@@ -63,7 +63,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   parseData(data) {
     this.tableData = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.getShortDateTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
+      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
       let oneRecordData = oneRecord.data;
       let record = [];
       record.push(dateTime);
@@ -121,7 +121,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             uniqueTimestamps.forEach(uniqueTimestamp => {
-               let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
+               let dateTime = this.commonService.getShortTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
               if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
                 data[dateTime] = vp.utilization[uniqueTimestamp];
                 numVps += 1;
@@ -144,7 +144,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
     this.fs.f1s.forEach(f1 => {
       let histogramData = [];
-      let funTimeSeriesCollection = new FunTimeSeriesCollection("VP utilization distribution (Range of percentages)", "Number of VPs",[]);
+      let funTimeSeriesCollection = new FunTimeSeriesCollection("Distribution by number of VPs", "Number",[]);
       for (let index = 0; index < 10; index++) {
         let binLow = (index * 10) + 1;
         let binHigh = (index * 10) + 10;
@@ -154,7 +154,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
         histogramData.push(y1Values);
       }
       uniqueTimestamps.forEach(timestamp => {
-        let dateTime = this.commonService.getShortDateTimeFromEpoch(timestamp * 1000, this.TIMEZONE);
+        let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000, this.TIMEZONE);
         histogramData.forEach(histogramElement => {
           histogramElement.data[dateTime]= 0;
         });

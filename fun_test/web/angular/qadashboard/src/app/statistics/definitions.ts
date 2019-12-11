@@ -15,20 +15,10 @@ export class FunTimeSeries {
 }
 
 export class FunTimeSeriesCollection {
-  // title: string = null;
   name: string = null;
   unit: string = null;
   collection: FunTimeSeries[] = [];
-  // xValues: any[] = [];
-  // y1Values: FunTimeSeries[] = [];
-  // y2AxisLabel: string = null;
-  // y2Values: string = null;
   constructor(name: string, unit: string, collection: FunTimeSeries[]) {
-    // this.title = title;
-    // this.xAxisLabel = xAxisLabel;
-    // this.y1AxisLabel = y1AxisLabel;
-    // this.y1Values = y1Values;
-    // this.xValues = xValues;
     this.name = name;
     this.unit = unit;
     this.collection = collection;

@@ -92,6 +92,12 @@ export class CommonService {
     return dateString;
   }
 
+  getShortTimeFromEpoch(epoch, timezone): string {
+    let pstDate = this.convertEpochToDate(epoch, timezone);
+    let timeString = this.addLeadingZeroesToDate(pstDate).split(", ");
+    return timeString[1];
+  }
+
   isSameDay(d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&

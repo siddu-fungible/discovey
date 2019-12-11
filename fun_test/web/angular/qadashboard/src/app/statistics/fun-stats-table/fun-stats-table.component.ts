@@ -1,4 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'fun-stats-table',
@@ -12,7 +13,7 @@ export class FunStatsTableComponent implements OnInit {
   filteredTableData: any[] = [];
   characterLimit: number = 25;
 
-  constructor() { }
+  constructor(private commonService: CommonService) { }
 
   ngOnInit() {
     this.filteredTableData = [];
@@ -44,6 +45,9 @@ export class FunStatsTableComponent implements OnInit {
 
    expandSlicedString(d): void {
     d.showSliced = !d.showSliced;
+    if (d.showSliced) {
+      this.commonService.scrollTo('topOfCell');
+    }
   }
 
   isString(value): boolean {
