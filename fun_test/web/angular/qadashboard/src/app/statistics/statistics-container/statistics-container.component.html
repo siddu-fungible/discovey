@@ -9,7 +9,7 @@
         </option>
       </select>
     </div>
-    <app-section-header [value]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name">
+    <app-section-header [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name">
     </app-section-header>
       <ng-container *ngIf="selectedAsset && selectedAsset.asset_type === 'DUT'">
         <ng-container *ngIf="statistic.statisticsCategory.name ==='system'"></ng-container>
