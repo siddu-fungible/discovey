@@ -901,6 +901,11 @@ class RunFioRds(FunTestCase):
                 for host in host_dict:
                     fio_filename = host_dict[host]["nvme_device"]
                     precondition_fio_num_jobs = len(fio_filename.split(":"))
+                    if precondition_fio_num_jobs > 2:
+                        # 64 max IODepth for write test. More than this write fail
+                        max_write_iodepth = 64
+                        set_iodepth = int(max_write_iodepth / precondition_fio_num_jobs)
+                        self.precondition_args["iodepth"] = set_iodepth
                     host_clone = host_dict[host]["handle"].clone()
                     thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser,
