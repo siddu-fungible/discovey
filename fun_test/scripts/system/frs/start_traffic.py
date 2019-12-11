@@ -888,18 +888,11 @@ class FrsTestCase(FunTestCase):
         if self.upload_to_file:
             self.add_data_to_file(getattr(self, "f_{}_f1_{}".format(stat_name, f1)), one_dataset, heading=heading)
 
-        differnce_data_set = {}
-        difference_output = debug_memory_calculation.debug_difference(self.initial_debug_memory_stats, one_dataset,
-                                                                      f1=f1)
-        differnce_data_set["output"] = difference_output
-        differnce_data_set["time"] = datetime.datetime.now()
-        differnce_data_set["time_difference"] = difference_output["time_difference"]
-        if self.upload_to_file:
-            self.add_data_to_file(getattr(self, "f_calculated_{}_f1_{}".format(stat_name, f1)), differnce_data_set,
-                                  heading=heading)
+        if self.stats_info["come"][stat_name].get("upload_to_es", False):
+            dpcsh_data = self.simplify_debug_memory_stats(dpcsh_output)
+            time_taken = self.upload_dpcsh_data_to_elk(dpcsh_data=dpcsh_data, f1=f1, stat_name=stat_name)
 
-        # dpcsh_output_list.append(one_dataset)
-        fun_test.sleep("before next iteration", seconds=3)
+        fun_test.sleep("before next iteration", seconds=self.stats_interval)
         fun_test.shared_variables["stat_{}".format(stat_name)]["count"] += 1
 
     @stats_deco
@@ -1349,6 +1342,19 @@ class FrsTestCase(FunTestCase):
                 result.append(one_data_set.copy())
         return result
 
+    def simplify_debug_memory_stats(self, dpcsh_data):
+        result = []
+        if dpcsh_data:
+            coh_cached = dpcsh_data["coherent"]["num_in_use_minus_cached"]
+            one_data_set = {"field": "coherent_num_in_use_minus_cached",
+                            "value": coh_cached}
+            result.append(one_data_set.copy())
+            non_coh_cached = dpcsh_data["non_coh"]["num_in_use_minus_cached"]
+            one_data_set = {"field": "non_coh_num_in_use_minus_cached",
+                            "value": non_coh_cached}
+            result.append(one_data_set.copy())
+        return result
+
     def simplify_storage_iops_stats(self, dpcsh_data):
         result = []
         if dpcsh_data:
@@ -1426,7 +1432,7 @@ class FrsTestCase(FunTestCase):
         # description : "{calculated_}_{app_name}_DPCSH_OUTPUT_F1_{f1}"
         self.stats_info["bmc"] = {POWER: {"calculated": True, "upload_to_es": True},
                                   DIE_TEMPERATURE: {"calculated": False, "disable": True}}
-        self.stats_info["come"] = {DEBUG_MEMORY: {"disable": True}, CDU: {"upload_to_es": True},
+        self.stats_info["come"] = {DEBUG_MEMORY: {"upload_to_es":True}, CDU: {"upload_to_es": True},
                                    EQM: {"upload_to_es": True},
                                    BAM: {"calculated": False, "disable": True}, DEBUG_VP_UTIL: {"upload_to_es": True},
                                    "LE": {"upload_to_es": True},
@@ -1597,6 +1603,7 @@ class FrsTestCase(FunTestCase):
                               disable_uart_logger=False)
 
     def initial_stats(self):
+        return
         if not self.stats_info["come"]["DEBUG_MEMORY"].get("disable", True):
             self.initial_debug_memory_stats = self.get_debug_memory_stats_initially(self.f_DEBUG_MEMORY_f1_0,
                                                                                     self.f_DEBUG_MEMORY_f1_1)
