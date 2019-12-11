@@ -1602,6 +1602,7 @@ class FrsTestCase(FunTestCase):
                                                                                     self.f_DEBUG_MEMORY_f1_1)
 
     def run_the_traffic(self):
+        fun_test.log("Starting the dpcsh apps")
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
