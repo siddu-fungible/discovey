@@ -121,6 +121,16 @@ class AssetManager:
         return result
 
     @fun_test.safe
+    def get_all_fs_spec(self):
+        fs_json = self.FS_SPEC
+        json_spec = parse_file_to_json(file_name=fs_json)
+        result = []
+        for fs_spec in json_spec:
+            result.append(fs_spec)
+        return result
+
+
+    @fun_test.safe
     def check_test_bed_manual_locked(self, test_bed_name):
         assets_required = self.get_assets_required(test_bed_name=test_bed_name)
         return self.check_assets_are_manual_locked(assets_required=assets_required)
@@ -325,6 +335,46 @@ class AssetManager:
                     a.save()
                 except Exception as ex:   #TODO
                     print(str(ex))
+
+
+    @fun_test.safe
+    def is_asset_in_test_bed(self, asset_name, asset_type, test_bed_name):
+        found = False
+        from lib.topology.topology_helper import TopologyHelper
+        if test_bed_name not in self.PSEUDO_TEST_BEDS:
+            test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
+            th = TopologyHelper(spec=test_bed_spec)
+            topology = th.get_expanded_topology()
+            if asset_type == AssetType.DUT:
+                duts = topology.get_duts()
+                for dut_index, dut in duts.iteritems():
+                    if dut.spec["dut"] == asset_name:
+                        found = True
+                        break
+            if asset_type == AssetType.HOST:
+                hosts = topology.get_hosts()
+                for host_index, host in hosts.iteritems():
+                    if host.name == asset_name:
+                        found = True
+                        break
+            if asset_type == AssetType.PERFORMANCE_LISTENER_HOST:
+                hosts = topology.get_perf_listener_hosts()
+                for host_index, host in hosts.iteritems():
+                    if host.name == asset_name:
+                        found = True
+                        break
+        return found
+
+
+    @fun_test.safe
+    def is_asset_valid(self, asset_name, asset_type):
+        valid_test_beds = self.get_valid_test_beds()
+        found = False
+        for test_bed_name in valid_test_beds:
+            found = self.is_asset_in_test_bed(test_bed_name=test_bed_name, asset_name=asset_name, asset_type=asset_type)
+            if found:
+                break
+        return found
 
     @fun_test.safe
     def get_assets_required(self, test_bed_name, with_pool_member_type_options=False):

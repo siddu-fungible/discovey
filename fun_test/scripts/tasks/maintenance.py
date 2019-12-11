@@ -1,6 +1,14 @@
 from lib.system.fun_test import *
 from lib.templates.tasks.tasks_template import TaskTemplate
+from web.fun_test.models_helper import get_suite_execution
+from lib.host.linux import Linux
 import subprocess
+import re
+from scheduler.scheduler_global import JobStatusType
+from datetime import timedelta
+from fun_global import get_current_time
+from fun_settings import TFTP_DIRECTORY
+
 
 class MaintenanceScript(FunTestScript):
     def describe(self):
@@ -123,7 +131,75 @@ class DetectLargeFiles(FunTestCase):
         pass
 
 
+class CheckMongoCollectionCount(FunTestCase):
+    MAX_COLLECTIONS = 5000
 
+    def describe(self):
+        self.set_test_details(id=5, summary="Ensure mongodb collection count is in control", steps=""" """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        m = fun_test.get_mongo_db_manager()
+        collection_count = m.collections_count()
+        fun_test.test_assert(collection_count < self.MAX_COLLECTIONS, "Mongodb collections < {}. Actual: {}".format(self.MAX_COLLECTIONS, collection_count))
+
+    def cleanup(self):
+        pass
+
+
+class RemoveOldCollections(FunTestCase):
+    MAX_DAYS_IN_PAST = 30
+
+    def describe(self):
+        self.set_test_details(id=6, summary="Remove collections older than {} days".format(self.MAX_DAYS_IN_PAST), steps=""" """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        mongo = fun_test.get_mongo_db_manager()
+        collection_names = mongo.get_all_collection_names()
+        for collection_name in collection_names:
+            if collection_name.startswith("s_"):
+                m = re.search("s_(\d+)", collection_name)
+                if m:
+                    suite_execution_id = m.group(1)
+                    try:
+                        s = get_suite_execution(suite_execution_id=suite_execution_id)
+                        if s and s.state <= JobStatusType.COMPLETED:
+                            completed_time = s.completed_time
+                            time_in_the_past = get_current_time() - timedelta(days=self.MAX_DAYS_IN_PAST)
+                            if completed_time < time_in_the_past and not s.preserve_logs:
+                                fun_test.log("Dropping collection {} {} {}".format(collection_name, suite_execution_id, s.completed_time))
+                                collection = mongo.get_collection(collection_name=collection_name)
+                                if collection:
+                                    collection.drop()
+                    except Exception as ex:
+                        pass
+    def cleanup(self):
+        pass
+
+
+class RemoveOldImagesOnTftpServer(FunTestCase):
+    MAX_DAYS_IN_PAST = 30
+
+    def describe(self):
+        self.set_test_details(id=7, summary="Remove old images from tftp server".format(self.MAX_DAYS_IN_PAST), steps=""" """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        service_host = Linux(**service_host_spec)
+        service_host.command("cd {}".format(TFTP_DIRECTORY))
+        service_host.command("find . -type f -name 's_*gz' -mtime +30 -exec rm {} \;")
+
+    def cleanup(self):
+        pass
 
 if __name__ == "__main__":
     myscript = MaintenanceScript()
@@ -131,4 +207,7 @@ if __name__ == "__main__":
     myscript.add_test_case(WebBackup())
     myscript.add_test_case(CleanupOldDirectories())
     myscript.add_test_case(DetectLargeFiles())
+    myscript.add_test_case(CheckMongoCollectionCount())
+    myscript.add_test_case(RemoveOldCollections())
+    myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.run()

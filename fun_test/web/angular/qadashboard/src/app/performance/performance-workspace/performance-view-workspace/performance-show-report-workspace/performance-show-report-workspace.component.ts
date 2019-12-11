@@ -158,6 +158,14 @@ export class PerformanceShowReportWorkspaceComponent implements OnInit {
     dataSet.show_history = !dataSet.show_history;
   }
 
+  onCommentsChanged(comments, interestedMetric): void {
+    interestedMetric.comments = comments;
+  }
+
+  onSubjectChanged(subject): void {
+    this.subject = subject;
+  }
+
   calculatePercentage(dataSets): void {
     for (let dataSet of dataSets) {
       let percentage = "NA";

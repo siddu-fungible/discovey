@@ -296,7 +296,7 @@ export class TestBedComponent implements OnInit {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
     let payload = {manual_lock_submitter_email: this.selectedUser.email,
     manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
-    manual_lock_extension_minute: this.schedulingTime.minute};
+    manual_lock_extension_minute: this.schedulingTime.minute, note: this.currentTestBed.note};
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Lock request submitted");
       this.selectedUser = null;

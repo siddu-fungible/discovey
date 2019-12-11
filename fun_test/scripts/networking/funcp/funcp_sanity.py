@@ -167,11 +167,11 @@ class NicEmulation(FunTestCase):
             setup_hu_host(funeth_obj, update_driver=True, sriov=32, num_queues=8)
             get_ethtool_on_hu_host(funeth_obj)
 
-            tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
-            funeth_obj = Funeth(tb_config_obj)
-            fun_test.shared_variables['funeth_obj'] = funeth_obj
-            setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
-            get_ethtool_on_hu_host(funeth_obj)
+            # tb_config_obj = tb_configs.TBConfigs(str(fs_name)+"2")
+            # funeth_obj = Funeth(tb_config_obj)
+            # fun_test.shared_variables['funeth_obj'] = funeth_obj
+            # setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=4)
+            # get_ethtool_on_hu_host(funeth_obj)
 
             print("\n=================")
             print ("Enable NVMe VFs:")

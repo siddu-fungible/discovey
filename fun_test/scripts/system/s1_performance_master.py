@@ -3,6 +3,9 @@ from scripts.system.palladium_performance_master import *
 S1 = FunPlatform.S1
 
 ALLOC_SPEED_TEST_TAG_S1 = "qa_alloc_speed_test_s1"
+NUCLEUS_SET_2_S1 = "qa_nucleus_set_2_s1"
+NUCLEUS_SET_3_S1 = "qa_nucleus_set_3_s1"
+
 
 class MyScript(FunTestScript):
     def describe(self):
@@ -22,7 +25,7 @@ class MyScript(FunTestScript):
 
 class WuDispatchTestPerformanceS1Tc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "WuDispatchTestPerformance"
+    model = "WuDispatchTestPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -31,8 +34,8 @@ class WuDispatchTestPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuSendSpeedTestPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "WuSendSpeedTestPerformance"
+    tag = NUCLEUS_SET_2_S1
+    model = "WuSendSpeedTestPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -41,8 +44,8 @@ class WuSendSpeedTestPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class FunMagentPerformanceTestS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "FunMagentPerformanceTest"
+    tag = NUCLEUS_SET_3_S1
+    model = "FunMagentPerformanceTest"  # Yes
     platform = S1
 
     def describe(self):
@@ -51,8 +54,8 @@ class FunMagentPerformanceTestS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuStackSpeedTestPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "WuStackSpeedTestPerformance"
+    tag = NUCLEUS_SET_2_S1
+    model = "WuStackSpeedTestPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -61,8 +64,8 @@ class WuStackSpeedTestPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class SoakFunMallocPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "SoakFunMallocPerformance"
+    tag = NUCLEUS_SET_3_S1
+    model = "SoakFunMallocPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -71,8 +74,8 @@ class SoakFunMallocPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class SoakClassicMallocPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "SoakClassicMallocPerformance"
+    tag = NUCLEUS_SET_3_S1
+    model = "SoakClassicMallocPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -102,7 +105,7 @@ class BcopyPerformanceS1Tc(PalladiumPerformanceTc):
 
 class AllocSpeedPerformanceS1Tc(PalladiumPerformanceTc):
     tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "AllocSpeedPerformance"
+    model = "AllocSpeedPerformance"  # Yes
     platform = S1
 
     def describe(self):
@@ -111,8 +114,8 @@ class AllocSpeedPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuLatencyUngatedPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "WuLatencyUngated"
+    tag = NUCLEUS_SET_2_S1
+    model = "WuLatencyUngated"   # Yes
     platform = S1
 
     def describe(self):
@@ -121,8 +124,8 @@ class WuLatencyUngatedPerformanceS1Tc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 class WuLatencyAllocStackPerformanceS1Tc(PalladiumPerformanceTc):
-    tag = ALLOC_SPEED_TEST_TAG_S1
-    model = "WuLatencyAllocStack"
+    tag = NUCLEUS_SET_2_S1
+    model = "WuLatencyAllocStack"   # Yes
     platform = S1
 
     def describe(self):

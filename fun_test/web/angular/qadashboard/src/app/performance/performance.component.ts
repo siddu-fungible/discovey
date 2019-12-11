@@ -7,6 +7,7 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {PerformanceService, SelectMode} from "./performance.service";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 
 class ChildInfo {
@@ -65,7 +66,9 @@ class FlatNode {
   children: FlatNode[] = [];
   lineage: any = [];
   special: boolean = false;
-  showAddLeaf: boolean = false;
+  showEditWorkspace: boolean = false;
+  showAttachDag: boolean = false;
+  showAttachModal: boolean = false;
   track: boolean = false;
   subscribe: boolean = false;
   viewLineage: string = null;
@@ -99,6 +102,7 @@ export class PerformanceComponent implements OnInit {
   @Input() description: string = null; //workspace description
   @Output() editedWorkspace: EventEmitter<boolean> = new EventEmitter(); //successful submission of metrics to DB
   @Input() metricIds: any[] = null;
+  @Input() flatNodeToAttach: any = null;
   updatedInterestedMetrics: any = [];
   SelectMode = SelectMode;
 
@@ -192,6 +196,7 @@ export class PerformanceComponent implements OnInit {
 
   allowedGridRows: number = 1;
   showFunMetric: boolean = false;
+  showAttachModal: boolean = false;
 
   constructor(
     private apiService: ApiService,
@@ -201,7 +206,8 @@ export class PerformanceComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private renderer: Renderer2,
-    private service: PerformanceService
+    private service: PerformanceService,
+    private modalService: NgbModal
   ) {
     this.urlDecodingReplacementMap = {};
     Object.keys(this.urlEncodingReplacementMap).forEach(key => {
@@ -214,7 +220,7 @@ export class PerformanceComponent implements OnInit {
     if (this.selectMode == SelectMode.ShowMainSite) {
       this.title.setTitle('Performance');
     }
-    if (this.selectMode == SelectMode.ShowViewWorkspace && this.metricIds) {
+    if (this.metricIds) {
       for (let metric of this.metricIds) {
         this.viewWorkspaceIds.push(metric["metric_id"]);
         this.lineagesMap[metric["metric_id"]] = metric["lineage"];
@@ -317,7 +323,7 @@ export class PerformanceComponent implements OnInit {
         for (let flatNode of this.flatNodes) {
           for (let metric of this.interestedMetrics) {
             if (flatNode.node.metricId === metric.metric_id) {
-              flatNode.showAddLeaf = true;
+              flatNode.showEditWorkspace = true;
               flatNode.track = true;
               flatNode.subscribe = metric.subscribe;
             }
@@ -1010,10 +1016,10 @@ export class PerformanceComponent implements OnInit {
       }
     } else {
       if (flatNode.node.leaf) {
-      this.showAtomicMetric(flatNode);
-    } else {
-      this.showNonAtomicMetric(flatNode);
-    }
+        this.showAtomicMetric(flatNode);
+      } else {
+        this.showNonAtomicMetric(flatNode);
+      }
     }
   }
 
@@ -1041,7 +1047,21 @@ export class PerformanceComponent implements OnInit {
       }
       this.fetchChartInfo(flatNode);
     } else if (this.selectMode == SelectMode.ShowEditWorkspace) {
-      flatNode.showAddLeaf = true;
+      flatNode.showEditWorkspace = true;
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    } else if (this.selectMode == SelectMode.ShowAttachModal) {
+      if (this.currentFlatNode && this.currentFlatNode.showAttachModal) {
+        this.currentFlatNode.showAttachModal = false;
+      }
+      flatNode.showAttachModal = true;
+      this.currentNode = flatNode.node;
+      this.currentFlatNode = flatNode;
+    } else if (this.selectMode == SelectMode.ShowAttachDag) {
+      if (this.currentFlatNode && this.currentFlatNode.showAttachDag) {
+        this.currentFlatNode.showAttachDag = false;
+      }
+      flatNode.showAttachDag = true;
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;
     } else {
@@ -1089,11 +1109,21 @@ export class PerformanceComponent implements OnInit {
       this.fetchChartInfo(flatNode);
       this.chartReady = true;
     } else {
+      if (this.currentFlatNode && this.currentFlatNode.showAttachDag) {
+        this.currentFlatNode.showAttachDag = false;
+      }
+      if (this.currentFlatNode && this.currentFlatNode.showAttachModal) {
+        this.currentFlatNode.showAttachModal = false;
+      }
       this.expandNode(flatNode);
       this.currentNode = flatNode.node;
       this.currentFlatNode = flatNode;
       if (this.selectMode == SelectMode.ShowEditWorkspace) {
-        this.currentFlatNode.showAddLeaf = true;
+        this.currentFlatNode.showEditWorkspace = true;
+      } else if (this.selectMode == SelectMode.ShowAttachDag) {
+        this.currentFlatNode.showAttachDag = true;
+      } else if (this.selectMode == SelectMode.ShowAttachModal) {
+        this.currentFlatNode.showAttachModal = true;
       }
     }
   };
@@ -1150,7 +1180,7 @@ export class PerformanceComponent implements OnInit {
       if (flatNode.node.metricId == metricId) {
         flatNode.track = false;
         flatNode.subscribe = false;
-        flatNode.showAddLeaf = false;
+        flatNode.showEditWorkspace = false;
       }
     }
   }
@@ -1329,5 +1359,48 @@ export class PerformanceComponent implements OnInit {
     return content;
   }
 
+  openAttachModal(content): void {
+    console.log("opened attach modal");
+    this.showAttachModal = true;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-attach-dag'}).result.then((result) => {
+      this.modalService.dismissAll();
+
+    }, (reason) => {
+    });
+  }
+
+  closeAttachModal(close): void {
+    this.showAttachModal = close;
+  }
+
+
+  attachToDag(flatNode): void {
+    console.log("MetricId to be attached", this.flatNodeToAttach.node.metricId);
+    console.log("MetricId where to attach", flatNode.node.metricId);
+    let self = this;
+    let payload = {};
+    payload["attach_id"] = this.flatNodeToAttach.node.metricId;
+    payload["original_metric_id"] = flatNode.node.metricId;
+    new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        return this.service.attachToDag(payload);
+      })).subscribe(response => {
+      console.log("attached to main dag");
+      this.modalService.dismissAll();
+      this.loggerService.success("attach to tree successful");
+    }, error => {
+      this.loggerService.error("Unable to attach it to tree");
+    });
+  }
+
+  detachFromTree(flatNode): void {
+    console.log("MetricId to be detached", this.flatNodeToAttach.node.metricId);
+    console.log("MetricId where to detach", flatNode.node.metricId);
+  }
 
 }

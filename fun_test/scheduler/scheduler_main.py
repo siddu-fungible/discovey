@@ -653,8 +653,15 @@ class SuiteWorker(Thread):
     def run_next(self):
         if not self.initialized:
             self.initialize()
+        suite_execution = self.get_suite_execution()
+        if suite_execution:
+            if suite_execution.state >= JobStatusType.IN_PROGRESS and ((get_current_time() - suite_execution.started_time).total_seconds() > suite_execution.max_run_time):
+                self.abort_suite(error_message="Max run-time exceeded")
+
         if self.suite_shutdown or self.suite_completed:
             return
+
+
 
         script_item = self.script_items[self.current_script_item_index]
 
@@ -1022,7 +1029,13 @@ def join_suite_workers():
                 jobs_to_be_removed.append(job_id)
         except Exception as ex:
             traceback.print_exc()
-            send_error_mail(submitter_email=t.submitter_email, job_id=job_id, message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+            submitter_email = TEAM_REGRESSION_EMAIL
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+            if suite_execution:
+                submitter_email = suite_execution.submitter_email
+            send_error_mail(submitter_email=submitter_email,
+                            job_id=job_id,
+                            message="Suite execution error at run_next. Exception: {}".format(str(ex)))
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:

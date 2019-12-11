@@ -15,19 +15,35 @@ class ElcomRebootTest(ApcPduTestcase):
         super(ElcomRebootTest, self).run()
 
     def basic_checks(self):
-        super(ElcomRebootTest, self).basic_checks()
         self.collect_bmc_logs()
-
-    def collect_bmc_logs(self):
-        self.bmc_handle.set_prompt_terminator(r'# $')
-        # Capture the UART logs also
-        artifact_file_name_f1_0 = self.bmc_handle.get_uart_log_file(0, "Iteration_{}".format(self.pc_no))
-        artifact_file_name_f1_1 = self.bmc_handle.get_uart_log_file(1, "Iteration_{}".format(self.pc_no))
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no), filename=artifact_file_name_f1_0)
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no), filename=artifact_file_name_f1_1)
+        self.collect_fpga_logs()
+        super(ElcomRebootTest, self).basic_checks()
 
     def data_integrity_check(self):
         pass
+
+    def check_nu_ports(self,
+                       expected_ports_up=None,
+                       f1=0):
+        self.get_dpcsh_data_for_cmds("port enableall", f1)
+        fun_test.sleep("Before checking port status", seconds=40)
+        super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
+
+    def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
+        result = True
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
+        if link_status:
+            for port_type, ports_list in expected_port_up.iteritems():
+                for each_port in ports_list:
+                    port_details = self.get_dict_for_port(port_type, each_port, link_status)
+                    if not (port_details["xcvr"] == "PRESENT" and port_details["SW"] == 1 and port_details["HW"] == 1):
+                        result = False
+                        break
+                if not result:
+                    break
+        else:
+            result = False
+        return result
 
     def apc_pdu_reboot(self):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -63,12 +79,78 @@ class ElcomRebootTest(ApcPduTestcase):
         come_handle.destroy()
         return
 
-    def check_nu_ports(self,
-                       expected_ports_up=None,
-                       f1=0):
-        self.get_dpcsh_data_for_cmds("port enableall", f1)
-        fun_test.sleep("Before checking port status", seconds=40)
-        super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
+    def collect_bmc_logs(self):
+        bmc_logs = {}
+        bmc_logs_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="important_bmc_logs_iteration_{}.txt".format(self.pc_no))
+        fun_test.add_auxillary_file(description="BMC logs Iteration: {}".format(self.pc_no), filename=bmc_logs_file_name)
+        bmc_logs['lanplus_sdr_logs'] = self.lanplus_sdr()
+        bmc_logs['lanplus_sensor_log'] = self.lanplus_sensor()
+        bmc_logs['f1_power_log'] = self.f1_power()
+        bmc_logs['var_logs'] = self.bmc_var_logs()
+        self.add_logs_to_file(bmc_logs_file_name, bmc_logs)
+
+    def collect_fpga_logs(self):
+        fpga_logs = {}
+        fpga_logs_file_name = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="important_fpga_logs_iteration_{}.txt".format(self.pc_no))
+        fun_test.add_auxillary_file(description="FPGA logs Iteration: {}".format(self.pc_no),
+                                    filename=fpga_logs_file_name)
+        fpga_logs["BootUpLog.txt"] = self.boot_up_log_txt()
+        fpga_logs["boot-up.log"] = self.boot_up_log()
+        fpga_logs["messages"] = self.messages_log()
+        self.add_logs_to_file(fpga_logs_file_name, fpga_logs)
+
+    def boot_up_log_txt(self):
+        output = self.fpga_handle.command("cat /home/root/BootUpLog.txt")
+        return output
+
+    def boot_up_log(self):
+        output = self.fpga_handle.command("cat /var/log/boot-up.log")
+        return output
+
+    def messages_log(self):
+        output = self.fpga_handle.command("cat /var/log/messages")
+        return output
+
+    def add_logs_to_file(self, file_name, logs_dict):
+        f = open(file_name, "a+")
+        for log_name, data in  logs_dict.iteritems():
+            f.write("\n\n"+"--"*10 + log_name + "--"*10 + "\n\n")
+            f.write(data)
+        f.close()
+
+    def lanplus_sdr(self):
+        output = self.bmc_handle.command("ipmitool -I lanplus -H 127.0.0.1 -U admin -P admin sdr")
+        return output
+
+    def lanplus_sensor(self):
+        output = self.bmc_handle.command("ipmitool -I lanplus -H 127.0.0.1 -U admin -P admin sensor")
+        return output
+
+    def f1_power(self):
+        output = self.bmc_handle.command("/mnt/sdmmc0p1/scripts/f1_power.sh")
+        return output
+
+    def bmc_var_logs(self):
+        result = ""
+        var_logs_list = ["alert.log", "btmp", "debug.log", "err.log", "messages", "redis-server.log", "syslog", "wtmp",
+                         "audit.log", "info.log", "notice.log", "slpd.log", "warning.log"]
+        for var_log in var_logs_list:
+            result += "\n\n" + "--"*10 + var_log + "--"*10 + "\n\n"
+            output = self.bmc_handle.command("cat /var/log/{}".format(var_log))
+            result += "\n\n{}".format(output)
+        return result
+
+    def collect_uart_logs(self):
+        self.bmc_handle.set_prompt_terminator(r'# $')
+        # Capture the UART logs also
+        artifact_file_name_f1_0 = self.bmc_handle.get_uart_log_file(0, "Iteration_{}".format(self.pc_no))
+        artifact_file_name_f1_1 = self.bmc_handle.get_uart_log_file(1, "Iteration_{}".format(self.pc_no))
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no), filename=artifact_file_name_f1_0)
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no), filename=artifact_file_name_f1_1)
+
+
 
     def cleanup(self):
         pass

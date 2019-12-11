@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
+import {RegisteredAsset} from "../definitions";
 
 class DataModel {
   letter: string;
@@ -71,6 +72,8 @@ class TestCaseTable {
 
 class ArtifactTree {
   root = {};
+  availableAssetTypes = new Set();
+  availableAssetIds = new Set();
 
   addArtifact(artifact: Artifact, staticLogDir: string) {
     if (!this.root.hasOwnProperty(artifact.data.asset_type)) {
@@ -90,6 +93,8 @@ class ArtifactTree {
       artifact.data.link = `${staticLogDir}/${parts[parts.length - 1]}`;
 
     }
+    this.availableAssetTypes.add(artifact.data.asset_type);
+    this.availableAssetIds.add(artifact.data.asset_id);
     categoryEntry.push(artifact);
   }
 
@@ -119,6 +124,7 @@ export class ScriptDetailComponent implements OnInit {
   values = [{data: [{y: 45}, {y: 51}, {y: 73}]}];
   series = [1, 2, 3];
   artifacts: Artifact [] = null;
+  artifactFilter = {assetType: null, assetId: null};
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -132,9 +138,13 @@ export class ScriptDetailComponent implements OnInit {
     sc.display_name = "System";
     sc.name = "system";
     let ssc = new StatisticsSubCategory();
-    ssc.display_name = "BAM";
+    /*ssc.display_name = "BAM";
     ssc.name = "bam";
-    //this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
+    ssc.display_name = "debug vp_util";
+    ssc.name = "debug_vp_util";
+    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+
   }
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
@@ -162,7 +172,8 @@ export class ScriptDetailComponent implements OnInit {
   logsAreTruncated: boolean = false;
   viewingCharts: boolean = false;
   statisticsCategories: any [] = [
-    {name: "system", display_name: "System", "sub_categories": [{name: "bam", display_name: "BAM"}]}
+    {name: "system", display_name: "System", sub_categories: [{name: "bam", display_name: "BAM"}]},
+    {name: "system", display_name: "System", sub_categories: [{name: "debug_vp_util", display_name: "debug vp_util"}]}
   ];
   selectedStatisticsCategory = null;
   selectedStatisticsSubCategory = null;
@@ -176,16 +187,25 @@ export class ScriptDetailComponent implements OnInit {
   artifactTree: ArtifactTree = new ArtifactTree();
   showingTablesPanel: boolean = false;
   testCaseTablePanels: {[panelHeader: string]: any} = {};
+  registeredAssets: RegisteredAsset [];
+
+  timeSeriesTypes: any = null;
 
   ngOnInit() {
 
     this.driver = of(true).pipe(switchMap(response => {
+      return this.regressionService.getTimeSeriesTypes();
+    })).pipe(switchMap(response => {
+      this.timeSeriesTypes = response;
       return this.service.getScriptRunTime(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptRunTime = response;
       return this.regressionService.getScriptInfoById(this.scriptId);
     })).pipe(switchMap(response => {
       this.scriptPath = response.script_path;
+      return this.regressionService.getRegisteredAssets(this.suiteExecutionId, this.timeSeriesTypes.REGISTERED_ASSET);
+    })).pipe(switchMap(response => {
+      this.registeredAssets = response;
       return this.service.getContexts(this.suiteExecutionId, this.scriptId);
     })).pipe(switchMap(response => {
       this.availableContexts = response;
@@ -206,7 +226,7 @@ export class ScriptDetailComponent implements OnInit {
 
       });
       this.updateScriptExecutionInfo();
-      return this.regressionService.testCaseTables(this.suiteExecutionId);
+      return this.regressionService.testCaseTables(this.suiteExecutionId, this.timeSeriesTypes.TEST_CASE_TABLE);
     })).pipe(switchMap(response => {
       this._parseTestCaseTables(response);
       return of(true);
@@ -278,7 +298,7 @@ export class ScriptDetailComponent implements OnInit {
     if (testCaseExecution.hasOwnProperty("checkpoints") && (testCaseExecution.checkpoints) && (testCaseExecution.checkpoints.length > 0)) {
       return of(true)
     } else {
-      return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, testCaseExecution.execution_id).pipe(switchMap(response => {
+      return this.regressionService.testCaseTimeSeriesCheckpoints(suiteExecutionId, this.timeSeriesTypes.CHECKPOINT, testCaseExecution.execution_id).pipe(switchMap(response => {
         if (!testCaseExecution.hasOwnProperty("checkpoints")) {
           testCaseExecution["checkpoints"] = response;
           testCaseExecution["minimum_epoch"] = 0;
@@ -351,7 +371,7 @@ export class ScriptDetailComponent implements OnInit {
     console.log(checkpointsInConsideration);
 
 
-    let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1).keys());
+    let checkpointIndexesToFetch = Array.from(Array(checkpointIndex + 1 + 1).keys());  // fetch logs for one checkpoint before and after
     //checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries"));
     let checkpointId = `${testCaseExecution.test_case_id}_${checkpointIndex}_${contextId}`;
 
@@ -375,14 +395,17 @@ export class ScriptDetailComponent implements OnInit {
 
   fetchLogsForCheckpoints(testCaseExecution, checkpointIndexesToFetch, checkpointIndexClicked): Observable<any> {
     checkpointIndexesToFetch = checkpointIndexesToFetch.filter(checkpointIndex => {
-      return !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries") && ((checkpointIndexClicked === checkpointIndex || ((checkpointIndexClicked - checkpointIndex) === 1)));
+      let difference: number = checkpointIndexClicked - checkpointIndex;
+      if (testCaseExecution.checkpoints.hasOwnProperty(checkpointIndex)) {
+        return !testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries") && ((difference === 0 || (difference === 1) || (difference === -1)));
+      }
     });
 
     if (checkpointIndexesToFetch.length > 0) {
       let minCheckpointIndex = checkpointIndexesToFetch[0];
-      if (checkpointIndexesToFetch.length > 1) {
-        minCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 2];
-      }
+      /*if (checkpointIndexesToFetch.length > 1) {
+        minCheckpointIndex = checkpointIndexesToFetch[];
+      }*/
       let maxCheckpointIndex = checkpointIndexesToFetch[checkpointIndexesToFetch.length - 1];
       this.status = "Fetching logs";
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId, testCaseExecution.execution_id, null, minCheckpointIndex, maxCheckpointIndex).pipe(switchMap(response => {
@@ -556,12 +579,13 @@ export class ScriptDetailComponent implements OnInit {
     this.scriptExecutionInfo["suite_execution_id"] = this.suiteExecutionId;
     this.scriptExecutionInfo["current_test_case_execution"] = this.currentTestCaseExecution;
     this.scriptExecutionInfo["current_checkpoint_index"] = this.currentCheckpointIndex;
+    this.scriptExecutionInfo["registered_assets"] = this.registeredAssets;
     this.scriptExecutionInfo = {...this.scriptExecutionInfo};
   }
 
   openArtifactsPanelClick() {
     this.showingArtifactPanel = !this.showingArtifactPanel;
-    this.regressionService.artifacts(this.suiteExecutionId).subscribe(response => {
+    this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
       this._parseArtifacts();
 

@@ -42,8 +42,8 @@ def save_entry(entry, run_time=None):
     dry_run = fun_test.get_job_environment_variable("dry_run")
     if not dry_run:
         if run_time:
-            fun_test.log("Adding runtime properties")
-            fun_test.log("Run time props are {}".format(run_time))
+            # fun_test.log("Adding runtime properties")
+            # fun_test.log("Run time props are {}".format(run_time))
             date_time = entry.input_date_time
             run_time_id = add_metrics_data_run_time(run_time=run_time, date_time=date_time)
             entry.run_time_id = run_time_id

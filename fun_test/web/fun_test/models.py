@@ -8,7 +8,7 @@ from django.db import models
 from fun_global import RESULTS
 from fun_global import is_lite_mode, get_current_time, get_epoch_time_from_datetime
 from web.fun_test.jira_models import *
-from web.fun_test.demo1_models import *
+#from web.fun_test.demo1_models import *
 from rest_framework import serializers
 from datetime import datetime, timedelta
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
@@ -17,7 +17,7 @@ import json
 from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
 from django.utils import timezone
-
+import logging
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -52,7 +52,7 @@ class FunModel(models.Model):
             value = getattr(self, field.name)
             result[field.name] = value
             if type(value) == datetime:
-                result[field.name + "_epoch"] = get_epoch_time_from_datetime(value)
+                result[field.name + "_timestamp"] = get_epoch_time_from_datetime(value)
         return result
 
 class TimeKeeper(models.Model):
@@ -192,6 +192,7 @@ class SuiteExecution(models.Model):
     is_re_run = models.NullBooleanField(default=False)
     re_run_info = JSONField(default={}, null=True)
     rich_inputs = JSONField(default=None, null=True)
+    max_run_time = models.IntegerField(default=7 * 24 * 3600, null=True)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -381,6 +382,12 @@ class ReleaseCatalogExecution(FunModel):
     completion_date = models.DateTimeField(null=True, default=None)
     owner = models.EmailField(null=True, blank=True)
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
+    description = models.TextField(default="TBD")
+    recurring = models.BooleanField(default=True)
+    release_train = models.TextField(default="master", null=True)
+    master_execution_id = models.IntegerField(default=None, null=True)
+    suite_executions = JSONField(default=None, null=True)
+
 
 
 class ReleaseCatalog(FunModel):

@@ -1,27 +1,113 @@
-<div class="fun-div">
-  <h4>Release catalogs</h4>
-  <app-section-horizontal-line></app-section-horizontal-line>
-  <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
-  <table class="fun-table-borderless1">
-  <tr>
-    <td class="fun-table-borderless-header">
-      Name
-    </td>
-    <td class="fun-table-borderless-header">
-      Description
-    </td>
-    <td class="fun-table-borderless-header">
-      # Suites
-    </td>
-    <td class="fun-table-borderless-header">
-    </td>
-  </tr>
-  <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
-    <td><small>{{ index }}.</small> {{ catalog.name }}</td>
-    <td>{{ catalog.description }}</td>
-    <td>{{ catalog.suites.length }}</td>
-    <td><i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;<i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
-  </tr>
+<div class="fun-flex-container">
+  <div class="fun-div" [@slideInOut] *ngIf="!preparingCatalogExecution">
+    <app-section-header [value]="'Release catalogs'"></app-section-header>
+    <span class="fun-action-link" (click)="addACatalog()">+ Add a catalog</span>
+    <table class="fun-table-borderless">
+      <tr>
+        <td>
+        </td>
+        <td class="fun-table-borderless-header">
+          Name
+        </td>
+        <td class="fun-table-borderless-header">
+          Description
+        </td>
+        <td class="fun-table-borderless-header">
+          # Suites
+        </td>
+        <td class="fun-table-borderless-header">
+        </td>
+      </tr>
+      <tr *ngFor="let catalog of releaseCatalogs; let index=index" class="fun-table-borderless-row">
+        <td><span class="fun-action-link" (click)="prepareRelease(index)">Prepare a release</span></td>
 
-</table>
+        <td><small>{{ index }}.</small> {{ catalog.name }}</td>
+        <td>{{ catalog.description }}</td>
+        <td>{{ catalog.suites.length }}</td>
+        <td>
+          <i class="fa fa-pencil" (click)="editCatalog(catalog.id)"></i>&nbsp;
+          <i class="fa fa-trash" style="color: red" (click)="removeCatalog(index)"></i></td>
+      </tr>
+
+    </table>
+  </div>
+  <div class="fun-div" *ngIf="preparingCatalogExecution">
+    <app-section-header [value]="'Prepare release parameters ...'"></app-section-header>
+    <table>
+      <tr>
+        <td class="fun-attribute-label">Owner</td>
+        <td>
+          <select id="owner" [(ngModel)]="releaseCatalogExecution.owner">
+            <option *ngFor="let user of users" [ngValue]="user.email">{{ user.first_name }} {{ user.last_name }}
+              ({{ user.email }})
+            </option>
+          </select>
+        </td>
+      </tr>
+      <tr>
+        <td class="fun-attribute-label">
+          Description
+        </td>
+        <td>
+          <app-textarea-input [numRows]="1" [hoverHide]="false" (valueChanged)="setExecutionDescription($event)" [initialValue]="releaseCatalogExecution.description"></app-textarea-input>
+        </td>
+      </tr>
+
+    </table>
+
+    <label class="fun-attribute-label" for="release-select">Select a release: </label>
+    <select id="release-select" [(ngModel)]="releaseCatalogExecution.release_train">
+      <option></option>
+      <option [ngValue]="releaseTrain" *ngFor="let releaseTrain of releaseTrains">
+      {{ releaseTrain }}
+      </option>
+    </select>
+
+    &nbsp;
+    <input [(ngModel)]="releaseCatalogExecution.recurring" type="checkbox"
+                     name="recurring"
+                     [checked]="releaseCatalogExecution.recurring"> Recurring
+
+    <table class="fun-table-borderless">
+      <tr>
+        <td class="fun-table-borderless-header">
+          Suite ID
+        </td>
+        <td class="fun-table-borderless-header">
+          Name
+        </td>
+        <td class="fun-table-borderless-header">
+          Test-bed
+        </td>
+        <td class="fun-table-borderless-header">
+          Description
+        </td>
+      </tr>
+      <tr class="fun-table-borderless-row" *ngFor="let suiteExecution of releaseCatalogExecution.suiteExecutions">
+        <td>
+          {{ suiteExecution.suite_id }}
+        </td>
+        <td>
+          {{ suiteExecution.suite_details.name }}
+        </td>
+        <td>
+          <select id="test-bed" [(ngModel)]="suiteExecution.test_bed_name">
+            <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
+            </option>
+          </select>
+        </td>
+        <td>
+          {{ suiteExecution.suite_details.short_description }}
+        </td>
+      </tr>
+    </table>
+    <div class="fun-div">
+      <span class="fun-action-link" (click)="preparingCatalogExecution = false">back</span>&nbsp;&nbsp;
+      <button class="fun-button-submit" (click)="createRelease()">Create release</button>
+    </div>
+
+  </div>
+
+
 </div>
+

@@ -1,11 +1,14 @@
-from fun_global import get_current_time
+from fun_global import get_current_time, is_development_mode
 from pymongo import MongoClient
 import pymongo.errors
 
 
 
 class MongoDbManager():
-    DEFAULT_HOST = "127.0.0.1"
+    if not is_development_mode():
+        DEFAULT_HOST = "127.0.0.1"
+    else:
+        DEFAULT_HOST = "integration.fungible.local"
     DEFAULT_PORT = 27017
 
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT):
@@ -76,7 +79,14 @@ class MongoDbManager():
             print ("insert_one exception: {}".format(str(ex)))
         return result
 
+    def collections_count(self):
+        return len(self.get_all_collection_names())
 
+    def get_all_collection_names(self):
+        return self.db.collection_names()
+
+    def drop_collection(self, collection):
+        collection.drop()
 
 if __name__ == "__main2__":
     m = MongoDbManager()

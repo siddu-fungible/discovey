@@ -159,6 +159,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["perftest_commit"] = job_inputs["perftest_commit"]
         else:
             fun_test.shared_variables["perftest_commit"] = None
+        if "update_funcp" in job_inputs:
+            update_funcp = job_inputs["update_funcp"]
+        else:
+            update_funcp = False
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -214,7 +218,8 @@ class BringupSetup(FunTestCase):
                                             % servers_mode[server])
 
             # Bringup FunCP
-            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=False), message="Bringup FunCP")
+            fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
+                                 message="Bringup FunCP")
             # Assign MPG IPs from dhcp
             funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                      f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
@@ -343,34 +348,6 @@ class NicEmulation(FunTestCase):
                 for handle in host_objs[objs]:
                     handle.sudo_command("dmesg -c > /dev/null")
 
-        # # Update RDMA Core & perftest on hosts
-        # bg_proc_id = {}
-        # for obj in host_objs:
-        #     if obj == "f1_0":
-        #         host_count = fun_test.shared_variables["host_len_f10"]
-        #         bg_proc_id[obj] = []
-        #     elif obj == "f1_1":
-        #         host_count = fun_test.shared_variables["host_len_f11"]
-        #         bg_proc_id[obj] = []
-        #     for x in xrange(0, host_count):
-        #         update_path = host_objs[obj][x].command("echo $HOME")
-        #         update_script = update_path.strip() + "/mks/update_rdma.sh"
-        #         print update_script
-        #         bg_proc_id[obj].append(host_objs[obj][x].
-        #                                start_bg_process("{} build build".format(update_script),
-        #                                                 timeout=1200))
-        # # fun_test.sleep("Building rdma_perf & core", seconds=120)
-        # for obj in host_objs:
-        #     if obj == "f1_0":
-        #         host_count = fun_test.shared_variables["host_len_f10"]
-        #     elif obj == "f1_1":
-        #         host_count = fun_test.shared_variables["host_len_f11"]
-        #     for x in xrange(0, host_count):
-        #         for pid in bg_proc_id[obj]:
-        #             while host_objs[obj][x].process_exists(process_id=pid):
-        #                 fun_test.sleep(message="Still building RDMA repo...", seconds=5)
-        #         host_objs[obj][x].disconnect()
-
         # Create a dict containing F1_0 & F1_1 details
         f10_hosts = []
         f11_hosts = []
@@ -448,8 +425,11 @@ class BwTest(FunTestCase):
             total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
+            # hosts used for populating charts, 4 for 200G & 2 for 100G
+            hosts = 4
         else:
             link_capacity = "100G"
+            hosts = 2
         for index in range(total_link_bw):
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
@@ -557,7 +537,8 @@ class BwTest(FunTestCase):
                     "{}_msg_rate".format(self.rt): msg_rate,
                     "fcp": self.fcp,
                     "qp": qp_count,
-                    "mtu": self.mtu
+                    "mtu": self.mtu,
+                    "hosts": hosts
                 }
                 add_to_data_base(value_dict)
 
@@ -606,8 +587,11 @@ class LatencyTest(FunTestCase):
             total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
+            # hosts used for populating charts, 4 for 200G & 2 for 100G
+            hosts = 4
         else:
             link_capacity = "100G"
+            hosts = 2
         for index in range(total_link_bw):
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
@@ -722,7 +706,8 @@ class LatencyTest(FunTestCase):
                 "{}_99_latency".format(self.rt): latency_99,
                 "{}_99_99_latency".format(self.rt): latency_99_99,
                 "mtu": self.mtu,
-                "fcp": self.fcp
+                "fcp": self.fcp,
+                "hosts": hosts
             }
             add_to_data_base(value_dict)
             table_data = {"headers": table_data_headers, "rows": table_data_rows}

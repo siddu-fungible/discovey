@@ -15,6 +15,7 @@ export class SchedulerAdminComponent implements OnInit {
   info: any = null;
   directiveTypes: any = null;
   stateTypes: any = null;
+  gitPullStatus = null;
   constructor(private apiService: ApiService,
               private loggerService: LoggerService) { }
 
@@ -38,9 +39,11 @@ export class SchedulerAdminComponent implements OnInit {
 
   gitPull() {
     let payload = {command: "pull"};
+    this.gitPullStatus = "Performing git pull";
     this.apiService.post('/regression/git', payload).subscribe(response => {
         this.gitPullLog = response.data.pull;
         this.fetchGitLogs();
+        this.gitPullStatus = null;
 
       }
     )

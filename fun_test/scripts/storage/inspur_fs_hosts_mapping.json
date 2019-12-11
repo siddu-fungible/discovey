@@ -6,7 +6,7 @@
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-41",
+        "dut": "fs-116",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -115,14 +115,14 @@
       "mktg-server-01"
     ]
   },
-  "fs-42": {
+  "fs-121": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-42",
+        "dut": "fs-121",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -232,14 +232,14 @@
         "mktg-server-03"
     ]
   },
-  "fs-43": {
+  "fs-122": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-43",
+        "dut": "fs-122",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -348,14 +348,14 @@
       "cab04-qa-03"
     ]
   },
-  "fs-44": {
+  "fs-123": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-44",
+        "dut": "fs-123",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -587,14 +587,14 @@
       "cab02-qa-09"
     ]
   },
-  "fs-102": {
+  "fs-144": {
     "workarounds": {
       "enable_funcp": true
     },
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
-        "dut": "fs-102",
+        "dut": "fs-144",
         "bond_interface_info": {
           "0": {
             "0": {
@@ -641,7 +641,7 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/17"
+                "port": "et-0/0/20"
               }
             },
             "4": {
@@ -662,7 +662,7 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-3",
-                "port": "et-0/0/20"
+                "port": "et-0/0/17"
               }
             }
           },

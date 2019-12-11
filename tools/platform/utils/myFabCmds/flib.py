@@ -4,6 +4,7 @@ import time, re, os
 import pexpect, sys
 import pprint
 import socket
+import tempfile
 
 from mysetups import *
 
@@ -341,6 +342,13 @@ def resetF(index=0):
 
 @roles('bmc')
 @task
+def get_fs_rev():
+    """ get FS1600 platform revision """
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        run("cd /mnt/sdmmc0p1/scripts && gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1")
+
+@roles('bmc')
+@task
 def check_serial_sockets():
     """ check if tcp sockets are running to replay serial interfaces /dev/ttySD """
     with settings( hide('stderr', 'running'), warn_only=True ):
@@ -541,7 +549,7 @@ def fwupgrade(index=0, flags=False, type=None, image=None, version=None):
 
 
 @roles('come')
-#@task
+@task
 def deploy_dpcsh_install_dependencies():
     with settings(hide('stdout', 'stderr'), warn_only=True):
         o = run('mkdir -p ~/tools/dpudebug')
@@ -571,16 +579,43 @@ def dpcshF(index=0, cmd=None):
     #if index == 1 and '0000:06:00.2' not in O:
     #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
     check_dpcsh_install_dependencies()
-    dev = '/dev/nvme0' if (index == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (index == 1 and '0000:06:00.2' in O) else '/dev/null'
+    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and '0000:06:00.2' in O) else '/dev/null'
     with cd(dpcsh_directory):
-        return sudo('echo "%s" | ./dpcsh --pcie_nvme_sock=%s' % (cmd, dev))
+        return sudo('./dpcsh --pcie_nvme_sock=%s --nvme_cmd_timeout=60000 --nocli %s' % (dev, cmd))
 
+def check_file_unsigned(image=TFTPPATH, type='tftp'):
+    (server, filename) = image.split(':')
+    with settings(warn_only=True):
+        o = run('file -L -z /tftpboot/{} | grep ELF && true || false'.format(filename))
+        status = True if o.return_code == 0 else False
+        print ("{} file downloaded - {} seem {} ...".format(type, filename, 'unsigned' if status == True else 'signed'))
+        return status
+
+def _is_file_unsigned(image=NFSPATH, type='nfs'):
+    (server, filename) = image.split(':')
+    (tfd, tname) = tempfile.mkstemp(suffix='.fab')
+    if 'tftp' in type:
+        local('tftp {} -c get {} {}'.format(server, filename, tname))
+    elif 'nfs' in type:
+        local('scp {} {}'.format(filename, tname))
+    else:
+        raise('filetype not supported ...')
+
+    with settings(warn_only=True):
+        o = local('file -z {} | grep ELF && true || false'.format(tname))
+        status = True if o.return_code == 0 else False
+        print ("{} file downloaded - {} seem {} ...".format(type, tname, 'unsigned' if status == True else 'signed'))
+        local('rm -rf {}'.format(tname))
+        return status
 
 @roles('bmc')
 @task
 def imageF(index=0, image=NFSPATH, type='nfs'):
     """ upgrade image of chip[index] over type [nfs|tftp] with provided arguments """
     global child
+
+    env.passwords.update({'localadmin@{}:22'.format(env.TFTPSERVER) : 'Precious1*'})
+    unsigned = execute(check_file_unsigned, image, type, hosts='localadmin@{}:22'.format(env.TFTPSERVER))
 
     command = 'nfs' if 'nfs' in type else 'tftpboot'
     child = connectF(index, True)
@@ -608,7 +643,7 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
         child.expect ('\nf1 # ')
 
     time.sleep(2)
-    if '.elf' not in image:
+    if not unsigned:
         child.sendline('authfw 0xffffffff99000000;')
         child.expect ('authentication OK\r\r\nf1 # ')
     else:
@@ -641,6 +676,8 @@ def argsF(index=0, bootargs=BOOTARGS):
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
     child.sendline('setenv bootargs %s' % (bootargs))
+    child.expect ('\nf1 # ')
+    child.sendline('printenv')
     child.expect ('\nf1 # ')
     child.close()
 
@@ -688,7 +725,7 @@ def redfish_power():
         local(rfcmd)
 
 @roles('bmc')
-#@task
+@task
 def redfish_thermals():
     """ get thermal sensor information via redfish  """
     with prefix('source ~/py3venv/bin/activate'):
@@ -697,7 +734,7 @@ def redfish_thermals():
         local(rfcmd)
 
 @roles('bmc')
-#@task
+@task
 def redfish_fans():
     """ get fan sensor information via redfish  """
     with prefix('source ~/py3venv/bin/activate'):

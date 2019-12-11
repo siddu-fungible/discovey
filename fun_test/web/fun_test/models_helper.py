@@ -2,7 +2,7 @@ import os, django, json, datetime
 import sys
 import random
 import time
-from lib.system.fun_test import *
+# from lib.system.fun_test import *
 from datetime import datetime, timedelta
 from django.core import paginator
 from fun_global import RESULTS, get_current_time, get_localized_time
