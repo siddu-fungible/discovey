@@ -989,6 +989,7 @@
     },
     "name": "fs-118",
     "revision": "2",
+    "bundle_compatible": true,
     "mpg_ips": ["10.1.108.15", "10.1.108.16"],
     "gateway_ip": "10.1.108.1",
     "workarounds": {
