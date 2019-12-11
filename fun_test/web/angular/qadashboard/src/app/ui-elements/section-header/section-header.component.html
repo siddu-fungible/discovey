@@ -1,2 +1,4 @@
-<h4>{{ value }}</h4>
+<h5>{{ title }}</h5>
+<div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
+<div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
 <app-section-horizontal-line></app-section-horizontal-line>

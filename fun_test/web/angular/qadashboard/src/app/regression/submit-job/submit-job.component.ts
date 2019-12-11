@@ -131,7 +131,7 @@ export class SubmitJobComponent implements OnInit {
 
 
   withStableMaster = {debug: false, stripped: true};
-  bundleImageParameters = {release_train: null, build_number: null};
+  bundleImageParameters = {release_train: null, build_number: "latest"};
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
@@ -410,7 +410,7 @@ export class SubmitJobComponent implements OnInit {
         if (this.bundleImageParameters.release_train === null) {
           return this.logger.error("Please select bundle release");
         }
-        if (this.bundleImageParameters.build_number === null) {
+        if (!this.bundleImageParameters.build_number) {
           return this.logger.error("Please select bundle number");
         }
         payload["environment"]["bundle_image_parameters"] = this.bundleImageParameters;

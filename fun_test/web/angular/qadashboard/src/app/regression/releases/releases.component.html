@@ -1,6 +1,5 @@
-<app-section-header>Releases</app-section-header>
 <div class="fun-div">
-  <app-section-header [value]="'Releases'"></app-section-header>
+  <app-section-header [title]="'Releases'"></app-section-header>
   <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
 
     <h6 style="display: inline-block">{{ index }}. <a href="/regression/release_detail/{{ execution.id }}">{{ execution.description }}</a></h6>

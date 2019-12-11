@@ -83,7 +83,7 @@
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="" style="overflow: auto; height: 100%; width: 100%;">
   <div *ngIf="showingArtifactPanel" [@show]="showingArtifactPanel" style="padding: 10px">
-      <app-section-header [value]="'Artifacts'"></app-section-header>
+      <app-section-header [title]="'Artifacts'"></app-section-header>
     <div class="fun-panel-body">
       <div style="padding: 10px">
         <span>Filters:</span>
