@@ -77,6 +77,9 @@
           Name
         </td>
         <td class="fun-table-borderless-header">
+          Test-bed
+        </td>
+        <td class="fun-table-borderless-header">
           Description
         </td>
       </tr>
@@ -86,6 +89,12 @@
         </td>
         <td>
           {{ suiteExecution.suite_details.name }}
+        </td>
+        <td>
+          <select id="test-bed" [(ngModel)]="suiteExecution.test_bed_name">
+            <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
+            </option>
+          </select>
         </td>
         <td>
           {{ suiteExecution.suite_details.short_description }}
