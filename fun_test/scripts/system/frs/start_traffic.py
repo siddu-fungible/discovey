@@ -2059,11 +2059,11 @@ class FrsTestCase(FunTestCase):
             are_all_apps_done = all(app_result.values())
             fun_test.sleep("Before checking the count iteration")
 
-        for thread_name, thread_id in self.stats_thread_map.iteritems():
-            fun_test.join_thread(thread_id)
-
         if not fun_test.shared_variables["stat_collection_threads_status"]:
             fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
+
+        for thread_name, thread_id in self.stats_thread_map.iteritems():
+            fun_test.join_thread(thread_id)
 
 
 if __name__ == "__main__":
