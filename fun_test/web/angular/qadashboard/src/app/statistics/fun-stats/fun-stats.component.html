@@ -1,10 +1,10 @@
-<div class="fun-flex-container">
-  <div class="fun-div fun-flex-item" [@show] style="width: 500px; height: 500px;">
+<div *ngIf="chartReady" class="fun-flex-container">
+  <div class="fun-flex-item" [@show] style="width: 500px; height: 500px;">
     <div>
       <span style="float: right;" class="fun-action-link"
        (click)="showTables()">Show tables <i class="fa fa-table" style="color: black"></i></span>
       <fun-chart [title]=title [xAxisLabel]=xAxisLabel
-                 [y1AxisLabel]=y1AxisLabel [y1Values]=y1Values></fun-chart>
+                 [y1AxisLabel]=y1AxisLabel [y1Values]=y1Values [xValues]="xValues"></fun-chart>
     </div>
   </div>
   <div *ngIf=showTable class="fun-flex-item" [@show] style="width: 500px; height: 500px; overflow: scroll">

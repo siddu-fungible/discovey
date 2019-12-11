@@ -24,13 +24,13 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   suiteExecutionId: number;
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
-  maxChartsPerRow: number = 3;
 
   xSeries: any = null;
   TIMEZONE: string = "America/Los_Angeles";
   tableHeaders: any = null;
   tableData: any = null;
   showCharts: boolean = false;
+  showTable: boolean  = false;
   funStatsSeries: FunTimeSeriesCollection[] = [];
   y1Values: FunTimeSeries[] = [];
 
@@ -55,21 +55,20 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
   prepareTableHeaders(): void {
     this.tableHeaders = [];
-    this.tableHeaders.push("Datetime");
-    this.tableHeaders.push("Value");
+    this.tableHeaders.push("Time");
+    this.tableHeaders.push("F1-0");
+    this.tableHeaders.push("F1-1");
   }
 
   parseData(data) {
-    this.tableData = {};
-    this.tableData[0] = [];
-    this.tableData[1] = [];
+    this.tableData = [];
     this.data.forEach(oneRecord => {
       let dateTime = this.commonService.getShortDateTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
       let oneRecordData = oneRecord.data;
+      let record = [];
+      record.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
-        let record = [];
-        record.push(dateTime);
         record.push(oneRecordData[f1Index]);
         Object.keys(oneRecordData[f1Index]).forEach(clusterKey => {
           let regex = /CCV(\d+)_(\d+)_(\d+)/;
@@ -82,7 +81,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             this.fs.addDebugVpUtil(parseInt(f1Index), clusterIndex, coreIndex, vpIndex, oneRecord.epoch_time, oneRecordData[f1Index][clusterKey]);
           }
         });
-        this.tableData[f1Index].push(record);
+        this.tableData.push(record);
 
       });
     });
@@ -109,15 +108,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
     this.fs.f1s.forEach(f1 => {
       f1.clusters.forEach(cluster => {
         cluster["debug_vp_util"] = {series: []};
-        cluster["tableHeaders"] = ["Datetime"];
-        cluster["tableData"] = [];
-        let dataSet = {};
-        uniqueTimestamps.forEach(uniqueTimestamp => {
-          let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
-          dataSet[dateTime] = [];
-        });
         let index = cluster.index;
-        let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "Sample", "%", null,[]);
+        let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "%", []);
         cluster.cores.forEach(core => {
           let numVps = 0;
           let sumOfUtilizations = 0;
@@ -126,34 +118,23 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let vpIndex = vp.index;
             let name = `${coreIndex}.${vpIndex}`;
             // console.log(name);
-            let oneSeries = new FunTimeSeries(name, []);
-            cluster["tableHeaders"].push(name);
+            let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             uniqueTimestamps.forEach(uniqueTimestamp => {
                let dateTime = this.commonService.getShortDateTimeFromEpoch(uniqueTimestamp * 1000, this.TIMEZONE);
               if (vp.utilization.hasOwnProperty(uniqueTimestamp)) {
-                data.push(vp.utilization[uniqueTimestamp]);
-                // cluster["tableData"].push([dateTime, vp.utilization[uniqueTimestamp]]);
+                data[dateTime] = vp.utilization[uniqueTimestamp];
                 numVps += 1;
                 sumOfUtilizations += vp.utilization[uniqueTimestamp] * 100;
-                dataSet[dateTime].push(vp.utilization[uniqueTimestamp]);
               } else {
-                data.push(-1);
-                // cluster["tableData"].push([dateTime, -1]);
-                dataSet[dateTime].push(-1);
+                data[dateTime] = -1;
               }
             });
             cluster["debug_vp_util"].series.push(oneSeries);
           })
         });
-        funTimeSeriesCollection.y1Values = cluster["debug_vp_util"].series;
+        funTimeSeriesCollection.collection = cluster["debug_vp_util"].series;
         cluster["funTimeSeries"] = funTimeSeriesCollection;
-        Object.keys(dataSet).forEach(date => {
-          let temp = [];
-          temp.push(date);
-          let result = temp.concat(dataSet[date]);
-          cluster["tableData"].push(result);
-        });
       });
     });
 
@@ -163,22 +144,19 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
 
     this.fs.f1s.forEach(f1 => {
       let histogramData = [];
-      let funTimeSeriesCollection = new FunTimeSeriesCollection("VP utilization distribution (Range of percentages)", "Sample", "Number" +
-        " of VPs", null,[]);
+      let funTimeSeriesCollection = new FunTimeSeriesCollection("VP utilization distribution (Range of percentages)", "Number of VPs",[]);
       for (let index = 0; index < 10; index++) {
         let binLow = (index * 10) + 1;
         let binHigh = (index * 10) + 10;
         // console.log(binLow, binHigh);
         let binName = `${binLow}-${binHigh}`;
-        let series = {name: binName, data:[]};
-        let y1Values = new FunTimeSeries(binName, []);
+        let y1Values = new FunTimeSeries(binName, {});
         histogramData.push(y1Values);
       }
-      let currentTimestampIndex = 0;
       uniqueTimestamps.forEach(timestamp => {
-
+        let dateTime = this.commonService.getShortDateTimeFromEpoch(timestamp * 1000, this.TIMEZONE);
         histogramData.forEach(histogramElement => {
-          histogramElement.data.push(0);
+          histogramElement.data[dateTime]= 0;
         });
         f1.clusters.forEach(cluster => {
           cluster.cores.forEach(core => {
@@ -186,19 +164,21 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
               if (vp.utilization.hasOwnProperty(timestamp)) {
                 let utilization = vp.utilization[timestamp];
                 let floorValue = Math.floor(utilization);
-                histogramData[floorValue].data[currentTimestampIndex] += 1;
+                histogramData[floorValue].data[dateTime] += 1;
               }
             })
           })
         });
-        currentTimestampIndex += 1;
-
       });
 
       f1["histogram"] = histogramData;
-      funTimeSeriesCollection.y1Values = histogramData;
+      funTimeSeriesCollection.collection = histogramData;
       f1["funTimeSeries"] = funTimeSeriesCollection;
     });
+  }
+
+  showTables(): void {
+    this.showTable = !this.showTable;
   }
 
   ngOnChanges() {

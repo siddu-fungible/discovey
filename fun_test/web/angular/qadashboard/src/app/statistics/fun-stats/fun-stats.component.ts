@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {slideInOutAnimation,showAnimation} from "../../animations/generic-animations";
+import {slideInOutAnimation, showAnimation} from "../../animations/generic-animations";
 
 @Component({
   selector: 'fun-stats',
@@ -22,15 +22,47 @@ export class FunStatsComponent implements OnInit {
   @Input() data: any = {};
 
   showTable: boolean = false;
+  chartReady: boolean = false;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
-    this.title = this.data.title;
-    this.xAxisLabel = this.data.xAxisLabel;
-    this.y1AxisLabel = this.data.y1AxisLabel;
-    this.y1Values = this.data.y1Values;
-    this.xValues = this.data.xValues;
+    this.chartReady = false;
+    this.tableHeaders = [];
+    this.tableHeaders.push("Time");
+    this.tableData = [];
+    this.title = this.data.name;
+    this.xAxisLabel = "Time";
+    this.y1AxisLabel = this.data.unit;
+    let collection = this.data.collection;
+    let y1Values = [];
+    let xValues = new Set();
+    let tableData = {};
+    for (let series of collection) {
+      let temp = {};
+      temp["name"] = series.name;
+      this.tableHeaders.push(series.name);
+      temp["data"] = [];
+      Object.keys(series.data).forEach(dateTime => {
+        if (!xValues.has(dateTime)) {
+          xValues.add(dateTime);
+          tableData[dateTime] = [];
+        }
+        tableData[dateTime].push(series.data[dateTime]);
+        temp["data"].push(series.data[dateTime]);
+      });
+      y1Values.push(temp);
+    }
+    this.y1Values = y1Values;
+    this.xValues = Array.from(xValues.values());
+    Object.keys(tableData).forEach(date => {
+      let temp = [];
+      temp.push(date);
+      let result = temp.concat(tableData[date]);
+      this.tableData.push(result);
+    });
+    this.chartReady = true;
   }
 
   showTables(): void {
