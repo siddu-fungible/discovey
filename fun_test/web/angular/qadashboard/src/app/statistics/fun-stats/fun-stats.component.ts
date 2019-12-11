@@ -23,6 +23,7 @@ export class FunStatsComponent implements OnInit {
 
   showTable: boolean = false;
   chartReady: boolean = false;
+  uniqueTimeStamps: any = new Set();
 
   constructor() {
   }
@@ -35,31 +36,37 @@ export class FunStatsComponent implements OnInit {
     this.title = this.data.name;
     this.xAxisLabel = "Time";
     this.y1AxisLabel = this.data.unit;
-    let collection = this.data.collection;
     let y1Values = [];
-    let xValues = new Set();
-    let tableData = {};
-    for (let series of collection) {
-      let temp = {};
-      temp["name"] = series.name;
+    let dataByTime = {};
+    this.findUniqueTimeStamps(); //find unique timestamps from the series data
+    this.xValues = Array.from(this.uniqueTimeStamps.values()).sort();
+    this.xValues.forEach(timestamp => {
+      dataByTime[timestamp] = [];
+    });
+    // populating the y values
+    for (let series of this.data.collection) {
+      let yData = {};
+      yData["name"] = series.name;
       this.tableHeaders.push(series.name);
-      temp["data"] = [];
-      Object.keys(series.data).forEach(dateTime => {
-        if (!xValues.has(dateTime)) {
-          xValues.add(dateTime);
-          tableData[dateTime] = [];
+      yData["data"] = [];
+      this.xValues.forEach(dateTime => {
+        if (series.data.hasOwnProperty(dateTime)) {
+          dataByTime[dateTime].push(series.data[dateTime]);
+          yData["data"].push(series.data[dateTime]);
+        } else {
+          dataByTime[dateTime].push("");
+          yData["data"].push(null);
         }
-        tableData[dateTime].push(series.data[dateTime]);
-        temp["data"].push(series.data[dateTime]);
       });
-      y1Values.push(temp);
+      y1Values.push(yData);
     }
     this.y1Values = y1Values;
-    this.xValues = Array.from(xValues.values());
-    Object.keys(tableData).forEach(date => {
+
+    // populating the table data
+    Object.keys(dataByTime).forEach(date => {
       let temp = [];
       temp.push(date);
-      let result = temp.concat(tableData[date]);
+      let result = temp.concat(dataByTime[date]);
       this.tableData.push(result);
     });
     this.chartReady = true;
@@ -67,5 +74,15 @@ export class FunStatsComponent implements OnInit {
 
   showTables(): void {
     this.showTable = !this.showTable;
+  }
+
+  findUniqueTimeStamps(): void {
+    for (let series of this.data.collection) {
+      Object.keys(series.data).forEach(dateTime => {
+          if (!this.uniqueTimeStamps.has(dateTime)) {
+            this.uniqueTimeStamps.add(dateTime);
+          }
+      });
+    }
   }
 }

@@ -13,6 +13,7 @@ import {RegisteredAsset} from "../../../regression/definitions";
 export class BamComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
   @Input() selectedAsset: RegisteredAsset = null;
+  @Input() title: string = null;
   data: any = null;
   parsedData: any = {};
   suiteExecutionId: number = null;
