@@ -362,7 +362,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     fun_test.sleep("waiting for API server to be up", 10)
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
-            fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 10)
+            fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
             # If fresh install, configure dataplane ip as database is cleaned up
             if self.install == "fresh":
                 # Getting all the DUTs of the setup
