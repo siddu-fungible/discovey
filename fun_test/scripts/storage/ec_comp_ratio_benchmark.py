@@ -62,7 +62,7 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_f1_index = None
             self.f1_in_use = 0
             self.command_timeout = 30
-            self.reboot_timeout = 480
+            self.reboot_timeout = 500
         else:
             for k, v in config_dict["GlobalSetup"].items():
                 setattr(self, k, v)
