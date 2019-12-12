@@ -111,74 +111,6 @@ class Fpga(Linux):
         return True
 
 
-class BmcMaintenanceWorker(Thread):
-    MAX_ARCHIVES = 10
-    FREQUENCY = 2 * 60
-
-    def __init__(self, fs, bmc, context, max_file_size=1024 * 1024 * 10):
-        super(BmcMaintenanceWorker, self).__init__()
-        self.fs = fs
-        self.bmc = bmc
-        self.context = context
-        self.archive_index = 0
-        self.max_file_size = max_file_size
-        self.stopped = False
-
-    def run(self):
-        bmc = None
-        try:
-            while not self.stopped and not fun_test.closed:
-                bmc = self.fs.get_bmc()
-                fun_test.log("BmcMaintenanceWorker")
-                for f1_index in range(2):
-                    if f1_index == self.fs.disable_f1_index:
-                        continue
-                    log_files = bmc.list_files(bmc.get_f1_uart_log_file_name(f1_index=f1_index))
-                    for log_file in log_files:
-                        file_name = log_file["filename"]
-                        stat = self.bmc.stat(file_name)
-                        fun_test.log("Current size: {} max_size: {}".format(stat["size"], self.max_file_size))
-                        if int(stat["size"]) >= self.max_file_size:
-                            fun_test.log("{} UART log exceeded max file size".format(self.context))
-                            bmc.command("cd /tmp")
-                            archive_file_name = "{}.tgz".format(file_name)
-                            bmc.command("tar -cvzf {} {}".format(archive_file_name, file_name))
-                            bmc.command("echo 'Archived' > {}".format(file_name))
-                            bmc.list_files(file_name)
-
-                            artifact_file_name = fun_test.get_test_case_artifact_file_name(
-                                "{}_{}_{}_archived.tgz".format(self.context, f1_index, self.archive_index))
-                            fun_test.scp(source_ip=bmc.host_ip,
-                                         source_file_path=archive_file_name,
-                                         source_username=bmc.ssh_username,
-                                         source_password=bmc.ssh_password,
-                                         target_file_path=artifact_file_name)
-                            fun_test.add_auxillary_file(description="{}_f1_{}_{}".format(self.context,
-                                                                                         f1_index,
-                                                                                         self.archive_index),
-                                                        filename=artifact_file_name)
-                            bmc.command("rm {}".format(archive_file_name))
-                            bmc.command("echo 'Archived' > {}".format(file_name))
-
-                            self.archive_index += 1
-                            if self.archive_index > self.MAX_ARCHIVES:
-                                fun_test.critical(
-                                    "Max archives: {} exceeded. Resetting micrcocom".format(self.MAX_ARCHIVES))
-                                bmc._reset_microcom()
-                fun_test.sleep(message="BMC Maintenance", seconds=self.FREQUENCY)
-                bmc.disconnect()
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        finally:
-            if bmc:
-                bmc.disconnect()
-        if bmc:
-            bmc.disconnect()
-
-    def stop(self):
-        self.stopped = True
-
-
 class Bmc(Linux):
     # UART_LOG_LISTENER_FILE = "uart_log_listener.py"
     UART_LOG_LISTENER_FILE = "uart_log_listener2.py"
@@ -374,6 +306,19 @@ class Bmc(Linux):
                     continue
                 self.kill_serial_proxies(f1_index=f1_index)
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
+
+        self.command("ps -ef | grep micro")
+        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+
+    def stop_bundle_f1_logs(self):
+        if self.bundle_compatible:
+            for f1_index in range(2):
+                if f1_index == self.disable_f1_index:
+                    continue
+                self.kill_serial_proxies(f1_index=f1_index)
+            self.command("{} stop".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("ps -ef | grep micro")
+        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
@@ -670,6 +615,11 @@ class Bmc(Linux):
             self.kill_process(signal=9, process_id=process_id, kill_seconds=2)
 
     def position_support_scripts(self, auto_boot=False):
+        try:
+            self.stop_bundle_f1_logs()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
         if not self.bundle_compatible or not auto_boot:
             self._reset_microcom()
         pyserial_filename = "pyserial-install.tar"
@@ -2106,10 +2056,6 @@ class Fs(object, ToDictMixin):
                 #    self.fs.fun_cp_callback(self.fs.get_come())
                 self.come_initialized = True
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COMPLETE)
-                if not self.bmc_maintenance_threads:
-                    if not self.bundle_compatible:
-                        bmc_maintenance_thread = BmcMaintenanceWorker(fs=self, bmc=self.get_bmc().clone(),
-                                                                      context=self._get_context_prefix(""))
                         # bmc_maintenance_thread.start()
                         # self.bmc_maintenance_threads.append(bmc_maintenance_thread)
             else:
@@ -2156,16 +2102,6 @@ class Fs(object, ToDictMixin):
         fun_test.log(message="Boot-phase: {}".format(self.get_boot_phase()), context=self.context)
 
         ready = self.boot_phase == BootPhases.FS_BRING_UP_COMPLETE
-        try:
-            if ready:
-                if not self.bundle_compatible:
-                    bmc_maintenance_thread = BmcMaintenanceWorker(fs=self,
-                                                                  bmc=self.get_bmc().clone(),
-                                                                  context=self._get_context_prefix(""))
-                    # bmc_maintenance_thread.start()
-                    # self.bmc_maintenance_threads.append(bmc_maintenance_thread)
-        except Exception as ex:
-            fun_test.critical(str(ex))
         return ready
 
     def is_come_ready(self):
