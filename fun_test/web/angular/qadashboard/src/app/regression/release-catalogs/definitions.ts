@@ -32,7 +32,7 @@ export class ReleaseCatalogExecution extends Api {
   recurring: boolean = true;
   release_train: string = "master";
   master_execution_id: number = null;
-  suiteExecutions: ReleaseSuiteExecution [] = [];
+  suite_executions: ReleaseSuiteExecution [] = [];
 
   /*
   deSerialize(data: any) {
@@ -74,7 +74,7 @@ export class ReleaseCatalogExecution extends Api {
       description: this.description,
       recurring: this.recurring,
       release_train: this.release_train,
-      suite_executions: this.suiteExecutions.map(suiteElement => suiteElement.serialize())
+      suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize())
     }
   }
 

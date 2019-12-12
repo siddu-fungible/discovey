@@ -1,10 +1,37 @@
 <div class="component">
   <fun-spinner [status]="status"></fun-spinner>
-  <app-section-header *ngIf="!status"
-    [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
-    [subText2]="'Owner: ' + releaseCatalogExecution.owner"
-                      [staticTitle]="'Release: '"
-    [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
-  </app-section-header>
+  <ng-container *ngIf="!status">
+    <app-section-header
+      [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
+      [subText2]="'Owner: ' + releaseCatalogExecution.owner"
+                        [staticTitle]="'Release: '"
+      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
+    </app-section-header>
+
+    <h6>Suites</h6>
+    <app-section-horizontal-line></app-section-horizontal-line>
+    <ng-container *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
+      {{ suite_execution.suite_id }}:
+      <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>
+      </div>
+      <span>
+        &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
+      </span>
+      <div>Test-bed: {{ suite_execution.test_bed_name }} Scripts: {{ suite_execution?.suite_details?.entries.length }}&nbsp;<span class="fun-action-link" (click)="showingScripts = !showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span></div>
+      <table *ngIf="showingScripts" [@show] class="fun-table">
+        <tr>
+          <td class="fun-table-header">
+            Script path
+          </td>
+        </tr>
+        <tr *ngFor="let entry of suite_execution?.suite_details?.entries">
+          <td>{{ entry.script_path }}</td>
+        </tr>
+      </table>
+
+    </ng-container>
+
+
+  </ng-container>
 
 </div>

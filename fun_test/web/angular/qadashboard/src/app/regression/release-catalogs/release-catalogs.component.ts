@@ -102,7 +102,7 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
     this.selectedReleaseCatalog = this.releaseCatalogs[index];
     let allObservables = this.selectedReleaseCatalog.suites.map((suite) => {
       return this.suiteEditorService.suite(suite.id).pipe(switchMap(response => {
-        this.releaseCatalogExecution.suiteExecutions.push(new ReleaseSuiteExecution({suite_id: suite.id, suite_details: response}));
+        this.releaseCatalogExecution.suite_executions.push(new ReleaseSuiteExecution({suite_id: suite.id, suite_details: response}));
         return of(true);
       }))});
 
