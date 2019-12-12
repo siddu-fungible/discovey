@@ -11,6 +11,15 @@
             "gph_index" : 1,
             "enable" : true
         },
+      {
+            "name" : "fpg8",
+            "mtu": 9000,
+            "address" : "9.1.1.2",
+            "prefix length" : 24,
+            "spine_index" : 1,
+            "gph_index" : 1,
+            "enable" : true
+        },
 	{
 	    "name" : "lo:0",
 	    "address" : "7.7.7.7",
@@ -27,8 +36,8 @@
     "BGP" : {
 	"Local AS": 62011,
 	"Neighbors" : [
-	    { "peer" : "7.1.1.1", "peer-as": 62010}
-
+	    { "peer" : "7.1.1.1", "peer-as": 62010},
+        { "peer" : "9.1.1.1", "peer-as": 62010}
 	]
     }
 }
