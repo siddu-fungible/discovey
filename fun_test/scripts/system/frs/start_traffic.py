@@ -1520,6 +1520,8 @@ class FrsTestCase(FunTestCase):
                 self.elasticsearch_config["ip"] = job_inputs["ip"]
             if "upload_to_file" in job_inputs:
                 self.upload_to_file["ip"] = job_inputs["upload_to_file"]
+            if "disable_f1_index" in job_inputs:
+                self.disable_f1_index = job_inputs["disable_f1_index"]
 
 
     def initialize_variables(self):
