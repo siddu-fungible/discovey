@@ -685,6 +685,10 @@ tr.text-center > th {
 
 }
 
+.fun-button-with-icon:focus {
+  outline: none !important;
+}
+
 .fun-button-with-icon-selected {
   background: grey;
   color: white;

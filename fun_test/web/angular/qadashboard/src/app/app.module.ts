@@ -104,6 +104,8 @@ import { VpUtilizationComponent } from './statistics/system/vp-utilization/vp-ut
 import { BrokerTestComponent } from './mq-broker/broker-test/broker-test.component';
 import { PerformanceAttachDagComponent } from "./performance/performance-workspace/performance-view-workspace/performance-attach-dag/performance-attach-dag.component";
 import { ReleaseDetailComponent } from './regression/release-detail/release-detail.component';
+import { FunStatsComponent } from './statistics/fun-stats/fun-stats.component';
+import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-table.component';
 
 
 @NgModule({
@@ -189,7 +191,9 @@ import { ReleaseDetailComponent } from './regression/release-detail/release-deta
     VpUtilizationComponent,
     BrokerTestComponent,
     PerformanceAttachDagComponent,
-    ReleaseDetailComponent
+    ReleaseDetailComponent,
+    FunStatsComponent,
+    FunStatsTableComponent
   ],
   imports: [
     BsDropdownModule,

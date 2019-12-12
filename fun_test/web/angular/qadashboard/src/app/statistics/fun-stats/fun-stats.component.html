@@ -1,0 +1,15 @@
+<div *ngIf="chartReady" class="fun-flex-container">
+  <div class="fun-flex-item stats-div" [@show]>
+    <div>
+      <button style="float: right;" class="fun-button-with-icon"
+              [ngClass]="{'fun-button-with-icon-selected': showTable}"
+              (click)="showTables()"><i class="fa fa-table"></i> Show tables
+      </button>
+      <fun-chart [title]=title [xAxisLabel]=xAxisLabel
+                 [y1AxisLabel]=y1AxisLabel [y1Values]=y1Values [xValues]="xValues"></fun-chart>
+    </div>
+  </div>
+  <div *ngIf=showTable class="fun-flex-item stats-div" [@show] style="overflow: scroll">
+    <fun-stats-table [tableData]="tableData" [tableHeaders]="tableHeaders"></fun-stats-table>
+  </div>
+</div>
