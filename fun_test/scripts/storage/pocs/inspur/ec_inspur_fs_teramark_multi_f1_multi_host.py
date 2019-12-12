@@ -483,15 +483,15 @@ class ECVolumeLevelScript(FunTestScript):
 
         if deploy_thread_started:
             fun_test.log("Deploy Thread IDs: {}".format(deploy_thread_id))
-            for index in xrange(self.num_duts):
+            for index in deploy_thread_id:
                 try:
                     fun_test.log("Joining deploy thread for DUT {}".format(index))
                     fun_test.join_thread(fun_test_thread_id=deploy_thread_id[index], sleep_time=1)
-                    fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
-                                                                          fun_test.shared_variables["funcp_deploy"][index]))
+                    fun_test.log("Deploy Output from DUT {}:\n {}".
+                                 format(index, fun_test.shared_variables["funcp_deploy"][index]))
                 except Exception as ex:
-                    fun_test.log("Deploy Output from DUT {}:\n {}".format(index,
-                                                                          fun_test.shared_variables["funcp_deploy"][index]))
+                    fun_test.log("Deploy Output from DUT {}:\n {}".
+                                 format(index, fun_test.shared_variables["funcp_deploy"][index]))
                     fun_test.critical(str(ex))
                 self.funcp_spec[index] = fun_test.shared_variables["funcp_deploy"][index]
                 fun_test.test_assert(self.funcp_spec[index]["status"],
