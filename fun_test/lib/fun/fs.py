@@ -1597,6 +1597,7 @@ class F1InFs:
         self.serial_device_path = serial_device_path
         self.serial_sbp_device_path = serial_sbp_device_path
         self.dpc_port = None
+        self.hbm_dump_complete = False
 
 
     def get_dpc_client(self, auto_disconnect=False, statistics=None, csi_perf=None):
@@ -1891,11 +1892,14 @@ class Fs(object, ToDictMixin):
         self.get_bmc().cleanup()
 
         if self.errors_detected:
-            for f1_index in range(self.NUM_F1S):
+            for f1_index, f1 in self.f1s.iteritems():
                 try:
                     if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
                         continue
+                    if f1.hbm_dump_complete:
+                        continue
                     fun_test.log("Errors were detected. Starting HBM dump")
+                    f1.hbm_dump_complete = True
                     self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
