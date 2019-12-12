@@ -341,8 +341,8 @@ class MyScript(FunTestScript):
         #     self.add_boot_arg)
         # f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
         #     self.add_boot_arg)
-        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats'
-        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats'
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats syslog=3'
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats syslog=3'
 
         topology_helper = TopologyHelper()
         if self.disable_f1_index == 0 or self.disable_f1_index == 1:
