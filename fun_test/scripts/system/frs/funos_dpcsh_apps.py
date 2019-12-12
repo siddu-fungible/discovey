@@ -17,7 +17,13 @@ class ParsingFunos(FrsTestCase):
         self.stop_collection_of_stats_for_count(count=1)
         self.run_the_traffic()
         self.start_collecting_stats(heading="During traffic")
-        fun_test.sleep("For the apps to stop", seconds=self.duration + 20)
+        # fun_test.sleep("For the apps to stop", seconds=self.duration + 20)
+        timer = FunTimer(max_time=self.duration + 20)
+        while not timer.is_expired():
+            if not fun_test.shared_variables["stat_collection_threads_status"]:
+                fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
+            else:
+                fun_test.sleep("Check if the stats are being collected", seconds=60)
         self.stop_traffic()
         self.stop_collection_of_stats()
 

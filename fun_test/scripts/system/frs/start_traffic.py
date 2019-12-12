@@ -2047,6 +2047,9 @@ class FrsTestCase(FunTestCase):
                         fun_test.shared_variables["stat_{}_f1_{}".format(stat_name, f1)]["run_status"] = False
                         fun_test.log("Sent a signal to stop the stat: {}".format(stat_name))
 
+        if not fun_test.shared_variables["stat_collection_threads_status"]:
+            fun_test.test_assert(False, "Stats collection has failed: Mainly because of DPCSH failure")
+
         for thread_name, thread_id in self.stats_thread_map.iteritems():
             fun_test.join_thread(thread_id)
 
