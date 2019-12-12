@@ -79,9 +79,7 @@ export class FunStatsComponent implements OnInit {
   findUniqueTimeStamps(): void {
     for (let series of this.data.collection) {
       Object.keys(series.data).forEach(dateTime => {
-          if (!this.uniqueTimeStamps.has(dateTime)) {
-            this.uniqueTimeStamps.add(dateTime);
-          }
+        this.uniqueTimeStamps.add(dateTime);
       });
     }
   }
