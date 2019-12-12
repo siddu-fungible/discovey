@@ -1,5 +1,5 @@
 <div class="fun-flex-container">
-  <div class="fun-flex-item panel fun-panel">
+  <div class="fun-flex-item panel fun-panel" style="width: 100%;">
     <div class="fun-panel-header">
       <span><span style="font-size: 1.5rem; font-weight: 500;">{{ title }}</span>
         <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showTable}"
@@ -61,7 +61,7 @@
       </div>
     </div>
   </div>
-  <div *ngIf=showTable class="fun-flex-item fun-panel">
+  <div *ngIf=showTable class="fun-flex-item fun-panel" style="width: 40%">
     <div class="fun-panel-body" [@show] style="height: 700px; overflow: scroll">
       <fun-stats-table [tableData]="tableData" [tableHeaders]="tableHeaders"></fun-stats-table>
     </div>
