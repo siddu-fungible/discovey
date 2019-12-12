@@ -11,6 +11,7 @@ export class TextareaInputComponent implements OnInit {
   @Input() hoverHide: boolean = true; // The pencil shows only if you hover
   @Input() editable: boolean = true;
   @Input() required: boolean = false;
+  @Input() h4: boolean = false;
   tempValue: string = null;
   editing: boolean = false;
   @Output() valueChanged = new EventEmitter<string>();

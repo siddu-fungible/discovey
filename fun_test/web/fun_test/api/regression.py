@@ -727,6 +727,16 @@ def release_catalog_executions(request, id):
                 result = map(lambda x: x.to_dict(), executions)
             else:
                 result = executions[0].to_dict()
+    if request.method == "PUT":
+        request_json = json.loads(request.body)
+        q = Q(id=int(id))
+        execution = ReleaseCatalogExecution.objects.get(q)
+        for key, value in request_json.iteritems():
+            if hasattr(execution, key):
+                setattr(execution, key, value)
+        execution.save()
+        result = execution.to_dict()
+
     return result
 
 if __name__ == "__main__":

@@ -1,4 +1,22 @@
-<h5>{{ title }}</h5>
+<ng-container *ngIf="!editable">
+  <h5>{{ title }}</h5>
+</ng-container>
+<ng-container *ngIf="editable">
+  <div [ngClass]="{'hover-cell': hoverHide}">
+    <h5 [innerHtml]="staticTitle| safeHtml"></h5>
+    <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
+    <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
+  </div>
+  <div *ngIf="editing" style="align-self: stretch">
+    <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;" [ngClass]="{'focus-text-area': editing }"></textarea>
+    <div >
+      <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitClick()"></i></span>
+      <span><i class="fa fa-times fa-fw close-color" (click)="onCancelClick()"></i></span>
+    </div>
+  </div>
+</ng-container>
+
+
 <div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
 <div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
 <app-section-horizontal-line></app-section-horizontal-line>

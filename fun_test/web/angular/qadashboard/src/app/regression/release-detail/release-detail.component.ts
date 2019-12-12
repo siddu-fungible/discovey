@@ -13,6 +13,8 @@ import {ReleaseCatalogExecution} from "../release-catalogs/definitions";
 })
 export class ReleaseDetailComponent implements OnInit {
   executionId: number = null;
+  status: string = null;
+  editing: boolean = false;
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService) { }
@@ -29,8 +31,10 @@ export class ReleaseDetailComponent implements OnInit {
       if (params['executionId']) {
         this.executionId = params.executionId;
       }
+      this.status = "Fetching catalog execution";
       return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({execution_id: this.executionId}));
     })).pipe(switchMap(response => {
+      this.status = null;
       return of(true)
     })).pipe(switchMap(response => {
       return of(true);
@@ -45,6 +49,17 @@ export class ReleaseDetailComponent implements OnInit {
     }, error => {
       this.logger.error(`release-detail`, error);
     })
+  }
+
+  descriptionChangedCallback(newDescription) {
+    let originalDescription = this.releaseCatalogExecution.description;
+    this.releaseCatalogExecution.description = newDescription;
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({execution_id: this.executionId})).subscribe(response => {
+
+    }, error => {
+      this.logger.error(`release-detail`, error);
+    });
+
   }
 
 }

@@ -75,7 +75,14 @@ export abstract class Api {
   public deleteAll() {
   }
 
-  public update() {
+  public update(url) {
+    return this.apiService.put(url, this.serialize()).pipe(switchMap(response => {
+      this.deSerialize(response.data);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to put: ${this.constructor.name}`, error);
+      return throwError(error);
+    }))
   }
 
 }

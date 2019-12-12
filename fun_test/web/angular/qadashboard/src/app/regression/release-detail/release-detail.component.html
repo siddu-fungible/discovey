@@ -1,10 +1,10 @@
 <div class="component">
-
-  <app-section-header
+  <fun-spinner [status]="status"></fun-spinner>
+  <app-section-header *ngIf="!status"
     [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
     [subText2]="'Owner: ' + releaseCatalogExecution.owner"
-    [title]="'Release: ' + releaseCatalogExecution.description"></app-section-header>
-  <span class="fun-attribute-label">Owner </span>{{ releaseCatalogExecution.owner }}
-
+                      [staticTitle]="'Release: '"
+    [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
+  </app-section-header>
 
 </div>
