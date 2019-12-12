@@ -1924,7 +1924,7 @@ class Fs(object, ToDictMixin):
             if self.errors_detected:
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
-            fun_test.simple_assert(self.errors_detected, "Error detected")
+            fun_test.simple_assert(not self.errors_detected, "Error detected")
         return True
 
     def get_f1_0(self):
