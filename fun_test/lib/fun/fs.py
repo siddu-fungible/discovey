@@ -422,7 +422,6 @@ class Bmc(Linux):
                                       write_on_trigger=write_on_trigger,
                                       read_buffer=20)
 
-
         return True
 
     def get_preamble(self, f1_index):
@@ -814,18 +813,7 @@ class Bmc(Linux):
                          source_password=self.ssh_password,
                          target_file_path=artifact_file_name,
                          timeout=240)
-            """
-            if not self.bundle_compatible:
-                mode = "r+"
-                if not os.path.exists(artifact_file_name):
-                    mode = "a+"
-                with open(artifact_file_name, mode) as f:
-                    content = f.read()
-                    f.seek(0, 0)
-                    f.write(self.u_boot_logs[f1_index] + '\n' + content)
-            
-            elif self.bundle_compatible and self.fs.tftp_image_path:
-            """
+
             if self.fs.tftp_image_path:
                 u_boot_artifact_file_name = fun_test.get_test_case_artifact_file_name(
                     self._get_context_prefix("f1_{}_tftpboot_u_boot_log.txt".format(f1_index)))
@@ -871,10 +859,12 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        for f1_index in range(self.NUM_F1S):
-            if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
-                continue
-            fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
+        # for f1_index in range(self.NUM_F1S):
+        #    if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
+        #        continue
+        # if post_processing_error_found:
+        #    pass
+        # fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
 
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
@@ -897,7 +887,9 @@ class Bmc(Linux):
 
         except Exception as ex:
             fun_test.critical(ex)
-        fun_test.simple_assert(not regex_found, "UART log contains: {}".format(regex_found))
+        if regex_found and self.fs:
+            self.fs.errors_detected.append("UART log contains: {}".format(regex_found))
+        # fun_test.simple_assert(not regex_found, "UART log contains: {}".format(regex_found))
 
     def get_f1_device_paths(self):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
@@ -1782,6 +1774,8 @@ class Fs(object, ToDictMixin):
         self.register_all_statistics()
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
+
+        self.errors_detected = []
         fun_test.register_fs(self)
 
     def enable_statistics(self, enable):
@@ -1896,6 +1890,15 @@ class Fs(object, ToDictMixin):
         self.get_come().cleanup()
         self.get_bmc().cleanup()
 
+        if self.errors_detected:
+            for f1_index in range(self.NUM_F1S):
+                try:
+                    if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
+                        continue
+                    fun_test.log("Errors were detected. Starting HBM dump")
+                    self.get_come().hbm_dump(f1_index=f1_index)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
         try:
             for maintenance_thread in self.bmc_maintenance_threads:
                 maintenance_thread.stop()
@@ -1913,6 +1916,11 @@ class Fs(object, ToDictMixin):
             fun_test.log(message="ComE disconnect", context=self.context)
         except:
             pass
+        finally:
+            if self.errors_detected:
+                for error_detected in self.errors_detected:
+                    fun_test.critical("Error detected: {}".format(error_detected))
+            fun_test.simple_assert(self.errors_detected, "Error detected")
         return True
 
     def get_f1_0(self):

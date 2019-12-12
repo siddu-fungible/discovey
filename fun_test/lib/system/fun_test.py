@@ -123,6 +123,16 @@ class FunContext:
         return "Context: {}".format(self.context_id)
 
 
+class FunAlertLevel:
+    LEVEL_FATAL = 0   # Fatal
+    LEVEL_WARNING = 1  #
+
+
+class FunAlert:
+    def __init__(self, level, message):
+        self.level = level
+        self.message = message
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
