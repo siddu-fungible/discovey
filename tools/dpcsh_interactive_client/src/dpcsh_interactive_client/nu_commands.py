@@ -3304,6 +3304,7 @@ class PeekCommands(object):
                 try:
                     cmd = "stats/eqm"
                     result = self.dpc_client.execute(verb="peek", arg_list=[cmd])
+                    result = result["eqm_stats"]
                     if result:
                         if prev_result:
                             table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])

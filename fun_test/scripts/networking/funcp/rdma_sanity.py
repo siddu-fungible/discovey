@@ -185,6 +185,9 @@ class BringupSetup(FunTestCase):
                 result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
                 fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                          % server)
+                linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
+                linux_obj.sudo_command("netplan apply")
+
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
@@ -800,6 +803,10 @@ class IbBwSeqIoTest(FunTestCase):
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_type_list = fun_test.shared_variables["test_type"]
 
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+
         # Load RDMA modules
         f10_host_roce.rdma_setup()
         f11_host_roce.rdma_setup()
@@ -941,6 +948,10 @@ class IbLatSeqIoTest(FunTestCase):
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_type_list = fun_test.shared_variables["test_type"]
+
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()

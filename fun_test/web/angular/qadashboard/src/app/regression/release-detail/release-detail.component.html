@@ -1,10 +1,57 @@
 <div class="component">
   <fun-spinner [status]="status"></fun-spinner>
-  <app-section-header *ngIf="!status"
-    [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
-    [subText2]="'Owner: ' + releaseCatalogExecution.owner"
-                      [staticTitle]="'Release: '"
-    [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
-  </app-section-header>
+  <ng-container *ngIf="!status">
+    <app-section-header
+      [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
+      [subText2]="'Owner: ' + releaseCatalogExecution.owner"
+                        [staticTitle]="'Release: '"
+      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
+    </app-section-header>
+
+    <h6>Suites</h6>
+    <app-section-horizontal-line></app-section-horizontal-line>
+    <ng-container *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
+      {{ suite_execution.suite_id }}:
+      <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>
+      </div>
+      <span>
+        &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
+      </span>
+      <div>
+        <span>Test-bed: {{ suite_execution.test_bed_name }}
+          <span class="fun-action-link" (click)="modifyingTestBed = !modifyingTestBed">modify</span>
+
+
+          <ng-container *ngIf="modifyingTestBed">
+            <select  id="test-bed" [(ngModel)]="newTestBedName">
+              <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
+              </option>
+            </select>
+              <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitModifyTestBed(suite_execution, newTestBedName)"></i></span>
+              <span><i class="fa fa-times fa-fw close-color" (click)="onCancelModifyTestBed(suite_execution, newTestBedName)"></i></span>
+          </ng-container>
+
+
+        </span>
+        <span>
+          , Scripts: {{ suite_execution?.suite_details?.entries.length }}
+          <span class="fun-action-link" (click)="showingScripts = !showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
+        </span>
+      </div>
+      <table *ngIf="showingScripts" [@show] class="fun-table">
+        <tr>
+          <td class="fun-table-header">
+            Script path
+          </td>
+        </tr>
+        <tr *ngFor="let entry of suite_execution?.suite_details?.entries">
+          <td>{{ entry.script_path }}</td>
+        </tr>
+      </table>
+
+    </ng-container>
+
+
+  </ng-container>
 
 </div>
