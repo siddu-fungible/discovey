@@ -1237,14 +1237,13 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Random write performance for multiple hosts on TCP "
-                                      "with different levels of numjobs & iodepth & block size 4K",
+                              summary="Pre-commit Sanity. Create BLT - Attach - IO (Write & Read) - Detach - Delete",
                               steps='''
-        1. Create 1 BLT volumes on F1 attached
-        2. Create a storage controller for TCP and attach above volumes to this controller   
-        3. Connect to this volume from remote host
-        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
-        remote host and check the performance are inline with the expected threshold. 
+        1. Bring-up F1 with latest image and configure Dataplane IP 
+        2. Create 1 BLT volume with SC API
+        2. Attach volume to Remote host
+        4. Run the FIO Sequential write and Sequentail Read test from remote host
+        5. Detach and Delete the BLT volume
         ''')
 
     def setup(self):
