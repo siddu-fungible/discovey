@@ -511,11 +511,9 @@ class Bmc(Linux):
                             f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
-        self.u_boot_command(
-            command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
-
-        fun_test.add_checkpoint("BOOTARGS: {}".format(boot_args), context=self.context)
+        final_boot_args = self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)
+        self.u_boot_command(command="setenv bootargs {}".format(final_boot_args), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
+        fun_test.add_checkpoint("BOOTARGS: {}".format(final_boot_args), context=self.context)
 
         if mpg_ips:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_IPADDR)
