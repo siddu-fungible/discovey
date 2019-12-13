@@ -4,7 +4,7 @@ import {switchMap} from "rxjs/operators";
 import {concat, Observable, of} from "rxjs";
 import {LoggerService} from "../../services/logger/logger.service";
 import {RegressionService} from "../regression.service";
-import {ReleaseCatalogExecution} from "../release-catalogs/definitions";
+import {ReleaseCatalogExecution, ReleaseSuiteExecution} from "../release-catalogs/definitions";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
 
@@ -19,6 +19,10 @@ export class ReleaseDetailComponent implements OnInit {
   status: string = null;
   editing: boolean = false;
   showingScripts: boolean = false;
+  modifyingTestBed: boolean = false;
+  newTestBedName: string = null;
+  testBeds = [];
+  suiteMap: {[suite_id: number]: Suite} = {};
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
@@ -41,8 +45,9 @@ export class ReleaseDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this.fetchSuiteDetails();
       this.status = null;
-      return of(true)
+      return this.regressionService.fetchTestbeds(true);
     })).pipe(switchMap(response => {
+      this.testBeds = response;
       return of(true);
     }));
 
@@ -50,17 +55,31 @@ export class ReleaseDetailComponent implements OnInit {
   }
 
   fetchSuiteDetails() {
-    let allObservables: Observable <boolean>[] = this.releaseCatalogExecution.suite_executions.map(suiteExecution => this.suiteEditorService.suite(suiteExecution.suite_id).pipe(switchMap(response => {
-      suiteExecution.suite_details = new Suite(response);
-      return of(true);
-    })));
+    if (this.releaseCatalogExecution.suite_executions) {
+      let allObservables: Observable <any>[] = this.releaseCatalogExecution.suite_executions.map(suiteExecution => {
 
-    concat(...allObservables).subscribe(response => {
+        if (!this.suiteMap.hasOwnProperty(suiteExecution.suite_id)) {
+          return this.suiteEditorService.suite(suiteExecution.suite_id).pipe(switchMap(response => {
+            let newSuite: Suite = new Suite(response);
+            suiteExecution.suite_details = newSuite;
+            this.suiteMap[newSuite.id] = newSuite;
+            return of(true);
+          }));
 
-    }, error => {
-      this.logger.error(`Unable to fetch suite information`, error);
-    })
+        } else {
+          suiteExecution.suite_details = this.suiteMap[suiteExecution.suite_id];
+          return of(true);
+        }
 
+
+      });
+
+      concat(...allObservables).subscribe(response => {
+
+      }, error => {
+        this.logger.error(`Unable to fetch suite information`, error);
+      })
+    }
   }
   refresh() {
     this.driver.subscribe(response => {
@@ -81,6 +100,20 @@ export class ReleaseDetailComponent implements OnInit {
 
   }
 
+  onSubmitModifyTestBed(suiteExecution) {
+    suiteExecution.test_bed_name = this.newTestBedName;
+    let originalSuiteExecutions = this.releaseCatalogExecution.suite_executions;
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({execution_id: this.executionId})).subscribe(response => {
+      this.modifyingTestBed = false;
+      this.releaseCatalogExecution.suite_executions = originalSuiteExecutions;
+    }, error => {
+      this.logger.error(`release-detail`, error);
+      this.modifyingTestBed = false;
 
+    });
+  }
 
+  onCancelModifyTestBed(suiteExecution) {
+    this.modifyingTestBed = false;
+  }
 }

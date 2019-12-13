@@ -17,7 +17,27 @@
       <span>
         &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
       </span>
-      <div>Test-bed: {{ suite_execution.test_bed_name }} Scripts: {{ suite_execution?.suite_details?.entries.length }}&nbsp;<span class="fun-action-link" (click)="showingScripts = !showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span></div>
+      <div>
+        <span>Test-bed: {{ suite_execution.test_bed_name }}
+          <span class="fun-action-link" (click)="modifyingTestBed = !modifyingTestBed">modify</span>
+
+
+          <ng-container *ngIf="modifyingTestBed">
+            <select  id="test-bed" [(ngModel)]="newTestBedName">
+              <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
+              </option>
+            </select>
+              <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitModifyTestBed(suite_execution, newTestBedName)"></i></span>
+              <span><i class="fa fa-times fa-fw close-color" (click)="onCancelModifyTestBed(suite_execution, newTestBedName)"></i></span>
+          </ng-container>
+
+
+        </span>
+        <span>
+          , Scripts: {{ suite_execution?.suite_details?.entries.length }}
+          <span class="fun-action-link" (click)="showingScripts = !showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
+        </span>
+      </div>
       <table *ngIf="showingScripts" [@show] class="fun-table">
         <tr>
           <td class="fun-table-header">

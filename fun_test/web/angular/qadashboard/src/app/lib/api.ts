@@ -5,13 +5,23 @@ import {LoggerService} from "../services/logger/logger.service";
 import {AppInjector} from "../app-injector";
 
 export abstract class Api {
-  abstract url: string = null;
+  url: string = null;
   abstract classType: any = null;
+  deserializationHooks = {};
 
   abstract serialize(): any;
   public deSerialize(data: any): any {
     Object.keys(data).forEach(key => {
-      this[key] = data[key];
+      let value = this[key];
+      if (this.deserializationHooks.hasOwnProperty(key)) {
+        try {
+          this[key] = this.deserializationHooks[key](data[key]);
+        } catch (e) {
+          this[key] = data[key];
+        }
+      } else {
+        this[key] = data[key];
+      }
     });
     return this;
   }
