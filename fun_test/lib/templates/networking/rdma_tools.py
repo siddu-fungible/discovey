@@ -421,3 +421,19 @@ class Rocetools:
                 pass
         self.host.disconnect()
         return device_info_dict
+
+    def ping_check(self, ip, count=5):
+        result = True
+        output = self.host.command("ping {} -c {}".format(ip, count), timeout=count*2)
+        m = re.search(r'(\d+)%\s+packet\s+loss', output)
+        if m:
+            percentage_loss = int(m.group(1))
+            if percentage_loss <= 1:
+                result &= True
+            else:
+                result &= False
+        self.host.disconnect()
+        if result:
+            fun_test.log("Can reach %s".format(ip))
+        else:
+            fun_test.test_assert(False, "Cannot ping host %s".format(ip))
