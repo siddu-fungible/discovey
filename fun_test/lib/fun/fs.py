@@ -309,6 +309,9 @@ class Bmc(Linux):
 
         self.command("ps -ef | grep micro")
         self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("cat /tmp/f1_0_logpid")
+        self.command("cat /tmp/f1_1_logpid")
+
 
     def stop_bundle_f1_logs(self):
         try:
@@ -321,6 +324,8 @@ class Bmc(Linux):
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
         self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("cat /tmp/f1_0_logpid")
+        self.command("cat /tmp/f1_1_logpid")
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
@@ -876,8 +881,10 @@ class Bmc(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             if self.bundle_compatible:
-                file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
-                self.command("echo 'Cleared' > {}".format(file_name))
+                self.stop_bundle_f1_logs()
+                # self.start_bundle_f1_logs()
+                # file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
+                # self.command("echo 'Cleared' > {}".format(file_name))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
