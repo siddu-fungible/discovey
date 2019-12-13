@@ -7,7 +7,8 @@ import os
 
 class BuildHelper():
     FUN_OS_STRIPPED_IMAGE_NAME = "funos-f1.stripped"
-    STABLE_MASTER_DOCHUB_PATH = "http://dochub.fungible.local/doc/jenkins/funsdk/latest/Linux/funos.mips64-extra.tgz"
+    DOCHUB_LATEST_PATH = "http://dochub.fungible.local/doc/jenkins/funsdk/latest"
+    STABLE_MASTER_DOCHUB_PATH = "{}/Linux/funos.mips64-extra.tgz".format(DOCHUB_LATEST_PATH)
 
     def __init__(self,
                  parameters,
@@ -103,6 +104,7 @@ class BuildHelper():
             tmp_tgz_file_name = "{}/extra_remove_me.tgz".format(base_temp_directory)
             tmp_untar_directory = "{}/untar_extra_remove_me".format(base_temp_directory)
             tftp_server.command("cd /tmp; mkdir -p {}".format(tmp_untar_directory))
+            tftp_server.curl(url=self.DOCHUB_LATEST_PATH + "/bld_props.json")
             tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_PATH, output_file=tmp_tgz_file_name)
             fun_test.log(tmp_tgz_file_name)
             tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory, sudo=False)
