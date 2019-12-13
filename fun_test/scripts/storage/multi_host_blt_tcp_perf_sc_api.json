@@ -200,7 +200,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "multiple_jobs": "--rw=write --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 300
     },
     "fio_cmd_args": {
