@@ -883,8 +883,8 @@ class Bmc(Linux):
             if self.bundle_compatible:
                 self.stop_bundle_f1_logs()
                 # self.start_bundle_f1_logs()
-                # file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
-                # self.command("echo 'Cleared' > {}".format(file_name))
+                file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
+                self.command("echo 'Cleared' > {}".format(file_name))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
