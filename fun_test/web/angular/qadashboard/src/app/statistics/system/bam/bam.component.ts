@@ -28,6 +28,8 @@ export class BamComponent implements OnInit, OnChanges {
   showTable: boolean = false;
   showCharts: boolean = false;
   TIMEZONE: string = "America/Los_Angeles";
+  rawTableData: any[] = [];
+  rawTableHeaders: any[] = [];
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
@@ -53,13 +55,18 @@ export class BamComponent implements OnInit, OnChanges {
   }
 
   parseData(data) {
+    let headers = new Set();
+    headers.add("Time");
     this.data.forEach(oneRecord => {
+      let oneData = [];
       let oneRecordData = oneRecord.data;
       let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000, this.TIMEZONE);
-
+      oneData.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         let dataForF1Index = oneRecordData[f1Index];
+        headers.add("F1-" + f1Index);
+        oneData.push(dataForF1Index);
         if (!this.parsedData.hasOwnProperty(f1Index)) {
           this.parsedData[f1Index] = {};
         }
@@ -91,7 +98,9 @@ export class BamComponent implements OnInit, OnChanges {
           });
         });
       });
+      this.rawTableData.push(oneData);
     });
+    this.rawTableHeaders = Array.from(headers.values())
   }
 
 

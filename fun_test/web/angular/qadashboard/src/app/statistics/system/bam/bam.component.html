@@ -22,4 +22,9 @@
       </div>
     </div>
   </div>
+  <div *ngIf=showTable class="fun-flex-item fun-panel" style="width: 40%">
+    <div class="fun-panel-body" [@show] style="height: 700px; overflow: scroll">
+      <fun-stats-table [tableData]="rawTableData" [tableHeaders]="rawTableHeaders"></fun-stats-table>
+    </div>
+  </div>
 </div>
