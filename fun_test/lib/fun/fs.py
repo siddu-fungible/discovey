@@ -311,12 +311,14 @@ class Bmc(Linux):
         self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
 
     def stop_bundle_f1_logs(self):
-        if self.bundle_compatible:
+        try:
             for f1_index in range(2):
                 if f1_index == self.disable_f1_index:
                     continue
                 self.kill_serial_proxies(f1_index=f1_index)
             self.command("{} stop".format(self.FUNOS_LOGS_SCRIPT))
+        except Exception as ex:
+            fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
         self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
 
