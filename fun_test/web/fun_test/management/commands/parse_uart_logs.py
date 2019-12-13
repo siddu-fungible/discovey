@@ -24,8 +24,10 @@ for suite_directory_path in suite_directory_paths:
             contents = fp.read()
             m2 = re.search(r'CSR:MUH_MCI_NON_FATAL_INTR_STAT|CSR:FEP_.*_FATAL_INTR ', contents)
             if m2:
-                entries.append(Entry(uart_log_file_path=uart_log_file, found_string=m.group(0)))
+                new_entry = Entry(uart_log_file_path=uart_log_file, found_string=m2.group(0))
+                entries.append(new_entry)
+                print str(entry)
 
-
+print "All entries"
 for entry in entries:
     print str(entry)
