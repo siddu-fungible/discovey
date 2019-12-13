@@ -26,7 +26,7 @@ for suite_directory_path in suite_directory_paths:
             if m2:
                 new_entry = Entry(uart_log_file_path=uart_log_file, found_string=m2.group(0))
                 entries.append(new_entry)
-                print str(entry)
+                print str(new_entry)
 
 print "All entries"
 for entry in entries:
