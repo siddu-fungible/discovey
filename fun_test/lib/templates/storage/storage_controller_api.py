@@ -73,7 +73,7 @@ class StorageControllerApi(object):
         url = "topology/dpus/{}".format(dpu_id)
         data = {"op": "DPU_DP_IP", "node_id": dpu_id, "ip_assignment_dhcp": use_dhcp, "dataplane_ip": ip,
                 "subnet_mask": subnet_mask, "next_hop": next_hop}
-        fun_test.sleep("before firing the dataplane ip config commands", 30)
+        fun_test.sleep("before firing the dataplane ip config commands", 60)
         response = self.execute_api("PATCH", url, data)
         try:
             if response.ok:
