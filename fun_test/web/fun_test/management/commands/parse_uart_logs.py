@@ -16,7 +16,10 @@ class Entry:
 
 suite_directory_paths = glob.glob(LOGS_DIR + "/s_*")
 entries = []
+entry_count = 0
 for suite_directory_path in suite_directory_paths:
+    entry_count += 1
+
     uart_log_files = glob.glob(suite_directory_path + "/*uart*txt")
     for uart_log_file in uart_log_files:
         fp = open(uart_log_file, "r")
@@ -28,6 +31,7 @@ for suite_directory_path in suite_directory_paths:
                 entries.append(new_entry)
                 print str(new_entry)
 
+print "Searched count: {}".format(entry_count)
 print "All entries"
 for entry in entries:
     print str(entry)
