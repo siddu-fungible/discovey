@@ -1233,9 +1233,34 @@ class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
         super(MultiHostFioRandWrite, self).cleanup()
 
 
+class PreCommitSanity(MultiHostVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Random write performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(PreCommitSanity, self).setup()
+
+    def run(self):
+        super(PreCommitSanity, self).run()
+
+    def cleanup(self):
+        super(PreCommitSanity, self).cleanup()
+
+
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(PreCommitSanity())
     bltscript.run()
