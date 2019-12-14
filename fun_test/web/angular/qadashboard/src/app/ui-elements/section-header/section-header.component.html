@@ -27,6 +27,21 @@
 </ng-container>
 
 
-<div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
-<div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
+<div class="fun-flex-container">
+  <div class="fun-flex-item">
+    <div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
+    <div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
+  </div>
+  <div class="fun-flex-item">
+    <span style="display: inline-block" *ngIf="leftAlignedButtons && leftAlignedButtons.length > 0">
+      <button class="fun-button-with-icon" *ngFor="let button of leftAlignedButtons">
+        <i class="fa {{ button.classes }} {{ button.textClasses }}"></i>&nbsp;
+        <span class="{{ button.textClasses }}">{{ button.text }}</span>
+      </button>
+    </span>
+  </div>
+</div>
+
+
+
 <app-section-horizontal-line></app-section-horizontal-line>

@@ -8,6 +8,7 @@ import {ReleaseCatalogExecution, ReleaseSuiteExecution} from "../release-catalog
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
 import {ApiType} from "../../lib/api";
+import {ButtonType, FunButtonWithIcon} from "../../ui-elements/definitions";
 
 @Component({
   selector: 'app-release-detail',
@@ -24,13 +25,18 @@ export class ReleaseDetailComponent implements OnInit {
   newTestBedName: string = null;
   testBeds = [];
   addingSuites: boolean = false;
+  headerLeftAlignedButtons: FunButtonWithIcon [] = [];
+
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
   jobStatusTypes: ApiType = null;
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
-              private suiteEditorService: SuiteEditorService) { }
+              private suiteEditorService: SuiteEditorService) {
+
+    this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE, text: "delete"}));
+  }
   driver: any = null;
   releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
 

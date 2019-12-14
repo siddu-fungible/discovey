@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {ButtonType} from "../definitions";
 
 @Component({
   selector: 'app-section-header',
@@ -12,6 +13,7 @@ export class SectionHeaderComponent implements OnInit {
   @Input() subText2: string = null;
   @Input() editable: boolean = false;
   @Input() subSection: boolean = false;
+  @Input() leftAlignedButtons: ButtonType;
   @Output() editingCallback = new EventEmitter<string>();
   editing: boolean = false;
   hoverHide: boolean = true;

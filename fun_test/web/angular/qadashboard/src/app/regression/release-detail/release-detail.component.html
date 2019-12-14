@@ -5,7 +5,10 @@
       [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
       [subText2]="'Owner: ' + releaseCatalogExecution.owner"
                         [staticTitle]="'Release: '"
-      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
+      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"
+      [leftAlignedButtons]="headerLeftAlignedButtons"
+    >
+
     </app-section-header>
 
     <div class="fun-attribute" *ngIf="jobStatusTypes">

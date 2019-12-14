@@ -39,6 +39,8 @@ export class ReleaseCatalogExecution extends Api {
   ready_for_execution: boolean = false;
   master_execution_id: number = null;
   suite_executions: ReleaseSuiteExecution [] = [];
+  deleted: boolean = false;
+
   showingScripts: boolean = false;
   modifyingTestBed: boolean = false;
   customDeserializableProperties = ["suite_executions"];
