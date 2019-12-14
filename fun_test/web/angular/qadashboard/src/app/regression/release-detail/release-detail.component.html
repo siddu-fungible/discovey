@@ -26,7 +26,11 @@
       </div>
     </ng-container>
 
-    <h6 style="display: inline-block; padding: 0 10px">Suites</h6>    <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites</span>
+
+    <h6 style="display: inline-block; padding: 0 10px">Suites</h6>
+    <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites
+    </span>
+    <button class="fun-button-delete" (click)="deleteSuites()" *ngIf="atLeastOneSelected">Delete</button>
 
     <app-section-horizontal-line></app-section-horizontal-line>
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
@@ -37,6 +41,7 @@
         &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
       </span>
       <div>
+        <input type="checkbox" (click)="onSelectClicked()" [(ngModel)]="suite_execution.selected" [checked]="suite_execution.selected">&nbsp;
         <span>Test-bed: {{ suite_execution.test_bed_name }}
           <span class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
 
@@ -49,8 +54,6 @@
               <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitModifyTestBed(suite_execution, newTestBedName)"></i></span>
               <span><i class="fa fa-times fa-fw close-color" (click)="onCancelModifyTestBed(suite_execution, newTestBedName)"></i></span>
           </ng-container>
-
-
         </span>
         <span>
           , Scripts: {{ suite_execution?.suite_details?.entries.length }}

@@ -6,7 +6,7 @@ export class ReleaseSuiteExecution extends Api {
   suite_id: number;
   test_bed_name: string;
   suite_details: Suite;
-
+  selected: boolean = false;
   constructor(props) {
     super();
     Object.keys(props).forEach(key => {

@@ -24,6 +24,7 @@ export class ReleaseDetailComponent implements OnInit {
   testBeds = [];
   addingSuites: boolean = false;
   suiteMap: {[suite_id: number]: Suite} = {};
+  atLeastOneSelected: boolean = false;
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
@@ -138,4 +139,33 @@ export class ReleaseDetailComponent implements OnInit {
   cancelSuiteSelection() {
     this.addingSuites = false;
   }
+
+  checkAtLeastOneSelected() {
+    setTimeout(() => {
+      this.atLeastOneSelected = false;
+      for (let index = 0; index < this.releaseCatalogExecution.suite_executions.length; index++) {
+        if (this.releaseCatalogExecution.suite_executions[index].selected) {
+          this.atLeastOneSelected = true;
+          break;
+        }
+      }
+    }, 1);
+  }
+
+  onSelectClicked() {
+    this.checkAtLeastOneSelected();
+  }
+
+  deleteSuites() {
+    if(confirm("Are you sure you want to delete suite(s)?")) {
+      this.releaseCatalogExecution.suite_executions = this.releaseCatalogExecution.suite_executions.filter(suite_execution => !suite_execution.selected);
+      this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(() => {
+        this.checkAtLeastOneSelected();
+        this.fetchSuiteDetails();
+      }, error => {
+        this.logger.error(`Unable to delete suite(s)`, error);
+      })
+    }
+  }
+
 }

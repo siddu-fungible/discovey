@@ -647,6 +647,25 @@ tr.text-center > th {
   cursor: pointer;
 }
 
+.fun-button-delete {
+  padding: 6px 12px;
+  border: #ed3336 0.5px;
+  background-color: #ed3336;
+  color: white;
+  cursor: pointer;
+  /*min-width: 100px;*/
+  border-radius: 4px;
+  margin: 5px;
+  /*max-height: 30px;*/
+  vertical-align: middle;
+}
+
+.fun-button-delete:hover {
+  background-color: palevioletred;
+  color: white;
+  cursor: pointer;
+}
+
 .fun-button-submit {
   color: #fff;
   background-color: #28a745;
