@@ -27,9 +27,11 @@
 </ng-container>
 
 
+
+<div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
+
 <div class="fun-flex-container">
   <div class="fun-flex-item">
-    <div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
     <div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
   </div>
   <div class="fun-flex-item">
