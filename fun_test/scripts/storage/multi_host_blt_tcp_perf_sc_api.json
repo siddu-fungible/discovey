@@ -60,7 +60,7 @@
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
     "container_up_timeout": 60,
-    "api_server_up_timeout": 90
+    "api_server_up_timeout": 240
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,
