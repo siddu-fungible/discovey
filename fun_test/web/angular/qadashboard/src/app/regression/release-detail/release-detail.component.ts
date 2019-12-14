@@ -168,4 +168,13 @@ export class ReleaseDetailComponent implements OnInit {
     }
   }
 
+  execute() {
+    this.releaseCatalogExecution.ready_for_execution = true;
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(response => {
+      this.fetchSuiteDetails();
+    }, error => {
+      this.logger.error(`Unable to submit request for execution`, error);
+    })
+
+  }
 }

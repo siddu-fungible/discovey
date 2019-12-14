@@ -26,6 +26,7 @@
       </div>
     </ng-container>
 
+    <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
     <h6 style="display: inline-block; padding: 0 10px">Suites</h6>
     <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites

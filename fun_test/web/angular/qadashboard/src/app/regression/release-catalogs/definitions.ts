@@ -36,6 +36,7 @@ export class ReleaseCatalogExecution extends Api {
   description: string = "TBD";
   recurring: boolean = true;
   release_train: string = "master";
+  ready_for_execution: boolean = false;
   master_execution_id: number = null;
   suite_executions: ReleaseSuiteExecution [] = [];
   showingScripts: boolean = false;
@@ -56,7 +57,8 @@ export class ReleaseCatalogExecution extends Api {
       description: this.description,
       recurring: this.recurring,
       release_train: this.release_train,
-      suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize())
+      suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize()),
+      ready_for_execution: this.ready_for_execution
     }
   }
 
