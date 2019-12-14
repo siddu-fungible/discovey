@@ -8,8 +8,10 @@
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
     </app-section-header>
 
-
-
+    <div class="fun-attribute" *ngIf="jobStatusTypes">
+      State: <app-smart-label [value]="jobStatusTypes.descriptionMap[releaseCatalogExecution.state]"></app-smart-label>
+    </div>
+    <br>
     <ng-container *ngIf="addingSuites">
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -26,14 +28,13 @@
       </div>
     </ng-container>
 
-    <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
-    <h6 style="display: inline-block; padding: 0 10px">Suites</h6>
+    <app-section-header [title]="'Suites'" [subSection]="true"></app-section-header>
     <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites
     </span>
     <button class="fun-button-delete" (click)="deleteSuites()" *ngIf="atLeastOneSelected">Delete</button>
+    <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
-    <app-section-horizontal-line></app-section-horizontal-line>
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
       {{ suite_execution.suite_id }}:
       <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>

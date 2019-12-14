@@ -6,6 +6,7 @@ import {forkJoin, observable, Observable, of, throwError} from "rxjs";
 import {CommonService} from "../services/common/common.service";
 import {ReleaseCatalogSuite, ReleaseCatalog, RegisteredAsset} from "./definitions";
 import {Suite} from "./suite-editor/suite-editor.service";
+import {ApiType} from "../lib/api";
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ import {Suite} from "./suite-editor/suite-editor.service";
 export class RegressionService implements OnInit {
   CONSOLE_LOG_EXTENSION: string = ".logs.txt";  //TIED to scheduler_helper.py  TODO
   HTML_LOG_EXTENSION: string = ".html";         //TIED to scheduler_helper.py  TODO
+  jobStatusType: ApiType = null; //new ApiType();
   stateStringMap = {
     "-200": "UNKNOWN",  // TODO: fetch from the back-end
     "-100": "ERROR",
@@ -464,6 +466,20 @@ export class RegressionService implements OnInit {
       this.loggerService.error("Unable to fetch time series types", error);
       return throwError(error);
     }))
+  }
+
+  getJobStatusTypes() {
+    if (!this.jobStatusType) {
+      this.jobStatusType = new ApiType();
+      return this.jobStatusType.get("/api/v1/regression/job_status_types").pipe(switchMap(response => {
+        return of(this.jobStatusType);
+      }), catchError(error => {
+        this.loggerService.error(`Unable to getJobStatusTypes`, error);
+        return throwError(error);
+      }))
+    } else {
+      return of(this.jobStatusType);
+    }
   }
 
 }

@@ -1,10 +1,20 @@
 <ng-container *ngIf="!editable">
-  <h5>{{ title }}</h5>
+  <h5 *ngIf="!subSection">{{ title }}</h5>
+  <h6 *ngIf="subSection">{{ title }}</h6>
+
 </ng-container>
 <ng-container *ngIf="editable">
   <div [ngClass]="{'hover-cell': hoverHide}">
-    <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
-    <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
+    <ng-container *ngIf="!subSection">
+      <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
+      <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
+    </ng-container>
+    <ng-container *ngIf="subSection">
+      <h6 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h6>
+      <h6 [innerHtml]="title| safeHtml" style="display: inline-block"></h6>&nbsp;
+    </ng-container>
+
+
     <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
   </div>
   <div *ngIf="editing" style="align-self: stretch">

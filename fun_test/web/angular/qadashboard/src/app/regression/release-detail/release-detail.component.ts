@@ -7,6 +7,7 @@ import {RegressionService} from "../regression.service";
 import {ReleaseCatalogExecution, ReleaseSuiteExecution} from "../release-catalogs/definitions";
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
+import {ApiType} from "../../lib/api";
 
 @Component({
   selector: 'app-release-detail',
@@ -25,6 +26,7 @@ export class ReleaseDetailComponent implements OnInit {
   addingSuites: boolean = false;
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
+  jobStatusTypes: ApiType = null;
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
@@ -42,6 +44,9 @@ export class ReleaseDetailComponent implements OnInit {
       if (params['executionId']) {
         this.executionId = params.executionId;
       }
+      return this.regressionService.getJobStatusTypes();
+    })).pipe(switchMap(response => {
+      this.jobStatusTypes = response;
       this.status = "Fetching catalog execution";
       return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({id: this.executionId}));
     })).pipe(switchMap(response => {
