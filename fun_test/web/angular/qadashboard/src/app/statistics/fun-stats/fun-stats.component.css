@@ -2,3 +2,8 @@
   width: 500px;
   height: 500px;
 }
+
+.chart-border {
+  border: 1px solid rgba(0, 0, 0, .125);
+  border-radius: .25rem;
+}
