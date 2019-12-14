@@ -808,7 +808,7 @@ class Bmc(Linux):
                                  target_file_path=rotated_artifact_file_name,
                                  timeout=60)
 
-                    fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART rotated log compressed {}").format(f1_index, rotated_index),
+                    fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART rotated log compressed {} {}").format(f1_index, rotated_index, os.path.basename(rotated_log_filename)),
                                                 filename=rotated_artifact_file_name,
                                                 asset_type=asset_type,
                                                 asset_id=asset_id,
