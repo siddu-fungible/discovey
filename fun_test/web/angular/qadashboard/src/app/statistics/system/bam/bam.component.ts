@@ -27,7 +27,6 @@ export class BamComponent implements OnInit, OnChanges {
   detectedF1Indexes = new Set();
   showTable: boolean = false;
   showCharts: boolean = false;
-  TIMEZONE: string = "America/Los_Angeles";
   rawTableData: any[] = [];
   rawTableHeaders: any[] = [];
 
@@ -60,7 +59,7 @@ export class BamComponent implements OnInit, OnChanges {
     this.data.forEach(oneRecord => {
       let oneData = [];
       let oneRecordData = oneRecord.data;
-      let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000, this.TIMEZONE);
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000);
       oneData.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);

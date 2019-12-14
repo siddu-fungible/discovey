@@ -26,7 +26,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
 
-  TIMEZONE: string = "America/Los_Angeles";
   tableHeaders: any = null;
   tableData: any = null;
   showCharts: boolean = false;
@@ -62,7 +61,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   parseData(data) {
     this.tableData = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
+      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
       let oneRecordData = oneRecord.data;
       let record = [];
       record.push(dateTime);
@@ -103,7 +102,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             Object.keys(vp.utilization).forEach(uniqueTimestamp => {
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(uniqueTimestamp) * 1000, this.TIMEZONE);
+              let dateTime = this.commonService.getShortTimeFromEpoch(Number(uniqueTimestamp) * 1000);
               data[dateTime] = vp.utilization[uniqueTimestamp];
             });
             funTimeSeriesCollection.collection.push(oneSeries);
@@ -131,7 +130,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             Object.keys(vp.utilization).forEach(timestamp => {
               let utilization = vp.utilization[timestamp];
               let floorValue = Math.floor(utilization);
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000, this.TIMEZONE);
+              let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
               if (histogramData[floorValue].data.hasOwnProperty(dateTime)) {
                 histogramData[floorValue].data[dateTime] += 1;
               } else {
