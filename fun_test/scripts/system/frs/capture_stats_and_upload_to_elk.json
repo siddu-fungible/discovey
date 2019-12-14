@@ -7,7 +7,7 @@
     "STORAGE_IOPS",
     "DEBUG_VP_UTIL"
   ],
-  "stats_interval": 5,
+  "stats_interval": 30,
   "disable_stats": [],
   "elasticsearch_config": {
     "ip": "10.1.20.52",
