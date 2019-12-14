@@ -326,6 +326,7 @@ class ECVolumeLevelScript(FunTestScript):
                         # Check if run_sc container is running
                         run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
                         timer = FunTimer(max_time=self.container_up_timeout)
+                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                         while not timer.is_expired():
                             run_sc_name = self.come_obj[0].command(
                                 run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
@@ -361,6 +362,7 @@ class ECVolumeLevelScript(FunTestScript):
                     api_server_response = self.sc_api.get_api_server_health()
                     if api_server_response["status"]:
                         fun_test.log("Bundle Image boot: API server is up and running")
+                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                         break
                     else:
                         fun_test.sleep("waiting for API server to be up", 10)
@@ -421,6 +423,7 @@ class ECVolumeLevelScript(FunTestScript):
                         else:
                             fun_test.sleep(
                                 "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                            fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
                     if container_chk_timer.is_expired():
                         fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
                     else:
@@ -449,6 +452,7 @@ class ECVolumeLevelScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep("for the run_sc docker container to start", 1)
+                                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                                 else:
                                     fun_test.critical(
                                         "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
@@ -483,6 +487,7 @@ class ECVolumeLevelScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep(" waiting for API server to be up", 10)
+                                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                                 fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                                        message="TFTP Image boot: init-fs1600 enabled: API server is up")
                                 fun_test.sleep(

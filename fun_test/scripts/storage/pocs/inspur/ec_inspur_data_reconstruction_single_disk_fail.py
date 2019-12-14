@@ -313,6 +313,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                                 break
                             else:
                                 fun_test.sleep("for the run_sc docker container to start", 1)
+                                fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                         else:
                             fun_test.critical(
                                 "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
@@ -343,6 +344,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                         break
                     else:
                         fun_test.sleep("waiting for API server to be up", 10)
+                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                 fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                        message="Bundle Image boot: API server is up")
                 fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
@@ -400,6 +402,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                         else:
                             fun_test.sleep(
                                 "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                            fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
                     if container_chk_timer.is_expired():
                         fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
                     else:
@@ -428,6 +431,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep("for the run_sc docker container to start", 1)
+                                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                                 else:
                                     fun_test.critical(
                                         "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
@@ -462,6 +466,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep(" waiting for API server to be up", 10)
+                                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                                 fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                                        message="TFTP Image boot: init-fs1600 enabled: API server is up")
                                 fun_test.sleep(
