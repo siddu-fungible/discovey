@@ -22,6 +22,7 @@ export class ReleaseDetailComponent implements OnInit {
   modifyingTestBed: boolean = false;
   newTestBedName: string = null;
   testBeds = [];
+  addingSuites: boolean = false;
   suiteMap: {[suite_id: number]: Suite} = {};
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
@@ -41,7 +42,7 @@ export class ReleaseDetailComponent implements OnInit {
         this.executionId = params.executionId;
       }
       this.status = "Fetching catalog execution";
-      return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({execution_id: this.executionId}));
+      return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({id: this.executionId}));
     })).pipe(switchMap(response => {
       this.fetchSuiteDetails();
       this.status = null;
@@ -92,7 +93,7 @@ export class ReleaseDetailComponent implements OnInit {
   descriptionChangedCallback(newDescription) {
     let originalDescription = this.releaseCatalogExecution.description;
     this.releaseCatalogExecution.description = newDescription;
-    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({execution_id: this.executionId})).subscribe(response => {
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.executionId})).subscribe(response => {
 
     }, error => {
       this.logger.error(`release-detail`, error);
@@ -103,17 +104,38 @@ export class ReleaseDetailComponent implements OnInit {
   onSubmitModifyTestBed(suiteExecution) {
     suiteExecution.test_bed_name = this.newTestBedName;
     let originalSuiteExecutions = this.releaseCatalogExecution.suite_executions;
-    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({execution_id: this.executionId})).subscribe(response => {
-      this.modifyingTestBed = false;
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.executionId})).subscribe(response => {
+      suiteExecution.modifyingTestBed = false;
       this.releaseCatalogExecution.suite_executions = originalSuiteExecutions;
     }, error => {
       this.logger.error(`release-detail`, error);
-      this.modifyingTestBed = false;
+      suiteExecution.modifyingTestBed = false;
 
     });
   }
 
   onCancelModifyTestBed(suiteExecution) {
-    this.modifyingTestBed = false;
+    suiteExecution.modifyingTestBed = false;
+  }
+
+
+  suitesSelectedByView(newlySelectedSuites) {
+    let originalSuiteExecutions = this.releaseCatalogExecution.suite_executions;
+    newlySelectedSuites.forEach(newlySelectedSuite => {
+      if (!this.releaseCatalogExecution.suite_executions) {
+        this.releaseCatalogExecution.suite_executions = [];
+      }
+      this.releaseCatalogExecution.suite_executions.push(new ReleaseSuiteExecution({suite_id: newlySelectedSuite.id, test_bed_name: null, suite_details: newlySelectedSuite}))
+    });
+    this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(() => {
+      this.addingSuites = false;
+      this.fetchSuiteDetails();
+    }, error => {
+      this.logger.error(`Unable to add suites`, error);
+    })
+  }
+
+  cancelSuiteSelection() {
+    this.addingSuites = false;
   }
 }
