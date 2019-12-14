@@ -91,7 +91,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   prepareChartData() {
     this.fs.f1s.forEach(f1 => {
       f1.clusters.forEach(cluster => {
-        cluster["debug_vp_util"] = {series: []};
         let index = cluster.index;
         let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "%", []);
         cluster.cores.forEach(core => {
@@ -103,8 +102,8 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             Object.keys(vp.utilization).forEach(uniqueTimestamp => {
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(uniqueTimestamp) * 1000, this.TIMEZONE);
-              data[dateTime] = vp.utilization[uniqueTimestamp];
+              // let dateTime = this.commonService.getShortTimeFromEpoch(Number(uniqueTimestamp) * 1000, this.TIMEZONE);
+              data[Number(uniqueTimestamp) * 1000] = vp.utilization[uniqueTimestamp];
             });
             funTimeSeriesCollection.collection.push(oneSeries);
           });
@@ -131,11 +130,11 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             Object.keys(vp.utilization).forEach(timestamp => {
               let utilization = vp.utilization[timestamp];
               let floorValue = Math.floor(utilization);
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000, this.TIMEZONE);
-              if (histogramData[floorValue].data.hasOwnProperty(dateTime)) {
-                histogramData[floorValue].data[dateTime] += 1;
+              // let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000, this.TIMEZONE);
+              if (histogramData[floorValue].data.hasOwnProperty(Number(timestamp) * 1000)) {
+                histogramData[floorValue].data[Number(timestamp) * 1000] += 1;
               } else {
-                histogramData[floorValue].data[dateTime] = 1;
+                histogramData[floorValue].data[Number(timestamp) * 1000] = 1;
               }
             });
           });

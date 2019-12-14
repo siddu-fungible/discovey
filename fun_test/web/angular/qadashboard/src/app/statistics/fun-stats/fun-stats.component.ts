@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {slideInOutAnimation, showAnimation} from "../../animations/generic-animations";
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'fun-stats',
@@ -13,7 +14,7 @@ export class FunStatsComponent implements OnInit {
   xAxisLabel: string = null;
   y1AxisLabel: string = null;
   y2AxisLabel: string = null;
-  xValues: any = null;
+  xValues: any[] = [];
   y1Values: any = null;
   y2Values: any = null;
 
@@ -24,8 +25,10 @@ export class FunStatsComponent implements OnInit {
   showTable: boolean = false;
   chartReady: boolean = false;
   uniqueTimeStamps: any = new Set();
+  TIMEZONE: string = "America/Los_Angeles";
+  xEpochValues: any = null;
 
-  constructor() {
+  constructor(private commonService: CommonService) {
   }
 
   ngOnInit() {
@@ -39,9 +42,11 @@ export class FunStatsComponent implements OnInit {
     let y1Values = [];
     let dataByTime = {};
     this.findUniqueTimeStamps(); //find unique timestamps from the series data
-    this.xValues = Array.from(this.uniqueTimeStamps.values()).sort();
-    this.xValues.forEach(timestamp => {
-      dataByTime[timestamp] = [];
+    this.xEpochValues = Array.from(this.uniqueTimeStamps.values()).sort();
+    this.xEpochValues.forEach(timestamp => {
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp), this.TIMEZONE);
+      this.xValues.push(dateTime);
+      dataByTime[dateTime] = [];
     });
     // populating the y values
     for (let series of this.data.collection) {
@@ -49,10 +54,11 @@ export class FunStatsComponent implements OnInit {
       yData["name"] = series.name;
       this.tableHeaders.push(series.name);
       yData["data"] = [];
-      this.xValues.forEach(dateTime => {
-        if (series.data.hasOwnProperty(dateTime)) {
-          dataByTime[dateTime].push(series.data[dateTime]);
-          yData["data"].push(series.data[dateTime]);
+      this.xEpochValues.forEach(timestamp => {
+        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp), this.TIMEZONE);
+        if (series.data.hasOwnProperty(timestamp)) {
+          dataByTime[dateTime].push(series.data[timestamp]);
+          yData["data"].push(series.data[timestamp]);
         } else {
           dataByTime[dateTime].push("");
           yData["data"].push(null);
