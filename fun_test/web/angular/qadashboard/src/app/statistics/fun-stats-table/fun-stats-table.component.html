@@ -4,7 +4,7 @@
   </tr>
   <tr *ngFor="let data of filteredTableData">
     <td *ngFor="let d of data" style="vertical-align: top; text-align: left">
-          <span id="topOfCell" *ngIf="d.showSliced">{{ d.slicedValue }}
+          <span *ngIf="d.showSliced">{{ d.slicedValue }}
             <span class="fun-action-link" (click)="expandSlicedString(d)"> ...expand</span>
           </span>
       <ng-container *ngIf="d.stringType">

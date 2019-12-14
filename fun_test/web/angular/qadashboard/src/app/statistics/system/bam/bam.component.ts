@@ -4,11 +4,15 @@ import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {RegisteredAsset} from "../../../regression/definitions";
+import {FunTimeSeries, FunTimeSeriesCollection} from "../../definitions";
+import {CommonService} from "../../../services/common/common.service";
+import {slideInOutAnimation, showAnimation} from "../../../animations/generic-animations";
 
 @Component({
   selector: 'app-bam',
   templateUrl: './bam.component.html',
-  styleUrls: ['./bam.component.css']
+  styleUrls: ['./bam.component.css'],
+  animations: [slideInOutAnimation, showAnimation]
 })
 export class BamComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
@@ -19,18 +23,22 @@ export class BamComponent implements OnInit, OnChanges {
   suiteExecutionId: number = null;
   bmUsagePerClusterPoolNames: string [] = ["default_alloc_pool", "nu_erp_fcp_pool"];
   bmUsagePerClusterPoolKeys: string [] = ["usage_percent"];
-  clusterIndexes = Array.from(Array(8).keys());
+  clusterIndexes = Array.from(Array(9).keys());
   detectedF1Indexes = new Set();
+  showTable: boolean = false;
+  showCharts: boolean = false;
+  rawTableData: any[] = [];
+  rawTableHeaders: any[] = [];
 
-  constructor(private regressionService: RegressionService, private loggerService: LoggerService) {
+  constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
-     return this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
-       null,
-       null,
-       null,
-       null,
-       100,
-       1000, this.selectedAsset.asset_id);
+      return this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
+        null,
+        null,
+        null,
+        null,
+        100,
+        1000, this.selectedAsset.asset_id);
 
     })).pipe(switchMap(response => {
       this.data = response;
@@ -39,17 +47,25 @@ export class BamComponent implements OnInit, OnChanges {
     }));
 
   }
+
   driver: any = null;
+
   ngOnInit() {
   }
 
   parseData(data) {
+    let headers = new Set();
+    headers.add("Time");
     this.data.forEach(oneRecord => {
+      let oneData = [];
       let oneRecordData = oneRecord.data;
-
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000);
+      oneData.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         let dataForF1Index = oneRecordData[f1Index];
+        headers.add("F1-" + f1Index);
+        oneData.push(dataForF1Index);
         if (!this.parsedData.hasOwnProperty(f1Index)) {
           this.parsedData[f1Index] = {};
         }
@@ -57,30 +73,33 @@ export class BamComponent implements OnInit, OnChanges {
         let poolKeys = this.bmUsagePerClusterPoolKeys;
 
 
-          poolNames.forEach(poolName => {
-            if (!this.parsedData[f1Index].hasOwnProperty(poolName)) {
-              this.parsedData[f1Index][poolName] = {};
-            }
-            poolKeys.forEach(poolKey => {
-              if (!this.parsedData[f1Index][poolName].hasOwnProperty(poolKey)) {
-                this.parsedData[f1Index][poolName][poolKey] = [];  // store array of cluster data here
-                this.clusterIndexes.forEach(clusterIndex => {
-                  this.parsedData[f1Index][poolName][poolKey].push({name: `PC-${clusterIndex}`, data: []});
-                })
-              }
+        poolNames.forEach(poolName => {
+          if (!this.parsedData[f1Index].hasOwnProperty(poolName)) {
+            this.parsedData[f1Index][poolName] = {};
+          }
+          poolKeys.forEach(poolKey => {
+            let title = poolName + "-" + poolKey;
+            let funTimeSeriesCollection = new FunTimeSeriesCollection(title, "%", []);
+            if (!this.parsedData[f1Index][poolName].hasOwnProperty(poolKey)) {
+              this.parsedData[f1Index][poolName][poolKey] = [];  // store array of cluster data here
               this.clusterIndexes.forEach(clusterIndex => {
-                let clusterIndexString = `cluster_${clusterIndex}`;
-                let element =
-                this.parsedData[f1Index][poolName][poolKey][clusterIndex].data.push(oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey]);
+                let name = `PC-${clusterIndex}`;
+                let oneSeries = new FunTimeSeries(name, {});
+                this.parsedData[f1Index][poolName][poolKey].push(oneSeries);
               });
-            })
-          })
-
-
+            }
+            this.clusterIndexes.forEach(clusterIndex => {
+              let clusterIndexString = `cluster_${clusterIndex}`;
+              this.parsedData[f1Index][poolName][poolKey][clusterIndex].data[dateTime] = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
+            });
+            funTimeSeriesCollection.collection = this.parsedData[f1Index][poolName][poolKey];
+            this.parsedData[f1Index][poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;
+          });
+        });
       });
-
-      let j = 0;
+      this.rawTableData.push(oneData);
     });
+    this.rawTableHeaders = Array.from(headers.values())
   }
 
 
@@ -88,15 +107,15 @@ export class BamComponent implements OnInit, OnChanges {
     if (this.scriptExecutionInfo && this.scriptExecutionInfo.suite_execution_id) {
       this.suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       this.driver.subscribe(response => {
-
+        this.showCharts = true;
       }, error => {
         this.loggerService.error("Unable to fetch data");
       })
     }
   }
 
-  refresh() {
-
+  showTables(): void {
+    this.showTable = !this.showTable;
   }
 
 }

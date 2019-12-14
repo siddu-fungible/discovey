@@ -8,9 +8,28 @@
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
     </app-section-header>
 
-    <h6>Suites</h6>
+
+
+    <ng-container *ngIf="addingSuites">
+      <div class="fun-panel">
+        <div class="fun-panel-header">
+          Adding suites ...
+        </div>
+        <div class="fun-panel-body">
+          <app-suites-view [@show]="addingSuites"
+                       *ngIf="addingSuites"
+                       [multiSelect]="true"
+                       (reportSelectedSuites)="suitesSelectedByView($event)" (cancelSelection)="cancelSuiteSelection()">
+
+          </app-suites-view>
+        </div>
+      </div>
+    </ng-container>
+
+    <h6 style="display: inline-block; padding: 0 10px">Suites</h6>    <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites</span>
+
     <app-section-horizontal-line></app-section-horizontal-line>
-    <ng-container *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
+    <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
       {{ suite_execution.suite_id }}:
       <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>
       </div>
@@ -19,10 +38,10 @@
       </span>
       <div>
         <span>Test-bed: {{ suite_execution.test_bed_name }}
-          <span class="fun-action-link" (click)="modifyingTestBed = !modifyingTestBed">modify</span>
+          <span class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
 
 
-          <ng-container *ngIf="modifyingTestBed">
+          <ng-container *ngIf="suite_execution.modifyingTestBed">
             <select  id="test-bed" [(ngModel)]="newTestBedName">
               <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
               </option>
@@ -35,10 +54,10 @@
         </span>
         <span>
           , Scripts: {{ suite_execution?.suite_details?.entries.length }}
-          <span class="fun-action-link" (click)="showingScripts = !showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
+          <span class="fun-action-link" (click)="suite_execution.showingScripts = !suite_execution.showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
         </span>
       </div>
-      <table *ngIf="showingScripts" [@show] class="fun-table">
+      <table *ngIf="suite_execution.showingScripts" [@show] class="fun-table">
         <tr>
           <td class="fun-table-header">
             Script path
@@ -49,7 +68,7 @@
         </tr>
       </table>
 
-    </ng-container>
+    </div>
 
 
   </ng-container>

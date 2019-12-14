@@ -26,7 +26,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   detectedF1Indexes = new Set();
   fs: Fs = new Fs();
 
-  TIMEZONE: string = "America/Los_Angeles";
   tableHeaders: any = null;
   tableData: any = null;
   showCharts: boolean = false;
@@ -62,7 +61,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   parseData(data) {
     this.tableData = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000, this.TIMEZONE);
+      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
       let oneRecordData = oneRecord.data;
       let record = [];
       record.push(dateTime);

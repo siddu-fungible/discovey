@@ -27,6 +27,7 @@ export class FunChartComponent implements OnInit, OnChanges {
   @Input() seriesColors: string[] = null;
   @Input() clickUrls;
   @Input() chartHeight;
+  @Input() borderless: boolean = false;
   chart: any;
   point: any = null;
 

@@ -9,6 +9,7 @@ import {ActivatedRoute} from "@angular/router";
 export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
+  TIMEZONE: string = "America/Los_Angeles";
 
   constructor(private route: ActivatedRoute) {
 
@@ -80,19 +81,19 @@ export class CommonService {
     return epochValue;
   }
 
-  getShortDateFromEpoch(epoch, timezone): string {
+  getShortDateFromEpoch(epoch, timezone=this.TIMEZONE): string {
     let pstDate = this.convertEpochToDate(epoch, timezone);
     let dateString = this.addLeadingZeroesToDate(pstDate);
     return dateString.substring(0, 5);
   }
 
-  getShortDateTimeFromEpoch(epoch, timezone): string {
+  getShortDateTimeFromEpoch(epoch, timezone=this.TIMEZONE): string {
     let pstDate = this.convertEpochToDate(epoch, timezone);
     let dateString = this.addLeadingZeroesToDate(pstDate);
     return dateString;
   }
 
-  getShortTimeFromEpoch(epoch, timezone): string {
+  getShortTimeFromEpoch(epoch, timezone=this.TIMEZONE): string {
     let pstDate = this.convertEpochToDate(epoch, timezone);
     let timeString = this.addLeadingZeroesToDate(pstDate).split(", ");
     return timeString[1];

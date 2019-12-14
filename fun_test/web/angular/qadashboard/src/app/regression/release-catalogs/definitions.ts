@@ -38,6 +38,8 @@ export class ReleaseCatalogExecution extends Api {
   release_train: string = "master";
   master_execution_id: number = null;
   suite_executions: ReleaseSuiteExecution [] = [];
+  showingScripts: boolean = false;
+  modifyingTestBed: boolean = false;
   customDeserializableProperties = ["suite_executions"];
   deserializationHooks = {suite_executions: function(data)  {
       return data.map(dataElement => {
@@ -56,6 +58,14 @@ export class ReleaseCatalogExecution extends Api {
       release_train: this.release_train,
       suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize())
     }
+  }
+
+  public getUrl(params) {
+    let url = this.url;
+    if (params.hasOwnProperty('id')) {
+      url = `${url}/${params.id}`;
+    }
+    return url;
   }
 
 }
