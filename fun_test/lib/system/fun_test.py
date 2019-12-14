@@ -23,7 +23,6 @@ from lib.utilities.send_mail import send_mail
 from fun_global import Codes, TimeSeriesTypes
 
 
-
 class TestException(Exception):
     def __str__(self):
         return self.message
@@ -44,7 +43,6 @@ class FunTestFatalException(Exception):
     pass
 
 
-
 class FunTimer:
     def __init__(self, max_time=10000):
         self.max_time = max_time
@@ -62,6 +60,7 @@ class FunTimer:
 
     def remaining_time(self):
         return self.max_time - self.elapsed_time()
+
 
 class FunTestThread(Thread):
     def __init__(self, func, **kwargs):
@@ -133,6 +132,7 @@ class FunAlert:
         self.level = level
         self.message = message
 
+
 class FunTest:
     PASSED = RESULTS["PASSED"]
     FAILED = RESULTS["FAILED"]
@@ -159,7 +159,6 @@ class FunTest:
         "RESET": '\033[0m',
         "GREEN": '\033[92m'
     }
-
 
     fun_test_thread_id = 0
 
@@ -1933,7 +1932,10 @@ class FunTestScript(object):
 
         except Exception as ex:
             fun_test.critical(ex)
-        fun_test.add_checkpoint(checkpoint="Cleanup error found", expected=False, actual=cleanup_error_found)
+        fun_test.add_checkpoint(checkpoint="Cleanup error found",
+                                expected=False,
+                                actual=cleanup_error_found,
+                                result=result)
         fun_test._end_test(result=result)
         if cleanup_te:
             models_helper.update_test_case_execution(test_case_execution_id=cleanup_te.execution_id,
