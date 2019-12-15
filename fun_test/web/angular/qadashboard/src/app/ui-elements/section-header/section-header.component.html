@@ -4,12 +4,16 @@
       <h5 *ngIf="!subSection">{{ title }}</h5>
       <h6 *ngIf="subSection">{{ title }}</h6>
     </div>
+    <div class="fun-flex-item" *ngIf="titleActionLinks && titleActionLinks.length > 0">
+      <ng-container *ngFor="let funActionLink of titleActionLinks">
+        &nbsp;&nbsp;&nbsp;&nbsp;<span *ngIf="funActionLink.show" (click)="onLinkClick(funActionLink)" class="fun-action-link" >{{ funActionLink.text }}</span>
+      </ng-container>
+    </div>
   </div>
 
 
 </ng-container>
 <ng-container *ngIf="editable">
-
   <div class="fun-flex-container">
     <div [ngClass]="{'hover-cell': hoverHide}" class="fun-flex-item">
       <ng-container *ngIf="!subSection">
@@ -23,8 +27,11 @@
       <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
     </div>
     <div class="fun-flex-item" *ngIf="titleStateLabel">
-    <app-smart-label [value]="titleStateLabel"></app-smart-label>
-  </div>
+      <app-smart-label [value]="titleStateLabel"></app-smart-label>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleActionLinks && titleActionLinks.length > 0">
+      <span (click)="onLinkClick(funActionLink)" class="fun-action-link" *ngFor="let funActionLink of titleActionLinks">{{ funActionLink.text }}</span>
+    </div>
   </div>
 
   <div *ngIf="editing" style="align-self: stretch">

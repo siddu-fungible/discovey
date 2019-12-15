@@ -8,7 +8,7 @@ import {ReleaseCatalogExecution, ReleaseSuiteExecution} from "../release-catalog
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
 import {ApiType} from "../../lib/api";
-import {ButtonType, FunButtonWithIcon} from "../../ui-elements/definitions";
+import {ButtonType, FunActionLink, FunButtonWithIcon} from "../../ui-elements/definitions";
 
 @Component({
   selector: 'app-release-detail',
@@ -26,6 +26,8 @@ export class ReleaseDetailComponent implements OnInit {
   testBeds = [];
   addingSuites: boolean = false;
   headerLeftAlignedButtons: FunButtonWithIcon [] = [];
+  suitesHeaderActionLinks: FunActionLink [] = [];
+  addSuitesLinkObject: FunActionLink = null;
 
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
@@ -38,6 +40,10 @@ export class ReleaseDetailComponent implements OnInit {
 
     this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE,
       text: "delete", callback: this.deleteRelease.bind(this)}));
+
+    this.addSuitesLinkObject = new FunActionLink({text: "+ Add suites",
+      callback: this.addSuites.bind(this)});
+    this.suitesHeaderActionLinks.push(this.addSuitesLinkObject);
   }
   driver: any = null;
   releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
@@ -108,7 +114,7 @@ export class ReleaseDetailComponent implements OnInit {
     let originalDescription = this.releaseCatalogExecution.description;
     this.releaseCatalogExecution.description = newDescription;
     this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.executionId})).subscribe(response => {
-
+      this.fetchSuiteDetails();
     }, error => {
       this.logger.error(`release-detail`, error);
     });
@@ -151,6 +157,8 @@ export class ReleaseDetailComponent implements OnInit {
 
   cancelSuiteSelection() {
     this.addingSuites = false;
+    this.addSuitesLinkObject.show = true;
+
   }
 
   checkAtLeastOneSelected() {
@@ -201,7 +209,11 @@ export class ReleaseDetailComponent implements OnInit {
       })
 
     }
+  }
 
+  addSuites(linkObject) {
+    this.addSuitesLinkObject.show = false;
+    this.addingSuites = true;
   }
 
   test() {

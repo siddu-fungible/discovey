@@ -4,18 +4,22 @@ export class ButtonType {
 
 export class GenericButton {
   text: string;
+  callback: Function = null;
+  type: ButtonType;
+  classes: string = "";
+  textClasses: string = "";
+
   constructor(props) {
     if (props.hasOwnProperty('text')) {
       this.text = props.text;
+    }
+    if (props.hasOwnProperty('callback')) {
+      this.callback = props.callback;
     }
   }
 }
 
 export class FunButtonWithIcon extends GenericButton {
-  type: ButtonType;
-  callback: Function;
-  classes: string = "";
-  textClasses: string = "";
   constructor(props) {
     super(props);
     if (props.hasOwnProperty('type')) {
@@ -25,9 +29,24 @@ export class FunButtonWithIcon extends GenericButton {
         this.textClasses += `${this.textClasses} text-color-red`;
       }
     }
+  }
+}
+
+export class FunActionLink {
+  text: string;
+  callback: Function = null;
+  data: any = null;
+  show: boolean = true;
+  constructor(props) {
+    if (props.hasOwnProperty('text')) {
+      this.text = props.text;
+    }
     if (props.hasOwnProperty('callback')) {
       this.callback = props.callback;
     }
-
+    if (props.hasOwnProperty('show')) {
+      this.show = props.show;
+    }
   }
 }
+

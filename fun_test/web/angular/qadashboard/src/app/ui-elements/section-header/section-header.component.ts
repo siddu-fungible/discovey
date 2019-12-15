@@ -1,5 +1,5 @@
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
-import {ButtonType, FunButtonWithIcon} from "../definitions";
+import {ButtonType, FunActionLink, FunButtonWithIcon} from "../definitions";
 
 @Component({
   selector: 'app-section-header',
@@ -15,6 +15,7 @@ export class SectionHeaderComponent implements OnInit, OnChanges {
   @Input() subSection: boolean = false;
   @Input() leftAlignedButtons: FunButtonWithIcon [];
   @Input() titleStateLabel: string = null;
+  @Input() titleActionLinks: FunActionLink [];
   @Output() editingCallback = new EventEmitter<string>();
   editing: boolean = false;
   hoverHide: boolean = true;
@@ -45,5 +46,9 @@ export class SectionHeaderComponent implements OnInit, OnChanges {
 
   onButtonClick(buttonObject) {
     buttonObject.callback();
+  }
+
+  onLinkClick(linkObject) {
+    linkObject.callback(linkObject.data);
   }
 }
