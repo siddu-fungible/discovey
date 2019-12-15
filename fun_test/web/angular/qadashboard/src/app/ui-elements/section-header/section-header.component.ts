@@ -37,4 +37,7 @@ export class SectionHeaderComponent implements OnInit {
     this.editing = false;
   }
 
+  onButtonClick(buttonObject) {
+    buttonObject.callback();
+  }
 }

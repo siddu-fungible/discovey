@@ -36,7 +36,7 @@
   </div>
   <div class="fun-flex-item">
     <span style="display: inline-block" *ngIf="leftAlignedButtons && leftAlignedButtons.length > 0">
-      <button class="fun-button-with-icon" *ngFor="let button of leftAlignedButtons">
+      <button (click)="onButtonClick(button)" class="fun-button-with-icon" *ngFor="let button of leftAlignedButtons">
         <i class="fa {{ button.classes }} {{ button.textClasses }}"></i>&nbsp;
         <span class="{{ button.textClasses }}">{{ button.text }}</span>
       </button>

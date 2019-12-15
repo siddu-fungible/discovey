@@ -25,6 +25,9 @@ export class FunButtonWithIcon extends GenericButton {
         this.textClasses += `${this.textClasses} text-color-red`;
       }
     }
+    if (props.hasOwnProperty('callback')) {
+      this.callback = props.callback;
+    }
 
   }
 }

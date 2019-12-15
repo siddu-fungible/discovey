@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {switchMap} from "rxjs/operators";
 import {concat, Observable, of} from "rxjs";
 import {LoggerService} from "../../services/logger/logger.service";
@@ -33,9 +33,11 @@ export class ReleaseDetailComponent implements OnInit {
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
-              private suiteEditorService: SuiteEditorService) {
+              private suiteEditorService: SuiteEditorService,
+              private router: Router) {
 
-    this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE, text: "delete"}));
+    this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE,
+      text: "delete", callback: this.deleteRelease.bind(this)}));
   }
   driver: any = null;
   releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
@@ -186,6 +188,19 @@ export class ReleaseDetailComponent implements OnInit {
     }, error => {
       this.logger.error(`Unable to submit request for execution`, error);
     })
+
+  }
+
+  deleteRelease() {
+    //console.log("Delete release");
+    if (confirm('Are you sure you want to delete this release?')) {
+      this.releaseCatalogExecution.delete(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(response => {
+        this.router.navigateByUrl('/regression/releases');
+      }, error => {
+        this.logger.error(`Unable to delete release`, error);
+      })
+
+    }
 
   }
 }

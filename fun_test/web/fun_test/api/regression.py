@@ -737,6 +737,12 @@ def release_catalog_executions(request, id):
         execution.save()
         result = execution.to_dict()
 
+    if request.method == "DELETE":
+        q = Q(id=int(id))
+        execution = ReleaseCatalogExecution.objects.get(q)
+        if execution:
+            execution.delete()
+        result = True
     return result
 
 if __name__ == "__main__":
