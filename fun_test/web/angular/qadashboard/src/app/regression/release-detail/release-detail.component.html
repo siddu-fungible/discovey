@@ -48,7 +48,8 @@
       <div>
         <input type="checkbox" (click)="onSelectClicked()" [(ngModel)]="suite_execution.selected" [checked]="suite_execution.selected">&nbsp;
         <span>Test-bed: {{ suite_execution.test_bed_name }}
-          <span class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
+
+          <span *ngIf="(releaseCatalogExecution.state === jobStatusTypes.UNKNOWN) || (!suite_execution.test_bed_name)" class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
 
 
           <ng-container *ngIf="suite_execution.modifyingTestBed">
