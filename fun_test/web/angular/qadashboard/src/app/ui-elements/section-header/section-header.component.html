@@ -1,22 +1,32 @@
 <ng-container *ngIf="!editable">
-  <h5 *ngIf="!subSection">{{ title }}</h5>
-  <h6 *ngIf="subSection">{{ title }}</h6>
+  <div class="fun-flex-container">
+    <div class="fun-flex-item">
+      <h5 *ngIf="!subSection">{{ title }}</h5>
+      <h6 *ngIf="subSection">{{ title }}</h6>
+    </div>
+  </div>
+
 
 </ng-container>
 <ng-container *ngIf="editable">
-  <div [ngClass]="{'hover-cell': hoverHide}">
-    <ng-container *ngIf="!subSection">
-      <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
-      <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
-    </ng-container>
-    <ng-container *ngIf="subSection">
-      <h6 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h6>
-      <h6 [innerHtml]="title| safeHtml" style="display: inline-block"></h6>&nbsp;
-    </ng-container>
 
-
-    <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
+  <div class="fun-flex-container">
+    <div [ngClass]="{'hover-cell': hoverHide}" class="fun-flex-item">
+      <ng-container *ngIf="!subSection">
+        <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
+        <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
+      </ng-container>
+      <ng-container *ngIf="subSection">
+        <h6 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h6>
+        <h6 [innerHtml]="title| safeHtml" style="display: inline-block"></h6>&nbsp;
+      </ng-container>
+      <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleStateLabel">
+    <app-smart-label [value]="titleStateLabel"></app-smart-label>
   </div>
+  </div>
+
   <div *ngIf="editing" style="align-self: stretch">
     <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;" [ngClass]="{'focus-text-area': editing }"></textarea>
     <div >

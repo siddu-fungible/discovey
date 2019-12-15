@@ -7,6 +7,7 @@ export class ReleaseSuiteExecution extends Api {
   test_bed_name: string;
   suite_details: Suite;
   selected: boolean = false;
+  job_id: number = null;
   constructor(props) {
     super();
     Object.keys(props).forEach(key => {
@@ -15,6 +16,9 @@ export class ReleaseSuiteExecution extends Api {
       }
       if (key === "test_bed_name") {
         this.test_bed_name = props.test_bed_name;
+      }
+      if (key === "job_id") {
+        this.job_id = props.job_id;
       }
     })
   }

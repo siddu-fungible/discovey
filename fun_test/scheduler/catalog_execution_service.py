@@ -1,14 +1,20 @@
+from django.db.models import Q
+
+from fun_settings import TEAM_REGRESSION_EMAIL
 from fun_global import RESULTS
 import web.fun_test.django_interactive
 from web.fun_test.models import Daemon
 from fun_global import get_current_time
+from scheduler_global import JobStatusType
 import time
 import sys
 import logging
 import logging.handlers
 from threading import Thread
 import re
-from web.fun_test.models_helper import get_suite_execution, get_log_files
+from scheduler.scheduler_helper import queue_job3
+# from web.fun_test.models_helper import
+from web.fun_test.models import ReleaseCatalogExecution
 DAEMON_NAME = "catalog_execution_service"
 logger = logging.getLogger("{}_logger".format(DAEMON_NAME))
 logger.setLevel(logging.DEBUG)
@@ -45,17 +51,37 @@ class FunTimer:
         return (self.start_time + self.max_time) - time.time()
 
 
+class CatalogExecutionStateMachine:
+    def __init__(self):
+        pass
+
+    def process_submitted_releases(self):
+        q = Q(deleted=False, state=JobStatusType.SUBMITTED)
+        catalog_executions = ReleaseCatalogExecution.objects.filter(q)
+        for catalog_execution in catalog_executions:
+            for suite_execution in catalog_execution.suite_executions:
+                environment = {"bundle_image_parameters": {"release_train": catalog_execution.release_train,
+                                                           "build_number": "latest"}}
+                job_id = queue_job3(suite_id=suite_execution["suite_id"],
+                                    emails=[TEAM_REGRESSION_EMAIL],
+                                    submitter_email=catalog_execution.owner,
+                                    tags="tbd",
+                                    test_bed_type=suite_execution["test_bed_name"],
+                                    environment=environment)
+                suite_execution["job_id"] = job_id
+            catalog_execution.save()
+
+
+
+    def process_in_progress_releases(self):
+        pass
+
+    def run(self):
+        self.process_submitted_releases()
+
 
 if __name__ == "__main__":
     while True:
         Daemon.get(name=DAEMON_NAME).beat()
-        """
-        for triage in triages:
-            try:
-                s = TriageStateMachine(triage=triage)
-                s.run()
-
-            except Exception as ex:
-                logger.exception(ex)
-        """
+        CatalogExecutionStateMachine().run()
         time.sleep(15)

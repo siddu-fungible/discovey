@@ -203,4 +203,8 @@ export class ReleaseDetailComponent implements OnInit {
     }
 
   }
+
+  test() {
+    console.log(this.releaseCatalogExecution);
+  }
 }

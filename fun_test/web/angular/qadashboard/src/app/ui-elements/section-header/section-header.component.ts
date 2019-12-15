@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
 import {ButtonType, FunButtonWithIcon} from "../definitions";
 
 @Component({
@@ -6,7 +6,7 @@ import {ButtonType, FunButtonWithIcon} from "../definitions";
   templateUrl: './section-header.component.html',
   styleUrls: ['./section-header.component.css']
 })
-export class SectionHeaderComponent implements OnInit {
+export class SectionHeaderComponent implements OnInit, OnChanges {
   @Input() title: string;
   @Input() staticTitle: string = null;
   @Input() subText1: string = null;
@@ -14,6 +14,7 @@ export class SectionHeaderComponent implements OnInit {
   @Input() editable: boolean = false;
   @Input() subSection: boolean = false;
   @Input() leftAlignedButtons: FunButtonWithIcon [];
+  @Input() titleStateLabel: string = null;
   @Output() editingCallback = new EventEmitter<string>();
   editing: boolean = false;
   hoverHide: boolean = true;
@@ -22,6 +23,11 @@ export class SectionHeaderComponent implements OnInit {
 
   ngOnInit() {
     this.tempValue = this.title;
+  }
+
+  ngOnChanges() {
+    let i = 0;
+    console.log(this.titleStateLabel);
   }
 
   onEditClick() {

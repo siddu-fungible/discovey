@@ -1,19 +1,16 @@
 <div class="component">
   <fun-spinner [status]="status"></fun-spinner>
-  <ng-container *ngIf="!status">
+  <ng-container *ngIf="!status && jobStatusTypes">
     <app-section-header
       [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
       [subText2]="'Owner: ' + releaseCatalogExecution.owner"
                         [staticTitle]="'Release: '"
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"
       [leftAlignedButtons]="headerLeftAlignedButtons"
+      [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
     >
 
     </app-section-header>
-
-    <div class="fun-attribute" *ngIf="jobStatusTypes">
-      State: <app-smart-label [value]="jobStatusTypes.descriptionMap[releaseCatalogExecution.state]"></app-smart-label>
-    </div>
     <br>
     <ng-container *ngIf="addingSuites">
       <div class="fun-panel">
@@ -39,11 +36,18 @@
     <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
-      {{ suite_execution.suite_id }}:
-      <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>
+      <div><b>{{ suite_execution.suite_id }}: {{ suite_execution.suite_details?.name }}</b>&nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}</div>
+      <div>
+      Job-ID:
+        <ng-container *ngIf="suite_execution.job_id else jobIdUnavailable">
+          <a href="/regression/suite_detail/{{ suite_execution.job_id }}">{{ suite_execution.job_id }}</a>
+        </ng-container>
+        <ng-template #jobIdUnavailable>
+          Not available
+        </ng-template>
       </div>
       <span>
-        &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
+
       </span>
       <div>
         <input type="checkbox" (click)="onSelectClicked()" [(ngModel)]="suite_execution.selected" [checked]="suite_execution.selected">&nbsp;
@@ -81,5 +85,5 @@
 
 
   </ng-container>
-
+  <button (click)="test()">Test</button>
 </div>
