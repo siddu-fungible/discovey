@@ -716,7 +716,7 @@ def release_catalog_executions(request, id):
         request_json = json.loads(request.body)
         execution = ReleaseCatalogExecution(**request_json)
         execution.save()
-        result = execution.id
+        result = execution.to_dict()
     if request.method == "GET":
         q = Q()
         if id:
@@ -732,8 +732,12 @@ def release_catalog_executions(request, id):
         q = Q(id=int(id))
         execution = ReleaseCatalogExecution.objects.get(q)
         for key, value in request_json.iteritems():
+            if key == "ready_for_execution":
+                if not execution.ready_for_execution and value:
+                    execution.state = JobStatusType.SUBMITTED
             if hasattr(execution, key):
                 setattr(execution, key, value)
+
         execution.save()
         result = execution.to_dict()
 
@@ -741,7 +745,8 @@ def release_catalog_executions(request, id):
         q = Q(id=int(id))
         execution = ReleaseCatalogExecution.objects.get(q)
         if execution:
-            execution.delete()
+            execution.deleted = True
+            execution.save()
         result = True
     return result
 

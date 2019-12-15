@@ -1,14 +1,15 @@
 <div class="fun-div">
   <app-section-header [title]="'Releases'"></app-section-header>
   <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
-
-    <h6 style="display: inline-block">{{ index }}. <a href="/regression/release_detail/{{ execution.id }}">{{ execution.description }}</a></h6>
-    &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
-    <div>
-      <small>Release: {{ execution.release_train }}</small>&nbsp;
-      <small>Owner: {{ execution.owner }}</small>
-    </div>
-    <app-section-horizontal-line></app-section-horizontal-line>
+    <ng-container *ngIf="!execution.deleted">
+      <h6 style="display: inline-block">{{ index }}. <a href="/regression/release_detail/{{ execution.id }}">{{ execution.description }}</a></h6>
+      &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
+      <div>
+        <small>Release: {{ execution.release_train }}</small>&nbsp;
+        <small>Owner: {{ execution.owner }}</small>
+      </div>
+      <app-section-horizontal-line></app-section-horizontal-line>
+    </ng-container>
 
   </ng-container>
 
