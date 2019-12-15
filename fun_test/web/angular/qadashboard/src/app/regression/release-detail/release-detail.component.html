@@ -15,7 +15,10 @@
 
 
 
-    <app-section-header [title]="'Suites'" [subSection]="true" [titleActionLinks]="suitesHeaderActionLinks"></app-section-header>
+    <app-section-header [title]="'Suites'"
+                        [subSection]="true"
+                        [titleActionLinks]="suitesHeaderActionLinks"
+                        [titleLeftAlignedButtons]="suitesHeaderLeftAlignedButtons"></app-section-header>
     <ng-container *ngIf="addingSuites">
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -31,7 +34,6 @@
         </div>
       </div>
     </ng-container>
-    <button class="fun-button-delete" (click)="deleteSuites()" *ngIf="atLeastOneSelected">Delete</button>
     <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">

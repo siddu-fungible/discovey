@@ -23,7 +23,7 @@ export class ReleaseSuiteExecution extends Api {
     })
   }
   serialize() {
-    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name};
+    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name, job_id: this.job_id};
   }
 }
 

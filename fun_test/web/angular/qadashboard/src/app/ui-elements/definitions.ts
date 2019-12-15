@@ -8,6 +8,7 @@ export class GenericButton {
   type: ButtonType;
   classes: string = "";
   textClasses: string = "";
+  show: boolean = true;
 
   constructor(props) {
     if (props.hasOwnProperty('text')) {
@@ -15,6 +16,9 @@ export class GenericButton {
     }
     if (props.hasOwnProperty('callback')) {
       this.callback = props.callback;
+    }
+    if (props.hasOwnProperty('show')) {
+      this.show = props.show;
     }
   }
 }

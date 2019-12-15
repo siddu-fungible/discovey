@@ -27,6 +27,8 @@ export class ReleaseDetailComponent implements OnInit {
   addingSuites: boolean = false;
   headerLeftAlignedButtons: FunButtonWithIcon [] = [];
   suitesHeaderActionLinks: FunActionLink [] = [];
+  suitesHeaderLeftAlignedButtons: FunButtonWithIcon [] = [];
+  suitesDeleteButton: FunButtonWithIcon = null;
   addSuitesLinkObject: FunActionLink = null;
 
   suiteMap: {[suite_id: number]: Suite} = {};
@@ -44,6 +46,8 @@ export class ReleaseDetailComponent implements OnInit {
     this.addSuitesLinkObject = new FunActionLink({text: "+ Add suites",
       callback: this.addSuites.bind(this)});
     this.suitesHeaderActionLinks.push(this.addSuitesLinkObject);
+    this.suitesDeleteButton = new FunButtonWithIcon({type: ButtonType.DELETE, text: "delete suite(s)", callback: this.deleteSuites.bind(this), show: false});
+    this.suitesHeaderLeftAlignedButtons.push(this.suitesDeleteButton);
   }
   driver: any = null;
   releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
@@ -164,9 +168,11 @@ export class ReleaseDetailComponent implements OnInit {
   checkAtLeastOneSelected() {
     setTimeout(() => {
       this.atLeastOneSelected = false;
+      this.suitesDeleteButton.show = false;
       for (let index = 0; index < this.releaseCatalogExecution.suite_executions.length; index++) {
         if (this.releaseCatalogExecution.suite_executions[index].selected) {
           this.atLeastOneSelected = true;
+          this.suitesDeleteButton.show = true;
           break;
         }
       }
@@ -183,6 +189,7 @@ export class ReleaseDetailComponent implements OnInit {
       this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(() => {
         this.checkAtLeastOneSelected();
         this.fetchSuiteDetails();
+        this.suitesDeleteButton.show = false;
       }, error => {
         this.logger.error(`Unable to delete suite(s)`, error);
       })

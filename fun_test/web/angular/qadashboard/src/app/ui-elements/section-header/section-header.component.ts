@@ -14,6 +14,7 @@ export class SectionHeaderComponent implements OnInit, OnChanges {
   @Input() editable: boolean = false;
   @Input() subSection: boolean = false;
   @Input() leftAlignedButtons: FunButtonWithIcon [];
+  @Input() titleLeftAlignedButtons: FunButtonWithIcon [];
   @Input() titleStateLabel: string = null;
   @Input() titleActionLinks: FunActionLink [];
   @Output() editingCallback = new EventEmitter<string>();

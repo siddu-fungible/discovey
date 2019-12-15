@@ -9,6 +9,14 @@
         &nbsp;&nbsp;&nbsp;&nbsp;<span *ngIf="funActionLink.show" (click)="onLinkClick(funActionLink)" class="fun-action-link" >{{ funActionLink.text }}</span>
       </ng-container>
     </div>
+    <div class="fun-flex-item" *ngIf="titleLeftAlignedButtons && titleLeftAlignedButtons.length > 0">
+      <ng-container *ngFor="let button of titleLeftAlignedButtons">
+        <button (click)="onButtonClick(button)" class="fun-button-with-icon" *ngIf="button.show">
+          <i class="fa {{ button.classes }} {{ button.textClasses }}"></i>&nbsp;
+          <span class="{{ button.textClasses }}">{{ button.text }}</span>
+        </button>
+      </ng-container>
+    </div>
   </div>
 
 
