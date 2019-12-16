@@ -1027,6 +1027,15 @@ class FrsTestCase(FunTestCase):
                 fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
             except:
                 fun_test.log("Its a bundle issue")
+        self.add_come_logs()
+
+    def add_come_logs(self):
+        dmesg_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="come_dmesg_logs.txt")
+        f = open(dmesg_file_name, "w+")
+        output = self.come_handle.command("dmesg")
+        f.write(output)
+        f.close()
+        fun_test.add_auxillary_file(description="COMe logs", filename=dmesg_file_name)
 
     def add_the_links(self):
         # Todo: Get the links for each individual app
