@@ -25,7 +25,7 @@ export class FunStatsComponent implements OnInit {
   showTable: boolean = false;
   chartReady: boolean = false;
   uniqueTimeStamps: any = new Set();
-  xEpochValues: any = null;
+  xTimeStamps: any = null;
 
   constructor(private commonService: CommonService) {
   }
@@ -41,9 +41,9 @@ export class FunStatsComponent implements OnInit {
     let y1Values = [];
     let dataByTime = {};
     this.findUniqueTimeStamps(); //find unique timestamps from the series data
-    this.xEpochValues = Array.from(this.uniqueTimeStamps.values()).sort();
-    this.xEpochValues.forEach(timestamp => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp));
+    this.xTimeStamps = Array.from(this.uniqueTimeStamps.values()).sort();
+    this.xTimeStamps.forEach(timestamp => {
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
       this.xValues.push(dateTime);
       dataByTime[dateTime] = [];
     });
@@ -53,8 +53,8 @@ export class FunStatsComponent implements OnInit {
       yData["name"] = series.name;
       this.tableHeaders.push(series.name);
       yData["data"] = [];
-      this.xEpochValues.forEach(timestamp => {
-        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp));
+      this.xTimeStamps.forEach(timestamp => {
+        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
         if (series.data.hasOwnProperty(timestamp)) {
           dataByTime[dateTime].push(series.data[timestamp]);
           yData["data"].push(series.data[timestamp]);
