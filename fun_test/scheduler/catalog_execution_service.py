@@ -8,6 +8,7 @@ from fun_global import get_current_time
 from scheduler_global import JobStatusType
 import time
 import sys
+import json
 import logging
 import logging.handlers
 from threading import Thread
@@ -61,7 +62,7 @@ class CatalogExecutionStateMachine:
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
-                            tags="tbd",
+                            tags=["tbd"],
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
         return job_id

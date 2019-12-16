@@ -29,6 +29,10 @@ export class ReleaseSuiteExecution extends Api {
       if (key === "error_message") {
         this.error_message = props.error_message;
       }
+      if (key == "suite_details") {
+        this.suite_details = props.suite_details;
+      }
+
     })
   }
   serialize() {
