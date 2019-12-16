@@ -9,6 +9,8 @@ export class ReleaseSuiteExecution extends Api {
   selected: boolean = false;
   job_id: number = null;
   error_message: string = null;
+  job_status: number = null;
+  job_result: string = null;
   showingScripts: boolean = false;
   modifyingTestBed: boolean = false;
 

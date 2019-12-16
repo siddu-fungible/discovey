@@ -35,7 +35,7 @@
       <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
     </div>
     <div class="fun-flex-item" *ngIf="titleStateLabel">
-      <app-smart-label [value]="titleStateLabel"></app-smart-label>
+      &nbsp;&nbsp;State: <app-smart-label [value]="titleStateLabel"></app-smart-label>
     </div>
     <div class="fun-flex-item" *ngIf="titleActionLinks && titleActionLinks.length > 0">
       <span (click)="onLinkClick(funActionLink)" class="fun-action-link" *ngFor="let funActionLink of titleActionLinks">{{ funActionLink.text }}</span>

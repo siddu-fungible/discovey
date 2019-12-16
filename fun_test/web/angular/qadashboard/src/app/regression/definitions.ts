@@ -1,3 +1,5 @@
+import {Api} from "../lib/api";
+
 export class ReleaseCatalogSuite {
   id: number;
   constructor(id: number) {
@@ -55,6 +57,26 @@ export class RegisteredAsset {
         }
       })
     }
+  }
+}
+
+export class SuiteExecutions extends Api {
+  classType = SuiteExecutions;
+  url = "/api/v1/regression/suite_executions";
+  execution_id: number;
+  state: number;
+  result: string;
+
+  public getUrl(params) {
+    let url = this.url;
+    if (params.hasOwnProperty('execution_id')) {
+      url = `${url}/${params.execution_id}`;
+    }
+    return url;
+  }
+
+  serialize() {
+    return {};
   }
 }
 

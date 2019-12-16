@@ -38,6 +38,7 @@
 
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
       <div><b>{{ suite_execution.suite_id }}: {{ suite_execution.suite_details?.name }}</b>&nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}</div>
+
       <div>
       Job-ID:
         <ng-container *ngIf="suite_execution.job_id else jobIdUnavailable">
@@ -46,6 +47,11 @@
         <ng-template #jobIdUnavailable>
           Not available
         </ng-template>
+        <span>
+          &nbsp;State: <app-smart-label [value]="jobStatusTypes.descriptionMap[suite_execution.job_status]"></app-smart-label>
+          &nbsp;Result: <app-smart-label [value]="suite_execution.job_result"></app-smart-label>
+        </span>
+
       </div>
       <span>
 
@@ -70,8 +76,7 @@
         </span>
 
         <ng-container *ngIf="suite_execution.error_message">
-          {{ suite_execution.error_message }}
-          <app-messages-panel [messages]="[suite_execution.error_message]" [type]="'ERROR'"></app-messages-panel>
+          Last error (updates every 3 mins): <app-messages-panel [messages]="[suite_execution.error_message]" [type]="'ERROR'"></app-messages-panel>
         </ng-container>
       </div>
       <table *ngIf="suite_execution.showingScripts" [@show] class="fun-table">

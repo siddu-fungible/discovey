@@ -9,6 +9,7 @@ import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
 import {ApiType} from "../../lib/api";
 import {ButtonType, FunActionLink, FunButtonWithIcon} from "../../ui-elements/definitions";
+import {SuiteExecutions} from "../definitions";
 
 @Component({
   selector: 'app-release-detail',
@@ -100,12 +101,37 @@ export class ReleaseDetailComponent implements OnInit {
       });
 
       concat(...allObservables).subscribe(response => {
+        this.fetchJobState();
+      }, error => {
+        this.logger.error(`Unable to fetch suite information`, error);
+      })
+    }
+  }
+
+  fetchJobState() {
+    if (this.releaseCatalogExecution.suite_executions) {
+      let allObservables: Observable <any>[] = this.releaseCatalogExecution.suite_executions.map(suiteExecution => {
+        if (suiteExecution.job_id) {
+          let suiteExecutionObject: SuiteExecutions = new SuiteExecutions();
+          return suiteExecutionObject.get(suiteExecutionObject.getUrl({execution_id: suiteExecution.job_id})).pipe(switchMap(response => {
+            suiteExecution.job_status = response[0].state;
+            suiteExecution.job_result = response[0].result;
+            return of(true);
+          }))
+        } else {
+          return of(true);
+        }
+
+      });
+
+      concat(...allObservables).subscribe(response => {
 
       }, error => {
         this.logger.error(`Unable to fetch suite information`, error);
       })
     }
   }
+
   refresh() {
     this.driver.subscribe(response => {
 
