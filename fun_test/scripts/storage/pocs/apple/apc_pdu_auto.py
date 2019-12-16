@@ -401,7 +401,7 @@ class ApcPduTestcase(FunTestCase):
 
     def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
         result = True
-        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=getattr(self, "pc_no", 1))
         if link_status:
             for port_type, ports_list in expected_port_up.iteritems():
                 for each_port in ports_list:
