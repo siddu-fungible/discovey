@@ -16,6 +16,9 @@ env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-serve
 env.NFSSERVER = "10.1.20.54"
 env.TFTPSERVER = "10.1.21.48"
 
+env.TFTPROOT = "localadmin"
+env.TFTPPASS = "Precious1*"
+env.TFTPPATH = '/tftpboot'
 ###########   ADD YOU FS BOX DETAILS BELOW  #######################################
 setups = {
     'FS2' : {
@@ -264,11 +267,11 @@ setups = {
         'come' : [ '10.1.104.133', 'fun', '123' ]
     },
    'FS64' : {
-        'bmc'  : [ '10.1.104.108', 'sysadmin', 'superuser' ],
-        'rf'   : [ '10.1.104.108', 'Administrator', 'superuser' ],
-        'ipmi' : [ '10.1.104.108', 'admin', 'admin' ],
-        'fpga' : [ '10.1.104.102', 'root', 'root' ],
-        'come' : [ '10.1.104.111', 'fun', '123' ]
+        'bmc'  : [ '10.1.104.127', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.104.127', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.104.127', 'admin', 'admin' ],
+        'fpga' : [ '10.1.104.129', 'root', 'root' ],
+        'come' : [ '10.1.104.128', 'fun', '123' ]
     },
    'FS65' : {
         'bmc'  : [ '10.1.104.164', 'sysadmin', 'superuser' ],
@@ -305,6 +308,20 @@ setups = {
         'fpga' : [ 'fs37-fpga.fungible.local', 'root', '""' ],
         'come' : [ 'fs37-come.fungible.local', 'fun', '123' ]
     },
+   'FS104' : {
+        'bmc'  : [ '10.1.108.46', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.108.46', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.108.46', 'admin', 'admin' ],
+        'fpga' : [ '10.1.108.48', 'root', '""' ],
+        'come' : [ '10.1.108.47', 'fun', '123' ]
+    },
+   'FS110' : {
+        'bmc'  : [ '10.90.4.106', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.90.4.106', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.90.4.106', 'admin', 'admin' ],
+        'fpga' : [ '10.90.4.108', 'root', '""' ],
+        'come' : [ '10.90.4.107', 'fun', '123' ]
+   },
 }
 
 
