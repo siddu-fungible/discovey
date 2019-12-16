@@ -55,17 +55,17 @@ class MyScript(FunTestScript):
         self.initialize_json_data()
         self.initialize_job_inputs()
         self.initialize_variables()
-        # if self.boot_new_image:
-        #     if FIO_SERVER in self.traffic_profile:
-        #         self.reboot_servers()
-        #     self.boot_fs()
-        #     self.verify_dpcsh_started()
-        #     if FIO_SERVER in self.traffic_profile:
-        #         self.create_vol_and_attach()
-        #         self.connect_the_volume_to_host()
-        #     if LE in self.traffic_profile:
-        #         self.restart_dpcsh()
-        #         self.setup_le_firewall()
+        if self.boot_new_image:
+            if FIO_SERVER in self.traffic_profile:
+                self.reboot_servers()
+            self.boot_fs()
+            self.verify_dpcsh_started()
+            if FIO_SERVER in self.traffic_profile:
+                self.create_vol_and_attach()
+                self.connect_the_volume_to_host()
+            if LE in self.traffic_profile:
+                self.restart_dpcsh()
+                self.setup_le_firewall()
         # else:
         #     self.clear_uart_logs()
 
