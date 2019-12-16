@@ -55,17 +55,17 @@ class MyScript(FunTestScript):
         self.initialize_json_data()
         self.initialize_job_inputs()
         self.initialize_variables()
-        if self.boot_new_image:
-            if FIO_SERVER in self.traffic_profile:
-                self.reboot_servers()
-            self.boot_fs()
-            self.verify_dpcsh_started()
-            if FIO_SERVER in self.traffic_profile:
-                self.create_vol_and_attach()
-                self.connect_the_volume_to_host()
-            if LE in self.traffic_profile:
-                self.restart_dpcsh()
-                self.setup_le_firewall()
+        # if self.boot_new_image:
+        #     if FIO_SERVER in self.traffic_profile:
+        #         self.reboot_servers()
+        #     self.boot_fs()
+        #     self.verify_dpcsh_started()
+        #     if FIO_SERVER in self.traffic_profile:
+        #         self.create_vol_and_attach()
+        #         self.connect_the_volume_to_host()
+        #     if LE in self.traffic_profile:
+        #         self.restart_dpcsh()
+        #         self.setup_le_firewall()
         # else:
         #     self.clear_uart_logs()
 
@@ -1027,6 +1027,15 @@ class FrsTestCase(FunTestCase):
                 fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
             except:
                 fun_test.log("Its a bundle issue")
+        self.add_come_logs()
+
+    def add_come_logs(self):
+        dmesg_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="come_dmesg_logs.txt")
+        f = open(dmesg_file_name, "w+")
+        output = self.come_handle.command("dmesg")
+        f.write(output)
+        f.close()
+        fun_test.add_auxillary_file(description="COMe logs", filename=dmesg_file_name)
 
     def add_the_links(self):
         # Todo: Get the links for each individual app
