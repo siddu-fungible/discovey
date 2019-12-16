@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from fun_settings import TEAM_REGRESSION_EMAIL
+from fun_settings import TEAM_REGRESSION_EMAIL, LOGS_DIR
 from fun_global import RESULTS
 import web.fun_test.django_interactive
 from web.fun_test.models import Daemon
@@ -19,7 +19,7 @@ DAEMON_NAME = "catalog_execution_service"
 logger = logging.getLogger("{}_logger".format(DAEMON_NAME))
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
-LOG_FILE_NAME = "{}_log.txt".format(DAEMON_NAME)
+LOG_FILE_NAME = "{}/{}_log.txt".format(LOGS_DIR, DAEMON_NAME)
 
 TEN_MB = 1e7
 DEBUG = False
@@ -101,16 +101,24 @@ class CatalogExecutionStateMachine:
         for catalog_execution in catalog_executions:
             job_ids = []
             for suite_execution in catalog_execution.suite_executions:
-                job_ids.append(suite_execution["job_id"])
+                if suite_execution["job_id"]:
+                    job_ids.append(suite_execution["job_id"])
 
+            job_results = []
             if job_ids:
                 completed_job_ids = 0
                 for job_id in job_ids:
                     s = SuiteExecution.objects.get(execution_id=job_id)
                     if JobStatusType.is_completed(s.state):
                         completed_job_ids += 1
+                        job_results.append(s.result)
                 if len(job_ids) == completed_job_ids:
                     catalog_execution.state = JobStatusType.COMPLETED
+                if len(job_ids) == len(job_results):
+                    if all(map(lambda x: x == RESULTS["PASSED"], job_results)):
+                        catalog_execution.result = RESULTS["PASSED"]
+                    else:
+                        catalog_execution.result = RESULTS["FAILED"]
             catalog_execution.save()
 
     def run(self):
