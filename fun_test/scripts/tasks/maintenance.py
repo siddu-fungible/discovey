@@ -215,7 +215,7 @@ class BackupTestRail(FunTestCase):
         time_string = get_current_time().strftime("%m_%d_%Y_%H_%M_%S")
         full_path_to_tgz = "{}/{}.tgz".format(TESTRAIL_BACKUP_DIRECTORY, time_string)
         command = "mysqldump -u testrail -p  testrail | gzip -c > {}".format(full_path_to_tgz)
-        service_host.command(command=command)
+        service_host.command(command=command, custom_prompts={"ssword:": "fun123"})
         fun_test.test_assert(service_host.list_files(full_path_to_tgz), "Testrail backup created")
 
     def cleanup(self):
