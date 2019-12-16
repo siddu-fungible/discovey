@@ -845,9 +845,8 @@ class StorageFsTemplate(object):
                 fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 2)
                 fun_test.log("Remaining Time: {}".format(interface_status_timer.remaining_time()))
             else:
-                break
                 result = True
+                break
         else:
             fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
-            result = True
         return result
