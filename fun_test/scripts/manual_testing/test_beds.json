@@ -1,0 +1,333 @@
+{
+  "fs-11": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-11",
+        "pcie_interface_info": {
+          "0": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "poc-server-10"
+            }
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "4": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "poc-server-05"
+            }
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "poc-server-08"
+            }
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "20": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1,
+            "host_info": {
+              "name": "poc-server-09"
+            }
+          },
+          "21": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          },
+          "22": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          },
+          "23": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 20
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-06"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-07"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "fs-6": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-6",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-01"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-02"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "fs-9": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-9"
+      }
+    }
+  },
+  "fs-7": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-7"
+      }
+    }
+  },
+  "fs-15": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-15"
+      }
+    }
+  },
+  "fs-alibaba": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-45"
+      },
+      "1": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-48"
+      }
+    }
+  },
+  "fs-20": {
+    "type": "csr-replay",
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-20",
+        "disable_f1_index": 1,
+        "fpg_interface_info": {
+          "0": {
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "hosts": 1,
+              "host_info": {
+                "name": "poc-server-03"
+              }
+            },
+            "20": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "dut_info": {
+                "dut_index": 0,
+                "fpg_interface_info": {
+                  "f1_index": 1,
+                  "interface_index": 4
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "inspur": {
+    "type": "dynamic", // Used to decide whether this testbed is used with CSR-replay or not. If it is CSR reply then it will won't have bond interface, and the hosts will be directly connected to the NU interface itself
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-41",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [0, 4, 8, 12],
+              "ip": "15.41.1.2/24"
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [0, 4, 8, 12],
+              "ip": "15.41.2.2/24"
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/22"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/23"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/20"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/21"
+              }
+            }
+          },
+          "1": {
+            "0": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/18"
+              }
+            },
+            "4": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/19"
+              }
+            },
+            "8": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/16"
+              }
+            },
+            "12": {
+              "type": "INTERFACE_TYPE_ETHERNET",
+              "switch_info": {
+                "name": "qfx-1",
+                "port": "et-0/0/17"
+              }
+            }
+          }
+        }
+      }
+    },
+    "switch_info": {
+      "name": "qfx-1",
+      "interface_info" : {
+        "et-0/0/0": {
+          "ip": "15.1.1.1/24",
+          "host_info": {
+            "name": "mktg-server-01"
+          }
+        },
+        "et-0/0/1": {
+          "ip": "15.1.2.1/24",
+          "host_info": {
+            "name": "mktg-server-02"
+          }
+        }
+      }
+    },
+    "hosts_info": {
+      "0": {
+        "type": "Host",
+        "name": "mktg-server-01",
+        "interface_info": {
+          "0": {
+            "name": "enp216s0",
+            "ip": "15.1.1.2/24",
+            "switch_info": {
+              "name": "qfx-1",
+              "port": "et-0/0/0"
+            }
+          }
+        }
+      },
+      "1": {
+        "type": "Host",
+        "name": "mktg-server-02",
+        "interface_info": {
+          "0": {
+            "name": "enp216s0",
+            "ip": "15.1.2.2/24",
+            "switch_info": {
+              "name": "qfx-1",
+              "port": "et-0/0/1"
+            }
+          }
+        }
+      }
+    }
+  }
+}
