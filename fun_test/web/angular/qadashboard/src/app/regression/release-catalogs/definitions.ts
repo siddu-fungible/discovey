@@ -45,6 +45,7 @@ export class ReleaseCatalogExecution extends Api {
   completion_date_timestamp: number;
   owner: string = null;
   state: number;
+  result: string = null;
   release_catalog_id: number;
   description: string = "TBD";
   recurring: boolean = true;

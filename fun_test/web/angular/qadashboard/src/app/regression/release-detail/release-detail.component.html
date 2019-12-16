@@ -8,6 +8,7 @@
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"
       [leftAlignedButtons]="headerLeftAlignedButtons"
       [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
+      [titleResultLabel]="releaseCatalogExecution.result"
     >
 
     </app-section-header>

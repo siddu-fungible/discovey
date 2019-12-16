@@ -382,6 +382,7 @@ class ReleaseCatalogExecution(FunModel):
     completion_date = models.DateTimeField(null=True, default=None)
     owner = models.EmailField(null=True, blank=True)
     state = models.IntegerField(default=JobStatusType.UNKNOWN)
+    result = models.CharField(max_length=20, choices=RESULT_CHOICES, default="UNKNOWN")
     description = models.TextField(default="TBD")
     recurring = models.BooleanField(default=True)
     release_train = models.TextField(default="master", null=True)

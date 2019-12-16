@@ -7,7 +7,7 @@ import re
 from scheduler.scheduler_global import JobStatusType
 from datetime import timedelta
 from fun_global import get_current_time
-from fun_settings import TFTP_DIRECTORY
+from fun_settings import TFTP_DIRECTORY, TESTRAIL_BACKUP_DIRECTORY
 
 
 class MaintenanceScript(FunTestScript):
@@ -201,6 +201,26 @@ class RemoveOldImagesOnTftpServer(FunTestCase):
     def cleanup(self):
         pass
 
+class BackupTestRail(FunTestCase):
+    def describe(self):
+        self.set_test_details(id=8, summary="Backup testrail database", steps=""" """)
+
+    def setup(self):
+        pass
+
+    def run(self):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        service_host = Linux(**service_host_spec)
+        time_string = get_current_time().strftime("%m_%d_%Y_%H_%M_%S")
+        full_path_to_tgz = "{}/{}.tgz".format(TESTRAIL_BACKUP_DIRECTORY, time_string)
+        command = "mysqldump -u testrail -p  testrail | gzip -c > {}".format(full_path_to_tgz)
+        service_host.command(command=command)
+        fun_test.test_assert(service_host.list_files(full_path_to_tgz), "Testrail backup created")
+
+    def cleanup(self):
+        pass
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
@@ -210,4 +230,5 @@ if __name__ == "__main__":
     myscript.add_test_case(CheckMongoCollectionCount())
     myscript.add_test_case(RemoveOldCollections())
     myscript.add_test_case(RemoveOldImagesOnTftpServer())
+    myscript.add_test_case(BackupTestRail())
     myscript.run()
