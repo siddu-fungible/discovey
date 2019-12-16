@@ -25,7 +25,6 @@ export class FunStatsComponent implements OnInit {
   showTable: boolean = false;
   chartReady: boolean = false;
   uniqueTimeStamps: any = new Set();
-  TIMEZONE: string = "America/Los_Angeles";
   xEpochValues: any = null;
 
   constructor(private commonService: CommonService) {
@@ -44,7 +43,7 @@ export class FunStatsComponent implements OnInit {
     this.findUniqueTimeStamps(); //find unique timestamps from the series data
     this.xEpochValues = Array.from(this.uniqueTimeStamps.values()).sort();
     this.xEpochValues.forEach(timestamp => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp), this.TIMEZONE);
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp));
       this.xValues.push(dateTime);
       dataByTime[dateTime] = [];
     });
@@ -55,7 +54,7 @@ export class FunStatsComponent implements OnInit {
       this.tableHeaders.push(series.name);
       yData["data"] = [];
       this.xEpochValues.forEach(timestamp => {
-        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp), this.TIMEZONE);
+        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp));
         if (series.data.hasOwnProperty(timestamp)) {
           dataByTime[dateTime].push(series.data[timestamp]);
           yData["data"].push(series.data[timestamp]);
