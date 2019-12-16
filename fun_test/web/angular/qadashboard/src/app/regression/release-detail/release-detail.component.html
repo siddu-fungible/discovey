@@ -1,15 +1,25 @@
 <div class="component">
   <fun-spinner [status]="status"></fun-spinner>
-  <ng-container *ngIf="!status">
+  <ng-container *ngIf="!status && jobStatusTypes">
     <app-section-header
       [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
       [subText2]="'Owner: ' + releaseCatalogExecution.owner"
                         [staticTitle]="'Release: '"
-      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)">
+      [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"
+      [leftAlignedButtons]="headerLeftAlignedButtons"
+      [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
+      [titleResultLabel]="releaseCatalogExecution.result"
+    >
+
     </app-section-header>
+    <br>
 
 
 
+    <app-section-header [title]="'Suites'"
+                        [subSection]="true"
+                        [titleActionLinks]="suitesHeaderActionLinks"
+                        [titleLeftAlignedButtons]="suitesHeaderLeftAlignedButtons"></app-section-header>
     <ng-container *ngIf="addingSuites">
       <div class="fun-panel">
         <div class="fun-panel-header">
@@ -25,22 +35,33 @@
         </div>
       </div>
     </ng-container>
+    <button *ngIf="!releaseCatalogExecution.ready_for_execution" class="fun-button-submit" (click)="execute()">Execute</button>
 
-    <h6 style="display: inline-block; padding: 0 10px">Suites</h6>    <span *ngIf="!addingSuites" class="fun-action-link" (click)="addingSuites = !addingSuites">+ Add suites</span>
-
-    <app-section-horizontal-line></app-section-horizontal-line>
     <div class="fun-div" *ngFor="let suite_execution of releaseCatalogExecution.suite_executions">
-      {{ suite_execution.suite_id }}:
-      <div style="text-decoration: underline; display: inline-block"><b>{{ suite_execution.suite_details?.name }}</b>
+      <div><b>{{ suite_execution.suite_id }}: {{ suite_execution.suite_details?.name }}</b>&nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}</div>
+
+      <div>
+      Job-ID:
+        <ng-container *ngIf="suite_execution.job_id else jobIdUnavailable">
+          <a href="/regression/suite_detail/{{ suite_execution.job_id }}">{{ suite_execution.job_id }}</a>
+        </ng-container>
+        <ng-template #jobIdUnavailable>
+          Not available
+        </ng-template>
+        <span>
+          &nbsp;State: <app-smart-label [value]="jobStatusTypes.descriptionMap[suite_execution.job_status]"></app-smart-label>
+          &nbsp;Result: <app-smart-label [value]="suite_execution.job_result"></app-smart-label>
+        </span>
+
       </div>
       <span>
-        &nbsp;&nbsp;{{ suite_execution?.suite_details?.short_description }}
+
       </span>
       <div>
+        <input type="checkbox" (click)="onSelectClicked()" [(ngModel)]="suite_execution.selected" [checked]="suite_execution.selected">&nbsp;
         <span>Test-bed: {{ suite_execution.test_bed_name }}
-          <span class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
 
-
+          <span *ngIf="(releaseCatalogExecution.state === jobStatusTypes.UNKNOWN) || (!suite_execution.test_bed_name)" class="fun-action-link" (click)="suite_execution.modifyingTestBed = !suite_execution.modifyingTestBed">modify</span>
           <ng-container *ngIf="suite_execution.modifyingTestBed">
             <select  id="test-bed" [(ngModel)]="newTestBedName">
               <option *ngFor="let testBed of testBeds" [ngValue]="testBed.name">{{ testBed.name }}
@@ -49,13 +70,15 @@
               <span><i class="fa fa-check fa-fw tick-color" (click)="onSubmitModifyTestBed(suite_execution, newTestBedName)"></i></span>
               <span><i class="fa fa-times fa-fw close-color" (click)="onCancelModifyTestBed(suite_execution, newTestBedName)"></i></span>
           </ng-container>
-
-
         </span>
         <span>
           , Scripts: {{ suite_execution?.suite_details?.entries.length }}
           <span class="fun-action-link" (click)="suite_execution.showingScripts = !suite_execution.showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
         </span>
+
+        <ng-container *ngIf="suite_execution.error_message">
+          Last error (updates every 3 mins): <app-messages-panel [messages]="[suite_execution.error_message]" [type]="'ERROR'"></app-messages-panel>
+        </ng-container>
       </div>
       <table *ngIf="suite_execution.showingScripts" [@show] class="fun-table">
         <tr>
@@ -72,5 +95,5 @@
 
 
   </ng-container>
-
+  <!--button (click)="test()">Test</button-->
 </div>

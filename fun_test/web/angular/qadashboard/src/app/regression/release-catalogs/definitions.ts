@@ -4,8 +4,15 @@ import {Suite} from "../suite-editor/suite-editor.service";
 export class ReleaseSuiteExecution extends Api {
   classType = ReleaseSuiteExecution;
   suite_id: number;
-  test_bed_name: string;
+  test_bed_name: string = null;
   suite_details: Suite;
+  selected: boolean = false;
+  job_id: number = null;
+  error_message: string = null;
+  job_status: number = null;
+  job_result: string = null;
+  showingScripts: boolean = false;
+  modifyingTestBed: boolean = false;
 
   constructor(props) {
     super();
@@ -16,10 +23,16 @@ export class ReleaseSuiteExecution extends Api {
       if (key === "test_bed_name") {
         this.test_bed_name = props.test_bed_name;
       }
+      if (key === "job_id") {
+        this.job_id = props.job_id;
+      }
+      if (key === "error_message") {
+        this.error_message = props.error_message;
+      }
     })
   }
   serialize() {
-    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name};
+    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name, job_id: this.job_id};
   }
 }
 
@@ -32,14 +45,17 @@ export class ReleaseCatalogExecution extends Api {
   completion_date_timestamp: number;
   owner: string = null;
   state: number;
+  result: string = null;
   release_catalog_id: number;
   description: string = "TBD";
   recurring: boolean = true;
   release_train: string = "master";
+  ready_for_execution: boolean = false;
   master_execution_id: number = null;
   suite_executions: ReleaseSuiteExecution [] = [];
-  showingScripts: boolean = false;
-  modifyingTestBed: boolean = false;
+  deleted: boolean = false;
+
+
   customDeserializableProperties = ["suite_executions"];
   deserializationHooks = {suite_executions: function(data)  {
       return data.map(dataElement => {
@@ -56,7 +72,8 @@ export class ReleaseCatalogExecution extends Api {
       description: this.description,
       recurring: this.recurring,
       release_train: this.release_train,
-      suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize())
+      suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize()),
+      ready_for_execution: this.ready_for_execution
     }
   }
 

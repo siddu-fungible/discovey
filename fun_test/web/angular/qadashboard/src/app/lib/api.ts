@@ -79,7 +79,13 @@ export abstract class Api {
 
   }
 
-  public delete() {
+  public delete(url) {
+    return this.apiService.delete(url).pipe(switchMap(response => {
+      return of(null);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to delete: ${this.constructor.name}`, error);
+      return throwError(error);
+    }))
   }
 
   public deleteAll() {

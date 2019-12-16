@@ -309,7 +309,7 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -793,6 +793,29 @@ class Bmc(Linux):
                                         asset_id=asset_id,
                                         artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
+            try:
+                fun_test.log("Looking for rotated files")
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    rotated_artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                        self._get_context_prefix("{}_{}".format(f1_index, os.path.basename(rotated_log_filename))))
+
+                    fun_test.scp(source_ip=self.host_ip,
+                                 source_file_path=rotated_log_filename,
+                                 source_username=self.ssh_username,
+                                 source_password=self.ssh_password,
+                                 target_file_path=rotated_artifact_file_name,
+                                 timeout=60)
+
+                    fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART rotated log compressed {} {}").format(f1_index, rotated_index, os.path.basename(rotated_log_filename)),
+                                                filename=rotated_artifact_file_name,
+                                                asset_type=asset_type,
+                                                asset_id=asset_id,
+                                                artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
+            except Exception as ex:
+                fun_test.critical(str(ex))
             try:
                 self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
             except Exception as ex:
