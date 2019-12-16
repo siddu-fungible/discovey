@@ -374,10 +374,10 @@ class ECVolumeLevelScript(FunTestScript):
                 for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
                     if container_name == "run_sc":
                         continue
-                    bond_interfaces_status = self.fs_spec[0].is_bond_interface_up(container_name=container_name,
-                                                                                  name="bond0")
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                                    name="bond0")
                     fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
-                                                  message="Bond Interface is Up & Running")
+                                                  message="Bundle Image boot: Bond Interface is Up & Running")
                 # If fresh install, configure dataplane ip as database is cleaned up
                 if self.install == "fresh":
                     # Getting all the DUTs of the setup
@@ -506,11 +506,11 @@ class ECVolumeLevelScript(FunTestScript):
                                 for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
                                     if container_name == "run_sc":
                                         continue
-                                    bond_interfaces_status = self.fs_spec[0].is_bond_interface_up(
-                                        container_name=container_name,
-                                        name="bond0")
-                                    fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
-                                                                  message="Bond Interface is Up & Running")
+                                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                        container_name=container_name, name="bond0")
+                                    fun_test.test_assert_expected(
+                                        expected=True, actual=bond_interfaces_status,
+                                        message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
 
                                 # Configure dataplane ip as database is cleaned up
                                 # Getting all the DUTs of the setup
