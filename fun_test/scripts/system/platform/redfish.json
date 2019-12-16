@@ -1,3 +1,6 @@
 {
-  "py3_env_name": "py3"
+  "credentials": {
+    "username": "Administrator",
+    "password": "superuser"
+  }
 }
