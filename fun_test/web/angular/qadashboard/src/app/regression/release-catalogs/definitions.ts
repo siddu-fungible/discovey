@@ -4,10 +4,14 @@ import {Suite} from "../suite-editor/suite-editor.service";
 export class ReleaseSuiteExecution extends Api {
   classType = ReleaseSuiteExecution;
   suite_id: number;
-  test_bed_name: string;
+  test_bed_name: string = null;
   suite_details: Suite;
   selected: boolean = false;
   job_id: number = null;
+  error_message: string = null;
+  showingScripts: boolean = false;
+  modifyingTestBed: boolean = false;
+
   constructor(props) {
     super();
     Object.keys(props).forEach(key => {
@@ -19,6 +23,9 @@ export class ReleaseSuiteExecution extends Api {
       }
       if (key === "job_id") {
         this.job_id = props.job_id;
+      }
+      if (key === "error_message") {
+        this.error_message = props.error_message;
       }
     })
   }
@@ -45,8 +52,7 @@ export class ReleaseCatalogExecution extends Api {
   suite_executions: ReleaseSuiteExecution [] = [];
   deleted: boolean = false;
 
-  showingScripts: boolean = false;
-  modifyingTestBed: boolean = false;
+
   customDeserializableProperties = ["suite_executions"];
   deserializationHooks = {suite_executions: function(data)  {
       return data.map(dataElement => {

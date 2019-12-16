@@ -62,13 +62,21 @@ class CatalogExecutionStateMachine:
             for suite_execution in catalog_execution.suite_executions:
                 environment = {"bundle_image_parameters": {"release_train": catalog_execution.release_train,
                                                            "build_number": "latest"}}
-                job_id = queue_job3(suite_id=suite_execution["suite_id"],
-                                    emails=[TEAM_REGRESSION_EMAIL],
-                                    submitter_email=catalog_execution.owner,
-                                    tags="tbd",
-                                    test_bed_type=suite_execution["test_bed_name"],
-                                    environment=environment)
-                suite_execution["job_id"] = job_id
+
+                valid_job = True
+                if not suite_execution["test_bed_name"]:
+                    valid_job = False
+                    suite_execution["error_message"] = "Test-bed is invalid"
+                if valid_job:
+                    job_id = queue_job3(suite_id=suite_execution["suite_id"],
+                                        emails=[TEAM_REGRESSION_EMAIL],
+                                        submitter_email=catalog_execution.owner,
+                                        tags="tbd",
+                                        test_bed_type=suite_execution["test_bed_name"],
+                                        environment=environment)
+                    suite_execution["job_id"] = job_id
+                    suite_execution["error_message"] = None
+            catalog_execution.state = JobStatusType.IN_PROGRESS
             catalog_execution.save()
 
 

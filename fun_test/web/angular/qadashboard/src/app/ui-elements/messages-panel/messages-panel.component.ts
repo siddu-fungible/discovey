@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 
-class MessageTypes {
+export class MessageTypes {
   static DANGER = "DANGER";
   static ERROR = "ERROR";
   static INFO = "INFO";
