@@ -9,6 +9,25 @@ from scripts.networking.helper import *
 import ipaddress
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from fun_global import PerfUnit, FunPlatform
+from lib.system.fun_test import *
+from lib.host.linux import Linux
+from StringIO import StringIO
+import random
+from lib.system.fun_test import *
+from lib.system import utils
+from lib.fun.fs import Fs
+from lib.fun.fs import Bmc
+
+import re
+from lib.templates.storage.storage_fs_template import *
+from scripts.storage.storage_helper import *
+from collections import OrderedDict, Counter
+from scripts.networking.helper import *
+from lib.utilities.funcp_config import *
+from lib.topology.topology_helper import TopologyHelper
+import ipaddress
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from fun_global import PerfUnit, FunPlatform
 
 
 
@@ -351,6 +370,20 @@ class RDSVolumePerformanceScript(FunTestScript):
                                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
             params[storage_fs]['f11_ip'] = params[storage_fs]['f11_ip'].strip()
             params[storage_fs]['come_handle'].disconnect()
+
+            fs_bmc = storage_fs.replace("-", "") + "-bmc"
+            bmc_username = "sysadmin"
+            bmc_passwd = "superuser"
+
+            bmc_handle = Bmc(host_ip=fs_bmc,
+                             ssh_username=bmc_username,
+                             ssh_password=bmc_passwd,
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.command("killall microcom")
+            bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
+            bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
+
 
             try:
                 ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
