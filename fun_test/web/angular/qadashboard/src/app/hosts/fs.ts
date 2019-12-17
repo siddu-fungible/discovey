@@ -12,9 +12,6 @@ export class Vp {
     this.utilization[timestamp] = value;
   }
 
-  addBamUtil(timestamp: number, value: number) {
-    this.utilization[timestamp] = value;
-  }
 }
 
 export class Core {
@@ -40,16 +37,13 @@ export class Core {
     this.vps[vpIndex].addDebugVpUtil(timestamp, value);
   }
 
-  addBamUtil(vpIndex, timestamp, value) {
-    this.vps[vpIndex].addBamUtil(timestamp, value);
-  }
 }
 
 //6 * 4, 4 * 2
 export class Cluster {
   index: number;
   cores: Core [] = [];
-  bamUsage: BamUsage;
+  bamUsage: any = {};
 
   constructor(index: number) {
     this.index = index;
@@ -73,7 +67,18 @@ export class Cluster {
   }
 
   addBamUsage(poolName, poolKey, timestamp, value) {
-    this.bamUsage[poolName][poolKey][timestamp] = value;
+    if (!this.bamUsage.hasOwnProperty(poolName)) {
+      this.bamUsage[poolName] = {};
+      this.bamUsage[poolName][poolKey] = {};
+      this.bamUsage[poolName][poolKey][timestamp] = value;
+    } else {
+      if (!this.bamUsage[poolName].hasOwnProperty(poolKey)) {
+        this.bamUsage[poolName][poolKey] = {};
+        this.bamUsage[poolName][poolKey][timestamp] = value;
+      } else {
+       this.bamUsage[poolName][poolKey][timestamp] = value;
+      }
+    }
   }
 }
 
@@ -128,26 +133,26 @@ export class Fs {
   }
 }
 
-export class BamUsage {
-  poolStats: PoolStats [] = [];
-
-  constructor() {
-  }
-
-  addBamUsage(timestamp, value) {
-   this.poolStats.push()
-  }
-
-}
-
-export class PoolStats {
-  poolStats: any = {};
-
-  constructor() {
-  }
-
-  addBamUsage(timestamp, value) {
-    this.poolStats[timestamp] = value;
-  }
-
-}
+// export class BamUsage {
+//   poolStats: PoolStats [] = [];
+//
+//   constructor() {
+//   }
+//
+//   addBamUsage(timestamp, value) {
+//    this.poolStats.push()
+//   }
+//
+// }
+//
+// export class PoolStats {
+//   poolStats: any = {};
+//
+//   constructor() {
+//   }
+//
+//   addBamUsage(timestamp, value) {
+//     this.poolStats[timestamp] = value;
+//   }
+//
+// }

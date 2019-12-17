@@ -7,6 +7,7 @@ import {RegisteredAsset} from "../../../regression/definitions";
 import {FunTimeSeries, FunTimeSeriesCollection} from "../../definitions";
 import {CommonService} from "../../../services/common/common.service";
 import {slideInOutAnimation, showAnimation} from "../../../animations/generic-animations";
+import {Fs} from "../../../hosts/fs";
 
 @Component({
   selector: 'app-bam',
@@ -30,6 +31,8 @@ export class BamComponent implements OnInit, OnChanges {
   rawTableData: any[] = [];
   rawTableHeaders: any[] = [];
 
+  fs: Fs = new Fs();
+
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.testCaseTimeSeries(this.suiteExecutionId,
@@ -42,7 +45,7 @@ export class BamComponent implements OnInit, OnChanges {
 
     })).pipe(switchMap(response => {
       this.data = response;
-      this.parseData(this.data);
+      this.parseData();
       return of(true);
     }));
 
@@ -53,7 +56,7 @@ export class BamComponent implements OnInit, OnChanges {
   ngOnInit() {
   }
 
-  parseData(data) {
+  parseBamData(data) {
     let headers = new Set();
     headers.add("Time");
     this.data.forEach(oneRecord => {
@@ -102,42 +105,54 @@ export class BamComponent implements OnInit, OnChanges {
     this.rawTableHeaders = Array.from(headers.values())
   }
 
-  parseBamData(data) {
-        this.data.forEach(oneRecord => {
+  parseData() {
+    let headers = new Set();
+    headers.add("Time");
+    this.data.forEach(oneRecord => {
+      let oneData = [];
       let oneRecordData = oneRecord.data;
       let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000);
+      oneData.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         let dataForF1Index = oneRecordData[f1Index];
-        if (!this.parsedData.hasOwnProperty(f1Index)) {
-          this.parsedData[f1Index] = {};
-        }
-        let poolNames = this.bmUsagePerClusterPoolNames;
-        let poolKeys = this.bmUsagePerClusterPoolKeys;
-
-
-        poolNames.forEach(poolName => {
-          if (!this.parsedData[f1Index].hasOwnProperty(poolName)) {
-            this.parsedData[f1Index][poolName] = {};
-          }
-          poolKeys.forEach(poolKey => {
-            let title = poolName + "-" + poolKey;
-            let funTimeSeriesCollection = new FunTimeSeriesCollection(title, "%", []);
-            if (!this.parsedData[f1Index][poolName].hasOwnProperty(poolKey)) {
-              this.parsedData[f1Index][poolName][poolKey] = [];  // store array of cluster data here
-              this.clusterIndexes.forEach(clusterIndex => {
-                let name = `PC-${clusterIndex}`;
-                let oneSeries = new FunTimeSeries(name, {});
-                this.parsedData[f1Index][poolName][poolKey].push(oneSeries);
-              });
-            }
-            this.clusterIndexes.forEach(clusterIndex => {
-              let clusterIndexString = `cluster_${clusterIndex}`;
-              this.parsedData[f1Index][poolName][poolKey][clusterIndex].data[dateTime] = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
+        headers.add("F1-" + f1Index);
+        oneData.push(dataForF1Index);
+        this.clusterIndexes.forEach(clusterIndex => {
+          let clusterIndexString = `cluster_${clusterIndex}`;
+          let poolNames = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString];
+          Object.keys(poolNames).forEach(poolName => {
+            let poolKeys = poolNames[poolName];
+            Object.keys(poolKeys).forEach(poolKey => {
+              this.fs.addBam(f1Index, poolName, poolKey);
+              let value = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
+              this.fs.addBamUsage(f1Index, clusterIndex, poolName, poolKey, oneRecord.epoch_time, value);
             });
-            funTimeSeriesCollection.collection = this.parsedData[f1Index][poolName][poolKey];
-            this.parsedData[f1Index][poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;
           });
+        });
+      });
+      this.rawTableData.push(oneData);
+    });
+    this.rawTableHeaders = Array.from(headers.values());
+  }
+
+  prepareStatsData(): void {
+    this.fs.f1s.forEach(f1 => {
+      let poolNames = this.bmUsagePerClusterPoolNames;
+      let poolKeys = this.bmUsagePerClusterPoolKeys;
+      poolNames.forEach(poolName => {
+        f1[poolName] = {};
+        poolKeys.forEach(poolKey => {
+          f1[poolName][poolKey] = {};
+          let title = poolName + "-" + poolKey;
+          let funTimeSeriesCollection = new FunTimeSeriesCollection(title, "%", []);
+          f1.clusters.forEach(cluster => {
+            let name = `PC-${cluster.index}`;
+            let oneSeries = new FunTimeSeries(name, {});
+            oneSeries.data = cluster.bamUsage[poolName][poolKey];
+            funTimeSeriesCollection.collection.push(oneSeries);
+          });
+          f1[poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;
         });
       });
     });
@@ -148,6 +163,7 @@ export class BamComponent implements OnInit, OnChanges {
     if (this.scriptExecutionInfo && this.scriptExecutionInfo.suite_execution_id) {
       this.suiteExecutionId = this.scriptExecutionInfo.suite_execution_id;
       this.driver.subscribe(response => {
+        this.prepareStatsData();
         this.showCharts = true;
       }, error => {
         this.loggerService.error("Unable to fetch data");

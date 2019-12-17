@@ -14,7 +14,7 @@
           <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
             <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
               <div [@slideInOut] class="fun-flex-item">
-                <fun-stats [data]="parsedData[f1Index][poolName][poolKey]['funTimeSeries']"></fun-stats>
+                <fun-stats [data]="fs.f1s[f1Index][poolName][poolKey]['funTimeSeries']"></fun-stats>
               </div>
             </ng-container>
           </ng-container>
