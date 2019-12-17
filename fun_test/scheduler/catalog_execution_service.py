@@ -92,10 +92,21 @@ class CatalogExecutionStateMachine:
                 if not suite_execution["test_bed_name"]:
                     valid_job_parameters = False
                     suite_execution["error_message"] = "Test-bed is invalid"
-                if valid_job_parameters and not suite_execution["job_id"]:
-                    job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
-                    suite_execution["job_id"] = job_id
-                    suite_execution["error_message"] = None
+                if valid_job_parameters:
+                    if not suite_execution["job_id"] or ("re_run_request_submitted" in suite_execution and suite_execution["re_run_request_submitted"]):
+                        existing_job_id = None
+                        if suite_execution["job_id"]:
+                            existing_job_id = suite_execution["job_id"]
+                        job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
+                        suite_execution["job_id"] = job_id
+                        if existing_job_id:
+                            if "run_history" not in suite_execution:
+                                suite_execution["run_history"] = []
+                            existing_job = SuiteExecution.objects.get(execution_id=existing_job_id)
+                            suite_execution["run_history"].append({"job_id": existing_job_id,
+                                                                   "job_result": existing_job.result})
+                        suite_execution["re_run_request_submitted"] = False
+                        suite_execution["error_message"] = None
             catalog_execution.save()
 
         # Prepare to change the state of the release

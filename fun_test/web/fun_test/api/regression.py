@@ -744,6 +744,7 @@ def release_catalog_executions(request, id):
                         suite_execution_entry["re_run_request"] = False
                         suite_execution_entry["re_run_request_submitted"] = True
                         execution.state = JobStatusType.IN_PROGRESS
+                        execution.result = RESULTS["UNKNOWN"]
             if hasattr(execution, key):
                 setattr(execution, key, value)
 

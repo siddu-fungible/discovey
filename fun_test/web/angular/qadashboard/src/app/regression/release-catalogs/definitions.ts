@@ -3,6 +3,11 @@ import {Suite} from "../suite-editor/suite-editor.service";
 import {switchMap} from "rxjs/operators";
 import {of} from "rxjs";
 
+export class ReleaseSuiteExecutionHistory {
+  job_id: number;
+  job_result: string;
+}
+
 export class ReleaseSuiteExecution extends Api {
   classType = ReleaseSuiteExecution;
   suite_id: number;
@@ -17,6 +22,7 @@ export class ReleaseSuiteExecution extends Api {
   re_run_request_submitted: boolean = false;
   showingScripts: boolean = false;
   modifyingTestBed: boolean = false;
+  run_history: ReleaseSuiteExecutionHistory [] = [];
 
   constructor(props) {
     super();
@@ -36,8 +42,11 @@ export class ReleaseSuiteExecution extends Api {
       if (key === "suite_details") {
         this.suite_details = props.suite_details;
       }
-      if (key == "re_run_request_submitted") {
+      if (key === "re_run_request_submitted") {
         this.re_run_request_submitted = props.re_run_request_submitted;
+      }
+      if (key === "run_history") {
+        this.run_history = props.run_history;
       }
 
     })
