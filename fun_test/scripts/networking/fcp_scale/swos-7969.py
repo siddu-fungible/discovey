@@ -353,7 +353,6 @@ class SWOS_7929(FunTestCase):
 
 
     def cleanup(self):
-
         pass
 
 if __name__ == '__main__':
