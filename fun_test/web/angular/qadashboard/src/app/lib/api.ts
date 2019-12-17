@@ -44,6 +44,17 @@ export abstract class Api {
     }))
   }
 
+  public putOperation(url, payload, operation) {
+    url = `${url}?operation_type=${operation}`;
+    return this.apiService.put(url, payload).pipe(switchMap(response => {
+      this.deSerialize(response.data);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to post operation: ${operation}`, error);
+      return throwError(error);
+    }))
+  }
+
   public getUrl(params) {
     let url = this.url;
     if (params.hasOwnProperty('execution_id')) {

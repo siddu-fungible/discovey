@@ -1,5 +1,7 @@
 import {Api} from "../../lib/api";
 import {Suite} from "../suite-editor/suite-editor.service";
+import {switchMap} from "rxjs/operators";
+import {of} from "rxjs";
 
 export class ReleaseSuiteExecution extends Api {
   classType = ReleaseSuiteExecution;
@@ -11,6 +13,8 @@ export class ReleaseSuiteExecution extends Api {
   error_message: string = null;
   job_status: number = null;
   job_result: string = null;
+  re_run_request: boolean = false;
+  re_run_request_submitted: boolean = false;
   showingScripts: boolean = false;
   modifyingTestBed: boolean = false;
 
@@ -29,14 +33,19 @@ export class ReleaseSuiteExecution extends Api {
       if (key === "error_message") {
         this.error_message = props.error_message;
       }
-      if (key == "suite_details") {
+      if (key === "suite_details") {
         this.suite_details = props.suite_details;
+      }
+      if (key == "re_run_request_submitted") {
+        this.re_run_request_submitted = props.re_run_request_submitted;
       }
 
     })
   }
+
+
   serialize() {
-    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name, job_id: this.job_id};
+    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name, job_id: this.job_id, re_run_request: this.re_run_request};
   }
 }
 
@@ -88,5 +97,6 @@ export class ReleaseCatalogExecution extends Api {
     }
     return url;
   }
+
 
 }
