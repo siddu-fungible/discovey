@@ -4,3 +4,17 @@
 .hover-cell:hover .hover-icon {
   visibility: visible;
 }
+
+
+h4 {
+  margin-bottom: unset;
+}
+
+h5 {
+  margin-bottom: unset;
+}
+
+h6 {
+  margin-bottom: unset;
+}
+

@@ -818,3 +818,35 @@ class StorageFsTemplate(object):
 
         nc.disconnect()
         return True
+
+    def is_bond_interface_up(self, container_name, name, bond_bringup_timeout=BOND_BRINGUP_TIMEOUT, **kwargs):
+        """
+        :param container_name: String
+        :param name: String: Interface Name
+        :param bond_bringup_timeout: Integer: Timeout value
+        :param kwargs: provisional for future use
+        :return: Boolean: True for Success, False for Failure
+        """
+        result = False
+        container_obj = self.container_info[container_name]
+        bond_dict = {}
+        bond_dict["name"] = name
+        if kwargs:
+            for key in kwargs:
+                bond_dict[key] = kwargs[key]
+
+        # Checking whether the bond0 is UP and Running
+        match = ""
+        interface_status_timer = FunTimer(max_time=bond_bringup_timeout)
+        while not interface_status_timer.is_expired():
+            bond_output = container_obj.command("ifconfig {}".format(bond_dict["name"]))
+            match = re.search(r'UP.*RUNNING', bond_output)
+            if not match:
+                fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 2)
+                fun_test.log("Remaining Time: {}".format(interface_status_timer.remaining_time()))
+            else:
+                result = True
+                break
+        else:
+            fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
+        return result

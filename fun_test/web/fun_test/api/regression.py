@@ -714,9 +714,11 @@ def release_catalog_executions(request, id):
     result = None
     if request.method == "POST":
         request_json = json.loads(request.body)
-        execution = ReleaseCatalogExecution(**request_json)
-        execution.save()
-        result = execution.id
+        if not id:
+            execution = ReleaseCatalogExecution(**request_json)
+            execution.save()
+            result = execution.to_dict()
+
     if request.method == "GET":
         q = Q()
         if id:
@@ -731,12 +733,30 @@ def release_catalog_executions(request, id):
         request_json = json.loads(request.body)
         q = Q(id=int(id))
         execution = ReleaseCatalogExecution.objects.get(q)
+
         for key, value in request_json.iteritems():
+            if key == "ready_for_execution":
+                if not execution.ready_for_execution and value:
+                    execution.state = JobStatusType.SUBMITTED
+            if key == "suite_executions":
+                for suite_execution_entry in value:
+                    if "re_run_request" in suite_execution_entry and suite_execution_entry["re_run_request"]:
+                        suite_execution_entry["re_run_request"] = False
+                        suite_execution_entry["re_run_request_submitted"] = True
+                        execution.state = JobStatusType.IN_PROGRESS
             if hasattr(execution, key):
                 setattr(execution, key, value)
+
         execution.save()
         result = execution.to_dict()
 
+    if request.method == "DELETE":
+        q = Q(id=int(id))
+        execution = ReleaseCatalogExecution.objects.get(q)
+        if execution:
+            execution.deleted = True
+            execution.save()
+        result = True
     return result
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {switchMap} from "rxjs/operators";
 import {concat, Observable, of} from "rxjs";
 import {LoggerService} from "../../services/logger/logger.service";
@@ -8,6 +8,8 @@ import {ReleaseCatalogExecution, ReleaseSuiteExecution} from "../release-catalog
 import {Suite, SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {showAnimation} from "../../animations/generic-animations";
 import {ApiType} from "../../lib/api";
+import {ButtonType, FunActionLink, FunButtonWithIcon} from "../../ui-elements/definitions";
+import {SuiteExecutions} from "../definitions";
 
 @Component({
   selector: 'app-release-detail',
@@ -24,13 +26,30 @@ export class ReleaseDetailComponent implements OnInit {
   newTestBedName: string = null;
   testBeds = [];
   addingSuites: boolean = false;
+  headerLeftAlignedButtons: FunButtonWithIcon [] = [];
+  suitesHeaderActionLinks: FunActionLink [] = [];
+  suitesHeaderLeftAlignedButtons: FunButtonWithIcon [] = [];
+  suitesDeleteButton: FunButtonWithIcon = null;
+  addSuitesLinkObject: FunActionLink = null;
+
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
   jobStatusTypes: ApiType = null;
   constructor(private route: ActivatedRoute,
               private logger: LoggerService,
               private regressionService: RegressionService,
-              private suiteEditorService: SuiteEditorService) { }
+              private suiteEditorService: SuiteEditorService,
+              private router: Router) {
+
+    this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE,
+      text: "delete", callback: this.deleteRelease.bind(this)}));
+
+    this.addSuitesLinkObject = new FunActionLink({text: "+ Add suites",
+      callback: this.addSuites.bind(this)});
+    this.suitesHeaderActionLinks.push(this.addSuitesLinkObject);
+    this.suitesDeleteButton = new FunButtonWithIcon({type: ButtonType.DELETE, text: "delete suite(s)", callback: this.deleteSuites.bind(this), show: false});
+    this.suitesHeaderLeftAlignedButtons.push(this.suitesDeleteButton);
+  }
   driver: any = null;
   releaseCatalogExecution: ReleaseCatalogExecution = new ReleaseCatalogExecution();
 
@@ -82,12 +101,37 @@ export class ReleaseDetailComponent implements OnInit {
       });
 
       concat(...allObservables).subscribe(response => {
+        this.fetchJobState();
+      }, error => {
+        this.logger.error(`Unable to fetch suite information`, error);
+      })
+    }
+  }
+
+  fetchJobState() {
+    if (this.releaseCatalogExecution.suite_executions) {
+      let allObservables: Observable <any>[] = this.releaseCatalogExecution.suite_executions.map(suiteExecution => {
+        if (suiteExecution.job_id) {
+          let suiteExecutionObject: SuiteExecutions = new SuiteExecutions();
+          return suiteExecutionObject.get(suiteExecutionObject.getUrl({execution_id: suiteExecution.job_id})).pipe(switchMap(response => {
+            suiteExecution.job_status = response[0].state;
+            suiteExecution.job_result = response[0].result;
+            return of(true);
+          }))
+        } else {
+          return of(true);
+        }
+
+      });
+
+      concat(...allObservables).subscribe(response => {
 
       }, error => {
         this.logger.error(`Unable to fetch suite information`, error);
       })
     }
   }
+
   refresh() {
     this.driver.subscribe(response => {
 
@@ -100,7 +144,7 @@ export class ReleaseDetailComponent implements OnInit {
     let originalDescription = this.releaseCatalogExecution.description;
     this.releaseCatalogExecution.description = newDescription;
     this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.executionId})).subscribe(response => {
-
+      this.fetchSuiteDetails();
     }, error => {
       this.logger.error(`release-detail`, error);
     });
@@ -143,14 +187,18 @@ export class ReleaseDetailComponent implements OnInit {
 
   cancelSuiteSelection() {
     this.addingSuites = false;
+    this.addSuitesLinkObject.show = true;
+
   }
 
   checkAtLeastOneSelected() {
     setTimeout(() => {
       this.atLeastOneSelected = false;
+      this.suitesDeleteButton.show = false;
       for (let index = 0; index < this.releaseCatalogExecution.suite_executions.length; index++) {
         if (this.releaseCatalogExecution.suite_executions[index].selected) {
           this.atLeastOneSelected = true;
+          this.suitesDeleteButton.show = true;
           break;
         }
       }
@@ -167,6 +215,7 @@ export class ReleaseDetailComponent implements OnInit {
       this.releaseCatalogExecution.update(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(() => {
         this.checkAtLeastOneSelected();
         this.fetchSuiteDetails();
+        this.suitesDeleteButton.show = false;
       }, error => {
         this.logger.error(`Unable to delete suite(s)`, error);
       })
@@ -182,4 +231,40 @@ export class ReleaseDetailComponent implements OnInit {
     })
 
   }
+
+  deleteRelease() {
+    //console.log("Delete release");
+    if (confirm('Are you sure you want to delete this release?')) {
+      this.releaseCatalogExecution.delete(this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id})).subscribe(response => {
+        this.router.navigateByUrl('/regression/releases');
+      }, error => {
+        this.logger.error(`Unable to delete release`, error);
+      })
+
+    }
+  }
+
+  addSuites(linkObject) {
+    this.addSuitesLinkObject.show = false;
+    this.addingSuites = true;
+  }
+
+  test() {
+    console.log(this.releaseCatalogExecution);
+  }
+  /*
+  reRunSuiteExecution(suiteExecution) {
+    this.releaseCatalogExecution.reRunRequest(suiteExecution);
+  }*/
+
+  reRunRequest(suiteExecution) {
+    let url = this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id});
+    suiteExecution.re_run_request = true;
+    this.releaseCatalogExecution.update(url).subscribe(response => {
+      this.fetchSuiteDetails();
+    }, error => {
+      this.logger.error(`Unable to re-run`, error);
+    })
+  }
+
 }

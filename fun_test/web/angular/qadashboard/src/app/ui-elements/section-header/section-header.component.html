@@ -1,22 +1,48 @@
 <ng-container *ngIf="!editable">
-  <h5 *ngIf="!subSection">{{ title }}</h5>
-  <h6 *ngIf="subSection">{{ title }}</h6>
+  <div class="fun-flex-container">
+    <div class="fun-flex-item">
+      <h5 *ngIf="!subSection">{{ title }}</h5>
+      <h6 *ngIf="subSection">{{ title }}</h6>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleActionLinks && titleActionLinks.length > 0">
+      <ng-container *ngFor="let funActionLink of titleActionLinks">
+        &nbsp;&nbsp;&nbsp;&nbsp;<span *ngIf="funActionLink.show" (click)="onLinkClick(funActionLink)" class="fun-action-link" >{{ funActionLink.text }}</span>
+      </ng-container>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleLeftAlignedButtons && titleLeftAlignedButtons.length > 0">
+      <ng-container *ngFor="let button of titleLeftAlignedButtons">
+        <button (click)="onButtonClick(button)" class="fun-button-with-icon" *ngIf="button.show">
+          <i class="fa {{ button.classes }} {{ button.textClasses }}"></i>&nbsp;
+          <span class="{{ button.textClasses }}">{{ button.text }}</span>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
 
 </ng-container>
 <ng-container *ngIf="editable">
-  <div [ngClass]="{'hover-cell': hoverHide}">
-    <ng-container *ngIf="!subSection">
-      <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
-      <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
-    </ng-container>
-    <ng-container *ngIf="subSection">
-      <h6 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h6>
-      <h6 [innerHtml]="title| safeHtml" style="display: inline-block"></h6>&nbsp;
-    </ng-container>
-
-
-    <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
+  <div class="fun-flex-container">
+    <div [ngClass]="{'hover-cell': hoverHide}" class="fun-flex-item">
+      <ng-container *ngIf="!subSection">
+        <h5 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h5>
+        <h5 [innerHtml]="title| safeHtml" style="display: inline-block"></h5>&nbsp;
+      </ng-container>
+      <ng-container *ngIf="subSection">
+        <h6 [innerHtml]="staticTitle| safeHtml" style="display: inline-block"></h6>
+        <h6 [innerHtml]="title| safeHtml" style="display: inline-block"></h6>&nbsp;
+      </ng-container>
+      <i class="fa fa-pencil" [ngClass]="{'hover-icon': hoverHide}" style="font-size:14px;" (click)="onEditClick()"></i>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleStateLabel">
+      &nbsp;&nbsp;State: <app-smart-label [value]="titleStateLabel"></app-smart-label>
+      &nbsp;Result: <app-smart-label [value]="titleResultLabel"></app-smart-label>
+    </div>
+    <div class="fun-flex-item" *ngIf="titleActionLinks && titleActionLinks.length > 0">
+      <span (click)="onLinkClick(funActionLink)" class="fun-action-link" *ngFor="let funActionLink of titleActionLinks">{{ funActionLink.text }}</span>
+    </div>
   </div>
+
   <div *ngIf="editing" style="align-self: stretch">
     <textarea rows="{{ numRows }}" [(ngModel)]="tempValue" style="width: 100%;" [ngClass]="{'focus-text-area': editing }"></textarea>
     <div >
@@ -27,6 +53,23 @@
 </ng-container>
 
 
+
 <div *ngIf="subText1" [innerHTML]="subText1 | safeHtml"></div>
-<div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
+
+<div class="fun-flex-container">
+  <div class="fun-flex-item">
+    <div *ngIf="subText2" [innerHTML]="subText2 | safeHtml"></div>
+  </div>
+  <div class="fun-flex-item">
+    <span style="display: inline-block" *ngIf="leftAlignedButtons && leftAlignedButtons.length > 0">
+      <button (click)="onButtonClick(button)" class="fun-button-with-icon" *ngFor="let button of leftAlignedButtons">
+        <i class="fa {{ button.classes }} {{ button.textClasses }}"></i>&nbsp;
+        <span class="{{ button.textClasses }}">{{ button.text }}</span>
+      </button>
+    </span>
+  </div>
+</div>
+
+
+
 <app-section-horizontal-line></app-section-horizontal-line>
