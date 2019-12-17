@@ -10,6 +10,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
+import {current} from "../../../../node_modules/codelyzer/util/syntaxKind";
 
 class DataModel {
   letter: string;
@@ -222,8 +223,10 @@ export class ScriptDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this.testCaseExecutions = response;
       this.testCaseExecutions.forEach(testCaseExecution => {
-        testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"] - this.scriptRunTime.started_epoch_time;
-
+        testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"];
+        if (this.scriptRunTime) {
+          testCaseExecution["relative_started_epoch_time"] = testCaseExecution["started_epoch_time"] - this.scriptRunTime.started_epoch_time;
+        }
       });
       this.updateScriptExecutionInfo();
       return this.regressionService.testCaseTables(this.suiteExecutionId, this.timeSeriesTypes.TEST_CASE_TABLE);
@@ -274,7 +277,10 @@ export class ScriptDetailComponent implements OnInit {
     checkpoints.forEach(checkpoint => {
       checkpoint["previous_checkpoint"] = null;
       currentCheckpoint = checkpoint;
-      checkpoint["relative_epoch_time"] = checkpoint.epoch_time - this.scriptRunTime.started_epoch_time;
+      checkpoint["relative_epoch_time"] = checkpoint.epoch_time;
+      if (this.scriptRunTime) {
+        checkpoint["relative_epoch_time"] = checkpoint.epoch_time - this.scriptRunTime.started_epoch_time;
+      }
       if (lastCheckpoint) {
         lastCheckpoint["relative_end_epoch_time"] = checkpoint.relative_epoch_time;
         checkpoint["previous_checkpoint"] = lastCheckpoint;
@@ -282,8 +288,9 @@ export class ScriptDetailComponent implements OnInit {
 
       lastCheckpoint = checkpoint;
     });
-    lastCheckpoint["relative_end_epoch_time"] = currentCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
-
+    if (currentCheckpoint) {
+      lastCheckpoint["relative_end_epoch_time"] = currentCheckpoint["relative_epoch_time"] + 100; //TODO: Derive this from script run time
+    }
 
   }
 
@@ -416,7 +423,10 @@ export class ScriptDetailComponent implements OnInit {
           if (!testCaseExecution.checkpoints[checkpointIndex].hasOwnProperty("timeSeries")) {
             testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = [];
           }
-          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+          timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time;
+          if (this.scriptRunTime) {
+            timeSeriesElement["relative_epoch_time"] = timeSeriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+          }
           testCaseExecution.checkpoints[checkpointIndex].timeSeries.push(timeSeriesElement);
         });
         this.status = null;
@@ -472,7 +482,10 @@ export class ScriptDetailComponent implements OnInit {
       testCaseExecution.checkpoints[checkpointIndex]["timeSeries"] = response;
 
       testCaseExecution.checkpoints[checkpointIndex]["timeSeries"].forEach(seriesElement => {
-        seriesElement["relative_epoch_time"] = seriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+        seriesElement["relative_epoch_time"] = seriesElement.epoch_time;
+        if (this.scriptRunTime) {
+          seriesElement["relative_epoch_time"] = seriesElement.epoch_time - this.scriptRunTime.started_epoch_time;
+        }
       });
       return of(true);
     }, error => {
