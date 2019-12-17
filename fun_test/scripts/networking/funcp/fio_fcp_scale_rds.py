@@ -9,6 +9,25 @@ from scripts.networking.helper import *
 import ipaddress
 from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
 from fun_global import PerfUnit, FunPlatform
+from lib.system.fun_test import *
+from lib.host.linux import Linux
+from StringIO import StringIO
+import random
+from lib.system.fun_test import *
+from lib.system import utils
+from lib.fun.fs import Fs
+from lib.fun.fs import Bmc
+
+import re
+from lib.templates.storage.storage_fs_template import *
+from scripts.storage.storage_helper import *
+from collections import OrderedDict, Counter
+from scripts.networking.helper import *
+from lib.utilities.funcp_config import *
+from lib.topology.topology_helper import TopologyHelper
+import ipaddress
+from web.fun_test.analytics_models_helper import ModelHelper, get_data_collection_time
+from fun_global import PerfUnit, FunPlatform
 
 
 
@@ -296,46 +315,86 @@ class RDSVolumePerformanceScript(FunTestScript):
         f10_storage_loop_ip = {}
         f11_storage_loop_ip = {}
 
+        params = {
+            'drives' : [],
+            'volumes' : {
+                'device': [],
+                'uuid' : [],
+            },
+            'controllers': {
+                'nqn' : [],
+                'uuid':  [],
+            },
+            'host_ips' : [],
+            'nsid' : {}
+        }
+
+        params['storage_fs'] = fun_test.shared_variables["storage_fs"]
+
+        params['storage_f1'] = []
+
+        for fs in params['storage_fs']:
+            for index in [1,0]:
+                params['storage_f1'].append("{}_f1{}".format(fs,str(index)))
+
+        # RDS volume is exposed is the first F1 in params['storage_f1']
+        params['all_f1'] = params['storage_f1']
+        rds_f1 = params['storage_f1'][0]
+        rds_fs_name, rds_f1_index = rds_f1.split('_')
+        params[rds_f1] = {}
+        params['storage_f1'] = params['storage_f1'][1:]
+
+
 
         # Setup controller and volumes on all storage FS
-        for storage_fs in fun_test.shared_variables["storage_fs"]:
+        for storage_fs in params['storage_fs']:
+            params[storage_fs] = {}
+
             fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
-            fun_test.shared_variables[storage_fs] = {}
-
-
-            storage_fs_come = storage_fs.replace("-", "") + "-come"
-            storage_fs_come_obj = Linux(host_ip=storage_fs_come, ssh_username="fun", ssh_password="123")
-            target_f10_storage_obj[storage_fs] = StorageController(target_ip=storage_fs_come, target_port=42220)
-            target_f11_storage_obj[storage_fs] = StorageController(target_ip=storage_fs_come, target_port=42221)
-
-            fun_test.shared_variables[storage_fs]["target_f10_storage_obj"] = target_f10_storage_obj[storage_fs]
-            fun_test.shared_variables[storage_fs]["target_f11_storage_obj"] = target_f11_storage_obj[storage_fs]
+            params[storage_fs]['come_ip'] = storage_fs.replace("-", "") + "-come"
+            params[storage_fs]['come_handle'] = Linux(host_ip=params[storage_fs]['come_ip'], ssh_username="fun", ssh_password="123")
+            params[storage_fs]['f10_handle'] = StorageController(target_ip=params[storage_fs]['come_ip'], target_port=42220)
+            params[storage_fs]['f11_handle'] = StorageController(target_ip=params[storage_fs]['come_ip'], target_port=42221)
 
             # Get loop back IP:
             # f10_storage_loop_ip = storage_fs_come_obj.command("docker exec -it F1-0 ifconfig lo:0 | "
             #                                                   "grep -e 'inet ' | awk -F ' ' '{print $2}'")
-            f10_storage_loop_ip[storage_fs] = storage_fs_come_obj.command("docker exec -it F1-0 ifconfig vlan1 | "
+            params[storage_fs]['f10_ip'] = params[storage_fs]['come_handle'].command("docker exec -it F1-0 ifconfig vlan1 | "
                                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
-            f10_storage_loop_ip[storage_fs] = f10_storage_loop_ip[storage_fs].strip()
-            storage_fs_come_obj.disconnect()
+            params[storage_fs]['f10_ip'] = params[storage_fs]['f10_ip'].strip()
+            params[storage_fs]['come_handle'].disconnect()
 
             # f11_storage_loop_ip = storage_fs_come_obj.command("docker exec -it F1-1 ifconfig lo:0 | "
             #                                                   "grep -e 'inet ' | awk -F ' ' '{print $2}'")
-            f11_storage_loop_ip[storage_fs] = storage_fs_come_obj.command("docker exec -it F1-1 ifconfig vlan1 | "
+            params[storage_fs]['f11_ip'] = params[storage_fs]['come_handle'].command("docker exec -it F1-1 ifconfig vlan1 | "
                                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
-            f11_storage_loop_ip[storage_fs] = f11_storage_loop_ip[storage_fs].strip()
-            storage_fs_come_obj.disconnect()
+            params[storage_fs]['f11_ip'] = params[storage_fs]['f11_ip'].strip()
+            params[storage_fs]['come_handle'].disconnect()
+
+            fs_bmc = storage_fs.replace("-", "") + "-bmc"
+            bmc_username = "sysadmin"
+            bmc_passwd = "superuser"
+
+            bmc_handle = Bmc(host_ip=fs_bmc,
+                             ssh_username=bmc_username,
+                             ssh_password=bmc_passwd,
+                             set_term_settings=True,
+                             disable_uart_logger=False)
+            bmc_handle.command("killall microcom")
+            bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
+            bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
+
 
             try:
-                ipaddress.ip_address(unicode(f10_storage_loop_ip[storage_fs].strip()))
+                ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
             except ValueError:
-                fun_test.log("F10 loop-back IP {} is not valid".format(f10_storage_loop_ip[storage_fs]))
-                fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(f10_storage_loop_ip[storage_fs]))
+                fun_test.log("F10 loop-back IP {} is not valid".format(params[storage_fs]['f10_ip']))
+                fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(params[storage_fs]['f10_ip']))
             try:
-                ipaddress.ip_address(unicode(f11_storage_loop_ip[storage_fs].strip()))
+                ipaddress.ip_address(unicode(params[storage_fs]['f11_ip'].strip()))
             except ValueError:
-                fun_test.log("F11 loop-back IP {} is not valid".format(f11_storage_loop_ip[storage_fs]))
-                fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(f11_storage_loop_ip[storage_fs]))
+                fun_test.log("F11 loop-back IP {} is not valid".format(params[storage_fs]['f11_ip']))
+                fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(params[storage_fs]['f11_ip']))
 
         # Parse the json file
         # testcase = self.__class__.__name__
@@ -353,162 +412,182 @@ class RDSVolumePerformanceScript(FunTestScript):
         blt_blk_size = self.blt_details["block_size"]
         fabric_transport = unicode(self.transport_type)
         nvme_io_queues = self.nvme_ioq
-        f10_ssd_uuid_list = {}
-        f11_ssd_uuid_list = {}
-        f10_blt_uuid = {}
-        f11_blt_uuid = {}
-        f11_nvme_controller = {}
-        params = {}
 
+        for f1 in params['all_f1']:
+            fs_name, f1_index = f1.split('_')
 
-        for storage_fs in fun_test.shared_variables["storage_fs"]:
-            params[storage_fs] = {}
-            fun_test.log(" ### Configuring FS {} ####".format(storage_fs))
+            fun_test.log(" ### Configuring FS {} F1 {} ####".format(fs_name,f1_index))
             # Create storage listener
             if ipconfig:
-                command_result = target_f10_storage_obj[storage_fs].ip_cfg(ip=f10_storage_loop_ip[storage_fs], port=ipcfg_port)
-                fun_test.simple_assert(command_result["status"], "IPCFG on F10")
+                command_result = params[fs_name][f1_index + '_handle'].ip_cfg(ip=params[storage_fs][f1_index + '_ip'], port=ipcfg_port)
+                fun_test.simple_assert(command_result["status"], "IPCFG on " + fs_name + ' ' + f1_index)
 
-                command_result = target_f11_storage_obj[storage_fs].ip_cfg(ip=f11_storage_loop_ip[storage_fs], port=ipcfg_port)
-                fun_test.simple_assert(command_result["status"], "IPCFG on F11")
+            # Get number of drives in the F1
+            drive_dict = params[fs_name][f1_index + '_handle'].peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
+                                                     command_duration=command_timeout)
+            params[storage_fs][f1_index + '_drives'] = sorted(drive_dict["data"].keys())
 
-            if deploy_vol:
-                fun_test.log_section("Deploying Volumes")
-                # Get number of drives
-                f10_ssd_uuid_list[storage_fs] = []
-                f11_ssd_uuid_list[storage_fs] = []
+        multiply = 2
+        while len(params['storage_f1']) < fun_test.shared_variables["num_vols"]:
+            params['storage_f1'] = params['storage_f1'] * multiply
+            multiply = multiply + 1
 
-                drive_dict = target_f10_storage_obj[storage_fs].peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
-                                                         command_duration=command_timeout)
-                f10_ssd_uuid_list[storage_fs] = sorted(drive_dict["data"].keys())
-                f10_ssd_count = len(f10_ssd_uuid_list)
-                print "Total number of SSD's on F10 {}".format(f10_ssd_count)
+        # make num volumes and num storage_f1 as equal
+        params['storage_f1'] = params['storage_f1'][:fun_test.shared_variables["num_vols"]]
 
-                # Configure volumes on storage_fs
-                f10_blt_uuid[storage_fs] = {}
+        # make a volume to storage_f1 mapping
+        volumes_to_create = zip(params['storage_f1'] ,range(1,fun_test.shared_variables["num_vols"]+1))
 
-                f10_rds_ctrl = {}
-                f11_rds_vol = {}
 
-                n = 0
 
-                for i in range(0, fun_test.shared_variables["num_vols"]):
-                    if n >= len(host_list):
-                        n = 0
-                    host = host_list[n]
-                    params[storage_fs] = { 'f10' : {
-                                                    'rds_controller_name' : 'nqn_rds' + str(i),
-                                                    'ip'       : f10_storage_loop_ip[storage_fs],
-                                                    'rds_controller_uuids' : [],
-                                                    'blt_uuids' :[],
 
-                                                    },
-                                            'f11' : {
-                                                'nvme_tcp_controller_name': 'nqn_nvme_tcp' + str(i),
-                                                'volume_name': 'rds_vol' + str(i),
-                                                'ip': f11_storage_loop_ip[storage_fs],
-                                                'rds_volume_uuids' : [],
-                                                    }
-                                        }
 
-                    # Create BLT volumes on F10
+        for vol in volumes_to_create:
 
-                    f10_blt_uuid[storage_fs] = utils.generate_uuid()
-                    print "F10_blt_uuid " + str(f10_blt_uuid[storage_fs])
-                    params[storage_fs]['f10']['blt_uuids'].append(f10_blt_uuid[storage_fs])
-                    # print "X is " + str(x) + " UUID is " + str(f10_blt_uuid[storage_fs][x])
-                    command_result = target_f10_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                                      capacity=blt_capacity,
-                                                                                      block_size=blt_blk_size,
-                                                                                      name="f10_thin_block_" + str(i),
-                                                                                      uuid=
-                                                                                      f10_blt_uuid[storage_fs],
-                                                                                      drive_uuid=
-                                                                                      f10_ssd_uuid_list[storage_fs][i],
-                                                                                      command_duration=command_timeout)
-                    fun_test.test_assert(command_result["status"], "Creation of BLT_{} on F10".format(i))
 
-                    # Create RDS controller on F10
-                    f10_rds_ctrl[storage_fs] = utils.generate_uuid()
-                    params[storage_fs]['f10']['rds_controller_uuids'].append(f10_rds_ctrl[storage_fs])
-                    command_result = target_f10_storage_obj[storage_fs].create_controller(ctrlr_uuid=f10_rds_ctrl[storage_fs],
-                                                                              transport="RDS",
-                                                                              nqn=params[storage_fs]['f10']['rds_controller_name'],
-                                                                              port=ipcfg_port,
-                                                                              remote_ip=params[storage_fs]['f11']['ip'],
+            f1_used = vol[0]
+            fs_name, f1_index = f1_used.split('_')
+            volume_index = str(vol[1])
+
+
+            # Create BLT volumes
+
+
+            params[f1_used] = {}
+            params[f1_used]['vol' + volume_index] = []
+            blt_uuid = utils.generate_uuid()
+            params[f1_used]['vol' + volume_index] = blt_uuid
+            volume_name = f1_used + '_' + 'vol' + volume_index
+
+            # print "X is " + str(x) + " UUID is " + str(f10_blt_uuid[storage_fs][x])
+            command_result = params[fs_name][f1_index + '_handle'].create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                              capacity=blt_capacity,
+                                                                              block_size=blt_blk_size,
+                                                                              name=volume_name,
+                                                                              uuid=blt_uuid,
+                                                                              drive_uuid=
+                                                                              params[fs_name][
+                                                                                  f1_index + '_drives'][int(volume_index) - 1],
                                                                               command_duration=command_timeout)
-                    fun_test.simple_assert(command_result["status"],
-                                           "Create RDS controller on F10 {}".format(i))
+            fun_test.test_assert(command_result["status"], "Creation of BLT volume {}".format(volume_name))
 
-                    # Attach BLT volume to F10 RDS controller
-                    command_result = target_f10_storage_obj[storage_fs].attach_volume_to_controller(ctrlr_uuid=f10_rds_ctrl[storage_fs],
-                                                                                        ns_id=i+1,
-                                                                                        vol_uuid=f10_blt_uuid[storage_fs],
-                                                                                        command_duration=command_timeout)
-                    fun_test.simple_assert(command_result["status"],
-                                           "Attaching RDS controller to BLT {}".format(i))
+            # Create RDS controllers
+            params[f1_used]['rds_ctrl' + volume_index] = []
+            rds_ctrl_uuid = utils.generate_uuid()
+            params[f1_used]['rds_ctrl' + volume_index] = rds_ctrl_uuid
+            rds_ctrl_name = f1_used + '_' + 'rds_ctrl' + volume_index
 
-                    # Create RDS volume on F11
-                    f11_rds_vol[storage_fs] = utils.generate_uuid()
-                    params[storage_fs]['f11']['rds_volume_uuids'].append(f11_rds_vol[storage_fs])
-                    command_result = target_f11_storage_obj[storage_fs].create_volume(type="VOL_TYPE_BLK_RDS",
-                                                          capacity=blt_capacity,
-                                                          transport="RDS",
-                                                          block_size=blt_blk_size,
-                                                          name=params[storage_fs]['f11']['volume_name'],
-                                                          uuid=f11_rds_vol[storage_fs],
-                                                          remote_nsid=i+1,
-                                                          connections=4,
-                                                          remote_ip=params[storage_fs]['f10']['ip'],
-                                                          port=ipcfg_port,
-                                                          command_duration=command_timeout)
+            command_result = params[fs_name][f1_index + '_handle'].create_controller(ctrlr_uuid=rds_ctrl_uuid,
+                                                                                  transport="TCP",
+                                                                                  nqn=rds_ctrl_name,
+                                                                                  port=ipcfg_port,
+                                                                                  remote_ip=params[rds_fs_name][rds_f1_index + '_ip'],
+                                                                                  command_duration=command_timeout)
+            fun_test.simple_assert(command_result["status"],
+                                   "Create RDS controller on {}".format(f1_used))
 
-                    fun_test.simple_assert(command_result["status"],
-                                           "Create RDS volume on F11 {}".format(i))
+            # Attach BLT volume to RDS controller
+            command_result = params[fs_name][f1_index + '_handle'].attach_volume_to_controller(
+                ctrlr_uuid=rds_ctrl_uuid,
+                ns_id=int(volume_index),
+                vol_uuid=blt_uuid,
+                command_duration=command_timeout)
+            fun_test.simple_assert(command_result["status"],
+                                   "Attaching RDS controller to BLT {}".format(volume_name))
+
+            # Create RDS volume on remote F1
+            params[rds_f1]['rds_vol' + volume_index] = []
+            rds_vol_uuid = utils.generate_uuid()
+            params[rds_f1]['rds_vol' + volume_index] = rds_vol_uuid
+            rds_vol_name = rds_f1 + '_' + 'rds_vol' + volume_index
+
+            command_result = params[rds_fs_name][rds_f1_index + '_handle'].create_volume(type="VOL_TYPE_BLK_RDS",
+                                                                              capacity=blt_capacity,
+                                                                              transport="TCP",
+                                                                              block_size=blt_blk_size,
+                                                                              name=rds_vol_name,
+                                                                              uuid=rds_vol_uuid,
+                                                                              remote_nsid=int(volume_index),
+                                                                              connections=4,
+                                                                              remote_ip=params[fs_name][f1_index + '_ip'],
+                                                                              port=ipcfg_port,
+                                                                              command_duration=command_timeout)
+            fun_test.simple_assert(command_result["status"],
+                                   "Create RDS volume for index {} on {}".format(volume_name, rds_vol_name))
 
 
-                    # Create NVME/TCP controller on F11
-                    f11_nvme_controller[storage_fs] = utils.generate_uuid()
-                    command_result = target_f11_storage_obj[storage_fs].create_controller(
-                        ctrlr_uuid=f11_nvme_controller[storage_fs],
+        n = 0
+
+        # Create NVME TCP controller for each RDS volume
+        for key in params[rds_f1].keys():
+            if 'rds_vol' in key:
+                rds_vol_uuid = params[rds_f1][key]
+                volume_index = int(key.split('rds_vol')[1])
+                if n >= len(host_list):
+                    n = 0
+                host = host_list[n]
+                if not host in params:
+                    params[host] = {}
+
+                if 'nvme_tcp_uuid' in host:
+                    nvme_tcp_uuid = params[host]['nvme_tcp_uuid']
+                else:
+                    nvme_tcp_uuid = utils.generate_uuid()
+                    params[host]['nvme_tcp_uuid'] = nvme_tcp_uuid
+
+                    nqn = host + '_' + key
+                    params[host]['nqn'] = nqn
+
+                    # Create NVME/TCP controller on rds_f1
+                    command_result = params[rds_fs_name][rds_f1_index + '_handle'].create_controller(
+                        ctrlr_uuid=nvme_tcp_uuid,
                         transport=fabric_transport.upper(),
                         remote_ip=hosts_dict[host]["hu_int_ip"],
                         port=ipcfg_port,
-                        nqn=params[storage_fs]['f11']['nvme_tcp_controller_name'],
+                        nqn=nqn,
                         command_duration=command_timeout)
-                    fun_test.test_assert(command_result["status"], "F1-1 Create of fabric controller {} to remote {}".
-                                         format(str(i), hosts_dict[host]["hu_int_ip"]))
+                    fun_test.test_assert(command_result["status"], "Create of NVME/TCP fabric controller {} to remote {}".
+                                         format(str(nqn), hosts_dict[host]["hu_int_ip"]))
 
-                    # Attach NVME/TCP controller to the RDS volume
-                    command_result = target_f11_storage_obj[storage_fs].attach_volume_to_controller(ctrlr_uuid=f11_nvme_controller[storage_fs],
-                                                                        ns_id=i+1,
-                                                                        vol_uuid=f11_rds_vol[storage_fs],
-                                                                        command_duration=command_timeout)
-                    fun_test.test_assert(command_result["status"], "Attach RDS_vol_{}".format(str(i)))
+                # Attach NVME/TCP controller to the RDS volume
+                command_result = params[rds_fs_name][rds_f1_index + '_handle'].attach_volume_to_controller(
+                    ctrlr_uuid=nvme_tcp_uuid,
+                    ns_id=volume_index,
+                    vol_uuid=rds_vol_uuid,
+                    command_duration=command_timeout)
+                fun_test.test_assert(command_result["status"], "Attach RDS_vol_{} to controller id {}".format(str(rds_vol_uuid),str(nvme_tcp_uuid)))
 
-                    # NMVe connect from x86 server to FS
-                    hosts_dict[host]["handle"].modprobe("nvme_tcp")
-                    check_nvmetcp = hosts_dict[host]["handle"].lsmod("nvme_tcp")
-                    fun_test.sleep("Waiting for load to complete", 2)
-                    if not check_nvmetcp:
-                        fun_test.critical("nvme_tcp load failed on {}".format(x))
-
-                    hosts_dict[host]["handle"].sudo_command("nvme connect -t {} -n {} -a {} -q {} -i {} -s {}".
-                                                         format(fabric_transport.lower(),
-                                                                params[storage_fs]['f11']['nvme_tcp_controller_name'],
-                                                                params[storage_fs]['f11']['ip'],
-                                                                hosts_dict[host]["hu_int_ip"],
-                                                                nvme_io_queues,
-                                                                ipcfg_port),
-                                                         timeout=90)
-
-                    n = n + 1
+                n = n + 1
 
 
-        for storage_fs in fun_test.shared_variables["storage_fs"]:
+        # Do a nvme connect from each host to the NVMe/TCP controller
+        for host in host_list:
+            # NMVe connect from x86 server to FS
+            hosts_dict[host]["handle"].modprobe("nvme_tcp")
+            check_nvmetcp = hosts_dict[host]["handle"].lsmod("nvme_tcp")
+            fun_test.sleep("Waiting for load to complete", 2)
+            if not check_nvmetcp:
+                fun_test.critical("nvme_tcp load failed on {}".format(host))
+
+            hosts_dict[host]["handle"].sudo_command("nvme connect -t {} -n {} -a {} -q {} -i {} -s {}".
+                                                    format(fabric_transport.lower(),
+                                                           params[host]['nqn'],
+                                                           params[rds_fs_name][rds_f1_index + '_ip'],
+                                                           hosts_dict[host]["hu_int_ip"],
+                                                           nvme_io_queues,
+                                                           ipcfg_port),
+                                                    timeout=90)
+
+
+
+
+        print "Params is " + str(params)
+        fun_test.shared_variables["params"] = params
+
+        for storage_fs in params['storage_fs']:
             # Disconnect all COMe objects
-            target_f10_storage_obj[storage_fs].disconnect()
-            target_f11_storage_obj[storage_fs].disconnect()
+            params[storage_fs]['f10_handle'].disconnect()
+            params[storage_fs]['f11_handle'].disconnect()
 
         ##################################
         #     Run fio from all hosts     #
@@ -591,8 +670,10 @@ class RDSVolumePerformanceScript(FunTestScript):
                     except:
                         pass
 
+                params = fun_test.shared_variables["params"]
+
                 for storage_fs in fun_test.shared_variables["storage_fs"]:
-                    for storage_obj in [fun_test.shared_variables[storage_fs]["target_f10_storage_obj"],fun_test.shared_variables[storage_fs]["target_f11_storage_obj"]]:
+                    for storage_obj in [params[storage_fs]['f10_handle'],params[storage_fs]['f11_handle']]:
                         storage_cleanup(storage_obj)
 
 
@@ -611,136 +692,136 @@ class BLTVolumePerformanceTestcase(FunTestCase):
     def run(self):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
+        if 1:
+            testcase_file = fun_test.get_script_name_without_ext() + ".json"
+            fun_test.log("Test case file being used: {}".format(testcase_file))
+            setup_details = utils.parse_file_to_json(testcase_file)
 
-        testcase_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Test case file being used: {}".format(testcase_file))
-        setup_details = utils.parse_file_to_json(testcase_file)
+            for k, v in setup_details[testcase].iteritems():
+                setattr(self, k, v)
 
-        for k, v in setup_details[testcase].iteritems():
-            setattr(self, k, v)
+            host_list = fun_test.shared_variables["host_list"]
+            hosts_dict = fun_test.shared_variables["hosts_dict"]
 
-        host_list = fun_test.shared_variables["host_list"]
-        hosts_dict = fun_test.shared_variables["hosts_dict"]
+            table_data_headers = ["Operation", "Block_Size", "Num Vols", "IOPs", "BW in Gbps", "Latency Avg", "Latency 50",
+                                  "Latency 90", "Latency 95", "Latency 99", "Latency 99.50", "Latency 99.99"]
+            table_data_cols = ["operation", "block_size", "num_vols", "total_iops", "total_bw", "latency_avg", "latency_50",
+                               "latency_90", "latency_95", "latency_99", "latency_9950", "latency_9999"]
 
-        table_data_headers = ["Operation", "Block_Size", "Num Vols", "IOPs", "BW in Gbps", "Latency Avg", "Latency 50",
-                              "Latency 90", "Latency 95", "Latency 99", "Latency 99.50", "Latency 99.99"]
-        table_data_cols = ["operation", "block_size", "num_vols", "total_iops", "total_bw", "latency_avg", "latency_50",
-                           "latency_90", "latency_95", "latency_99", "latency_9950", "latency_9999"]
+            # Run read fio test from all hosts
+            wait_time = len(host_list)
+            thread_count = 1
+            thread_id = {}
+            fio_output = {}
+            host_thread_map = {}
+            fio_test = self.fio_cmd_args["rw"]
+            if "write" in fio_test:
+                fio_result_name = "write"
+                numjobs_set = True
+            elif "read" in fio_test:
+                fio_result_name = "read"
+            print "Hosts_dict is " + str(hosts_dict)
+            #one_host = hosts_dict.keys()[0]
+            #self.fio_cmd_args["numjobs"] = self.fio_cmd_args["numjobs"] * len(hosts_dict[one_host]["nvme_device"].split(':'))
+            for hosts in hosts_dict:
+                hosts_dict[hosts]["nvme_device"] = get_nvme_device(hosts_dict[hosts]["handle"])
+                if 0:
+                    if "write" in fio_test and numjobs_set:
+                        self.fio_cmd_args["numjobs"] = \
+                            self.fio_cmd_args["numjobs"] * len(hosts_dict[hosts]["nvme_device"].split(":"))
+                        numjobs_set = False
+                print "Running {} test on {}".format(fio_test, hosts)
+                host_clone = hosts_dict[hosts]["handle"].clone()
+                temp = hosts_dict[hosts]["handle"].command("hostname")
+                hostname = temp.strip()
+                host_thread_map[thread_count] = hostname
 
-        # Run read fio test from all hosts
-        wait_time = len(host_list)
-        thread_count = 1
-        thread_id = {}
-        fio_output = {}
-        host_thread_map = {}
-        fio_test = self.fio_cmd_args["rw"]
-        if "write" in fio_test:
-            fio_result_name = "write"
-            numjobs_set = True
-        elif "read" in fio_test:
-            fio_result_name = "read"
-        print "Hosts_dict is " + str(hosts_dict)
-        #one_host = hosts_dict.keys()[0]
-        #self.fio_cmd_args["numjobs"] = self.fio_cmd_args["numjobs"] * len(hosts_dict[one_host]["nvme_device"].split(':'))
-        for hosts in hosts_dict:
-            hosts_dict[hosts]["nvme_device"] = get_nvme_device(hosts_dict[hosts]["handle"])
-            if 0:
-                if "write" in fio_test and numjobs_set:
-                    self.fio_cmd_args["numjobs"] = \
-                        self.fio_cmd_args["numjobs"] * len(hosts_dict[hosts]["nvme_device"].split(":"))
-                    numjobs_set = False
-            print "Running {} test on {}".format(fio_test, hosts)
-            host_clone = hosts_dict[hosts]["handle"].clone()
-            temp = hosts_dict[hosts]["handle"].command("hostname")
-            hostname = temp.strip()
-            host_thread_map[thread_count] = hostname
+                thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                        func=fio_parser,
+                                                                        host_index=thread_count,
+                                                                        arg1=host_clone,
+                                                                        filename=hosts_dict[hosts]["nvme_device"],
+                                                                        name=fio_test + "_" + str(hosts),
+                                                                        cpus_allowed=hosts_dict[hosts]["cpu_list"],
+                                                                        timeout=self.fio_cmd_args["runtime"] * 2,
+                                                                        **self.fio_cmd_args)
+                fun_test.sleep("Fio threadzz", seconds=1)
+                wait_time -= 1
+                thread_count += 1
+            fun_test.sleep("Fio threads started", 10)
+            iops_sum = 0
+            bw_sum = 0
+            for x in range(1, len(host_list) + 1):
+                try:
+                    fun_test.log("Joining fio thread {}".format(x))
+                    fun_test.join_thread(fun_test_thread_id=thread_id[x])
+                    fun_test.log("FIO Command Output:")
+                    fun_test.log(fun_test.shared_variables["fio"][x])
+                    fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
+                    fio_output[x] = {}
+                    fio_output[x] = fun_test.shared_variables["fio"][x]
+                    iops_sum += fio_output[x][fio_result_name]["iops"]
+                    bw_sum += fio_output[x][fio_result_name]["bw"]
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                    fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
+            for hosts in hosts_dict:
+                hosts_dict[hosts]["handle"].disconnect()
+            print "******************************************************"
+            print "Collective {} test IOP's is {}".format(fio_test, iops_sum)
+            print "******************************************************"
+            print fun_test.shared_variables["fio"]
+            # Check which host is giving highest latency50 and use that to plot latency
+            fio_latency = fun_test.shared_variables["fio"]
+            max_lat = 0
+            for thread, value in fio_latency.iteritems():
+                if value[fio_result_name]["latency50"] > max_lat:
+                    max_lat = value[fio_result_name]["latency50"]
+                    host_thread = thread
+                    print "The max is {}".format(max_lat)
+                    print "The host is {}".format(host_thread_map[host_thread])
+            print "The final max is {}".format(max_lat)
+            print "The final host is {}".format(host_thread_map[host_thread])
+            result_dict = fun_test.shared_variables["fio"][host_thread][fio_result_name]
+            print result_dict
+            operation = fio_test
+            block_size = self.fio_cmd_args["bs"]
+            num_vols = fun_test.shared_variables["num_vols"]
+            total_iops = int(round(iops_sum))
+            total_bw = bw_sum/125000
+            latency_avg = result_dict["clatency"]
+            latency_50 = result_dict["latency50"]
+            latency_90 = result_dict["latency90"]
+            latency_95 = result_dict["latency95"]
+            latency_99 = result_dict["latency99"]
+            latency_9950 = result_dict["latency9950"]
+            latency_9999 = result_dict["latency9999"]
+            row_data_list = []
+            table_data_rows = []
+            for item in table_data_cols:
+                row_data_list.append(eval(item))
+            table_data_rows.append(row_data_list)
+            value_dict = {
+                "test_case": "NVMe/TCP",
+                "volumes": num_vols,
+                "operation": fio_test,
+                "{}_block_size".format(fio_result_name): block_size,
+                "{}_iops".format(fio_result_name): total_iops,
+                "{}_bw".format(fio_result_name): total_bw,
+                "{}_latency_avg".format(fio_result_name): latency_avg,
+                "{}_latency_50".format(fio_result_name): latency_50,
+                "{}_latency_90".format(fio_result_name): latency_90,
+                "{}_latency_95".format(fio_result_name): latency_95,
+                "{}_latency_99".format(fio_result_name): latency_99,
+                "{}_latency_9950".format(fio_result_name): latency_9950,
+                "{}_latency_9999".format(fio_result_name): latency_9999}
+            # add_to_data_base(value_dict)
+            print value_dict
+            table_data = {"headers": table_data_headers, "rows": table_data_rows}
 
-            thread_id[thread_count] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                    func=fio_parser,
-                                                                    host_index=thread_count,
-                                                                    arg1=host_clone,
-                                                                    filename=hosts_dict[hosts]["nvme_device"],
-                                                                    name=fio_test + "_" + str(hosts),
-                                                                    cpus_allowed=hosts_dict[hosts]["cpu_list"],
-                                                                    timeout=self.fio_cmd_args["runtime"] * 2,
-                                                                    **self.fio_cmd_args)
-            fun_test.sleep("Fio threadzz", seconds=1)
-            wait_time -= 1
-            thread_count += 1
-        fun_test.sleep("Fio threads started", 10)
-        iops_sum = 0
-        bw_sum = 0
-        for x in range(1, len(host_list) + 1):
-            try:
-                fun_test.log("Joining fio thread {}".format(x))
-                fun_test.join_thread(fun_test_thread_id=thread_id[x])
-                fun_test.log("FIO Command Output:")
-                fun_test.log(fun_test.shared_variables["fio"][x])
-                fun_test.test_assert(fun_test.shared_variables["fio"][x], "Fio threaded test")
-                fio_output[x] = {}
-                fio_output[x] = fun_test.shared_variables["fio"][x]
-                iops_sum += fio_output[x][fio_result_name]["iops"]
-                bw_sum += fio_output[x][fio_result_name]["bw"]
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                fun_test.log("FIO Command Output for volume {}:\n {}".format(x, fio_output[x]))
-        for hosts in hosts_dict:
-            hosts_dict[hosts]["handle"].disconnect()
-        print "******************************************************"
-        print "Collective {} test IOP's is {}".format(fio_test, iops_sum)
-        print "******************************************************"
-        print fun_test.shared_variables["fio"]
-        # Check which host is giving highest latency50 and use that to plot latency
-        fio_latency = fun_test.shared_variables["fio"]
-        max_lat = 0
-        for thread, value in fio_latency.iteritems():
-            if value[fio_result_name]["latency50"] > max_lat:
-                max_lat = value[fio_result_name]["latency50"]
-                host_thread = thread
-                print "The max is {}".format(max_lat)
-                print "The host is {}".format(host_thread_map[host_thread])
-        print "The final max is {}".format(max_lat)
-        print "The final host is {}".format(host_thread_map[host_thread])
-        result_dict = fun_test.shared_variables["fio"][host_thread][fio_result_name]
-        print result_dict
-        operation = fio_test
-        block_size = self.fio_cmd_args["bs"]
-        num_vols = fun_test.shared_variables["num_vols"]
-        total_iops = int(round(iops_sum))
-        total_bw = bw_sum/125000
-        latency_avg = result_dict["clatency"]
-        latency_50 = result_dict["latency50"]
-        latency_90 = result_dict["latency90"]
-        latency_95 = result_dict["latency95"]
-        latency_99 = result_dict["latency99"]
-        latency_9950 = result_dict["latency9950"]
-        latency_9999 = result_dict["latency9999"]
-        row_data_list = []
-        table_data_rows = []
-        for item in table_data_cols:
-            row_data_list.append(eval(item))
-        table_data_rows.append(row_data_list)
-        value_dict = {
-            "test_case": "NVMe/TCP",
-            "volumes": num_vols,
-            "operation": fio_test,
-            "{}_block_size".format(fio_result_name): block_size,
-            "{}_iops".format(fio_result_name): total_iops,
-            "{}_bw".format(fio_result_name): total_bw,
-            "{}_latency_avg".format(fio_result_name): latency_avg,
-            "{}_latency_50".format(fio_result_name): latency_50,
-            "{}_latency_90".format(fio_result_name): latency_90,
-            "{}_latency_95".format(fio_result_name): latency_95,
-            "{}_latency_99".format(fio_result_name): latency_99,
-            "{}_latency_9950".format(fio_result_name): latency_9950,
-            "{}_latency_9999".format(fio_result_name): latency_9999}
-        # add_to_data_base(value_dict)
-        print value_dict
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-
-        fun_test.add_table(panel_header="NVMe FunTCP FCP {} Perf".format(fio_test).upper(),
-                           table_name=self.summary,
-                           table_data=table_data)
+            fun_test.add_table(panel_header="NVMe FunTCP FCP {} Perf".format(fio_test).upper(),
+                               table_name=self.summary,
+                               table_data=table_data)
 
     def cleanup(self):
         pass
@@ -753,6 +834,9 @@ class BLTFioRandWrite(BLTVolumePerformanceTestcase):
                               summary="Random Write performance of BLT volume over NVMe FunTCP FCP",
                               steps=''' ''')
 
+    def run(self):
+        pass
+
 
 class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
@@ -760,6 +844,14 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
         self.set_test_details(id=2,
                               summary="Random Read performance of BLT volume over NVMe FunTCP FCP",
                               steps='''''')
+
+class dummy():
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Random Read performance of BLT volume over NVMe FunTCP FCP",
+                              steps='''''')
+
 
 
 if __name__ == '__main__':

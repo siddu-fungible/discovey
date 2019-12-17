@@ -252,4 +252,19 @@ export class ReleaseDetailComponent implements OnInit {
   test() {
     console.log(this.releaseCatalogExecution);
   }
+  /*
+  reRunSuiteExecution(suiteExecution) {
+    this.releaseCatalogExecution.reRunRequest(suiteExecution);
+  }*/
+
+  reRunRequest(suiteExecution) {
+    let url = this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id});
+    suiteExecution.re_run_request = true;
+    this.releaseCatalogExecution.update(url).subscribe(response => {
+      this.fetchSuiteDetails();
+    }, error => {
+      this.logger.error(`Unable to re-run`, error);
+    })
+  }
+
 }
