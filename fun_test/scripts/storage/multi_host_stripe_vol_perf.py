@@ -315,6 +315,14 @@ class StripeVolumeLevelScript(FunTestScript):
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
             fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+            # Check if bond interface status is Up and Running
+            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                if container_name == "run_sc":
+                    continue
+                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                                name="bond0")
+                fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
+                                              message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
             if self.install == "fresh":
                 # Getting all the DUTs of the setup
@@ -435,7 +443,16 @@ class StripeVolumeLevelScript(FunTestScript):
                                                    message="TFTP Image boot: init-fs1600 enabled: API server is up")
                             fun_test.sleep(
                                 "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-
+                            # Check if bond interface status is Up and Running
+                            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                                if container_name == "run_sc":
+                                    continue
+                                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                    container_name=container_name,
+                                    name="bond0")
+                                fun_test.test_assert_expected(
+                                    expected=True, actual=bond_interfaces_status,
+                                    message="Bundle Image boot: Bond Interface is Up & Running")
                             # Configure dataplane ip as database is cleaned up
                             # Getting all the DUTs of the setup
                             nodes = self.sc_api.get_dpu_ids()

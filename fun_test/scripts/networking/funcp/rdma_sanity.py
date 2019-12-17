@@ -134,6 +134,10 @@ class BringupSetup(FunTestCase):
             update_funcp = job_inputs["update_funcp"]
         else:
             update_funcp = False
+        if "disable_large_io" in job_inputs:
+            fun_test.shared_variables["disable_large_io"] = job_inputs["disable_large_io"]
+        else:
+            fun_test.shared_variables["disable_large_io"] = 0
 
         if deploy_setup:
             funcp_obj = FunControlPlaneBringup(fs_name=self.server_key["fs"][fs_name]["fs-name"])
@@ -827,10 +831,14 @@ class IbBwSeqIoTest(FunTestCase):
             rdmacm = False
 
         if self.random_io:
+            if not fun_test.shared_variables["disable_large_io"]:
+                max_io = 2097152
+            else:
+                max_io = 524288
             io_type = "Random"
             io_list = []
             while True:
-                rand_num = random.randint(1, 2097152)
+                rand_num = random.randint(1, max_io)
                 if rand_num not in io_list:
                     io_list.append(rand_num)
                 if len(io_list) == 16:
@@ -973,10 +981,14 @@ class IbLatSeqIoTest(FunTestCase):
             rdmacm = False
 
         if self.random_io:
+            if not fun_test.shared_variables["disable_large_io"]:
+                max_io = 2097152
+            else:
+                max_io = 524288
             io_type = "Random"
             io_list = []
             while True:
-                rand_num = random.randint(1, 2097152)
+                rand_num = random.randint(1, max_io)
                 if rand_num not in io_list:
                     io_list.append(rand_num)
                 if len(io_list) == 16:
@@ -1106,10 +1118,14 @@ class IbWriteScale(FunTestCase):
             rdmacm = False
 
         if self.random_io:
+            if not fun_test.shared_variables["disable_large_io"]:
+                max_io = 2097152
+            else:
+                max_io = 524288
             io_type = "Random"
             io_list = []
             while True:
-                rand_num = random.randint(1, 524288)
+                rand_num = random.randint(1, max_io)
                 if rand_num not in io_list:
                     io_list.append(rand_num)
                 if len(io_list) == 16:

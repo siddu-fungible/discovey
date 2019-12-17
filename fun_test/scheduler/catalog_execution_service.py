@@ -56,13 +56,17 @@ class CatalogExecutionStateMachine:
     def __init__(self):
         pass
 
+    def get_build_number(self, release_train):
+        return "latest"
+
     def queue_job(self, catalog_execution, suite_execution):
+
         environment = {"bundle_image_parameters": {"release_train": catalog_execution.release_train,
-                                                   "build_number": "latest"}}
+                                                   "build_number": self.get_build_number(release_train=catalog_execution.release_train)}}
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
-                            tags=["tbd"],
+                            tags=["release", catalog_execution.release_train],
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
         return job_id
@@ -81,6 +85,7 @@ class CatalogExecutionStateMachine:
                     suite_execution["job_id"] = job_id
                     suite_execution["error_message"] = None
             catalog_execution.state = JobStatusType.IN_PROGRESS
+            catalog_execution.started_date = get_current_time()
             catalog_execution.save()
 
     def process_in_progress_releases(self):
@@ -92,10 +97,23 @@ class CatalogExecutionStateMachine:
                 if not suite_execution["test_bed_name"]:
                     valid_job_parameters = False
                     suite_execution["error_message"] = "Test-bed is invalid"
-                if valid_job_parameters and not suite_execution["job_id"]:
-                    job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
-                    suite_execution["job_id"] = job_id
-                    suite_execution["error_message"] = None
+                if valid_job_parameters:
+                    if not suite_execution["job_id"] or \
+                            ("re_run_request_submitted" in suite_execution
+                             and suite_execution["re_run_request_submitted"]):
+                        existing_job_id = None
+                        if suite_execution["job_id"]:
+                            existing_job_id = suite_execution["job_id"]
+                        job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
+                        suite_execution["job_id"] = job_id
+                        if existing_job_id:
+                            if "run_history" not in suite_execution:
+                                suite_execution["run_history"] = []
+                            existing_job = SuiteExecution.objects.get(execution_id=existing_job_id)
+                            suite_execution["run_history"].append({"job_id": existing_job_id,
+                                                                   "job_result": existing_job.result})
+                        suite_execution["re_run_request_submitted"] = False
+                        suite_execution["error_message"] = None
             catalog_execution.save()
 
         # Prepare to change the state of the release
@@ -115,6 +133,7 @@ class CatalogExecutionStateMachine:
                         job_results.append(s.result)
                 if len(job_ids) == completed_job_ids:
                     catalog_execution.state = JobStatusType.COMPLETED
+                    catalog_execution.completion_date = get_current_time()
                 if len(job_ids) == len(job_results):
                     if all(map(lambda x: x == RESULTS["PASSED"], job_results)):
                         catalog_execution.result = RESULTS["PASSED"]
@@ -122,9 +141,34 @@ class CatalogExecutionStateMachine:
                         catalog_execution.result = RESULTS["FAILED"]
             catalog_execution.save()
 
+    def re_spawn(self, catalog_execution):
+        new_catalog_execution = catalog_execution
+        new_catalog_execution.pk = None
+        new_catalog_execution.created_date = get_current_time()
+        new_catalog_execution.completion_date = get_current_time()
+        new_catalog_execution.started_date = get_current_time()
+        new_catalog_execution.result = RESULTS["UNKNOWN"]
+        new_catalog_execution.ready_for_execution = True
+        new_catalog_execution.master_execution_id = catalog_execution.id
+        new_catalog_execution.save()
+
+    def process_recurring_releases(self):
+        q = Q(deleted=False, state=JobStatusType.COMPLETED, recurring=True)
+        catalog_executions = ReleaseCatalogExecution.objects.filter(q)
+        for catalog_execution in catalog_executions:
+            if (catalog_execution.state > JobStatusType.UNKNOWN) and (catalog_execution.state <= JobStatusType.COMPLETED):
+                q2 = Q(deleted=False,
+                       state__gt=JobStatusType.COMPLETED,
+                       recurring=False,
+                       master_execution_id=catalog_execution.id)
+                recurrent_catalog_executions = ReleaseCatalogExecution.objects.filter(q2)
+                if not recurrent_catalog_executions.count():
+                    self.re_spawn(catalog_execution=catalog_execution)
+
     def run(self):
         self.process_submitted_releases()
         self.process_in_progress_releases()
+        self.process_recurring_releases()
 
 
 if __name__ == "__main__":
