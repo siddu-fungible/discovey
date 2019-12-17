@@ -715,6 +715,11 @@ def release_catalog_executions(request, id):
     if request.method == "POST":
         request_json = json.loads(request.body)
         if not id:
+            release_train = request_json.get("release_train")
+            description = request_json.get("description")
+            if ReleaseCatalogExecution.objects.filter(release_train=release_train, description=description).count() > 0:
+                raise Exception("This description has already been taken")
+
             execution = ReleaseCatalogExecution(**request_json)
             execution.save()
             result = execution.to_dict()
