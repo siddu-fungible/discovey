@@ -294,6 +294,7 @@ class ApcPduTestcase(FunTestCase):
             bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 0")
             bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 1")
             fun_test.sleep(message="Wait for F1s to reset", seconds=45)
+            come_handle.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
             come_handle.reboot()
 
             fun_test.log("Checking if COMe is UP")
