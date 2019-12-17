@@ -1075,6 +1075,10 @@ class BootupWorker(Thread):
         except Exception as ex:
             fun_test.critical(str(ex) + " FS: {}".format(fs), context=fs.context)
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+            fun_test.add_checkpoint(result=fun_test.FAILED,
+                                    expected=False,
+                                    actual=True,
+                                    checkpoint="Bringup error")
             raise ex
 
 
@@ -1507,7 +1511,7 @@ class ComE(Linux):
 
             try:
                 if self.fs and self.fs.get_revision() in ["2"]:
-                    fungible_root = "/opt/fungible/logs"
+                    fungible_root = "/opt/fungible"
             except Exception as ex:
                 fun_test.critical(str(ex))
 
