@@ -32,18 +32,17 @@ class Platform(ApcPduTestcase):
         self.initialize_json_data()
         self.initialize_job_inputs()
         self.initialize_variables()
+        self.intialize_handles()
         self.switch_to_py3_env()
-        self.get_ipv6_addr()
 
     def run(self):
         self.chassis_power()
         self.chassis_thermal()
-        fan_speed = self.get_fan_speed()
+        fan_speed = self.read_fans_data()
         temperature = self.get_temperature()
         fun_test.log("\nFan speed: {}\nTemperature : {}".format(fan_speed, temperature))
         self.check_ssd_status(self.expected_ssds)
         self.check_nu_ports(self.expected_ports_up)
-
 
     def redfishtool(self, bmc_ip, username, password, sub_command=None, **kwargs):
         cmd = "python3 redfishtool -r {bmc_ip} -u {username} -p {password}".format(bmc_ip=bmc_ip,
@@ -80,6 +79,7 @@ class Platform(ApcPduTestcase):
         fun_test.simple_assert(service_host_spec, "Service host spec")
         self.qa_02 = Linux(**service_host_spec)
 
+    def intialize_handles(self):
         self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                 ssh_username=self.fs['come']['mgmt_ssh_username'],
                                 ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -89,7 +89,6 @@ class Platform(ApcPduTestcase):
         self.fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
                                 ssh_username=self.fs['fpga']['mgmt_ssh_username'],
                                 ssh_password=self.fs['fpga']['mgmt_ssh_password'])
-
         self.f1_0_dpc = DpcshClient(target_ip=self.come_handle.host_ip,
                                     target_port=self.come_handle.get_dpc_port(0),
                                     verbose=False)
@@ -113,14 +112,6 @@ class Platform(ApcPduTestcase):
         output = self.redfishtool(self.fs['bmc']['mgmt_ip'], self.credentials["username"], self.credentials["password"],
                                   sub_command, **additional)
         return output
-
-    def get_fan_speed(self):
-        result = {}
-        output = self.chassis_thermal()
-        fans = output["Fans"]
-        for fan in fans:
-            result[fan["Name"]] = fan["Reading"]
-        return result
 
     def get_temperature(self):
         result = {}
@@ -174,25 +165,134 @@ class Platform(ApcPduTestcase):
         fun_test.log("Successfully validated all the temperature sensors")
         fun_test.test_assert(True, "Temperature sensors healthy")
 
-    def get_ipv6_addr(self):
-        self.ipv6 = {}
+    def get_platform_drop_information(self, system="come"):
+        # todo: no idea
+        result = {"status":False, "dropname":""}
+        fun_test.log("Platform drop informtion: {}".format(""))
+        return result
+
+    def set_platform_ip_information(self, system="come"):
+        # todo: how to set it
+        result = {"status": False}
+        fun_test.log("Platform : {} IP set to : {}".format("", ""))
+        return result
+
+    def get_platform_ip_information(self):
+        result = {"status": False, "data": {}}
         handles_list = {"come": self.come_handle, "bmc": self.bmc_handle,
-                        "fpga":self.fpga_handle}
-        for system, handle in handles_list.iteritems():
-            output = handle.command("ifconfig")
-            if system == "come" or system == "fpga":
-                split_with = "flags"
-            elif system == "bmc":
-                split_with = "Link"
-            interfaces = output.split(split_with)
-            for interface in interfaces:
-                match_inet = re.search(r'inet\s+(addr:)?\s?(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
-                match_inet6 = re.search(r'inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)', interface)
-                if match_inet and match_inet6:
-                    ipv4 = match_inet.group("ipv4")
-                    ipv6 = match_inet6.group("ipv6")
-                    self.ipv6[system] = {"ipv4":ipv4, "ipv6":ipv6}
-        fun_test.log("IPV6 addresses: {}".format(self.ipv6))
+                        "fpga": self.fpga_handle}
+        try:
+            for system, handle in handles_list.iteritems():
+                output = handle.command("ifconfig")
+                if system == "come" or system == "fpga":
+                    split_with = "flags"
+                elif system == "bmc":
+                    split_with = "Link"
+                interfaces = output.split(split_with)
+                for interface in interfaces:
+                    match_inet = re.search(r'inet\s+(addr:)?\s?(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
+                    match_inet6 = re.search(r'inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)', interface)
+                    if match_inet and match_inet6:
+                        ipv4 = match_inet.group("ipv4")
+                        ipv6 = match_inet6.group("ipv6")
+                        result["data"][system] = {"ipv4": ipv4, "ipv6": ipv6}
+                        fun_test.log("System : {} IP : {}".format(system, result["data"][system]))
+                result["status"] = True
+            fun_test.log("IPV6 addresses: {}".format(result))
+        except Exception as ex:
+            fun_test.log(ex)
+            result["status"] = False
+        return result
+
+    def set_platform_link(self):
+        # todo: need to verify with Parag if this is what we need to do
+        self.get_port_link_status()
+        cmd = "port enableall"
+        output = self.get_dpcsh_data_for_cmds(cmd)
+        result = {"status": True}
+        fun_test.sleep("Enabling all the ports", seconds=30)
+        self.get_port_link_status()
+        return result
+
+    def get_platform_link(self, f1=0):
+        # todo: Verify with Parag if this is what we want to do
+        result = {"status": False}
+        return result
+
+    def get_platform_version_information(self):
+        # todo: how to get the version
+        result = {"status": False, "linkparams": ""}
+        return result
+
+    # def get_platform_ip_information(self):
+    #     #  Loop through all array (fpga, come, bcc)
+    #     # todo : check with parag what is the bcc thing
+    #     result = self.get_platform_ip_information()
+    #     fun_test.log("Platform ip info: {}".format(result["data"]))
+    #     return result
+
+    def get_ssd_info(self, f1=0):
+        cmd = "peek storage/devices/nvme/ssds"
+        dpcsh_data = self.get_dpcsh_data_for_cmds(cmd, f1)
+        result = {"status": True, "data": dpcsh_data}
+        fun_test.log("SSD info : {}".format(dpcsh_data))
+        return result
+
+    def get_port_link_status(self, f1=0):
+        result = {"status": False}
+        cmd = "port linkstatus"
+        dpcsh_output = self.get_dpcsh_data_for_cmds(cmd, f1)
+        data = self.parse_link_status_out(dpcsh_output, f1)
+        if data:
+            result = {"status": True, "data": data}
+            fun_test.log("Port linkstatus: {}".format(data))
+        return result
+
+    def read_fans_data(self):
+        # todo: check with Parag if just fan speed is enough
+        result = {"status": False, "data": {}}
+        try:
+            output = self.chassis_thermal()
+            fans = output["Fans"]
+            for fan in fans:
+                result["data"][fan["Name"]] = fan["Reading"]
+            result["status"] = True
+        except Exception as ex:
+            fun_test.log(ex)
+            result = {"status": False}
+        fun_test.simple_assert(result["status"], "Read fan speed")
+        fun_test.log("Fan Readings: {}".format(result["data"])) if (result["status"]) else None
+        return result
+
+    def read_dpu_data(self):
+        # todo: dont know how to read the dpu data
+        result = {"status": False}
+        return result
+
+    def reboot(self, system="come", max_wait_time=180):
+        if system == "come":
+            self.come_handle.reboot(max_wait_time=max_wait_time)
+        elif system == "bmc":
+            self.bmc_handle.reboot(max_wait_time=max_wait_time)
+        elif system == "fpga":
+            self.fpga_handle.reboot(max_wait_time=max_wait_time)
+        self.intialize_handles()
+
+    def power_on(self):
+        # todo: is it redfish or any other tool, what are the commands
+        pass
+
+    def power_off(self):
+        # todo: is it redfish or any other tool, what are the commands
+        pass
+
+    def connect_get_set_get_jtag(self):
+        # todo: how to do this
+        pass
+
+    def connect_get_set_get_i2c(self):
+        # todo: how to do this
+        pass
 
     def cleanup(self):
         pass
