@@ -326,6 +326,7 @@ class ECVolumeLevelScript(FunTestScript):
                         # Check if run_sc container is running
                         run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
                         timer = FunTimer(max_time=self.container_up_timeout)
+                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                         while not timer.is_expired():
                             run_sc_name = self.come_obj[0].command(
                                 run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
@@ -361,12 +362,21 @@ class ECVolumeLevelScript(FunTestScript):
                     api_server_response = self.sc_api.get_api_server_health()
                     if api_server_response["status"]:
                         fun_test.log("Bundle Image boot: API server is up and running")
+                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                         break
                     else:
                         fun_test.sleep("waiting for API server to be up", 10)
                 fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                        message="Bundle Image boot: API server is up")
                 fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+                # Check if bond interface status is Up and Running
+                for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                    if container_name == "run_sc":
+                        continue
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                                    name="bond0")
+                    fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
+                                                  message="Bundle Image boot: Bond Interface is Up & Running")
                 # If fresh install, configure dataplane ip as database is cleaned up
                 if self.install == "fresh":
                     # Getting all the DUTs of the setup
@@ -421,6 +431,7 @@ class ECVolumeLevelScript(FunTestScript):
                         else:
                             fun_test.sleep(
                                 "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                            fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
                     if container_chk_timer.is_expired():
                         fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
                     else:
@@ -449,6 +460,7 @@ class ECVolumeLevelScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep("for the run_sc docker container to start", 1)
+                                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                                 else:
                                     fun_test.critical(
                                         "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
@@ -483,11 +495,21 @@ class ECVolumeLevelScript(FunTestScript):
                                         break
                                     else:
                                         fun_test.sleep(" waiting for API server to be up", 10)
+                                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                                 fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                                        message="TFTP Image boot: init-fs1600 enabled: API server is up")
                                 fun_test.sleep(
                                     "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-
+                                # Check if bond interface status is Up and Running
+                                for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                                    if container_name == "run_sc":
+                                        continue
+                                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                        container_name=container_name,
+                                        name="bond0")
+                                    fun_test.test_assert_expected(
+                                        expected=True, actual=bond_interfaces_status,
+                                        message="Bundle Image boot: Bond Interface is Up & Running")
                                 # Configure dataplane ip as database is cleaned up
                                 # Getting all the DUTs of the setup
                                 nodes = self.sc_api.get_dpu_ids()
@@ -1129,7 +1151,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 vol_group[self.ec_info["volume_types"]["jvol"]] = [self.ec_info["uuids"][num]["jvol"]]
                 vol_group[self.ec_info["volume_types"]["lsv"]] = self.ec_info["uuids"][num]["lsv"]
                 self.vol_details.append(vol_group)
-            fun_test.log("vol_details is: {}".format(self.vol_details))
+            fun_test.debug("vol_details is: {}".format(self.vol_details))
             fun_test.shared_variables["vol_details"] = self.vol_details
 
         # Executing the FIO command to fill the volume to it's capacity
@@ -1142,7 +1164,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                 self.sc_lock.release()
                 fun_test.test_assert(initial_vol_stats["status"], "Volume stats collected before warmup")
-                fun_test.log("Volume stats before warmup: {}".format(initial_vol_stats))
+                fun_test.debug("Volume stats before warmup: {}".format(initial_vol_stats))
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -1196,7 +1218,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                 self.sc_lock.release()
                 fun_test.test_assert(final_vol_stats["status"], "Volume stats collected after warmup")
-                fun_test.log("Volume stats after warmup: {}".format(final_vol_stats))
+                fun_test.debug("Volume stats after warmup: {}".format(final_vol_stats))
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -1383,7 +1405,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                     self.sc_lock.release()
                     fun_test.test_assert(initial_vol_stat[iodepth]["status"], "Volume stats collected before the test")
-                    fun_test.log("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
+                    fun_test.debug("Initial vol stats in script: {}".format(initial_vol_stat[iodepth]))
 
                     self.sc_lock.acquire()
                     initial_rcnvme_stat[iodepth] = self.storage_controller.peek(
@@ -1392,7 +1414,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     self.sc_lock.release()
                     fun_test.test_assert(initial_rcnvme_stat[iodepth]["status"],
                                          "rcnvme stats collected before the test")
-                    fun_test.log("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
+                    fun_test.debug("Initial rcnvme stats in script: {}".format(initial_rcnvme_stat[iodepth]))
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
@@ -1537,7 +1559,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                             command_duration=self.command_timeout)
                         self.sc_lock.release()
                         fun_test.test_assert(final_vol_stat[iodepth]["status"], "Volume stats collected after the test")
-                        fun_test.log("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
+                        fun_test.debug("Final vol stats in script: {}".format(final_vol_stat[iodepth]))
 
                         self.sc_lock.acquire()
                         final_rcnvme_stat[iodepth] = self.storage_controller.peek(
@@ -1546,7 +1568,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         self.sc_lock.release()
                         fun_test.test_assert(final_rcnvme_stat[iodepth]["status"],
                                              "rcnvme stats collected after the test")
-                        fun_test.log("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))
+                        fun_test.debug("Final rcnvme stats in script: {}".format(final_rcnvme_stat[iodepth]))
                     except Exception as ex:
                         fun_test.critical(str(ex))
 
@@ -1662,15 +1684,15 @@ class ECVolumeLevelTestcase(FunTestCase):
                 '''
                 try:
                     if initial_vol_stat[iodepth]["status"] or final_vol_stat[iodepth]["status"]:
-                        fun_test.log("\ninitial_vol_stat[{}] is: {}\n".
+                        fun_test.debug("\ninitial_vol_stat[{}] is: {}\n".
                                      format(iodepth, initial_vol_stat[iodepth]["data"]))
-                        fun_test.log("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
-                        fun_test.log("\nvol_details: {}\n".format(self.vol_details))
+                        fun_test.debug("\nfinal_vol_stat[{}] is: {}\n".format(iodepth, final_vol_stat[iodepth]["data"]))
+                        fun_test.debug("\nvol_details: {}\n".format(self.vol_details))
                         curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
                                                          final_vol_stats=final_vol_stat[iodepth]["data"],
                                                          vol_details=self.vol_details)
                         fun_test.simple_assert(curr_stats_diff["status"], "Volume stats diff to measure amplification")
-                        fun_test.log("\nVolume stats diff: {}".format(curr_stats_diff))
+                        fun_test.debug("\nVolume stats diff: {}".format(curr_stats_diff))
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
                         lbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"]
@@ -1679,11 +1701,11 @@ class ECVolumeLevelTestcase(FunTestCase):
                         lbr = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["read_bytes"]
                         lbr_app = aggr_fio_output[iodepth]['read']["io_bytes"]
 
-                        fun_test.log("Iodepth: {}\nPhysical Bytes Written from volume stats: {}"
-                                     "\nLogical Bytes Written from volume stats: {}\nLogical written bytes by app: {}"
-                                     "\nPhysical Bytes Read from volume stats: {}"
-                                     "\nLogical Bytes Read from volume stats: {}\nLogical bytes Read by app: {}\n".
-                                     format(iodepth, pbw, lbw, lbw_app, pbr, lbr, lbr_app))
+                        fun_test.debug("Iodepth: {}\nPhysical Bytes Written from volume stats: {}"
+                                       "\nLogical Bytes Written from volume stats: {}\nLogical written bytes by app: {}"
+                                       "\nPhysical Bytes Read from volume stats: {}"
+                                       "\nLogical Bytes Read from volume stats: {}\nLogical bytes Read by app: {}\n".
+                                       format(iodepth, pbw, lbw, lbw_app, pbr, lbr, lbr_app))
 
                         row_data_dict["write_amp_vol_stats"] = "{0:.2f}".format(divide(n=float(pbw), d=lbw))
                         row_data_dict["write_amp_app_stats"] = "{0:.2f}".format(divide(n=float(pbw), d=lbw_app))
@@ -1708,7 +1730,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         rcnvme_diff_stats = get_results_diff(old_result=initial_rcnvme_stat[iodepth]["data"],
                                                              new_result=final_rcnvme_stat[iodepth]["data"])
                         fun_test.simple_assert(rcnvme_diff_stats, "rcnvme diff stats")
-                        fun_test.log("\nRCNVMe stats diff: {}".format(rcnvme_diff_stats))
+                        fun_test.debug("\nRCNVMe stats diff: {}".format(rcnvme_diff_stats))
 
                         # Sum up all rcnvme_read_count & rcnvme_write_count for all the SSD
                         for drive_id in sorted(rcnvme_diff_stats, key=lambda key: int(key)):

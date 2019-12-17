@@ -25,7 +25,8 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "bug_check on",
                  "platform_halt: exit status 1",
                  "Assertion failed",
-                 "Trap exception"]
+                 "Trap exception",
+                 "CSR:FEP_.*_FATAL_INTR"]
 
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
@@ -308,7 +309,10 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("cat /tmp/f1_0_logpid")
+        self.command("cat /tmp/f1_1_logpid")
+
 
     def stop_bundle_f1_logs(self):
         try:
@@ -321,6 +325,8 @@ class Bmc(Linux):
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
         self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("cat /tmp/f1_0_logpid")
+        self.command("cat /tmp/f1_1_logpid")
 
     def start_uart_log_listener(self, f1_index, serial_device):
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
@@ -506,11 +512,9 @@ class Bmc(Linux):
                             f1_index=index)
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_BOOT_ARGS)
-        self.u_boot_command(
-            command="setenv bootargs {}".format(
-                self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
-
-        fun_test.add_checkpoint("BOOTARGS: {}".format(boot_args), context=self.context)
+        final_boot_args = self._get_boot_args_for_index(boot_args=boot_args, f1_index=index)
+        self.u_boot_command(command="setenv bootargs {}".format(final_boot_args), timeout=5, f1_index=index, expected=self.U_BOOT_F1_PROMPT)
+        fun_test.add_checkpoint("BOOTARGS: {}".format(final_boot_args), context=self.context)
 
         if mpg_ips:
             self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_SET_IPADDR)
@@ -790,6 +794,29 @@ class Bmc(Linux):
                                         artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
             try:
+                fun_test.log("Looking for rotated files")
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    rotated_artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                        self._get_context_prefix("{}_{}".format(f1_index, os.path.basename(rotated_log_filename))))
+
+                    fun_test.scp(source_ip=self.host_ip,
+                                 source_file_path=rotated_log_filename,
+                                 source_username=self.ssh_username,
+                                 source_password=self.ssh_password,
+                                 target_file_path=rotated_artifact_file_name,
+                                 timeout=60)
+
+                    fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART rotated log compressed {} {}").format(f1_index, rotated_index, os.path.basename(rotated_log_filename)),
+                                                filename=rotated_artifact_file_name,
+                                                asset_type=asset_type,
+                                                asset_id=asset_id,
+                                                artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            try:
                 self.post_process_uart_log(f1_index=f1_index, file_name=artifact_file_name)
             except Exception as ex:
                 post_processing_error_found = True
@@ -876,6 +903,8 @@ class Bmc(Linux):
             if f1_index == self.disable_f1_index:
                 continue
             if self.bundle_compatible:
+                self.stop_bundle_f1_logs()
+                # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
 
@@ -1475,6 +1504,13 @@ class ComE(Linux):
         try:
             fungible_root = self.command("echo $FUNGIBLE_ROOT")
             fungible_root = fungible_root.strip()
+
+            try:
+                if self.fs and self.fs.get_revision() in ["2"]:
+                    fungible_root = "/opt/fungible/logs"
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             if fungible_root:
                 logs_path = "{}/logs/*".format(fungible_root)
                 files = self.list_files(logs_path)

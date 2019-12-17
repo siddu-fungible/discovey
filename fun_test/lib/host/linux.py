@@ -2832,8 +2832,11 @@ class Linux(object, ToDictMixin):
         command = "curl {}".format(url)
         if output_file:
             command += " -o {}".format(output_file)
-        self.command(command, timeout=timeout)
-        return int(self.exit_status()) == 0
+        output = self.command(command, timeout=timeout)
+        result = int(self.exit_status()) == 0
+        if not output_file:
+            result = output
+        return result
 
     @fun_test.safe
     def destroy(self):

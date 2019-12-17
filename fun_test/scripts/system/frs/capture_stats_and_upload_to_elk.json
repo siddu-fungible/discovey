@@ -1,9 +1,11 @@
 {
-  "duration": 10,
+  "duration": 120,
   "disable_f1_index": 1,
   "upload_to_file": true,
   "collect_stats": [
-    "DEBUG_MEMORY"
+    "DEBUG_MEMORY",
+    "STORAGE_IOPS",
+    "DEBUG_VP_UTIL"
   ],
   "stats_interval": 30,
   "disable_stats": [],

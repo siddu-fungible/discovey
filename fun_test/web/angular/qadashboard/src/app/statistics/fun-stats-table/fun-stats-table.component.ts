@@ -45,9 +45,6 @@ export class FunStatsTableComponent implements OnInit {
 
    expandSlicedString(d): void {
     d.showSliced = !d.showSliced;
-    if (d.showSliced) {
-      this.commonService.scrollTo('topOfCell');
-    }
   }
 
   isString(value): boolean {

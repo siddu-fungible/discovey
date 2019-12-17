@@ -444,12 +444,12 @@ def divide(n, d):
     return n/d if d else 0
 
 
-def init_fs1600_status(come_obj):
+def init_fs1600_status(come_obj, timeout=180):
     result = False
     service_name = "init-fs1600.service"
     status_cmd = "sudo systemctl status {} --no-pager".format(service_name)
     try:
-        status = come_obj.command(status_cmd)
+        status = come_obj.command(status_cmd, timeout=timeout)
 
         if status:
             m = re.search(r'{};\s(\w+)'.format(service_name), status)

@@ -338,6 +338,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                             break
                         else:
                             fun_test.sleep("for the run_sc docker container to start", 1)
+                            fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                     else:
                         fun_test.critical(
                             "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
@@ -368,9 +369,18 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     break
                 else:
                     fun_test.sleep("waiting for API server to be up", 10)
+                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
             fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+            # Check if bond interface status is Up and Running
+            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                if container_name == "run_sc":
+                    continue
+                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                                name="bond0")
+                fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
+                                              message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
             if self.install == "fresh":
                 # Getting all the DUTs of the setup
@@ -425,6 +435,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     else:
                         fun_test.sleep(
                             "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                        fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
                 if container_chk_timer.is_expired():
                     fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
                 else:
@@ -453,6 +464,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                     break
                                 else:
                                     fun_test.sleep("for the run_sc docker container to start", 1)
+                                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                             else:
                                 fun_test.critical(
                                     "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
@@ -487,11 +499,21 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                     break
                                 else:
                                     fun_test.sleep(" waiting for API server to be up", 10)
+                                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                                    message="TFTP Image boot: init-fs1600 enabled: API server is up")
                             fun_test.sleep(
                                 "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-
+                            # Check if bond interface status is Up and Running
+                            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                                if container_name == "run_sc":
+                                    continue
+                                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                    container_name=container_name,
+                                    name="bond0")
+                                fun_test.test_assert_expected(
+                                    expected=True, actual=bond_interfaces_status,
+                                    message="Bundle Image boot: Bond Interface is Up & Running")
                             # Configure dataplane ip as database is cleaned up
                             # Getting all the DUTs of the setup
                             nodes = self.sc_api.get_dpu_ids()
@@ -1489,9 +1511,33 @@ class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
         super(MultiHostFioRandWrite, self).cleanup()
 
 
+class PreCommitSanity(MultiHostVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Pre-commit Sanity. Create BLT - Attach - IO (Write & Read) - Detach - Delete",
+                              steps='''
+        1. Bring-up F1 with latest image and configure Dataplane IP 
+        2. Create 1 BLT volume with SC API
+        2. Attach volume to Remote host
+        4. Run the FIO Sequential write and Sequentail Read test from remote host
+        5. Detach and Delete the BLT volume
+        ''')
+
+    def setup(self):
+        super(PreCommitSanity, self).setup()
+
+    def run(self):
+        super(PreCommitSanity, self).run()
+
+    def cleanup(self):
+        super(PreCommitSanity, self).cleanup()
+
+
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(PreCommitSanity())
     bltscript.run()

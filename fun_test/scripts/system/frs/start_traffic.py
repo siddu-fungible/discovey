@@ -341,8 +341,8 @@ class MyScript(FunTestScript):
         #     self.add_boot_arg)
         # f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]} hbm-coh-pool-mb=550 hbm-ncoh-pool-mb=3303%s' % (
         #     self.add_boot_arg)
-        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats syslog=3'
-        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --disable-wu-watchdog --dis-stats syslog=3'
+        f1_0_boot_args = 'cc_huid=3 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --dis-stats syslog=3'
+        f1_1_boot_args = 'cc_huid=2 app=mdt_test,load_mods workload=storage --serial --memvol --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze --useddr --sync-uart --dis-stats syslog=3'
 
         topology_helper = TopologyHelper()
         if self.disable_f1_index == 0 or self.disable_f1_index == 1:
@@ -1027,6 +1027,15 @@ class FrsTestCase(FunTestCase):
                 fun_test.add_auxillary_file(description="DUT_0_fs-65_F1_1 UART Log", filename=artifact_file_name_f1_1)
             except:
                 fun_test.log("Its a bundle issue")
+        self.add_come_logs()
+
+    def add_come_logs(self):
+        dmesg_file_name = fun_test.get_test_case_artifact_file_name(post_fix_name="come_dmesg_logs.txt")
+        f = open(dmesg_file_name, "w+")
+        output = self.come_handle.command("dmesg")
+        f.write(output)
+        f.close()
+        fun_test.add_auxillary_file(description="COMe logs", filename=dmesg_file_name)
 
     def add_the_links(self):
         # Todo: Get the links for each individual app

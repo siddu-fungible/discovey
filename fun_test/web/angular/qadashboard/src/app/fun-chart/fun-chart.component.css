@@ -3,3 +3,7 @@
   padding: 10px;
   width: 100% !important;
 }
+
+.chart-borderless {
+  border: none !important;
+}

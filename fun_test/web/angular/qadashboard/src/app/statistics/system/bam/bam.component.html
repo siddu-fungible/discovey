@@ -1,13 +1,30 @@
-<app-section-header [title]="title">
-    </app-section-header>
-<h5>BM usage per cluster</h5>
-<div *ngFor="let f1Index of detectedF1Indexes">
-  <h6>F1-{{ f1Index }}</h6>
-  <div class="fun-flex-container">
-    <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
-      <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
-        <fun-chart [title]="poolName + '-' + poolKey" [xAxisLabel]="'Sample'" [y1Values]="parsedData[f1Index][poolName][poolKey]"></fun-chart>
-      </ng-container>
-    </ng-container>
+<div class="fun-flex-container">
+  <div class="fun-flex-item fun-panel panel" style="width: 100%;">
+    <div class="fun-panel-header">
+      <span><span style="font-size: 1.5rem; font-weight: 500;">{{ title }}</span>
+        <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showTable}"
+                (click)="showTables()"><i class="fa fa-table"></i> Show raw tables
+        </button></span>
+    </div>
+    <div class="fun-panel-body">
+      <span><span style="font-size: 1.5rem; font-weight: 500;">BM usage per cluster</span></span>
+      <div *ngFor="let f1Index of detectedF1Indexes">
+        <h5>F1-{{ f1Index }}</h5>
+        <div *ngIf="showCharts" class="fun-flex-container">
+          <ng-container *ngFor="let poolName of bmUsagePerClusterPoolNames">
+            <ng-container *ngFor="let poolKey of bmUsagePerClusterPoolKeys">
+              <div [@slideInOut] class="fun-flex-item">
+                <fun-stats [data]="parsedData[f1Index][poolName][poolKey]['funTimeSeries']"></fun-stats>
+              </div>
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf=showTable class="fun-flex-item fun-panel" style="width: 40%">
+    <div class="fun-panel-body" [@show] style="height: 700px; overflow: scroll">
+      <fun-stats-table [tableData]="rawTableData" [tableHeaders]="rawTableHeaders"></fun-stats-table>
+    </div>
   </div>
 </div>

@@ -5,13 +5,23 @@ import {LoggerService} from "../services/logger/logger.service";
 import {AppInjector} from "../app-injector";
 
 export abstract class Api {
-  abstract url: string = null;
+  url: string = null;
   abstract classType: any = null;
+  deserializationHooks = {};
 
   abstract serialize(): any;
   public deSerialize(data: any): any {
     Object.keys(data).forEach(key => {
-      this[key] = data[key];
+      let value = this[key];
+      if (this.deserializationHooks.hasOwnProperty(key)) {
+        try {
+          this[key] = this.deserializationHooks[key](data[key]);
+        } catch (e) {
+          this[key] = data[key];
+        }
+      } else {
+        this[key] = data[key];
+      }
     });
     return this;
   }
@@ -30,6 +40,17 @@ export abstract class Api {
       return of(this);
     }), catchError(error => {
       this.loggerService.error(`Unable to create: ${this.constructor.name}`, error);
+      return throwError(error);
+    }))
+  }
+
+  public putOperation(url, payload, operation) {
+    url = `${url}?operation_type=${operation}`;
+    return this.apiService.put(url, payload).pipe(switchMap(response => {
+      this.deSerialize(response.data);
+      return of(this);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to post operation: ${operation}`, error);
       return throwError(error);
     }))
   }
@@ -69,7 +90,13 @@ export abstract class Api {
 
   }
 
-  public delete() {
+  public delete(url) {
+    return this.apiService.delete(url).pipe(switchMap(response => {
+      return of(null);
+    }), catchError(error => {
+      this.loggerService.error(`Unable to delete: ${this.constructor.name}`, error);
+      return throwError(error);
+    }))
   }
 
   public deleteAll() {

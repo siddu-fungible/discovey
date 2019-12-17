@@ -51,8 +51,8 @@
     "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
-    "container_up_timeout": 60,
-    "api_server_up_timeout": 90
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 180
   },
   "RandReadWrite8kBlocks": {
     "ec_info": {
@@ -90,7 +90,7 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "nvme_device": "/dev/nvme",
     "nvme_io_queues": 16,
-    "warm_up_traffic": 0,
+    "warm_up_traffic": 1,
     "parallel_warm_up": false,
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
@@ -204,8 +204,8 @@
     "fio_run_timeout": 150,
     "fio_size_timeout": 7200,
     "fio_modes": ["randwrite"],
-    "fio_iodepth": [32, 64, 96, 128],
-    "full_run_iodepth": [16, 32],
+    "fio_iodepth": [8, 16, 32, 64, 96, 128],
+    "full_run_iodepth": [8, 16],
     "fio_job_name": "inspur_8k_random_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
