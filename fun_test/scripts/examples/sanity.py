@@ -88,7 +88,7 @@ class FunTestCase2(FunTestCase):
     def run(self):
         fun_test.log("The Testcase")
 
-        # fun_test.test_assert(expression=1 > 2, message="1 > 2")
+        fun_test.test_assert(expression=1 > 2, message="1 > 2")
         fun_test.test_assert(expression=2 > 1, message="2 > 1")
 
 
