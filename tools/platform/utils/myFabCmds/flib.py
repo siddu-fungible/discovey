@@ -331,11 +331,11 @@ def rescan_pcie():
 def bmcresetF(index=0):
     """ reset the chip from BMC system"""
     with cd('/mnt/sdmmc0p1/scripts'), settings( hide('stderr'), warn_only=True ):
-        run("sh ./f1_reset.sh %s" % index)
+        run("bash ./REV2_f1_reset.sh %s" % index)
 
 @roles('fpga')
 @task
-def resetF(index=0):
+def fpgaresetF(index=0):
     """ reset the chip from FPGA system"""
     #env.password = 'root'
     run('/home/root/f1reset -s {} 0 && sleep 2 && /home/root/f1reset -s {} 1 && /home/root/f1reset -g && sleep 1'.format(index, index), shell=False)
@@ -345,7 +345,19 @@ def resetF(index=0):
 def get_fs_rev():
     """ get FS1600 platform revision """
     with settings( hide('stderr', 'running'), warn_only=True ):
-        run("cd /mnt/sdmmc0p1/scripts && gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1")
+        o =  run("cd /mnt/sdmmc0p1/scripts && gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1")
+        if o.return_code == 0: return o.stdout
+
+@roles('bmc')
+@task
+def resetF(index=0):
+    revstring = execute(get_fs_rev)
+    if 'REV1' in revstring.values()[0] :
+        execute(fpgaresetF, index=index)
+    elif 'REV2' in revstring.values()[0] :
+        execute(bmcresetF, index=index)
+    else:
+        raise('Unknown platform revision ...')
 
 @roles('bmc')
 @task
@@ -591,31 +603,17 @@ def check_file_unsigned(image=TFTPPATH, type='tftp'):
         print ("{} file downloaded - {} seem {} ...".format(type, filename, 'unsigned' if status == True else 'signed'))
         return status
 
-def _is_file_unsigned(image=NFSPATH, type='nfs'):
-    (server, filename) = image.split(':')
-    (tfd, tname) = tempfile.mkstemp(suffix='.fab')
-    if 'tftp' in type:
-        local('tftp {} -c get {} {}'.format(server, filename, tname))
-    elif 'nfs' in type:
-        local('scp {} {}'.format(filename, tname))
-    else:
-        raise('filetype not supported ...')
-
-    with settings(warn_only=True):
-        o = local('file -z {} | grep ELF && true || false'.format(tname))
-        status = True if o.return_code == 0 else False
-        print ("{} file downloaded - {} seem {} ...".format(type, tname, 'unsigned' if status == True else 'signed'))
-        local('rm -rf {}'.format(tname))
-        return status
-
 @roles('bmc')
 @task
-def imageF(index=0, image=NFSPATH, type='nfs'):
+def imageF(index=0, server=env.TFTPSERVER, imagefile=env.DEFAULT_TFTPFILE, type='tftp', selfip=None):
     """ upgrade image of chip[index] over type [nfs|tftp] with provided arguments """
     global child
+    image = "%s:%s" % (server, imagefile)
 
-    env.passwords.update({'localadmin@{}:22'.format(env.TFTPSERVER) : 'Precious1*'})
-    unsigned = execute(check_file_unsigned, image, type, hosts='localadmin@{}:22'.format(env.TFTPSERVER))
+    rootuser = env.get('TFTPROOT', 'localadmin')
+    rootpass = env.get('TFTPPASS', 'Precious1*')
+    env.passwords.update({'{}@{}:22'.format(rootuser, server) : rootpass })
+    unsigned = execute(check_file_unsigned, image, type, hosts='{}@{}:22'.format(rootuser, server))
 
     command = 'nfs' if 'nfs' in type else 'tftpboot'
     child = connectF(index, True)
@@ -629,9 +627,13 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
     child.expect ('\nf1 # ')
     child.sendline ('setenv gatewayip %s' % _make_gateway(index))
     child.expect ('\nf1 # ')
-    child.sendline ('dhcp')
-    child.expect ('\nf1 # ')
-    child.sendline ('setenv serverip {}'.format(env.TFTPSERVER))
+    if selfip:
+        child.sendline ('setenv ipaddr %s' % selfip)
+        child.expect ('\nf1 # ')
+    else:
+        child.sendline ('dhcp')
+        child.expect ('\nf1 # ')
+    child.sendline ('setenv serverip {}'.format(server))
     child.expect ('\nf1 # ', timeout=10)
     child.sendline ('printenv')
     child.expect ('\nf1 # ')
@@ -654,15 +656,15 @@ def imageF(index=0, image=NFSPATH, type='nfs'):
 
 @roles('bmc')
 @task
-def nfsF(index=0, image=NFSPATH):
+def nfsF(index=0, server=env.NFSSERVER, imagefile=env.DEFAULT_NFSFILE, selfip=None):
     """ upgrade image of chip[index] over NFS with provided arguments """
-    imageF(index=index, image=image, type='nfs')
+    imageF(index=index, server=server, imagefile=imagefile, type='nfs', selfip=selfip)
 
 @roles('bmc')
 @task
-def tftpF(index=0, image=TFTPPATH):
+def tftpF(index=0, server=env.TFTPSERVER, imagefile=env.DEFAULT_TFTPFILE, selfip=None):
     """ upgrade image of chip[index] over TFTP with provided arguments """
-    imageF(index=index, image=image, type='tftp')
+    imageF(index=index, server=server, imagefile=imagefile, type='tftp', selfip=selfip)
 
 @roles('bmc')
 @task

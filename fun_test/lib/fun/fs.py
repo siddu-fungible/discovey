@@ -1504,6 +1504,13 @@ class ComE(Linux):
         try:
             fungible_root = self.command("echo $FUNGIBLE_ROOT")
             fungible_root = fungible_root.strip()
+
+            try:
+                if self.fs and self.fs.get_revision() in ["2"]:
+                    fungible_root = "/opt/fungible/logs"
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             if fungible_root:
                 logs_path = "{}/logs/*".format(fungible_root)
                 files = self.list_files(logs_path)
