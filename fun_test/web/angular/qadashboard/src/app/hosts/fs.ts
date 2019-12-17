@@ -1,6 +1,8 @@
+import {f1} from "../../../node_modules/@angular/core/src/render3";
+
 export class Vp {
   index: number;
-  utilization: {[timestamp: number]: number} = {};
+  utilization: { [timestamp: number]: number } = {};
 
   constructor(index: number) {
     this.index = index;
@@ -9,11 +11,16 @@ export class Vp {
   addDebugVpUtil(timestamp: number, value: number) {
     this.utilization[timestamp] = value;
   }
+
+  addBamUtil(timestamp: number, value: number) {
+    this.utilization[timestamp] = value;
+  }
 }
 
 export class Core {
   index: number;
   vps: Vp [] = [];
+
   constructor(index: number, clusterIndex: number) {
     this.index = index;
     let maxVp: number = 4;
@@ -32,12 +39,18 @@ export class Core {
   addDebugVpUtil(vpIndex, timestamp, value) {
     this.vps[vpIndex].addDebugVpUtil(timestamp, value);
   }
+
+  addBamUtil(vpIndex, timestamp, value) {
+    this.vps[vpIndex].addBamUtil(timestamp, value);
+  }
 }
 
 //6 * 4, 4 * 2
 export class Cluster {
   index: number;
   cores: Core [] = [];
+  bamUsage: BamUsage;
+
   constructor(index: number) {
     this.index = index;
     let maxCores = 6;
@@ -58,10 +71,16 @@ export class Cluster {
     this.cores[coreIndex].addDebugVpUtil(vpIndex, timestamp, value);
 
   }
+
+  addBamUsage(poolName, poolKey, timestamp, value) {
+    this.bamUsage[poolName][poolKey][timestamp] = value;
+  }
 }
 
 class F1 {
   clusters: Cluster [] = [];
+  availablePools: any = {};
+
   constructor() {
     for (let index = 0; index < 9; index++) {
       this.clusters.push(new Cluster(index));
@@ -71,10 +90,25 @@ class F1 {
   addDebugVpUtil(clusterIndex, coreIndex, vpIndex, timestamp, value) {
     this.clusters[clusterIndex].addDebugVpUtil(coreIndex, vpIndex, timestamp, value);
   }
+
+  addBam(poolName, poolKey) {
+    if (this.availablePools.hasOwnProperty(poolName)) {
+      if (!this.availablePools[poolName].includes(poolKey)) {
+        this.availablePools[poolName].push(poolKey);
+      }
+    } else {
+      this.availablePools[poolName] = [poolKey];
+    }
+  }
+
+  addBamUsage(clusterIndex, poolName, poolKey, timestamp, value) {
+    this.clusters[clusterIndex].addBamUsage(poolName, poolKey, timestamp, value);
+  }
 }
 
 export class Fs {
   f1s: F1 [] = [];
+
   constructor() {
     for (let index = 0; index < 2; index++) {
       this.f1s.push(new F1());
@@ -84,4 +118,36 @@ export class Fs {
   addDebugVpUtil(f1Index, clusterIndex, coreIndex, vpIndex, timestamp, value) {
     this.f1s[f1Index].addDebugVpUtil(clusterIndex, coreIndex, vpIndex, timestamp, value);
   }
+
+  addBam(f1Index, poolName, poolKey) {
+    this.f1s[f1Index].addBam(poolName, poolKey);
+  }
+
+  addBamUsage(f1Index, clusterIndex, poolName, poolKey, timestamp, value) {
+    this.f1s[f1Index].addBamUsage(clusterIndex, poolName, poolKey, timestamp, value);
+  }
+}
+
+export class BamUsage {
+  poolStats: PoolStats [] = [];
+
+  constructor() {
+  }
+
+  addBamUsage(timestamp, value) {
+   this.poolStats.push()
+  }
+
+}
+
+export class PoolStats {
+  poolStats: any = {};
+
+  constructor() {
+  }
+
+  addBamUsage(timestamp, value) {
+    this.poolStats[timestamp] = value;
+  }
+
 }

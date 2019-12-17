@@ -102,6 +102,47 @@ export class BamComponent implements OnInit, OnChanges {
     this.rawTableHeaders = Array.from(headers.values())
   }
 
+  parseBamData(data) {
+        this.data.forEach(oneRecord => {
+      let oneRecordData = oneRecord.data;
+      let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000);
+      Object.keys(oneRecordData).forEach(f1Index => {
+        this.detectedF1Indexes.add(f1Index);
+        let dataForF1Index = oneRecordData[f1Index];
+        if (!this.parsedData.hasOwnProperty(f1Index)) {
+          this.parsedData[f1Index] = {};
+        }
+        let poolNames = this.bmUsagePerClusterPoolNames;
+        let poolKeys = this.bmUsagePerClusterPoolKeys;
+
+
+        poolNames.forEach(poolName => {
+          if (!this.parsedData[f1Index].hasOwnProperty(poolName)) {
+            this.parsedData[f1Index][poolName] = {};
+          }
+          poolKeys.forEach(poolKey => {
+            let title = poolName + "-" + poolKey;
+            let funTimeSeriesCollection = new FunTimeSeriesCollection(title, "%", []);
+            if (!this.parsedData[f1Index][poolName].hasOwnProperty(poolKey)) {
+              this.parsedData[f1Index][poolName][poolKey] = [];  // store array of cluster data here
+              this.clusterIndexes.forEach(clusterIndex => {
+                let name = `PC-${clusterIndex}`;
+                let oneSeries = new FunTimeSeries(name, {});
+                this.parsedData[f1Index][poolName][poolKey].push(oneSeries);
+              });
+            }
+            this.clusterIndexes.forEach(clusterIndex => {
+              let clusterIndexString = `cluster_${clusterIndex}`;
+              this.parsedData[f1Index][poolName][poolKey][clusterIndex].data[dateTime] = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
+            });
+            funTimeSeriesCollection.collection = this.parsedData[f1Index][poolName][poolKey];
+            this.parsedData[f1Index][poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;
+          });
+        });
+      });
+    });
+  }
+
 
   ngOnChanges() {
     if (this.scriptExecutionInfo && this.scriptExecutionInfo.suite_execution_id) {
