@@ -26,7 +26,7 @@
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
     "container_up_timeout": 120,
-    "api_server_up_timeout": 90
+    "api_server_up_timeout": 180
   },
   "RandReadXFS": {
     "syslog": 2,
