@@ -12,6 +12,7 @@
   "num_hosts": 0,
   "apc_pdu_power_cycle_test": true,
   "reboot_machine_test": false,
+  "reset_f1s_bmc": false,
   "check_docker": true,
   "expected_dockers": 3,
   "end_sleep": 300,

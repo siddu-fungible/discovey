@@ -99,6 +99,9 @@ class ApcPduTestcase(FunTestCase):
                 self.apc_pdu_power_cycle_test = job_inputs["apc_pdu_power_cycle"]
             if "reboot_machine_test" in job_inputs:
                 self.reboot_machine_test = job_inputs["reboot_machine_test"]
+            if "reset_f1s_bmc" in job_inputs:
+                self.reset_f1s_bmc = job_inputs["reset_f1s_bmc"]
+
 
     def run(self):
         '''
@@ -224,6 +227,8 @@ class ApcPduTestcase(FunTestCase):
             self.reboot_fs1600()
         elif self.apc_pdu_power_cycle_test:
             self.apc_pdu_reboot()
+        elif self.reset_f1s_bmc:
+            self.reset_f1s_bmc()
 
     def apc_pdu_reboot(self):
         '''
@@ -265,6 +270,39 @@ class ApcPduTestcase(FunTestCase):
             fun_test.test_assert(outlet_on, "Power on FS")
 
             apc_pdu.disconnect()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        return
+
+    def reset_f1s_bmc(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+
+        try:
+            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+            fun_test.log("Checking if COMe is UP")
+            come_up = come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
+                                    self.to_str(come_up), True, come_up)
+
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+
+            bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 0")
+            bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 1")
+            fun_test.sleep(message="Wait for F1s to reset", seconds=45)
+            come_handle.reboot()
+
+            fun_test.log("Checking if COMe is UP")
+            come_up = come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
+                                    self.to_str(come_up), True, come_up)
+
+            bmc_handle.destroy()
+            come_handle.destroy()
         except Exception as ex:
             fun_test.critical(ex)
 
