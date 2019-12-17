@@ -7,6 +7,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from collections import OrderedDict
+from lib.templates.storage.storage_controller_api import *
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -695,14 +696,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["testbed_config"] = self.testbed_config
 
     def cleanup(self):
-
-        if self.bundle_image_parameters:
-            try:
-                for index in xrange(self.num_duts):
-                    self.come_obj[index].command("sudo systemctl disable init-fs1600")
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
@@ -751,18 +744,6 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
-        '''
-        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
-        try:
-            if come_reboot:
-                self.fs.fpga_initialize()
-                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-                self.fs.come_reset(max_wait_time=self.reboot_timeout)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        '''
-        # fun_test.sleep("Allowing buffer time before clean-up", 30)
-        self.topology.cleanup()
 
 
 class ECVolumeLevelTestcase(FunTestCase):
