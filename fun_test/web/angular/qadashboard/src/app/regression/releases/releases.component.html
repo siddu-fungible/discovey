@@ -1,18 +1,35 @@
+<a href="/regression/release_catalogs">Go to release catalogs</a>
 <div class="fun-div">
-  <app-section-header [title]="'Releases'"></app-section-header>
-  <ng-container *ngFor="let execution of releaseCatalogExecutions; let index = index">
-    <ng-container *ngIf="!execution.deleted">
-      <h6 style="display: inline-block">{{ index }}. <a href="/regression/release_detail/{{ execution.id }}">{{ execution.description }}</a></h6>
-      &nbsp;&nbsp;State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
-      <div>
-        <small>Release: {{ execution.release_train }}</small>&nbsp;
-        <small>Owner: {{ execution.owner }}</small>
-      </div>
-      <app-section-horizontal-line></app-section-horizontal-line>
-    </ng-container>
+  <ng-container *ngFor="let releaseTrain of byReleaseTrain| keyvalue">
+    <h5 style="display: inline-block">{{ releaseTrain.key }}</h5>
+    <app-section-horizontal-line></app-section-horizontal-line>
+    <ng-container *ngFor="let byDescription of releaseTrain.value| keyvalue">
+      <h6>{{ byDescription.key }}</h6>
+      <ng-container *ngFor="let execution of byDescription.value; let index = index">
+        <ng-container *ngIf="!execution.deleted">
+          <table>
+            <tr>
+              <td>
+                <a href="/regression/release_detail/{{ execution.id }}">{{ index }}</a>
+              </td>
+              <td>
+                State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
+              </td>
+              <td>
+                Result: <app-smart-label [value]="execution.result"></app-smart-label>
+              </td>
+            </tr>
+          </table>
+          <div>
+            <small>Release: {{ execution.release_train }}</small>&nbsp;
+            <small>Owner: {{ execution.owner }}</small>
+          </div>
+          <app-section-horizontal-line></app-section-horizontal-line>
+        </ng-container>
 
+      </ng-container>
+
+    </ng-container>
   </ng-container>
 
-</div>fs
-
-<a href="/regression/release_catalogs">Go to release catalogs</a>
+</div>
