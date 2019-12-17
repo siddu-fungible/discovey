@@ -304,11 +304,12 @@ class TcTrafficTests(FunTestCase):
         try:
             if subtests == 'all':
                 subtest_list = []
-                datalen_list = ['1k', '10k', '25k', '50k', '75k', '100k', '1000k']
+                datalen_list = ['1k', '10k', '25k', '50k', '75k', '100k']
                 tc_suites = ['', '_drop']
                 for size in datalen_list:
                     for tc in tc_suites:
                         subtest_list.append('send_data' + size + tc)
+                subtest_list.append('send_data1000k')        
                 subt = ','.join(subtest_list)
 
                 self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_traffic_tests --ts %s" %(subt),timeout=script_timeout )
