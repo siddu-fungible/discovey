@@ -59,7 +59,7 @@ export class BamComponent implements OnInit, OnChanges {
     this.data.forEach(oneRecord => {
       let oneData = [];
       let oneRecordData = oneRecord.data;
-      let dateTime = this.commonService.getShortTimeFromEpoch(Number(oneRecord.epoch_time) * 1000);
+      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
       oneData.push(dateTime);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
@@ -90,7 +90,7 @@ export class BamComponent implements OnInit, OnChanges {
             }
             this.clusterIndexes.forEach(clusterIndex => {
               let clusterIndexString = `cluster_${clusterIndex}`;
-              this.parsedData[f1Index][poolName][poolKey][clusterIndex].data[Number(oneRecord.epoch_time)] = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
+              this.parsedData[f1Index][poolName][poolKey][clusterIndex].data[oneRecord.epoch_time] = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
             });
             funTimeSeriesCollection.collection = this.parsedData[f1Index][poolName][poolKey];
             this.parsedData[f1Index][poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;

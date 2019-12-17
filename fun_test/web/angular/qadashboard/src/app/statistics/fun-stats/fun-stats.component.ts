@@ -43,7 +43,7 @@ export class FunStatsComponent implements OnInit {
     this.findUniqueTimeStamps(); //find unique timestamps from the series data
     this.xTimeStamps = Array.from(this.uniqueTimeStamps.values()).sort();
     this.xTimeStamps.forEach(timestamp => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
+      let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000);
       this.xValues.push(dateTime);
       dataByTime[dateTime] = [];
     });
@@ -54,7 +54,7 @@ export class FunStatsComponent implements OnInit {
       this.tableHeaders.push(series.name);
       yData["data"] = [];
       this.xTimeStamps.forEach(timestamp => {
-        let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
+        let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000);
         if (series.data.hasOwnProperty(timestamp)) {
           dataByTime[dateTime].push(series.data[timestamp]);
           yData["data"].push(series.data[timestamp]);

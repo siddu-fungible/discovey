@@ -101,7 +101,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             Object.keys(vp.utilization).forEach(uniqueTimestamp => {
-              data[Number(uniqueTimestamp)] = vp.utilization[uniqueTimestamp];
+              data[uniqueTimestamp] = vp.utilization[uniqueTimestamp];
             });
             funTimeSeriesCollection.collection.push(oneSeries);
           });
@@ -128,10 +128,10 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             Object.keys(vp.utilization).forEach(timestamp => {
               let utilization = vp.utilization[timestamp];
               let floorValue = Math.floor(utilization);
-              if (histogramData[floorValue].data.hasOwnProperty(Number(timestamp))) {
-                histogramData[floorValue].data[Number(timestamp)] += 1;
+              if (histogramData[floorValue].data.hasOwnProperty(timestamp)) {
+                histogramData[floorValue].data[timestamp] += 1;
               } else {
-                histogramData[floorValue].data[Number(timestamp)] = 1;
+                histogramData[floorValue].data[timestamp] = 1;
               }
             });
           });
