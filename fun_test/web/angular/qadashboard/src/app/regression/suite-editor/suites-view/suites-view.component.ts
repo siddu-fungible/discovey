@@ -34,6 +34,7 @@ export class SuitesViewComponent implements OnInit {
   @Output() cancelSelection = new EventEmitter();
   Mode = Mode;
   mode: Mode = Mode.DEFAULT;
+  showScriptPath: boolean = false;
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
 
