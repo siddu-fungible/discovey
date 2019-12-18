@@ -728,7 +728,7 @@ def release_catalog_executions(request, id):
         q = Q()
         if id:
             q = q & Q(id=int(id))
-        executions = ReleaseCatalogExecution.objects.filter(q)
+        executions = ReleaseCatalogExecution.objects.filter(q).order_by('-started_date')
         if executions.count():
             if not id:
                 result = map(lambda x: x.to_dict(), executions)

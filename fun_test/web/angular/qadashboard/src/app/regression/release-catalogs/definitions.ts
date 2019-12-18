@@ -90,6 +90,8 @@ export class ReleaseCatalogExecution extends Api {
   master_execution_id: number = null;
   suite_executions: ReleaseSuiteExecution [] = [];
   deleted: boolean = false;
+  error_message: string = null;
+  build_number: number = null;
 
 
   customDeserializableProperties = ["suite_executions"];

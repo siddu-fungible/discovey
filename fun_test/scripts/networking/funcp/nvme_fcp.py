@@ -71,7 +71,8 @@ def get_nvme_device(host_obj):
     try:
         nvme_device_list = []
         for device in nvme_list_dict["Devices"]:
-            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
+            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or \
+                    "fs1600" in device["ModelNumber"].lower():
                 nvme_device_list.append(device["DevicePath"])
             elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
                 if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
