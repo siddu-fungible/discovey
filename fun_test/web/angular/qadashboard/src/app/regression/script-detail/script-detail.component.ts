@@ -10,7 +10,6 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
-import {current} from "../../../../node_modules/codelyzer/util/syntaxKind";
 
 class DataModel {
   letter: string;
