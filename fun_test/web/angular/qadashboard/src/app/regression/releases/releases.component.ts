@@ -14,7 +14,7 @@ import {LoggerService} from "../../services/logger/logger.service";
 })
 export class ReleasesComponent implements OnInit {
   releaseCatalogExecutions: ReleaseCatalogExecution [];
-  byReleaseTrain: {[release_train: string]: {[description: string]: ReleaseCatalogExecution []}} = {};
+  byReleaseTrain: {[release_train: string]: {[description: string]: {}}} = {};
   jobStatusType: ApiType = new ApiType();
   constructor(private regressionService: RegressionService, private loggerService: LoggerService) { }
   driver: any = null;
@@ -41,12 +41,15 @@ export class ReleasesComponent implements OnInit {
         this.byReleaseTrain[releaseCatalogExecution.release_train] = {};
       }
       if (!this.byReleaseTrain[releaseCatalogExecution.release_train].hasOwnProperty(releaseCatalogExecution.description)) {
-        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description] = [];
+        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description] = {executions: [], master_execution: null};
       }
-      this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description].push(releaseCatalogExecution);
 
+      this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description]["executions"].push(releaseCatalogExecution);
+      if (!releaseCatalogExecution.master_execution_id) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description]["master_execution"] = releaseCatalogExecution;
+      }
 
-    })
+    });
     let i = 0;
   }
 
@@ -58,5 +61,13 @@ export class ReleasesComponent implements OnInit {
     });
   }
 
+  onToggleRecurring(recurring, masterExecution) {
+    masterExecution.recurring = recurring;
+    masterExecution.update(masterExecution.getUrl({id: masterExecution.id})).subscribe(response => {
+
+    }, error => {
+      this.loggerService.error(`Unable to toggle recurring attribute`, error);
+    })
+  }
 
 }

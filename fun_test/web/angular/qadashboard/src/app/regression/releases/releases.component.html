@@ -5,9 +5,11 @@
     <app-section-horizontal-line></app-section-horizontal-line>
     <ng-container *ngFor="let byDescription of releaseTrain.value| keyvalue">
       <h6>{{ byDescription.key }}</h6>
-      <ng-container *ngFor="let execution of byDescription.value; let index = index">
-        <ng-container *ngIf="!execution.deleted">
-          <table>
+      <span>Recurring: <app-toggle-button [checked]="byDescription.value?.master_execution.recurring" (changed)="onToggleRecurring($event, byDescription.value?.master_execution)"></app-toggle-button>
+      </span>
+      <table>
+      <ng-container *ngFor="let execution of byDescription.value.executions; let index = index">
+          <ng-container *ngIf="!execution.deleted">
             <tr>
               <td>
                 <a href="/regression/release_detail/{{ execution.id }}">{{ index }}</a>
@@ -18,18 +20,18 @@
               <td>
                 Result: <app-smart-label [value]="execution.result"></app-smart-label>
               </td>
+              <td>
+                <small>Release: {{ execution.release_train }}</small>
+              </td>
+              <td>
+                <small>Owner: {{ execution.owner }}</small>
+              </td>
             </tr>
-          </table>
-          <div>
-            <small>Release: {{ execution.release_train }}</small>&nbsp;
-            <small>Owner: {{ execution.owner }}</small>
-          </div>
-          <app-section-horizontal-line></app-section-horizontal-line>
+          </ng-container>
         </ng-container>
-
-      </ng-container>
-
+      </table>
     </ng-container>
+    <app-section-horizontal-line></app-section-horizontal-line>
   </ng-container>
 
 </div>
