@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {slideInOutAnimation, showAnimation} from "../../animations/generic-animations";
+import {CommonService} from "../../services/common/common.service";
 
 @Component({
   selector: 'fun-stats',
@@ -13,7 +14,7 @@ export class FunStatsComponent implements OnInit {
   xAxisLabel: string = null;
   y1AxisLabel: string = null;
   y2AxisLabel: string = null;
-  xValues: any = null;
+  xValues: any[] = [];
   y1Values: any = null;
   y2Values: any = null;
 
@@ -24,8 +25,9 @@ export class FunStatsComponent implements OnInit {
   showTable: boolean = false;
   chartReady: boolean = false;
   uniqueTimeStamps: any = new Set();
+  xTimeStamps: any = null;
 
-  constructor() {
+  constructor(private commonService: CommonService) {
   }
 
   ngOnInit() {
@@ -39,8 +41,10 @@ export class FunStatsComponent implements OnInit {
     let y1Values = [];
     let dataByTime = {};
     this.findUniqueTimeStamps(); //find unique timestamps from the series data
-    this.xValues = Array.from(this.uniqueTimeStamps.values()).sort();
-    this.xValues.forEach(timestamp => {
+    this.xTimeStamps = Array.from(this.uniqueTimeStamps.values()).sort();
+    this.xTimeStamps.forEach(timestamp => {
+      let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000);
+      this.xValues.push(dateTime);
       dataByTime[timestamp] = [];
     });
     // populating the y values
@@ -49,12 +53,12 @@ export class FunStatsComponent implements OnInit {
       yData["name"] = series.name;
       this.tableHeaders.push(series.name);
       yData["data"] = [];
-      this.xValues.forEach(dateTime => {
-        if (series.data.hasOwnProperty(dateTime)) {
-          dataByTime[dateTime].push(series.data[dateTime]);
-          yData["data"].push(series.data[dateTime]);
+      this.xTimeStamps.forEach(timestamp => {
+        if (series.data.hasOwnProperty(timestamp)) {
+          dataByTime[timestamp].push(series.data[timestamp]);
+          yData["data"].push(series.data[timestamp]);
         } else {
-          dataByTime[dateTime].push("");
+          dataByTime[timestamp].push("");
           yData["data"].push(null);
         }
       });
@@ -65,7 +69,7 @@ export class FunStatsComponent implements OnInit {
     // populating the table data
     Object.keys(dataByTime).forEach(date => {
       let temp = [];
-      temp.push(date);
+      temp.push(Number(date));
       let result = temp.concat(dataByTime[date]);
       this.tableData.push(result);
     });

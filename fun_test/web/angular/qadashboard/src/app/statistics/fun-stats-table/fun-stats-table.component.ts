@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 export class FunStatsTableComponent implements OnInit {
   @Input() tableHeaders: any = null;
   @Input() tableData: any = null;
+  @Input() dataIsTimeSeries: boolean = true;
 
   filteredTableData: any[] = [];
   characterLimit: number = 25;
@@ -49,6 +50,10 @@ export class FunStatsTableComponent implements OnInit {
 
   isString(value): boolean {
     return typeof value === 'string';
+  }
+
+  getPrettyTime(value): string {
+    return this.commonService.getShortTimeFromEpoch(value * 1000);
   }
 
 }
