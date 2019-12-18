@@ -4,7 +4,7 @@ from fun_settings import TEAM_REGRESSION_EMAIL, LOGS_DIR
 from fun_global import RESULTS
 import web.fun_test.django_interactive
 from web.fun_test.models import Daemon
-from fun_global import get_current_time
+from fun_global import get_current_time, get_build_number_for_latest
 from scheduler_global import JobStatusType
 import time
 import sys
@@ -58,7 +58,8 @@ class CatalogExecutionStateMachine:
         pass
 
     def get_build_number(self, release_train):
-        return "latest"
+        build_number = get_build_number_for_latest(release_train=release_train)
+        return build_number
 
     def queue_job(self, catalog_execution, suite_execution):
 

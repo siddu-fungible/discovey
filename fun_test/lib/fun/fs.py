@@ -379,7 +379,10 @@ class Bmc(Linux):
 
     def get_preamble(self, f1_index):
         nc = self.nc[f1_index]
-        fun_test.sleep("Reading preamble", context=self.context)
+        seconds = 5
+        if self.fs.get_revision() in ["2"]:
+            seconds = 20
+        fun_test.sleep("Reading preamble", context=self.context, seconds=seconds)
         nc.stop_reading()
         output = nc.get_buffer()
         fun_test.log(message=output, context=self.context)

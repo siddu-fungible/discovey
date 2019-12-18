@@ -390,7 +390,7 @@ class ReleaseCatalogExecution(FunModel):
     suite_executions = JSONField(default=None, null=True)
     ready_for_execution = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
-
+    
 
 class ReleaseCatalog(FunModel):
     name = models.TextField(default="TBD")
