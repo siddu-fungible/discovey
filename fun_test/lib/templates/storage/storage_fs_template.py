@@ -837,12 +837,12 @@ class StorageFsTemplate(object):
 
         # Checking whether the bond0 is UP and Running
         match = ""
-        interface_status_timer = FunTimer(max_time=bond_bringup_timeout)
+        interface_status_timer = FunTimer(max_time=bond_bringup_timeout * 2)
         while not interface_status_timer.is_expired():
             bond_output = container_obj.command("ifconfig {}".format(bond_dict["name"]))
             match = re.search(r'UP.*RUNNING', bond_output)
             if not match:
-                fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 2)
+                fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 10)
                 fun_test.log("Remaining Time: {}".format(interface_status_timer.remaining_time()))
             else:
                 result = True

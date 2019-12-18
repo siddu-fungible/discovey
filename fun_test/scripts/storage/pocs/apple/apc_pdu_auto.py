@@ -99,6 +99,9 @@ class ApcPduTestcase(FunTestCase):
                 self.apc_pdu_power_cycle_test = job_inputs["apc_pdu_power_cycle"]
             if "reboot_machine_test" in job_inputs:
                 self.reboot_machine_test = job_inputs["reboot_machine_test"]
+            if "reset_f1s_bmc" in job_inputs:
+                self.reset_f1s_bmc = job_inputs["reset_f1s_bmc"]
+
 
     def run(self):
         '''
@@ -224,6 +227,8 @@ class ApcPduTestcase(FunTestCase):
             self.reboot_fs1600()
         elif self.apc_pdu_power_cycle_test:
             self.apc_pdu_reboot()
+        elif self.reset_f1s_bmc:
+            self.reset_f1s_bmc_test()
 
     def apc_pdu_reboot(self):
         '''
@@ -265,6 +270,44 @@ class ApcPduTestcase(FunTestCase):
             fun_test.test_assert(outlet_on, "Power on FS")
 
             apc_pdu.disconnect()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        return
+
+    def reset_f1s_bmc_test(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+
+        try:
+            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+            fun_test.log("Checking if COMe is UP")
+            come_up = come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
+                                    self.to_str(come_up), True, come_up)
+
+            come_handle.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
+            bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                             ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                             ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+
+            bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 0")
+            bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 1")
+            fun_test.sleep(message="Wait for F1s to reset", seconds=45)
+
+            come_handle.reboot()
+
+            fun_test.log("Checking if COMe is UP")
+            come_up = come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
+                                    self.to_str(come_up), True, come_up)
+
+            fun_test.sleep(message="Wait for Containers to come up", seconds=45)
+
+            bmc_handle.destroy()
+            come_handle.destroy()
         except Exception as ex:
             fun_test.critical(ex)
 
@@ -323,17 +366,19 @@ class ApcPduTestcase(FunTestCase):
 
     def check_pci_dev(self, f1=0):
         result = True
-        bdf = '04:00.'
+        bdf_list = ['04:00.']
         if f1 == 1:
-            bdf = '06:00.'
-            if self.fs.get("bundle_compatible", False):
-                bdf = '05:00.'
-        lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
-        sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
-        for section in sections:
-            if section not in lspci_output:
+            bdf_list = ['06:00.', '05:00.']
+        for bdf in bdf_list:
+            lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
+            if lspci_output:
+                sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+                result = all([s in lspci_output for s in sections])
+                if result:
+                    break
+            else:
                 result = False
-                fun_test.critical("Under LSPCI {} not found".format(section))
+
         fun_test.test_assert(result, "F1_{} PCIe devices detected".format(f1))
         return result
 

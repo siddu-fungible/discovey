@@ -75,13 +75,15 @@ export abstract class Api {
 
   public getAll() {
     return this.apiService.get(this.url).pipe(switchMap(response => {
-      let allObjects = response.data.map(oneEntry => {
-        //let newInstance = new this.constructor();
-        let newInstance = new this.classType();
-        //newInstance.constructor.apply(newInstance, oneEntry);
-        newInstance.deSerialize(oneEntry);
-        return newInstance;
-      });
+
+      let allObjects = [];
+      if (response.data) {
+        allObjects = response.data.map(oneEntry => {
+          let newInstance = new this.classType();
+          newInstance.deSerialize(oneEntry);
+          return newInstance;
+        });
+      }
       return of(allObjects);
     }), catchError(error => {
       this.loggerService.error(`Unable to getAll: ${this.constructor.name}`, error);

@@ -3,9 +3,17 @@ import {Suite} from "../suite-editor/suite-editor.service";
 import {switchMap} from "rxjs/operators";
 import {of} from "rxjs";
 
-export class ReleaseSuiteExecutionHistory {
+export class ReleaseSuiteExecutionHistoryElement {
   job_id: number;
   job_result: string;
+
+  constructor(props) {
+    Object.assign(this, props);
+  }
+
+  serialize() {
+    return {"job_id": this.job_id, "job_result": this.job_result};
+  }
 }
 
 export class ReleaseSuiteExecution extends Api {
@@ -22,7 +30,8 @@ export class ReleaseSuiteExecution extends Api {
   re_run_request_submitted: boolean = false;
   showingScripts: boolean = false;
   modifyingTestBed: boolean = false;
-  run_history: ReleaseSuiteExecutionHistory [] = [];
+  showingRunHistory: boolean = false;
+  run_history: ReleaseSuiteExecutionHistoryElement [] = [];
 
   constructor(props) {
     super();
@@ -46,15 +55,20 @@ export class ReleaseSuiteExecution extends Api {
         this.re_run_request_submitted = props.re_run_request_submitted;
       }
       if (key === "run_history") {
-        this.run_history = props.run_history;
+        this.run_history = props.run_history.map(historyElement => new ReleaseSuiteExecutionHistoryElement(historyElement));
       }
+
 
     })
   }
 
 
   serialize() {
-    return {suite_id: this.suite_id, test_bed_name: this.test_bed_name, job_id: this.job_id, re_run_request: this.re_run_request};
+    return {suite_id: this.suite_id,
+      test_bed_name: this.test_bed_name,
+      job_id: this.job_id,
+      re_run_request: this.re_run_request
+    };
   }
 }
 

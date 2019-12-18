@@ -301,7 +301,10 @@ class Rocetools:
             bw_peak = lines[2]
             bw_avg = lines[3]
             pps = lines[4]
-            if bw_avg == 0.0 or bw_avg == 0.0 or iterations == 0:
+            float_bw_avg = float(bw_avg)
+            float_pps = float(pps)
+            float_iteration = float(iterations)
+            if not(float_bw_avg > 0 or float_pps > 0 or float_iteration > 0):
                 self.host.command("dmesg")
                 self.host.disconnect()
                 fun_test.test_assert(False, "BW test failed as result is zero!!")
@@ -327,6 +330,10 @@ class Rocetools:
                 t_stdev = lines[6]
                 t_99 = lines[7]
                 t_9999 = lines[8]
+                float_tmin = float(t_min)
+                float_tmax = float(t_max)
+                float_tavg = float(t_avg)
+                float_iterations = float(iterations)
             else:
                 content = self.host.command("grep -i 'bytes' -A 1 {} | tail -1".format(filepath))
                 lines = content.split()
@@ -343,7 +350,11 @@ class Rocetools:
                 t_stdev = lines[6]
                 t_99 = lines[7]
                 t_9999 = lines[8]
-            if t_min == 0.0 or t_max == 0.0 or t_avg == 0.0 or iterations == 0:
+                float_tmin = float(t_min)
+                float_tmax = float(t_max)
+                float_tavg = float(t_avg)
+                float_iterations = float(iterations)
+            if not (float_tmin > 0 or float_tmax > 0 or float_tavg > 0 or float_iterations > 0):
                 self.host.command("dmesg")
                 self.host.disconnect()
                 fun_test.test_assert(False, "Latency test failed as result is zero!!")

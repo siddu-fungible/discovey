@@ -79,7 +79,12 @@
         </span>
         <span>
           , Scripts: {{ suite_execution?.suite_details?.entries.length }}
-          <span class="fun-action-link" (click)="suite_execution.showingScripts = !suite_execution.showingScripts">{{ showingScripts? 'hide': 'show' }} scripts</span>
+          <span class="fun-action-link" (click)="suite_execution.showingScripts = !suite_execution.showingScripts">{{ suite_execution.showingScripts? 'hide': 'show' }} scripts</span>
+        </span>
+        <span *ngIf="suite_execution?.run_history.length > 0">
+          , Previous runs: {{ suite_execution?.run_history.length }}
+          <span class="fun-action-link" (click)="suite_execution.showingRunHistory = !suite_execution.showingRunHistory">{{ suite_execution.showingRunHistory? 'hide': 'show' }} history </span>
+
         </span>
 
         <ng-container *ngIf="suite_execution.error_message">
@@ -96,7 +101,20 @@
           <td>{{ entry.script_path }}</td>
         </tr>
       </table>
-
+      <table *ngIf="suite_execution.showingRunHistory" [@show] class="fun-table">
+        <tr>
+          <td class="fun-table-header">
+            Job-ID
+          </td>
+          <td class="fun-table-header">
+            Result
+          </td>
+        </tr>
+        <tr *ngFor="let entry of suite_execution?.run_history">
+          <td><a href="/regression/suite_detail/{{ entry.job_id }}">{{ entry.job_id }}</a></td>
+          <td><app-smart-label [value]="entry.job_result"></app-smart-label></td>
+        </tr>
+      </table>
     </div>
 
 
