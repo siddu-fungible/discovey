@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 export class FunStatsTableComponent implements OnInit {
   @Input() tableHeaders: any = null;
   @Input() tableData: any = null;
+  @Input() timeSeriesData: boolean = true;
 
   filteredTableData: any[] = [];
   characterLimit: number = 25;
@@ -19,7 +20,7 @@ export class FunStatsTableComponent implements OnInit {
     this.filteredTableData = [];
     for (let record of this.tableData) {
       let oneRecord = [];
-      if (typeof record[0] != "string") {
+      if (this.timeSeriesData && typeof record[0] != "string") {
         record[0] = this.commonService.getShortTimeFromEpoch(record[0] * 1000);
       }
       for (let value of record) {
