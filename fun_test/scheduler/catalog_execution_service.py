@@ -32,6 +32,7 @@ else:
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger.addHandler(hdlr=handler)
 
+ReleaseCatalogExecution.objects.all().delete()
 
 class FunTimer:
     def __init__(self, max_time=10000):
@@ -141,15 +142,23 @@ class CatalogExecutionStateMachine:
                         catalog_execution.result = RESULTS["FAILED"]
             catalog_execution.save()
 
+    def clone_execution(self, execution):
+        execution_object = ReleaseCatalogExecution.objects.get(id=execution.id)
+        new_execution = execution_object
+        new_execution.pk = None
+        new_execution.id = None
+        return new_execution
+
     def re_spawn(self, catalog_execution):
-        new_catalog_execution = catalog_execution
-        new_catalog_execution.pk = None
+        new_catalog_execution = self.clone_execution(catalog_execution)
         new_catalog_execution.created_date = get_current_time()
         new_catalog_execution.completion_date = get_current_time()
         new_catalog_execution.started_date = get_current_time()
         new_catalog_execution.result = RESULTS["UNKNOWN"]
         new_catalog_execution.ready_for_execution = True
         new_catalog_execution.master_execution_id = catalog_execution.id
+        new_catalog_execution.recurring = False
+        new_catalog_execution.state = JobStatusType.SUBMITTED
         new_catalog_execution.save()
 
     def process_recurring_releases(self):

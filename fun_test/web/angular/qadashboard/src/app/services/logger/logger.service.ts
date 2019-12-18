@@ -80,6 +80,9 @@ export class LoggerService {
         if (errorObject.hasOwnProperty('message')) {
           toasterMessage += ": " + errorObject.message;
         }
+        if (errorObject.hasOwnProperty('value') && errorObject.value.hasOwnProperty('error_message')) {
+          toasterMessage += ": " + errorObject.value.error_message;
+        }
         message += "\n";
         message += this.formatErrorObject(errorObject);
       }

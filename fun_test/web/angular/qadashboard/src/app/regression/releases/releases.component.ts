@@ -6,6 +6,7 @@ import {switchMap} from "rxjs/operators";
 import {ApiType} from "../../lib/api";
 import {LoggerService} from "../../services/logger/logger.service";
 
+
 @Component({
   selector: 'app-releases',
   templateUrl: './releases.component.html',
@@ -13,6 +14,7 @@ import {LoggerService} from "../../services/logger/logger.service";
 })
 export class ReleasesComponent implements OnInit {
   releaseCatalogExecutions: ReleaseCatalogExecution [];
+  byReleaseTrain: {[release_train: string]: {[description: string]: ReleaseCatalogExecution []}} = {};
   jobStatusType: ApiType = new ApiType();
   constructor(private regressionService: RegressionService, private loggerService: LoggerService) { }
   driver: any = null;
@@ -26,10 +28,26 @@ export class ReleasesComponent implements OnInit {
       return rce.getAll();
     })).pipe(switchMap(response => {
       this.releaseCatalogExecutions = response;
+      this.prepareByReleaseTrain();
       return of(true);
     }));
 
     this.refresh();
+  }
+
+  prepareByReleaseTrain() {
+    this.releaseCatalogExecutions.forEach(releaseCatalogExecution => {
+      if (!this.byReleaseTrain.hasOwnProperty(releaseCatalogExecution.release_train)) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train] = {};
+      }
+      if (!this.byReleaseTrain[releaseCatalogExecution.release_train].hasOwnProperty(releaseCatalogExecution.description)) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description] = [];
+      }
+      this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description].push(releaseCatalogExecution);
+
+
+    })
+    let i = 0;
   }
 
   refresh() {
