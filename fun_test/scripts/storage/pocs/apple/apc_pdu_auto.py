@@ -230,7 +230,7 @@ class ApcPduTestcase(FunTestCase):
         elif self.apc_pdu_power_cycle_test:
             self.apc_pdu_reboot()
         elif self.reset_f1s_bmc:
-            self.reset_f1s_bmc()
+            self.reset_f1s_bmc_test()
 
     def apc_pdu_reboot(self):
         '''
@@ -277,7 +277,7 @@ class ApcPduTestcase(FunTestCase):
 
         return
 
-    def reset_f1s_bmc(self):
+    def reset_f1s_bmc_test(self):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -289,6 +289,8 @@ class ApcPduTestcase(FunTestCase):
             fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
                                     self.to_str(come_up), True, come_up)
 
+            come_handle.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
             bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
@@ -296,13 +298,15 @@ class ApcPduTestcase(FunTestCase):
             bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 0")
             bmc_handle.command("cd /mnt/sdmmc0p1/scripts; ./REV2_f1_reset.sh 1")
             fun_test.sleep(message="Wait for F1s to reset", seconds=45)
-            come_handle.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop")
+
             come_handle.reboot()
 
             fun_test.log("Checking if COMe is UP")
             come_up = come_handle.ensure_host_is_up()
             fun_test.add_checkpoint("COMe is UP (before resettign F1s)",
                                     self.to_str(come_up), True, come_up)
+
+            fun_test.sleep(message="Wait for Containers to come up", seconds=45)
 
             bmc_handle.destroy()
             come_handle.destroy()
