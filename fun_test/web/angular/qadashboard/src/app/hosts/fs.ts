@@ -132,27 +132,3 @@ export class Fs {
     this.f1s[f1Index].addBamUsage(clusterIndex, poolName, poolKey, timestamp, value);
   }
 }
-
-// export class BamUsage {
-//   poolStats: PoolStats [] = [];
-//
-//   constructor() {
-//   }
-//
-//   addBamUsage(timestamp, value) {
-//    this.poolStats.push()
-//   }
-//
-// }
-//
-// export class PoolStats {
-//   poolStats: any = {};
-//
-//   constructor() {
-//   }
-//
-//   addBamUsage(timestamp, value) {
-//     this.poolStats[timestamp] = value;
-//   }
-//
-// }

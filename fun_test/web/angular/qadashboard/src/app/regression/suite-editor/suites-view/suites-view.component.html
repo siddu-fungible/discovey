@@ -27,8 +27,6 @@
 
 
   <button *ngIf="mode === Mode.DEFAULT" class="fun-button-add" (click)="onAddSuiteClick()">Add a suite</button>
-  <button *ngIf="mode === Mode.DEFAULT" class="fun-button-add" (click)="showScriptPath = !showScriptPath">Show
-    script path</button>
   <div class="fun-flex-container">
     <!-- pager -->
     <div id="page-div" *ngIf="pager.pages && pager.pages.length">
@@ -50,6 +48,8 @@
             [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
       <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
       </span>
+       <span class="fun-action-link" (click)="showScriptPath = !showScriptPath">Show
+    script path</span>
     </div>
   </div>
 
