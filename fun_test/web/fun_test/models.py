@@ -386,10 +386,12 @@ class ReleaseCatalogExecution(FunModel):
     description = models.TextField(default="TBD")
     recurring = models.BooleanField(default=True)
     release_train = models.TextField(default="master", null=True)
+    build_number = models.TextField(default="latest", null=True)
     master_execution_id = models.IntegerField(default=None, null=True)
     suite_executions = JSONField(default=None, null=True)
     ready_for_execution = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    error_message = models.TextField(default=None, null=True)
 
 
 class ReleaseCatalog(FunModel):

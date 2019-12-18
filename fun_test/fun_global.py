@@ -1,7 +1,7 @@
 import pytz
 import datetime
 import time
-from fun_settings import TIME_ZONE
+from fun_settings import TIME_ZONE, DOCHUB_BASE_URL
 import os
 import dateutil
 from lib.utilities.http import fetch_text_file
@@ -210,3 +210,21 @@ class TimeSeriesTypes(Codes):
     ARTIFACT = 200
     TEST_CASE_TABLE = 300
     REGISTERED_ASSET = 400
+
+
+def get_build_number_for_latest(release_train, model="fs1600"):
+    release_prefix = ""
+    if "master" not in release_train:
+        release_prefix = "rel_"
+    latest_url = "{}/{}/{}/latest/build_info.txt".format(DOCHUB_BASE_URL,
+                                                         release_prefix + release_train.replace(".", "_"),
+                                                         model)
+
+    result = None
+    build_info_file_contents = fetch_text_file(url=latest_url)
+    if build_info_file_contents:
+        try:
+            result = int(build_info_file_contents)
+        except Exception as ex:
+            print("Error getting build number: {}".format(str(ex)))
+    return result
