@@ -125,8 +125,6 @@ class ApcPduTestcase(FunTestCase):
                                   ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                                   ssh_password=self.fs['bmc']['mgmt_ssh_password'])
             self.bmc_handle.set_prompt_terminator(r'# $')
-            self.check_pci_dev(0)
-            self.check_pci_dev(1)
 
             self.reboot_test()
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
