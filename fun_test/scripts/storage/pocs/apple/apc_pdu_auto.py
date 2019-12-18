@@ -366,17 +366,19 @@ class ApcPduTestcase(FunTestCase):
 
     def check_pci_dev(self, f1=0):
         result = True
-        bdf = '04:00.'
+        bdf_list = ['04:00.']
         if f1 == 1:
-            bdf = '06:00.'
-            if self.fs.get("bundle_compatible", False):
-                bdf = '05:00.'
-        lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
-        sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
-        for section in sections:
-            if section not in lspci_output:
+            bdf_list = ['06:00.', '05:00.']
+        for bdf in bdf_list:
+            lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
+            if lspci_output:
+                sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+                result = all([s in lspci_output for s in sections])
+                if result:
+                    break
+            else:
                 result = False
-                fun_test.critical("Under LSPCI {} not found".format(section))
+
         fun_test.test_assert(result, "F1_{} PCIe devices detected".format(f1))
         return result
 
