@@ -7,7 +7,16 @@
       <h6>{{ byDescription.key }}</h6>
       <span>Recurring: <app-toggle-button [checked]="byDescription.value?.master_execution.recurring" (changed)="onToggleRecurring($event, byDescription.value?.master_execution)"></app-toggle-button>
       </span>
-      <table>
+      <table class="fun-table-borderless">
+        <tr>
+          <td class="fun-table-borderless-header"></td>
+          <td class="fun-table-borderless-header">State</td>
+          <td class="fun-table-borderless-header">Result</td>
+          <td class="fun-table-borderless-header">Release-train</td>
+          <td class="fun-table-borderless-header">Owner</td>
+          <td class="fun-table-borderless-header">Started-date</td>
+          <td class="fun-table-borderless-header">Completion-date</td>
+        </tr>
       <ng-container *ngFor="let execution of byDescription.value.executions; let index = index">
           <ng-container *ngIf="!execution.deleted">
             <tr>
@@ -15,16 +24,22 @@
                 <a href="/regression/release_detail/{{ execution.id }}">{{ index }}</a>
               </td>
               <td>
-                State: <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
+                <app-smart-label [value]="jobStatusType.descriptionMap[execution.state]"></app-smart-label>
               </td>
               <td>
-                Result: <app-smart-label [value]="execution.result"></app-smart-label>
+                <app-smart-label [value]="execution.result"></app-smart-label>
               </td>
               <td>
-                <small>Release: {{ execution.release_train }}</small>
+                <small>{{ execution.release_train }}</small>
               </td>
               <td>
-                <small>Owner: {{ execution.owner }}</small>
+                <small>{{ execution.owner }}</small>
+              </td>
+              <td>
+                {{ execution.started_date_string }}
+              </td>
+              <td *ngIf="execution.state <= jobStatusType.COMPLETED">
+                {{ execution.completion_date_string }}
               </td>
             </tr>
           </ng-container>

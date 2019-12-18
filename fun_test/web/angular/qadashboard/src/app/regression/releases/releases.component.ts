@@ -5,6 +5,7 @@ import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {ApiType} from "../../lib/api";
 import {LoggerService} from "../../services/logger/logger.service";
+import {CommonService} from "../../services/common/common.service";
 
 
 @Component({
@@ -16,7 +17,8 @@ export class ReleasesComponent implements OnInit {
   releaseCatalogExecutions: ReleaseCatalogExecution [];
   byReleaseTrain: {[release_train: string]: {[description: string]: {}}} = {};
   jobStatusType: ApiType = new ApiType();
-  constructor(private regressionService: RegressionService, private loggerService: LoggerService) { }
+  constructor(private regressionService: RegressionService,
+              private loggerService: LoggerService, private commonService: CommonService) { }
   driver: any = null;
 
   ngOnInit() {
@@ -40,6 +42,9 @@ export class ReleasesComponent implements OnInit {
       if (!this.byReleaseTrain.hasOwnProperty(releaseCatalogExecution.release_train)) {
         this.byReleaseTrain[releaseCatalogExecution.release_train] = {};
       }
+      releaseCatalogExecution["started_date_string"] = this.commonService.getShortDateTimeFromEpoch(releaseCatalogExecution.started_date_timestamp);
+      releaseCatalogExecution["completion_date_string"] = this.commonService.getShortDateTimeFromEpoch(releaseCatalogExecution.completion_date_timestamp);
+
       if (!this.byReleaseTrain[releaseCatalogExecution.release_train].hasOwnProperty(releaseCatalogExecution.description)) {
         this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description] = {executions: [], master_execution: null};
       }
