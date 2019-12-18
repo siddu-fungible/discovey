@@ -34,6 +34,7 @@ logger.addHandler(hdlr=handler)
 
 ReleaseCatalogExecution.objects.all().delete()
 
+
 class FunTimer:
     def __init__(self, max_time=10000):
         self.max_time = max_time
@@ -71,6 +72,7 @@ class CatalogExecutionStateMachine:
                             tags=["release", catalog_execution.release_train],
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
+        logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
         return job_id
 
     def process_submitted_releases(self):
@@ -104,21 +106,30 @@ class CatalogExecutionStateMachine:
                     catalog_execution.state = JobStatusType.IN_PROGRESS
                     catalog_execution.started_date = get_current_time()
                 else:
-                    pass   #TODO
+                    logger.info("Skipping Release: {} Build-number: {}".format(catalog_execution.release_train,
+                                                                               catalog_execution.build_number))
 
             else:
-                catalog_execution.error_message = "Unable determine build number for {}".format(catalog_execution.release_train)
+                error_message = "{}: Unable determine build number for {}".format(catalog_execution,
+                                                                                  catalog_execution.release_train)
+                catalog_execution.error_message = error_message
+                logger.exception(error_message)
+
             catalog_execution.save()
 
     def process_in_progress_releases(self):
         q = Q(deleted=False, state=JobStatusType.IN_PROGRESS)
         catalog_executions = ReleaseCatalogExecution.objects.filter(q)
         for catalog_execution in catalog_executions:
+            logger.info("{}: Processing in progress release".format(catalog_execution))
             for suite_execution in catalog_execution.suite_executions:
                 valid_job_parameters = True
                 if not suite_execution["test_bed_name"]:
+
                     valid_job_parameters = False
                     suite_execution["error_message"] = "Test-bed is invalid"
+                    logger.error('{}: SuID: {} Test-bed is invalid'.format(catalog_execution, suite_execution["suite_id"]))
+
                 if valid_job_parameters:
                     if not suite_execution["job_id"] or \
                             ("re_run_request_submitted" in suite_execution
@@ -139,6 +150,8 @@ class CatalogExecutionStateMachine:
                                                                    "job_result": existing_job.result})
                         suite_execution["re_run_request_submitted"] = False
                         suite_execution["error_message"] = None
+                else:
+                    logger.error('{}: SuID: {} is invalid'.format(catalog_execution, suite_execution["suite_id"]))
             catalog_execution.save()
 
         # Prepare to change the state of the release
@@ -164,6 +177,7 @@ class CatalogExecutionStateMachine:
                         catalog_execution.result = RESULTS["PASSED"]
                     else:
                         catalog_execution.result = RESULTS["FAILED"]
+                    logger.info("{}: Setting result: {}".format(catalog_execution, catalog_execution.result))
             catalog_execution.save()
 
     def clone_execution(self, execution):
@@ -196,6 +210,7 @@ class CatalogExecutionStateMachine:
                        master_execution_id=catalog_execution.id)
                 recurrent_catalog_executions = ReleaseCatalogExecution.objects.filter(q2)
                 if not recurrent_catalog_executions.count():
+                    logger.error("{}: Re-spawning ".format(catalog_execution))
                     self.re_spawn(catalog_execution=catalog_execution)
 
     def run(self):
@@ -206,6 +221,7 @@ class CatalogExecutionStateMachine:
 
 if __name__ == "__main__":
     while True:
-        Daemon.get(name=DAEMON_NAME).beat()
+        daemon = Daemon.get(name=DAEMON_NAME).beat()
         CatalogExecutionStateMachine().run()
         time.sleep(15)
+        logger.setLevel(daemon.logging_level)
