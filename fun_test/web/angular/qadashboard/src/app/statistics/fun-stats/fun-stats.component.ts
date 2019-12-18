@@ -45,7 +45,7 @@ export class FunStatsComponent implements OnInit {
     this.xTimeStamps.forEach(timestamp => {
       let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000);
       this.xValues.push(dateTime);
-      dataByTime[dateTime] = [];
+      dataByTime[timestamp] = [];
     });
     // populating the y values
     for (let series of this.data.collection) {
@@ -54,12 +54,11 @@ export class FunStatsComponent implements OnInit {
       this.tableHeaders.push(series.name);
       yData["data"] = [];
       this.xTimeStamps.forEach(timestamp => {
-        let dateTime = this.commonService.getShortTimeFromEpoch(timestamp * 1000);
         if (series.data.hasOwnProperty(timestamp)) {
-          dataByTime[dateTime].push(series.data[timestamp]);
+          dataByTime[timestamp].push(series.data[timestamp]);
           yData["data"].push(series.data[timestamp]);
         } else {
-          dataByTime[dateTime].push("");
+          dataByTime[timestamp].push("");
           yData["data"].push(null);
         }
       });
@@ -70,7 +69,7 @@ export class FunStatsComponent implements OnInit {
     // populating the table data
     Object.keys(dataByTime).forEach(date => {
       let temp = [];
-      temp.push(date);
+      temp.push(Number(date));
       let result = temp.concat(dataByTime[date]);
       this.tableData.push(result);
     });

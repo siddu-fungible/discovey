@@ -59,8 +59,7 @@ export class BamComponent implements OnInit, OnChanges {
     this.data.forEach(oneRecord => {
       let oneData = [];
       let oneRecordData = oneRecord.data;
-      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
-      oneData.push(dateTime);
+      oneData.push(oneRecord.epoch_time);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         let dataForF1Index = oneRecordData[f1Index];

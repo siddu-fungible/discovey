@@ -61,10 +61,9 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   parseData(data) {
     this.tableData = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
       let oneRecordData = oneRecord.data;
       let record = [];
-      record.push(dateTime);
+      record.push(oneRecord.epoch_time);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         record.push(oneRecordData[f1Index]);

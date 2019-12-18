@@ -19,6 +19,9 @@ export class FunStatsTableComponent implements OnInit {
     this.filteredTableData = [];
     for (let record of this.tableData) {
       let oneRecord = [];
+      if (typeof record[0] != "string") {
+        record[0] = this.commonService.getShortTimeFromEpoch(record[0] * 1000);
+      }
       for (let value of record) {
         let oneValue = {};
         let newValue = value;
