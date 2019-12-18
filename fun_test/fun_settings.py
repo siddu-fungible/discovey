@@ -46,8 +46,9 @@ TCMS_PROJECT = "TCM"
 SYSTEM_TMP_DIR = "/tmp"
 sys.path.append(WEB_DIR)
 
-DOCKHUB_FUNGIBLE_LOCAL = "10.1.20.99"
-DEFAULT_BUILD_URL = "http://{}/doc/jenkins/funsdk/latest".format(DOCKHUB_FUNGIBLE_LOCAL)
+DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+DEFAULT_BUILD_URL = "{}/funsdk/latest".format(DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL)
 TIME_ZONE = "America/Los_Angeles"
 
 

@@ -277,10 +277,10 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def u_boot_command(self, f1_index, command, timeout=15, expected=None):
+    def u_boot_command(self, f1_index, command, timeout=15, expected=None, write_on_trigger=None):
         nc = self.nc[f1_index]
         nc.write(command + "\n")
-        output = nc.read_until(expected_data=expected, timeout=timeout)
+        output = nc.read_until(expected_data=expected, timeout=timeout, write_on_trigger=write_on_trigger)
         self.detect_version(output)
 
         fun_test.log(message=output, context=self.context)
@@ -363,26 +363,34 @@ class Bmc(Linux):
             self.command("rm -f {}".format(uart_log_file_name))
         fun_test.log("Netcat: open {}:{}".format(self.host_ip, self.SERIAL_PROXY_PORTS[f1_index]))
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
-
+        """
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
             write_on_trigger = {"Autoboot in": "noboot"}
+    
         fun_test.execute_thread_after(0,
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=30,
+                                      timeout=60,
                                       write_on_trigger=write_on_trigger,
                                       read_buffer=20)
-
+        """
         return True
 
-    def get_preamble(self, f1_index):
+    def get_preamble(self, f1_index, auto_boot=False):
         nc = self.nc[f1_index]
-        fun_test.sleep("Reading preamble", context=self.context)
-        nc.stop_reading()
-        output = nc.get_buffer()
-        fun_test.log(message=output, context=self.context)
+        write_on_trigger = None
+        if not auto_boot:
+            write_on_trigger = {"Autoboot in": "noboot"}
+        output = self.u_boot_command(command="",
+                            timeout=90,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=f1_index,
+                            write_on_trigger=write_on_trigger)
+        # nc.stop_reading()
+        # output = nc.get_buffer()
+        # fun_test.log(message=output, context=self.context)
         return output
 
     def validate_u_boot_version(self, output, minimum_date):
@@ -1008,29 +1016,19 @@ class BootupWorker(Thread):
                             fpga.reset_f1(f1_index=f1_index)
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
-
-
-
-                    if fs.tftp_image_path:
-                        preamble = bmc.get_preamble(f1_index=f1_index)
+                        preamble = bmc.get_preamble(f1_index=f1_index, auto_boot=fs.is_auto_boot())
                         if fs.validate_u_boot_version:
                             fun_test.log("Preamble: {}".format(preamble))
-                            """
-                            try:
-                                fun_test.test_assert(
-                                    bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                    "Validate preamble", context=self.context)
-                            except Exception as ex:
-                                fun_test.critical(ex)
-                            """
-
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
                                                              boot_args=boot_args, gateway_ip=fs.gateway_ip,
                                                              mpg_ips=fs.mpg_ips),
                             message="U-Bootup f1: {} complete".format(f1_index),
+
                             context=self.context)
+
+
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
@@ -1075,6 +1073,10 @@ class BootupWorker(Thread):
         except Exception as ex:
             fun_test.critical(str(ex) + " FS: {}".format(fs), context=fs.context)
             fs.set_boot_phase(BootPhases.FS_BRING_UP_ERROR)
+            fun_test.add_checkpoint(result=fun_test.FAILED,
+                                    expected=False,
+                                    actual=True,
+                                    checkpoint="Bringup error")
             raise ex
 
 
@@ -1507,7 +1509,7 @@ class ComE(Linux):
 
             try:
                 if self.fs and self.fs.get_revision() in ["2"]:
-                    fungible_root = "/opt/fungible/logs"
+                    fungible_root = "/opt/fungible"
             except Exception as ex:
                 fun_test.critical(str(ex))
 

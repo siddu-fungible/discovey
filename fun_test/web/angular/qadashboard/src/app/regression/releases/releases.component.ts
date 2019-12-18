@@ -5,6 +5,8 @@ import {of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {ApiType} from "../../lib/api";
 import {LoggerService} from "../../services/logger/logger.service";
+import {CommonService} from "../../services/common/common.service";
+
 
 @Component({
   selector: 'app-releases',
@@ -13,8 +15,10 @@ import {LoggerService} from "../../services/logger/logger.service";
 })
 export class ReleasesComponent implements OnInit {
   releaseCatalogExecutions: ReleaseCatalogExecution [];
+  byReleaseTrain: {[release_train: string]: {[description: string]: {}}} = {};
   jobStatusType: ApiType = new ApiType();
-  constructor(private regressionService: RegressionService, private loggerService: LoggerService) { }
+  constructor(private regressionService: RegressionService,
+              private loggerService: LoggerService, private commonService: CommonService) { }
   driver: any = null;
 
   ngOnInit() {
@@ -26,10 +30,32 @@ export class ReleasesComponent implements OnInit {
       return rce.getAll();
     })).pipe(switchMap(response => {
       this.releaseCatalogExecutions = response;
+      this.prepareByReleaseTrain();
       return of(true);
     }));
 
     this.refresh();
+  }
+
+  prepareByReleaseTrain() {
+    this.releaseCatalogExecutions.forEach(releaseCatalogExecution => {
+      if (!this.byReleaseTrain.hasOwnProperty(releaseCatalogExecution.release_train)) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train] = {};
+      }
+      releaseCatalogExecution["started_date_string"] = this.commonService.getShortDateTimeFromEpoch(releaseCatalogExecution.started_date_timestamp);
+      releaseCatalogExecution["completion_date_string"] = this.commonService.getShortDateTimeFromEpoch(releaseCatalogExecution.completion_date_timestamp);
+
+      if (!this.byReleaseTrain[releaseCatalogExecution.release_train].hasOwnProperty(releaseCatalogExecution.description)) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description] = {executions: [], master_execution: null};
+      }
+
+      this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description]["executions"].push(releaseCatalogExecution);
+      if (!releaseCatalogExecution.master_execution_id) {
+        this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description]["master_execution"] = releaseCatalogExecution;
+      }
+
+    });
+    let i = 0;
   }
 
   refresh() {
@@ -40,5 +66,13 @@ export class ReleasesComponent implements OnInit {
     });
   }
 
+  onToggleRecurring(recurring, masterExecution) {
+    masterExecution.recurring = recurring;
+    masterExecution.update(masterExecution.getUrl({id: masterExecution.id})).subscribe(response => {
+
+    }, error => {
+      this.loggerService.error(`Unable to toggle recurring attribute`, error);
+    })
+  }
 
 }
