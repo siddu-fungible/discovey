@@ -103,7 +103,7 @@
         <i (click)="onDeleteSuite(suite)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
       </td>
       <td *ngIf="showScriptPath">
-        <div *ngFor="let entry of suite.entries">{{ entry.script_path }}</div>
+        <ul *ngFor="let entry of suite.entries"><li>{{ entry.script_path }}</li></ul>
       </td>
     </tr>
   </table>
