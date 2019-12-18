@@ -2,7 +2,7 @@
   <fun-spinner [status]="status"></fun-spinner>
   <ng-container *ngIf="!status && jobStatusTypes">
     <app-section-header
-      [subText1]="'Release-train: ' + releaseCatalogExecution.release_train"
+      [subText1]="'Release-train: ' + releaseCatalogExecution.release_train + ', Build: ' + releaseCatalogExecution.build_number"
       [subText2]="'Owner: ' + releaseCatalogExecution.owner"
                         [staticTitle]="'Release: '"
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"

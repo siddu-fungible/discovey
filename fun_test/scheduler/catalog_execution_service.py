@@ -61,10 +61,10 @@ class CatalogExecutionStateMachine:
         build_number = get_build_number_for_latest(release_train=release_train)
         return build_number
 
-    def queue_job(self, catalog_execution, suite_execution):
+    def queue_job(self, catalog_execution, suite_execution, release_train, build_number):
+        environment = {"bundle_image_parameters": {"release_train": release_train,
+                                                   "build_number": build_number}}
 
-        environment = {"bundle_image_parameters": {"release_train": catalog_execution.release_train,
-                                                   "build_number": self.get_build_number(release_train=catalog_execution.release_train)}}
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
@@ -74,20 +74,40 @@ class CatalogExecutionStateMachine:
         return job_id
 
     def process_submitted_releases(self):
+
         q = Q(deleted=False, state=JobStatusType.SUBMITTED)
         catalog_executions = ReleaseCatalogExecution.objects.filter(q)
         for catalog_execution in catalog_executions:
-            for suite_execution in catalog_execution.suite_executions:
-                valid_job_parameters = True
-                if not suite_execution["test_bed_name"]:
-                    valid_job_parameters = False
-                    suite_execution["error_message"] = "Test-bed is invalid"
-                if valid_job_parameters:
-                    job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
-                    suite_execution["job_id"] = job_id
-                    suite_execution["error_message"] = None
-            catalog_execution.state = JobStatusType.IN_PROGRESS
-            catalog_execution.started_date = get_current_time()
+            build_number = self.get_build_number(release_train=catalog_execution.release_train)
+            catalog_execution.build_number = build_number
+            if build_number:
+                skip = ReleaseCatalogExecution.objects.filter(release_train=catalog_execution.release_train,
+                                                              build_number=build_number,
+                                                              description=catalog_execution.description).count() > 0
+                if not skip:
+                    for suite_execution in catalog_execution.suite_executions:
+                        valid_job_parameters = True
+                        if not suite_execution["test_bed_name"]:
+                            valid_job_parameters = False
+                            suite_execution["error_message"] = "Test-bed is invalid"
+                        if valid_job_parameters:
+                            job_id = self.queue_job(catalog_execution=catalog_execution,
+                                                    suite_execution=suite_execution,
+                                                    release_train=catalog_execution.release_train,
+                                                    build_number=build_number)
+                            if job_id:
+                                suite_execution["job_id"] = job_id
+                                suite_execution["error_message"] = None
+                            else:
+                                suite_execution["job_id"] = None
+
+                    catalog_execution.state = JobStatusType.IN_PROGRESS
+                    catalog_execution.started_date = get_current_time()
+                else:
+                    pass   #TODO
+
+            else:
+                catalog_execution.error_message = "Unable determine build number for {}".format(catalog_execution.release_train)
             catalog_execution.save()
 
     def process_in_progress_releases(self):
@@ -106,7 +126,10 @@ class CatalogExecutionStateMachine:
                         existing_job_id = None
                         if suite_execution["job_id"]:
                             existing_job_id = suite_execution["job_id"]
-                        job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
+                        job_id = self.queue_job(catalog_execution=catalog_execution,
+                                                suite_execution=suite_execution,
+                                                release_train=catalog_execution.release_train,
+                                                build_number=catalog_execution.build_number)
                         suite_execution["job_id"] = job_id
                         if existing_job_id:
                             if "run_history" not in suite_execution:
