@@ -1703,7 +1703,7 @@ class Fs(object, ToDictMixin):
             except:
                 pass
             if is_number and bundle_build_number < 0:
-                fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                fun_test.log("Build number set to -1 so resetting bundle image parameters. Received bundle number: {}".format(bundle_build_number))
                 self.bundle_image_parameters = None
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
@@ -1969,7 +1969,7 @@ class Fs(object, ToDictMixin):
                     except:
                         pass
                     if is_number and int(bundle_image_parameters["build_number"]) < 0:
-                        fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                        fun_test.log("Build number set to -1 so resetting bundle image parameters. Received: {}".format(bundle_image_parameters["build_number"]))
                         bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
