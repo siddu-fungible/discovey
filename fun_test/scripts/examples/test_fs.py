@@ -64,7 +64,7 @@ class FunTestCase2(FunTestCase):
         # fun_test.shared_variables["fs"].cleanup()
 
     def run(self):
-        fun_test.build_parameters["bundle_image_parameters"] = {"release_train": "rel_1_0a_aa", "build_number": -1}
+        # fun_test.build_parameters["bundle_image_parameters"] = {"release_train": "rel_1_0a_aa", "build_number": -1}
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g")
         topology = topology_helper.deploy()
