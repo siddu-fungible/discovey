@@ -386,17 +386,17 @@ class RDSVolumePerformanceScript(FunTestScript):
                 bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
                 bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
 
-
-            try:
-                ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
-            except ValueError:
-                fun_test.log("F10 loop-back IP {} is not valid".format(params[storage_fs]['f10_ip']))
-                fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(params[storage_fs]['f10_ip']))
-            try:
-                ipaddress.ip_address(unicode(params[storage_fs]['f11_ip'].strip()))
-            except ValueError:
-                fun_test.log("F11 loop-back IP {} is not valid".format(params[storage_fs]['f11_ip']))
-                fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(params[storage_fs]['f11_ip']))
+            if 0:
+                try:
+                    ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
+                except ValueError:
+                    fun_test.log("F10 loop-back IP {} is not valid".format(params[storage_fs]['f10_ip']))
+                    fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(params[storage_fs]['f10_ip']))
+                try:
+                    ipaddress.ip_address(unicode(params[storage_fs]['f11_ip'].strip()))
+                except ValueError:
+                    fun_test.log("F11 loop-back IP {} is not valid".format(params[storage_fs]['f11_ip']))
+                    fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(params[storage_fs]['f11_ip']))
 
         # Parse the json file
         # testcase = self.__class__.__name__
