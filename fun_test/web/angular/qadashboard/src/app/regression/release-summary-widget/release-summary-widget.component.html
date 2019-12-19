@@ -3,7 +3,7 @@
     <table class="fun-table">
       <tr *ngFor="let description of releaseTrain.value | keyvalue">
         <td>
-          {{ description.key }}
+          <a href="/regression/releases">{{ description.key }}</a>
         </td>
         <td *ngFor="let execution of description.value.executions">
 
