@@ -1279,9 +1279,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             job_inputs = {}
         if "io_depth" in job_inputs:
             self.fio_iodepth = job_inputs["io_depth"]
-
         if not isinstance(self.fio_iodepth, list):
             self.fio_iodepth = [self.fio_iodepth]
+        if "rwmixread" in job_inputs:
+            self.rwmixread = job_inputs["rwmixread"]
+            self.fio_cmd_args["multiple_jobs"] = re.sub(r"--rwmixread=\d+ ", "--rwmixread={} ".format(self.rwmixread),
+                                                        self.fio_cmd_args["multiple_jobs"])
+            fun_test.log("FIO param --rwmixread is overridden by user to: --rwmixread={}".format(self.rwmixread))
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
