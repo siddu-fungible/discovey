@@ -13,6 +13,7 @@
           <td class="fun-table-borderless-header">State</td>
           <td class="fun-table-borderless-header">Result</td>
           <td class="fun-table-borderless-header">Release-train</td>
+          <td class="fun-table-borderless-header">Build</td>
           <td class="fun-table-borderless-header">Owner</td>
           <td class="fun-table-borderless-header">Started-date</td>
           <td class="fun-table-borderless-header">Completion-date</td>
@@ -31,6 +32,12 @@
               </td>
               <td>
                 <small>{{ execution.release_train }}</small>
+              </td>
+              <td>
+                <ng-container *ngIf="(execution.state <= jobStatusType.COMPLETED) || (execution.state === jobStatusType.IN_PROGRESS)">
+                  <small>{{ execution.build_number }}</small>
+                </ng-container>
+
               </td>
               <td>
                 <small>{{ execution.owner }}</small>

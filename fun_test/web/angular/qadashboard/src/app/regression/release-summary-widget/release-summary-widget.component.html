@@ -1,0 +1,29 @@
+<ng-container *ngFor="let releaseTrain of byReleaseTrain| keyvalue">
+    <h6 style="display: inline-block">{{ releaseTrain.key }}</h6>
+    <table class="fun-table">
+      <tr *ngFor="let description of releaseTrain.value | keyvalue">
+        <td>
+          <a href="/regression/releases">{{ description.key }}</a>
+        </td>
+        <td *ngFor="let execution of description.value.executions">
+
+          <a href="/regression/release_detail/{{ execution.id }}">
+            <ng-container *ngIf="jobStatusTypes && (execution.state <= jobStatusTypes.COMPLETED) && (execution.state > jobStatusTypes.UNKNOWN)">
+              <ng-container *ngIf="execution.result === 'PASSED'">
+                <span>
+                  <i class="fa fa-check" style="color: green"></i>
+                </span>
+              </ng-container>
+              <ng-container *ngIf="execution.result === 'FAILED'">
+                <span>
+                  <i class="fa fa-times" style="color: red"></i>
+                </span>
+              </ng-container>
+              <small>({{ execution?.build_number }})</small>
+            </ng-container>
+          </a>
+
+        </td>
+      </tr>
+    </table>
+  </ng-container>

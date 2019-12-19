@@ -10,9 +10,9 @@ media_path = MEDIA_DIR + '/' + 'Linux/'
 dockhub_path = "{}/Linux/".format(DEFAULT_BUILD_URL)
 build_info_file = 'build_info.txt'
 build_info_url = "{}/build_info.txt".format(DEFAULT_BUILD_URL)
-fun_cp_path = "{}{}/doc/jenkins/funcontrolplane/latest/functrlp.tgz".format(protocol,DOCKHUB_FUNGIBLE_LOCAL)
+fun_cp_path = "{}{}/doc/jenkins/funcontrolplane/latest/functrlp.tgz".format(protocol,DOCHUB_FUNGIBLE_LOCAL)
 fun_cp = "functrlp.tgz"
-modules_path = "{}{}/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz".format(protocol,DOCKHUB_FUNGIBLE_LOCAL)
+modules_path = "{}{}/doc/jenkins/fungible-host-drivers/latest/x86_64/modules.tgz".format(protocol,DOCHUB_FUNGIBLE_LOCAL)
 modules = "modules.tgz"
 
 

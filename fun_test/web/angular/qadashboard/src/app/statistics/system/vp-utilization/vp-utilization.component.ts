@@ -61,10 +61,9 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   parseData(data) {
     this.tableData = [];
     this.data.forEach(oneRecord => {
-      let dateTime = this.commonService.getShortTimeFromEpoch(oneRecord.epoch_time * 1000);
       let oneRecordData = oneRecord.data;
       let record = [];
-      record.push(dateTime);
+      record.push(oneRecord.epoch_time);
       Object.keys(oneRecordData).forEach(f1Index => {
         this.detectedF1Indexes.add(f1Index);
         record.push(oneRecordData[f1Index]);
@@ -90,7 +89,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   prepareChartData() {
     this.fs.f1s.forEach(f1 => {
       f1.clusters.forEach(cluster => {
-        cluster["debug_vp_util"] = {series: []};
         let index = cluster.index;
         let funTimeSeriesCollection = new FunTimeSeriesCollection("Cluster-" + index, "%", []);
         cluster.cores.forEach(core => {
@@ -102,8 +100,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             let oneSeries = new FunTimeSeries(name, {});
             let data = oneSeries.data;
             Object.keys(vp.utilization).forEach(uniqueTimestamp => {
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(uniqueTimestamp) * 1000);
-              data[dateTime] = vp.utilization[uniqueTimestamp];
+              data[uniqueTimestamp] = vp.utilization[uniqueTimestamp];
             });
             funTimeSeriesCollection.collection.push(oneSeries);
           });
@@ -130,11 +127,10 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             Object.keys(vp.utilization).forEach(timestamp => {
               let utilization = vp.utilization[timestamp];
               let floorValue = Math.floor(utilization);
-              let dateTime = this.commonService.getShortTimeFromEpoch(Number(timestamp) * 1000);
-              if (histogramData[floorValue].data.hasOwnProperty(dateTime)) {
-                histogramData[floorValue].data[dateTime] += 1;
+              if (histogramData[floorValue].data.hasOwnProperty(timestamp)) {
+                histogramData[floorValue].data[timestamp] += 1;
               } else {
-                histogramData[floorValue].data[dateTime] = 1;
+                histogramData[floorValue].data[timestamp] = 1;
               }
             });
           });

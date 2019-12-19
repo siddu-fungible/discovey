@@ -106,6 +106,7 @@ import { PerformanceAttachDagComponent } from "./performance/performance-workspa
 import { ReleaseDetailComponent } from './regression/release-detail/release-detail.component';
 import { FunStatsComponent } from './statistics/fun-stats/fun-stats.component';
 import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-table.component';
+import { ReleaseSummaryWidgetComponent } from './regression/release-summary-widget/release-summary-widget.component';
 
 
 @NgModule({
@@ -193,7 +194,8 @@ import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-t
     PerformanceAttachDagComponent,
     ReleaseDetailComponent,
     FunStatsComponent,
-    FunStatsTableComponent
+    FunStatsTableComponent,
+    ReleaseSummaryWidgetComponent
   ],
   imports: [
     BsDropdownModule,
