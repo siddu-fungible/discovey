@@ -58,8 +58,9 @@
     "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 180
+    "api_server_up_timeout": 300
   },
   "MultiNvmeConnect": {
     "blt_count": 4,
