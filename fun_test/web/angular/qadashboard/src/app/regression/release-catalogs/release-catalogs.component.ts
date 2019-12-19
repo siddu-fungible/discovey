@@ -100,6 +100,7 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
   prepareRelease(index) {
     this.preparingCatalogExecution = true;
     this.selectedReleaseCatalog = this.releaseCatalogs[index];
+    this.releaseCatalogExecution.description = this.selectedReleaseCatalog.name;
     let allObservables = this.selectedReleaseCatalog.suites.map((suite) => {
       return this.suiteEditorService.suite(suite.id).pipe(switchMap(response => {
         this.releaseCatalogExecution.suite_executions.push(new ReleaseSuiteExecution({suite_id: suite.id, suite_details: response}));
@@ -131,5 +132,9 @@ export class ReleaseCatalogsComponent implements OnInit, OnChanges {
     this.releaseCatalogExecution.description = description;
   }
 
+  prepareReleaseBack() {
+    this.releaseCatalogExecution.suite_executions = [];
+    this.preparingCatalogExecution = false;
+  }
 
 }
