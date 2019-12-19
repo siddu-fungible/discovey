@@ -115,7 +115,7 @@ export class Fs {
     this.f1s[f1Index].addDebugVpUtil(clusterIndex, coreIndex, vpIndex, timestamp, value);
   }
 
-  addPools(poolName, poolKey) {
+  addBamPools(poolName, poolKey) {
     if (this.availablePools.hasOwnProperty(poolName)) {
       if (!this.availablePools[poolName].includes(poolKey)) {
         this.availablePools[poolName].push(poolKey);
@@ -126,6 +126,7 @@ export class Fs {
   }
 
   addBamUsage(f1Index, clusterIndex, poolName, poolKey, timestamp, value) {
+    this.addBamPools(poolName, poolKey);
     this.f1s[f1Index].addBamUsage(clusterIndex, poolName, poolKey, timestamp, value);
   }
 }

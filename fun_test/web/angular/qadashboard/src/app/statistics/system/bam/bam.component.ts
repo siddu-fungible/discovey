@@ -84,7 +84,6 @@ export class BamComponent implements OnInit, OnChanges {
           Object.keys(poolNames).forEach(poolName => {
             let poolKeys = poolNames[poolName];
             Object.keys(poolKeys).forEach(poolKey => {
-              this.fs.addPools(poolName, poolKey);
               let value = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
               this.fs.addBamUsage(f1Index, clusterIndex, poolName, poolKey, oneRecord.epoch_time, value);
             });

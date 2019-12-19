@@ -6,7 +6,7 @@
                 (click)="showTables()"><i class="fa fa-table"></i> Show raw tables
         </button></span><br>
       <span>
-        PoolName: 
+        PoolName:
         <select [(ngModel)]="selectedPoolName" (change)="setPoolName(selectedPoolName)">
         <option *ngFor="let poolName of fs.availablePools | keyvalue" [ngValue]="poolName.key">
           {{ poolName.key }}
