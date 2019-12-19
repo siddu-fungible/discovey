@@ -361,6 +361,36 @@ def resetF(index=0):
 
 @roles('bmc')
 @task
+def get_bmc_info():
+    """ get FS1600 bmc platform revision """
+    run("uname -a")
+    run("cat /proc/ractrends/Helper/FwInfo")
+
+@roles('fpga')
+@task
+def get_fpga_info():
+    """ get FS1600 fpga platform revision """
+    run("uname -a", shell=False)
+    run("cat /etc/angstrom-version", shell=False)
+    run("cat /etc/machine-id", shell=False)
+
+@roles('come')
+@task
+def get_come_info():
+    """ get FS1600 come platform revision """
+    run("uname -a")
+    run("cat /etc/lsb-release")
+
+@roles('fpga')
+@task
+def get_platform_info():
+    """ get FS1600 platform revision """
+    execute(get_bmc_info)
+    execute(get_fpga_info)
+    execute(get_come_info)
+
+@roles('bmc')
+@task
 def check_serial_sockets():
     """ check if tcp sockets are running to replay serial interfaces /dev/ttySD """
     with settings( hide('stderr', 'running'), warn_only=True ):
