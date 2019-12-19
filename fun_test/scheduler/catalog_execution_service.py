@@ -32,7 +32,7 @@ else:
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger.addHandler(hdlr=handler)
 
-ReleaseCatalogExecution.objects.all().delete()
+# ReleaseCatalogExecution.objects.all().delete()
 
 
 class FunTimer:
@@ -63,8 +63,10 @@ class CatalogExecutionStateMachine:
         return build_number
 
     def queue_job(self, catalog_execution, suite_execution, release_train, build_number):
+
         environment = {"bundle_image_parameters": {"release_train": release_train,
-                                                   "build_number": build_number}}
+                                                   "build_number": build_number},
+                       "test_bed_type": suite_execution["test_bed_name"]}
 
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
@@ -73,6 +75,7 @@ class CatalogExecutionStateMachine:
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
         logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
+        time.sleep(15) # Prevent flooding as this code is not tested properly
         return job_id
 
     def process_submitted_releases(self):
@@ -221,7 +224,8 @@ class CatalogExecutionStateMachine:
 
 if __name__ == "__main__":
     while True:
-        daemon = Daemon.get(name=DAEMON_NAME).beat()
+        daemon = Daemon.get(name=DAEMON_NAME)
+        daemon.beat()
         CatalogExecutionStateMachine().run()
         time.sleep(15)
         logger.setLevel(daemon.logging_level)

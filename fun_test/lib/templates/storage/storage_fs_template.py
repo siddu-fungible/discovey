@@ -843,7 +843,7 @@ class StorageFsTemplate(object):
             match = re.search(r'UP.*RUNNING', bond_output)
             if not match:
                 fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 10)
-                fun_test.log("Remaining Time: {}".format(interface_status_timer.remaining_time()))
+                fun_test.log("Remaining Time: {}\n".format(interface_status_timer.remaining_time()))
             else:
                 result = True
                 break

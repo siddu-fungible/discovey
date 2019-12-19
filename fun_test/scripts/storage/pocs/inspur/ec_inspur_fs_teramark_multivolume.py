@@ -319,7 +319,8 @@ class ECVolumeLevelScript(FunTestScript):
                     if self.come_obj[0].check_file_directory_exists(path=path):
                         self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                         # Restarting run_sc with -c option
-                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                 timeout=self.run_sc_restart_timeout)
                         fun_test.test_assert_expected(
                             expected=0, actual=self.come_obj[0].exit_status(),
                             message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
@@ -443,7 +444,8 @@ class ECVolumeLevelScript(FunTestScript):
                             if self.come_obj[0].check_file_directory_exists(path=path):
                                 self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                                 # restarting run_sc with -c option
-                                self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                                self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                         timeout=self.run_sc_restart_timeout)
                                 fun_test.test_assert_expected(
                                     expected=0, actual=self.come_obj[0].exit_status(),
                                     message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
@@ -1277,9 +1279,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             job_inputs = {}
         if "io_depth" in job_inputs:
             self.fio_iodepth = job_inputs["io_depth"]
-
         if not isinstance(self.fio_iodepth, list):
             self.fio_iodepth = [self.fio_iodepth]
+        if "rwmixread" in job_inputs and "rwmixread" in self.fio_cmd_args["multiple_jobs"]:
+            self.rwmixread = job_inputs["rwmixread"]
+            self.fio_cmd_args["multiple_jobs"] = re.sub(r"--rwmixread=\d+ ", "--rwmixread={} ".format(self.rwmixread),
+                                                        self.fio_cmd_args["multiple_jobs"])
+            fun_test.log("FIO param --rwmixread is overridden by user to: --rwmixread={}".format(self.rwmixread))
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}

@@ -34,7 +34,10 @@
                 <small>{{ execution.release_train }}</small>
               </td>
               <td>
-                <small>{{ execution.build_number }}</small>
+                <ng-container *ngIf="(execution.state <= jobStatusType.COMPLETED) || (execution.state === jobStatusType.IN_PROGRESS)">
+                  <small>{{ execution.build_number }}</small>
+                </ng-container>
+
               </td>
               <td>
                 <small>{{ execution.owner }}</small>
