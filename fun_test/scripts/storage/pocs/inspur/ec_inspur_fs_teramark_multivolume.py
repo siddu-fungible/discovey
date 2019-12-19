@@ -1281,7 +1281,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.fio_iodepth = job_inputs["io_depth"]
         if not isinstance(self.fio_iodepth, list):
             self.fio_iodepth = [self.fio_iodepth]
-        if "rwmixread" in job_inputs:
+        if "rwmixread" in job_inputs and "rwmixread" in self.fio_cmd_args["multiple_jobs"]:
             self.rwmixread = job_inputs["rwmixread"]
             self.fio_cmd_args["multiple_jobs"] = re.sub(r"--rwmixread=\d+ ", "--rwmixread={} ".format(self.rwmixread),
                                                         self.fio_cmd_args["multiple_jobs"])
