@@ -12,7 +12,7 @@
         <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
           <div [@slideInOut] class="fun-flex-item">
             <h5>F1-{{ f1Index }}</h5>
-            <fun-stats [data]="f1['funTimeSeries']"></fun-stats>
+            <fun-stats [data]="f1['timeSeries']"></fun-stats>
           </div>
         </ng-container>
       </div>
@@ -24,37 +24,37 @@
           <h5>F1-{{ f1Index }}</h5>
           <div class="fun-flex-container">
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[0]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[0]['timeSeries']"></fun-stats>
             </div>
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[1]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[1]['timeSeries']"></fun-stats>
             </div>
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[2]['funTimeSeries']"></fun-stats>
-            </div>
-          </div>
-
-          <div class="fun-flex-container">
-            <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[3]['funTimeSeries']"></fun-stats>
-            </div>
-            <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[4]['funTimeSeries']"></fun-stats>
-            </div>
-            <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[5]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[2]['timeSeries']"></fun-stats>
             </div>
           </div>
 
           <div class="fun-flex-container">
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[6]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[3]['timeSeries']"></fun-stats>
             </div>
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[7]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[4]['timeSeries']"></fun-stats>
             </div>
             <div [@slideInOut] class="fun-flex-item">
-              <fun-stats [data]="f1.clusters[8]['funTimeSeries']"></fun-stats>
+              <fun-stats [data]="f1.clusters[5]['timeSeries']"></fun-stats>
+            </div>
+          </div>
+
+          <div class="fun-flex-container">
+            <div [@slideInOut] class="fun-flex-item">
+              <fun-stats [data]="f1.clusters[6]['timeSeries']"></fun-stats>
+            </div>
+            <div [@slideInOut] class="fun-flex-item">
+              <fun-stats [data]="f1.clusters[7]['timeSeries']"></fun-stats>
+            </div>
+            <div [@slideInOut] class="fun-flex-item">
+              <fun-stats [data]="f1.clusters[8]['timeSeries']"></fun-stats>
             </div>
           </div>
         </ng-container>

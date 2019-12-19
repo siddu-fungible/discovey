@@ -105,7 +105,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
             funTimeSeriesCollection.collection.push(oneSeries);
           });
         });
-        cluster["funTimeSeries"] = funTimeSeriesCollection;
+        cluster["timeSeries"] = funTimeSeriesCollection;
       });
     });
 
@@ -137,7 +137,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
         })
       });
       funTimeSeriesCollection.collection = histogramData;
-      f1["funTimeSeries"] = funTimeSeriesCollection;
+      f1["timeSeries"] = funTimeSeriesCollection;
     });
   }
 

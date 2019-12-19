@@ -36,7 +36,7 @@ export class BamComponent implements OnInit, OnChanges {
 
   selectedPoolName: string = null;
   selectedPoolKey: string = null;
-  showChartsPerPool: boolean = true;
+  updatingCharts: boolean = false;
 
 
   fs: Fs = new Fs();
@@ -111,7 +111,7 @@ export class BamComponent implements OnInit, OnChanges {
             oneSeries.data = cluster.bamUsage[poolName][poolKey];
             funTimeSeriesCollection.collection.push(oneSeries);
           });
-          f1[poolName][poolKey]["funTimeSeries"] = funTimeSeriesCollection;
+          f1[poolName][poolKey]["timeSeries"] = funTimeSeriesCollection;
         });
       });
     });
@@ -134,17 +134,17 @@ export class BamComponent implements OnInit, OnChanges {
     this.showTable = !this.showTable;
   }
 
-  setPoolNameAndKey(): void {
-    this.showChartsPerPool = false;
+  updatePoolNameAndKey(): void {
+    this.updatingCharts = true;
     setTimeout(() => {
       this.defaultSelectedPoolName = this.selectedPoolName;
       this.defaultSelectedPoolKey = this.selectedPoolKey;
-      this.showChartsPerPool = true;
+      this.updatingCharts = false;
     }, 1);
 
   }
 
-  setPoolName(poolName): void {
+  updatePoolName(poolName): void {
     this.selectedPoolName = null;
     this.selectedPoolKey = null;
     setTimeout(() => {

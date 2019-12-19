@@ -7,13 +7,13 @@
         </button></span><br>
       <span>
         PoolName:
-        <select [(ngModel)]="selectedPoolName" (change)="setPoolName(selectedPoolName)">
+        <select [(ngModel)]="selectedPoolName" (change)="updatePoolName(selectedPoolName)">
         <option *ngFor="let poolName of fs.availablePools | keyvalue" [ngValue]="poolName.key">
           {{ poolName.key }}
         </option>
       </select>
         <span *ngIf="selectedPoolName">&nbsp;&nbsp;Key:
-          <select [(ngModel)]="selectedPoolKey" (change)="setPoolNameAndKey()">
+          <select [(ngModel)]="selectedPoolKey" (change)="updatePoolNameAndKey()">
         <option *ngFor="let poolKey of fs.availablePools[selectedPoolName]" [ngValue]="poolKey">
           {{ poolKey }}
         </option>
@@ -23,13 +23,13 @@
     </div>
     <div class="fun-panel-body">
       <span><span style="font-size: 1.5rem; font-weight: 500;">BM usage per cluster</span></span>
-      <ng-container *ngIf="showChartsPerPool">
+      <ng-container *ngIf="!updatingCharts">
         <div *ngFor="let f1Index of detectedF1Indexes">
         <h5>F1-{{ f1Index }}</h5>
         <div *ngIf="showCharts" class="fun-flex-container">
               <div [@slideInOut] class="fun-flex-item">
                 <fun-stats
-                  [data]="fs.f1s[f1Index][defaultSelectedPoolName][defaultSelectedPoolKey]['funTimeSeries']"></fun-stats>
+                  [data]="fs.f1s[f1Index][defaultSelectedPoolName][defaultSelectedPoolKey]['timeSeries']"></fun-stats>
               </div>
         </div>
       </div>
