@@ -32,7 +32,7 @@ else:
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger.addHandler(hdlr=handler)
 
-ReleaseCatalogExecution.objects.all().delete()
+# ReleaseCatalogExecution.objects.all().delete()
 
 
 class FunTimer:
