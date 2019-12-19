@@ -107,7 +107,6 @@ import { ReleaseDetailComponent } from './regression/release-detail/release-deta
 import { FunStatsComponent } from './statistics/fun-stats/fun-stats.component';
 import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-table.component';
 import { ReleaseSummaryWidgetComponent } from './regression/release-summary-widget/release-summary-widget.component';
-import { ReleaseSummaryComponent } from './regression/release-summary/release-summary.component';
 
 
 @NgModule({
@@ -196,8 +195,7 @@ import { ReleaseSummaryComponent } from './regression/release-summary/release-su
     ReleaseDetailComponent,
     FunStatsComponent,
     FunStatsTableComponent,
-    ReleaseSummaryWidgetComponent,
-    ReleaseSummaryComponent
+    ReleaseSummaryWidgetComponent
   ],
   imports: [
     BsDropdownModule,
