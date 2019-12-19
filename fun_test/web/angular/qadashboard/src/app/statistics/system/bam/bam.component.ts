@@ -31,6 +31,14 @@ export class BamComponent implements OnInit, OnChanges {
   rawTableData: any[] = [];
   rawTableHeaders: any[] = [];
 
+  defaultSelectedPoolName: string = "default_alloc_pool";
+  defaultSelectedPoolKey: string = "usage_percent";
+
+  selectedPoolName: string = null;
+  selectedPoolKey: string = null;
+  showChartsPerPool: boolean = true;
+
+
   fs: Fs = new Fs();
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {
@@ -54,6 +62,8 @@ export class BamComponent implements OnInit, OnChanges {
   driver: any = null;
 
   ngOnInit() {
+    // this.selectedPoolName = this.defaultSelectedPoolName;
+    // this.selectedPoolKey = this.defaultSelectedPoolKey;
   }
 
   parseData() {
@@ -74,7 +84,7 @@ export class BamComponent implements OnInit, OnChanges {
           Object.keys(poolNames).forEach(poolName => {
             let poolKeys = poolNames[poolName];
             Object.keys(poolKeys).forEach(poolKey => {
-              this.fs.addBam(f1Index, poolName, poolKey);
+              this.fs.addPools(poolName, poolKey);
               let value = oneRecordData[f1Index].bm_usage_per_cluster[clusterIndexString][poolName][poolKey];
               this.fs.addBamUsage(f1Index, clusterIndex, poolName, poolKey, oneRecord.epoch_time, value);
             });
@@ -88,10 +98,10 @@ export class BamComponent implements OnInit, OnChanges {
 
   prepareStatsData(): void {
     this.fs.f1s.forEach(f1 => {
-      let poolNames = this.bmUsagePerClusterPoolNames;
-      let poolKeys = this.bmUsagePerClusterPoolKeys;
+      let poolNames = Object.keys(this.fs.availablePools);
       poolNames.forEach(poolName => {
         f1[poolName] = {};
+        let poolKeys = this.fs.availablePools[poolName];
         poolKeys.forEach(poolKey => {
           f1[poolName][poolKey] = {};
           let title = poolName + "-" + poolKey;
@@ -123,6 +133,24 @@ export class BamComponent implements OnInit, OnChanges {
 
   showTables(): void {
     this.showTable = !this.showTable;
+  }
+
+  setPoolNameAndKey(): void {
+    this.showChartsPerPool = false;
+    setTimeout(() => {
+      this.defaultSelectedPoolName = this.selectedPoolName;
+      this.defaultSelectedPoolKey = this.selectedPoolKey;
+      this.showChartsPerPool = true;
+    }, 1);
+
+  }
+
+  setPoolName(poolName): void {
+    this.selectedPoolName = null;
+    this.selectedPoolKey = null;
+    setTimeout(() => {
+      this.selectedPoolName = poolName;
+    }, 1);
   }
 
 }

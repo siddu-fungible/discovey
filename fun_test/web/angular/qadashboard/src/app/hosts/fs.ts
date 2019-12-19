@@ -84,7 +84,7 @@ export class Cluster {
 
 class F1 {
   clusters: Cluster [] = [];
-  availablePools: any = {};
+
 
   constructor() {
     for (let index = 0; index < 9; index++) {
@@ -96,16 +96,6 @@ class F1 {
     this.clusters[clusterIndex].addDebugVpUtil(coreIndex, vpIndex, timestamp, value);
   }
 
-  addBam(poolName, poolKey) {
-    if (this.availablePools.hasOwnProperty(poolName)) {
-      if (!this.availablePools[poolName].includes(poolKey)) {
-        this.availablePools[poolName].push(poolKey);
-      }
-    } else {
-      this.availablePools[poolName] = [poolKey];
-    }
-  }
-
   addBamUsage(clusterIndex, poolName, poolKey, timestamp, value) {
     this.clusters[clusterIndex].addBamUsage(poolName, poolKey, timestamp, value);
   }
@@ -113,6 +103,7 @@ class F1 {
 
 export class Fs {
   f1s: F1 [] = [];
+  availablePools: any = {};
 
   constructor() {
     for (let index = 0; index < 2; index++) {
@@ -124,8 +115,14 @@ export class Fs {
     this.f1s[f1Index].addDebugVpUtil(clusterIndex, coreIndex, vpIndex, timestamp, value);
   }
 
-  addBam(f1Index, poolName, poolKey) {
-    this.f1s[f1Index].addBam(poolName, poolKey);
+  addPools(poolName, poolKey) {
+    if (this.availablePools.hasOwnProperty(poolName)) {
+      if (!this.availablePools[poolName].includes(poolKey)) {
+        this.availablePools[poolName].push(poolKey);
+      }
+    } else {
+      this.availablePools[poolName] = [poolKey];
+    }
   }
 
   addBamUsage(f1Index, clusterIndex, poolName, poolKey, timestamp, value) {
