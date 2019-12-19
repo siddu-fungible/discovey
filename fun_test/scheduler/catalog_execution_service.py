@@ -65,7 +65,8 @@ class CatalogExecutionStateMachine:
     def queue_job(self, catalog_execution, suite_execution, release_train, build_number):
 
         environment = {"bundle_image_parameters": {"release_train": release_train,
-                                                   "build_number": build_number}}
+                                                   "build_number": build_number},
+                       "test_bed_type": suite_execution["test_bed_name"]}
 
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
