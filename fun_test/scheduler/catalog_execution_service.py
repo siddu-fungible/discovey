@@ -63,6 +63,7 @@ class CatalogExecutionStateMachine:
         return build_number
 
     def queue_job(self, catalog_execution, suite_execution, release_train, build_number):
+
         environment = {"bundle_image_parameters": {"release_train": release_train,
                                                    "build_number": build_number}}
 
@@ -73,6 +74,7 @@ class CatalogExecutionStateMachine:
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
         logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
+        time.sleep(15) # Prevent flooding as this code is not tested properly
         return job_id
 
     def process_submitted_releases(self):
