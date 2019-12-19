@@ -223,7 +223,8 @@ class CatalogExecutionStateMachine:
 
 if __name__ == "__main__":
     while True:
-        daemon = Daemon.get(name=DAEMON_NAME).beat()
+        daemon = Daemon.get(name=DAEMON_NAME)
+        daemon.beat()
         CatalogExecutionStateMachine().run()
         time.sleep(15)
         logger.setLevel(daemon.logging_level)
