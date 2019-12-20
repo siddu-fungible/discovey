@@ -231,6 +231,8 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
+        if self.fs.get_revision() in ["2"]:
+            ipmi_details = None
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=max_wait_time,
                                                                ipmi_details=ipmi_details,
                                                                power_cycle=power_cycle),
@@ -584,12 +586,12 @@ class Bmc(Linux):
 
         if not rich_input_boot_args:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="FUNOS_INITIALIZED")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
@@ -1042,9 +1044,19 @@ class BootupWorker(Thread):
 
                 come = fs.get_come()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
-                fun_test.test_assert(expression=fs.come_reset(power_cycle=self.power_cycle_come, non_blocking=self.non_blocking),
-                                     message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
-                                     context=self.context)
+                if fs.get_revision() not in ["2"]:
+                    fun_test.test_assert(expression=fs.come_reset(power_cycle=self.power_cycle_come, non_blocking=self.non_blocking),
+                                         message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
+                                         context=self.context)
+                else:
+                    try:
+                        fun_test.test_assert(expression=fs.come_reset(power_cycle=False, non_blocking=self.non_blocking),
+                                             message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
+                                             context=self.context)
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                        fs.apc_power_cycle()
+                        raise ex
 
             self.worker = ComEInitializationWorker(fs=self.fs)
             self.worker.run()
