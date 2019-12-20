@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {RegressionService} from "../regression/regression.service";
 import {Observable, of, forkJoin} from "rxjs";
 import {switchMap} from "rxjs/operators";
@@ -14,14 +14,24 @@ enum EditMode {
   MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration"
 }
 
+class FlatNode {
+  name: string = null;
+  leaf: boolean = false;
+  hide: boolean = true;
+  indent: number = 0;
+  children: FlatNode[] = [];
+}
+
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
   styleUrls: ['./test.component.css'],
 })
 
-export class TestComponent {
+export class TestComponent implements OnInit {
 
+  @Input() data: any = null;
+  @Output() clickedNode: EventEmitter<any> = new EventEmitter();
   @Input() embed: boolean = false;
   schedulingTime = {hour: 1, minute: 1};
   testBeds: any [] = null;
@@ -41,6 +51,7 @@ export class TestComponent {
   userMap: any = null;
   editingDescription: boolean = false;
   currentDescription: string;
+  flatNodes: FlatNode[] = [];
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -48,38 +59,109 @@ export class TestComponent {
               private commonService: CommonService,
               private service: TestBedService,
               private userService: UserService
-  ) { }
-
-  ngOnInit() {
-    // fetchUsers
-    // fetchTestbeds
-    this.driver = new Observable(observer => {
-      observer.next(true);
-      //observer.complete();
-      return () => {
-      };
-    }).pipe(
-      switchMap(response => {
-        return this.fetchTestBeds();
-      }),
-      switchMap(response => {
-        return this.fetchAutomationStatus();
-      }),
-      switchMap(response => {
-        return this.getUsers();
-      }),
-      switchMap(response => {
-        return this.userService.getUserMap();
-      }),
-      switchMap(response => {
-        this.userMap = response;
-        return this.fetchAssets();
-      })
-      );
-    this.refreshAll();
+  ) {
   }
 
-  refreshAll () {
+  ngOnInit() {
+    if (this.data) {
+      for (let d of this.data) {
+        let flatNode = new FlatNode();
+        flatNode.name = d["name"];
+        flatNode.leaf = d["leaf"];
+        flatNode.children = [];
+        flatNode.indent = 0;
+        flatNode.hide = false;
+        this.flatNodes.push(flatNode);
+        this.setFlatNodes(d, flatNode, 0);
+      }
+    }
+
+    // fetchUsers
+    // fetchTestbeds
+    // this.driver = new Observable(observer => {
+    //   observer.next(true);
+    //   //observer.complete();
+    //   return () => {
+    //   };
+    // }).pipe(
+    //   switchMap(response => {
+    //     return this.fetchTestBeds();
+    //   }),
+    //   switchMap(response => {
+    //     return this.fetchAutomationStatus();
+    //   }),
+    //   switchMap(response => {
+    //     return this.getUsers();
+    //   }),
+    //   switchMap(response => {
+    //     return this.userService.getUserMap();
+    //   }),
+    //   switchMap(response => {
+    //     this.userMap = response;
+    //     return this.fetchAssets();
+    //   })
+    //   );
+    // this.refreshAll();
+  }
+
+  setFlatNodes(d, node, indent): FlatNode {
+    if (!d["leaf"]) {
+      for (let child of d["children"]) {
+        let flatNode = new FlatNode();
+        flatNode.name = child["name"];
+        flatNode.leaf = child["leaf"];
+        flatNode.children = [];
+        flatNode.indent = indent + 1;
+        this.flatNodes.push(flatNode);
+        let childFlatNode = this.setFlatNodes(child, flatNode, indent + 1);
+        node.children.push(childFlatNode);
+      }
+    }
+    return node;
+  }
+
+  clickNode(flatNode) {
+    if (!flatNode.leaf) {
+      for (let child of flatNode.children) {
+        if (child.hide) {
+          this.expandNode(child);
+        } else {
+          this.collapseNode(child);
+        }
+      }
+    } else {
+      this.clickedNode.emit(flatNode);
+    }
+  }
+
+  expandNode(node): void {
+    node.hide = false;
+  }
+
+  collapseNode(node): void {
+    if (!node.leaf) {
+      for (let child of node.children) {
+        this.collapseNode(child);
+      }
+    }
+    node.hide = true;
+  }
+
+  getIndentHtml = (node) => {
+    let s = "";
+    if (node.hasOwnProperty("indent")) {
+      for (let i = 0; i < node.indent - 1; i++) {
+        s += "<span style=\"color: white\">&rarr;</span>";
+      }
+      if (node.indent)
+        s += "<span>&nbsp;&nbsp;</span>";
+    }
+
+    return s;
+  };
+
+
+  refreshAll() {
     this.refreshing = "Refreshing test-beds";
     this.driver.subscribe(() => {
       this.refreshing = null;
@@ -131,12 +213,16 @@ export class TestComponent {
         let numExecutions = -1;
         let executionId = -1;
 
-        this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-          executionId: executionId};
+        this.automationStatus[testBed.name] = {
+          numExecutions: numExecutions,
+          executionId: executionId
+        };
 
-        this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
-        manualLockExpiryTime: testBed.manual_lock_expiry_time,
-        manualLockSubmitter: testBed.manual_lock_submitter};
+        this.manualStatus[testBed.name] = {
+          manualLock: testBed.manual_lock,
+          manualLockExpiryTime: testBed.manual_lock_expiry_time,
+          manualLockSubmitter: testBed.manual_lock_submitter
+        };
         this.assetLevelManualLockStatus[testBed.name] = null;
         if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
           this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
@@ -150,16 +236,18 @@ export class TestComponent {
 
   fetchAutomationStatus() {
     return forkJoin(...this.testBeds.map((testBed) => {
-      return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
-        let numExecutions = -1;
-        let executionId = -1;
-        let manualLock = false;
-        if (testBed.name === 'fs-42') {
-          let i = 0;
-        }
-        this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-          executionId: executionId,
-          manualLock: manualLock};
+        return this.regressionService.testBedInProgress(testBed.name).pipe(switchMap(response => {
+          let numExecutions = -1;
+          let executionId = -1;
+          let manualLock = false;
+          if (testBed.name === 'fs-42') {
+            let i = 0;
+          }
+          this.automationStatus[testBed.name] = {
+            numExecutions: numExecutions,
+            executionId: executionId,
+            manualLock: manualLock
+          };
           if (response && response.hasOwnProperty("automation_status")) {
             /*
             let numExecutions = response.length;
@@ -170,16 +258,21 @@ export class TestComponent {
             }*/
             let automationStatus = response.automation_status;
             if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
-              this.automationStatus[testBed.name] = {numExecutions: 1,
-                executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+              this.automationStatus[testBed.name] = {
+                numExecutions: 1,
+                executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset
+              };
             } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
               this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
             } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
-              this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
+              this.automationStatus[testBed.name] = {
+                numExecutions: 1,
+                executionId: automationStatus.suite_info.suite_execution_id
+              };
             }
 
           }
-        return of(null);
+          return of(null);
         }))
       })
     )
@@ -217,8 +310,10 @@ export class TestComponent {
 
   onExtendTimeSubmit() {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_extension_hour: this.schedulingTime.hour,
-    manual_lock_extension_minute: this.schedulingTime.minute};
+    let payload = {
+      manual_lock_extension_hour: this.schedulingTime.hour,
+      manual_lock_extension_minute: this.schedulingTime.minute
+    };
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Extension request submitted");
       this.refreshTestBeds();
@@ -237,9 +332,11 @@ export class TestComponent {
     console.log(this.schedulingTime.hour);
     console.log(this.schedulingTime.minute);
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_submitter_email: this.selectedUser.email,
-    manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
-    manual_lock_extension_minute: this.schedulingTime.minute};
+    let payload = {
+      manual_lock_submitter_email: this.selectedUser.email,
+      manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
+      manual_lock_extension_minute: this.schedulingTime.minute
+    };
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Lock request submitted");
       this.selectedUser = null;
