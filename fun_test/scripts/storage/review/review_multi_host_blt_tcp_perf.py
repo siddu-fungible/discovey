@@ -314,6 +314,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         self.funcp_obj = {}
         self.funcp_spec = {}
         self.funcp_obj[0] = StorageFsTemplate(self.come_obj[0])
+        self.temp_dataplane_ip_set = False
         if self.bundle_image_parameters:
             fun_test.log("Bundle image installation")
             if self.install == "fresh":
@@ -410,6 +411,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     fun_test.test_assert(
                         result["status"],
                         "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
+                self.temp_dataplane_ip_set = True
             else:
                 # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
                 pass
@@ -684,6 +686,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
+        if not self.temp_dataplane_ip_set:
+            fun_test.sleep("Dataplane IP apply failed.. debug", 300)
+        """
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
@@ -757,6 +762,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fs.cleanup()
 
         self.storage_controller.disconnect()
+        """
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
@@ -1483,10 +1489,12 @@ class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
         super(MultiHostFioRandRead, self).setup()
 
     def run(self):
-        super(MultiHostFioRandRead, self).run()
+        pass
+        # super(MultiHostFioRandRead, self).run()
 
     def cleanup(self):
-        super(MultiHostFioRandRead, self).cleanup()
+        pass
+        # super(MultiHostFioRandRead, self).cleanup()
 
 
 class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
