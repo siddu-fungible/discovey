@@ -107,6 +107,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = True
         if "rxlog" in job_inputs:
             self.rxlog = job_inputs["rxlog"]
+        else:
+            self.rxlog = False
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
