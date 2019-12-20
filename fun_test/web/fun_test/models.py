@@ -86,6 +86,10 @@ class CatalogTestCase(models.Model):
         return str(self.jira_id)
 
 
+class SavedJobConfig(FunModel):
+    config = JSONField(default=None, null=True)
+
+
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
