@@ -1489,8 +1489,7 @@ class MultiHostFioRandRead(MultiHostVolumePerformanceTestcase):
         super(MultiHostFioRandRead, self).setup()
 
     def run(self):
-        pass
-        # super(MultiHostFioRandRead, self).run()
+        super(MultiHostFioRandRead, self).run()
 
     def cleanup(self):
         pass
