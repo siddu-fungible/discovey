@@ -323,7 +323,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 if self.come_obj[0].check_file_directory_exists(path=path):
                     self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                     # Restarting run_sc with -c option
-                    self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                    self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                             timeout=self.run_sc_restart_timeout)
                     fun_test.test_assert_expected(
                         expected=0, actual=self.come_obj[0].exit_status(),
                         message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
@@ -338,6 +339,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                             break
                         else:
                             fun_test.sleep("for the run_sc docker container to start", 1)
+                            fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                     else:
                         fun_test.critical(
                             "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
@@ -368,9 +370,18 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     break
                 else:
                     fun_test.sleep("waiting for API server to be up", 10)
+                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
-            fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 10)
+            fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+            # Check if bond interface status is Up and Running
+            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                if container_name == "run_sc":
+                    continue
+                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                                name="bond0")
+                fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
+                                              message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
             if self.install == "fresh":
                 # Getting all the DUTs of the setup
@@ -425,6 +436,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     else:
                         fun_test.sleep(
                             "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
+                        fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
                 if container_chk_timer.is_expired():
                     fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are not running")
                 else:
@@ -436,7 +448,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                         if self.come_obj[0].check_file_directory_exists(path=path):
                             self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                             # restarting run_sc with -c option
-                            self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                     timeout=self.run_sc_restart_timeout)
                             fun_test.test_assert_expected(
                                 expected=0, actual=self.come_obj[0].exit_status(),
                                 message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
@@ -453,6 +466,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                     break
                                 else:
                                     fun_test.sleep("for the run_sc docker container to start", 1)
+                                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                             else:
                                 fun_test.critical(
                                     "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
@@ -487,11 +501,21 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                                     break
                                 else:
                                     fun_test.sleep(" waiting for API server to be up", 10)
+                                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
                             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                                    message="TFTP Image boot: init-fs1600 enabled: API server is up")
                             fun_test.sleep(
-                                "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 10)
-
+                                "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
+                            # Check if bond interface status is Up and Running
+                            for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
+                                if container_name == "run_sc":
+                                    continue
+                                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                    container_name=container_name,
+                                    name="bond0")
+                                fun_test.test_assert_expected(
+                                    expected=True, actual=bond_interfaces_status,
+                                    message="Bundle Image boot: Bond Interface is Up & Running")
                             # Configure dataplane ip as database is cleaned up
                             # Getting all the DUTs of the setup
                             nodes = self.sc_api.get_dpu_ids()
@@ -849,6 +873,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warm_up_traffic" in job_inputs:
             self.warm_up_traffic = job_inputs["warm_up_traffic"]
+        if "warm_up_count" in job_inputs:
+            self.warm_up_count = job_inputs["warm_up_count"]
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
@@ -863,8 +889,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt"]["warmup_done"] = False
@@ -1061,70 +1086,74 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.shared_variables["blt"]["setup_created"] = True
 
-            thread_id = {}
-            end_host_thread = {}
-
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             # Pre-conditioning the volume (one time task)
             if self.warm_up_traffic:
+                total_warmup_done = 0
                 # self.nvme_block_device_str = ':'.join(self.nvme_block_device)
                 # fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
-                fio_output = {}
-                for index, host_name in enumerate(self.host_info):
-                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
-                                 "provided")
-                    warm_up_fio_cmd_args = {}
-                    jobs = ""
-                    fio_output[index] = {}
-                    end_host_thread[index] = self.host_info[host_name]["handle"].clone()
-                    wait_time = self.num_hosts - index
-                    if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                        # Adding the allowed CPUs into the fio warmup command
-                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                        #    format(self.host_info[host_name]["host_numa_cpus"])
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
-                        for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
-                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
-                            fio_cpus_allowed_args) + str(jobs)
-                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
-                        #                                    **warm_up_fio_cmd_args)
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename="nofile",
-                                                                         **warm_up_fio_cmd_args)
-                    else:
-                        # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
-                        filename = self.host_info[host_name]["fio_filename"]
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename=filename,
-                                                                         **self.warm_up_fio_cmd_args)
+                for count in range(self.warm_up_count):
+                    fun_test.log("Starting Volume Warmup: Round {}".format(count + 1))
+                    thread_id = {}
+                    end_host_thread = {}
+                    fio_output = {}
+                    for index, host_name in enumerate(self.host_info):
+                        fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
+                                     "provided")
+                        warm_up_fio_cmd_args = {}
+                        jobs = ""
+                        fio_output[index] = {}
+                        end_host_thread[index] = self.host_info[host_name]["handle"].clone()
+                        wait_time = self.num_hosts - index
+                        if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                            # Adding the allowed CPUs into the fio warmup command
+                            # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                            #    format(self.host_info[host_name]["host_numa_cpus"])
+                            fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                            for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                                jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                            warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                                fio_cpus_allowed_args) + str(jobs)
+                            warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                            #                                    **warm_up_fio_cmd_args)
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename="nofile",
+                                                                             **warm_up_fio_cmd_args)
+                        else:
+                            # Adding the allowed CPUs into the fio warmup command
+                            self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
+                            filename = self.host_info[host_name]["fio_filename"]
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename=filename,
+                                                                             **self.warm_up_fio_cmd_args)
 
-                    fun_test.sleep("Fio threadzz", seconds=1)
+                        fun_test.sleep("Fio threadzz", seconds=1)
 
-                fun_test.sleep("Fio threads started", 10)
-                try:
+                    fun_test.sleep("Fio threads started", 10)
                     for index, host_name in enumerate(self.host_info):
                         fun_test.log("Joining fio thread {}".format(index))
                         fun_test.join_thread(fun_test_thread_id=thread_id[index])
                         fun_test.log("FIO Command Output:")
                         fun_test.log(fun_test.shared_variables["fio"][index])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
-                                             format(host_name))
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {} - "
+                                                                                      "Round {}".format(host_name,
+                                                                                                        count + 1))
                         fio_output[index] = {}
                         fio_output[index] = fun_test.shared_variables["fio"][index]
+                        total_warmup_done += 1
                         fun_test.shared_variables["blt"]["warmup_done"] = True
-                except Exception as ex:
-                    fun_test.log("Fio warmup failed")
-                    fun_test.critical(str(ex))
 
+                if total_warmup_done == len(self.host_info) * self.warm_up_count:
+                    fun_test.shared_variables["blt"]["warmup_done"] = True
+                    fun_test.log("Successfully completed {} round(s) of volume warmup".format(self.warm_up_count))
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
@@ -1165,6 +1194,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
+            # In case for the given IO depths if the expected_fio_result dictionary don't have the expected values, then
+            # add that IO depth into the expected_fio_result dictionary by setting its value equal to the one set to
+            # its first attribute
+            for combo in self.fio_jobs_iodepth:
+                if combo not in self.expected_fio_result:
+                    first_combo = sorted(self.expected_fio_result.keys())[0]
+                    self.expected_fio_result[combo] = self.expected_fio_result[first_combo]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
@@ -1477,9 +1513,33 @@ class MultiHostFioRandWrite(MultiHostVolumePerformanceTestcase):
         super(MultiHostFioRandWrite, self).cleanup()
 
 
+class PreCommitSanity(MultiHostVolumePerformanceTestcase):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Pre-commit Sanity. Create BLT - Attach - IO (Write & Read) - Detach - Delete",
+                              steps='''
+        1. Bring-up F1 with latest image and configure Dataplane IP 
+        2. Create 1 BLT volume with SC API
+        2. Attach volume to Remote host
+        4. Run the FIO Sequential write and Sequentail Read test from remote host
+        5. Detach and Delete the BLT volume
+        ''')
+
+    def setup(self):
+        super(PreCommitSanity, self).setup()
+
+    def run(self):
+        super(PreCommitSanity, self).run()
+
+    def cleanup(self):
+        super(PreCommitSanity, self).cleanup()
+
+
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(PreCommitSanity())
     bltscript.run()
