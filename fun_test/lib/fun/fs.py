@@ -908,6 +908,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
+                try:
+                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                        rotated_log_filename = rotated_log_file["filename"]
+                        self.command('rm {}'.format(rotated_log_filename))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -1912,6 +1919,7 @@ class Fs(object, ToDictMixin):
                         if self.errors_detected \
                                 and self.get_revision() in ["2"] \
                                 and any("bug_check" in error_detected for error_detected in self.errors_detected):
+                            fun_test.add_checkpoint("Crash detected, so doing a full power-cycle")
                             fun_test.test_assert(self.apc_power_cycle(), "APC power-cycle complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
