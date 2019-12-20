@@ -289,7 +289,7 @@ class Linux(object, ToDictMixin):
                     telnet_command = 'telnet -l {} {} {}'.format(self.telnet_username, self.host_ip, self.telnet_port)
                     self.logger.log(telnet_command)
                     self.handle = pexpect.spawn(telnet_command,
-                                                env={"TERM": "dumb", "PATH": "$PATH:/usr/local/bin"},
+                                                env={"TERM": "dumb", "PATH": "$PATH:/usr/local/bin:/usr/bin"},
                                                 maxread=4096)
 
                 # self.handle.logfile_read = sys.stdout
