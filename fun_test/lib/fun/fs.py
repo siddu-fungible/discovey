@@ -1565,12 +1565,12 @@ class ComE(Linux):
             if f1_index == self.disable_f1_index:
                 continue
 
-            try:
-                if self.hbm_dump_enabled:
-                    self.hbm_dump(f1_index=f1_index)
+            # try:
+            #    if self.hbm_dump_enabled:
+            #        self.hbm_dump(f1_index=f1_index)
 
-            except Exception as ex:
-                fun_test.critical(str(ex))
+            # except Exception as ex:
+            #    fun_test.critical(str(ex))
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
@@ -1890,6 +1890,7 @@ class Fs(object, ToDictMixin):
                         continue
                     fun_test.log("Errors were detected. Starting HBM dump")
                     f1.hbm_dump_complete = True
+                    self.get_come().setup_hbm_tools()
                     self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
