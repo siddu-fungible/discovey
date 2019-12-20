@@ -1531,6 +1531,8 @@ class FrsTestCase(FunTestCase):
                 self.upload_to_file["ip"] = job_inputs["upload_to_file"]
             if "disable_f1_index" in job_inputs:
                 self.disable_f1_index = job_inputs["disable_f1_index"]
+            if "stats_interval" in job_inputs:
+                self.stats_interval = job_inputs["stats_interval"]
 
 
     def initialize_variables(self):
