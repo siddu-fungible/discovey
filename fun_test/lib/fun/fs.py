@@ -1914,6 +1914,7 @@ class Fs(object, ToDictMixin):
             if self.errors_detected:
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
+                    fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True)
             fun_test.simple_assert(not self.errors_detected, "Error detected")
         return True
 
