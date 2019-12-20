@@ -598,7 +598,7 @@ def test_case_time_series(request, suite_execution_id):
             query["data.checkpoint_index"] = checkpoint_filter
 
         if collection:
-            result = list(collection.find(query))
+            result = list(collection.find(query).sort('epoch_time'))
     return result
 
 
