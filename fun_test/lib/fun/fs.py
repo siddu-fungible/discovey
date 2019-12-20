@@ -1677,7 +1677,11 @@ class Fs(object, ToDictMixin):
                  spec=None,
                  already_deployed=None,
                  revision=None,
-                 fs_parameters=None):
+                 fs_parameters=None,
+                 fpga_telnet_ip=None,
+                 fpga_telnet_port=None,
+                 fpga_telnet_username=None,
+                 fpga_telnet_password=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1685,6 +1689,12 @@ class Fs(object, ToDictMixin):
         self.fpga_mgmt_ip = fpga_mgmt_ip
         self.fpga_mgmt_ssh_username = fpga_mgmt_ssh_username
         self.fpga_mgmt_ssh_password = fpga_mgmt_ssh_password
+
+        self.fpga_telnet_ip = fpga_telnet_ip
+        self.fpga_telnet_port = fpga_telnet_port
+        self.fpga_telnet_username = fpga_telnet_username
+        self.fpga_telnet_password = fpga_telnet_password
+
         self.come_mgmt_ip = come_mgmt_ip
         self.come_mgmt_ssh_username = come_mgmt_ssh_username
         self.come_mgmt_ssh_password = come_mgmt_ssh_password
@@ -2024,6 +2034,12 @@ class Fs(object, ToDictMixin):
                   bundle_image_parameters=bundle_image_parameters,
                   already_deployed=already_deployed,
                   fs_parameters=fs_parameters)
+
+        if "telnet_ip" in fpga_spec:
+            fs_obj.fpga_telnet_ip = fpga_spec["telnet_ip"]
+            fs_obj.fpga_telnet_port = fpga_spec.get("telnet_port", None)
+            fs_obj.fpga_telnet_username = fpga_spec.get("telnet_username", None)
+            fs_obj.fpga_telnet_password = fpga_spec.get("telnet_password", None)
         if already_deployed:
             fs_obj.re_initialize()
         return fs_obj
@@ -2218,16 +2234,36 @@ class Fs(object, ToDictMixin):
         self.bmc.bundle_compatible = self.bundle_compatible
         return self.bmc
 
-    def get_fpga(self):
-        if not self.fpga:
-            if self.fpga_mgmt_ip:
-                self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
+    def get_terminal(self):
+        return self.get_fpga(terminal=True)
+
+    def get_fpga(self, terminal=False):
+        result = None
+        if not terminal:
+            if not self.fpga:
+                if self.fpga_mgmt_ip:
+                    self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
+                                     ssh_username=self.fpga_mgmt_ssh_username,
+                                     ssh_password=self.fpga_mgmt_ssh_password,
+                                     set_term_settings=True,
+                                     disable_f1_index=self.disable_f1_index,
+                                     context=self.context)
+            result = self.fpga
+        else:
+            telnet_object = Fpga(host_ip=self.fpga_telnet_ip,
                                  ssh_username=self.fpga_mgmt_ssh_username,
                                  ssh_password=self.fpga_mgmt_ssh_password,
                                  set_term_settings=True,
                                  disable_f1_index=self.disable_f1_index,
-                                 context=self.context)
-        return self.fpga
+                                 context=self.context,
+                                 telnet_username=self.fpga_telnet_username,
+                                 telnet_password=self.fpga_telnet_password,
+                                 telnet_ip=self.fpga_telnet_ip,
+                                 telnet_port=self.fpga_telnet_port,
+                                 use_telnet=True)
+            telnet_object.set_prompt_terminator('# ')
+            result = telnet_object
+        return result
 
     def get_come(self, clone=False):
         if not self.come:
@@ -2422,9 +2458,12 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main2__":
-    fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
-    fs.get_bmc().position_support_scripts()
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"), "funos-f1.stripped.gz")
+    terminal = fs.get_terminal()
+    terminal.command("pwd")
+    terminal.command("ifconfig")
+    # fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
     # fs.come_initialize()
     # fs.come_reset()
@@ -2433,7 +2472,7 @@ if __name__ == "__main2__":
     # come.setup_dpc()
 
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
     output = come.pre_reboot_cleanup()
     i = 0
