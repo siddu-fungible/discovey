@@ -584,12 +584,12 @@ class Bmc(Linux):
 
         if not rich_input_boot_args:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="\"this space intentionally left blank.\"")
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=100, f1_index=index, expected="sending a HOST_BOOTED message")
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
@@ -2459,7 +2459,7 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"), "funos-f1.stripped.gz")
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"))
     terminal = fs.get_terminal()
     terminal.command("pwd")
     terminal.command("ifconfig")
