@@ -1914,7 +1914,7 @@ class Fs(object, ToDictMixin):
             if self.errors_detected:
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
-                    fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True)
+                    fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True, result=fun_test.FAILED)
                     try:
                         if self.errors_detected \
                                 and self.get_revision() in ["2"] \
