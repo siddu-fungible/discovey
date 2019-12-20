@@ -105,6 +105,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "rxlog" in job_inputs:
+            self.rxlog = job_inputs["rxlog"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -151,6 +153,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
+                if self.rxlog:
+                    self.bootargs[i] += " --rxlog"
 
             for dut_index in self.available_dut_indexes:
                 self.topology_helper.set_dut_parameters(dut_index=dut_index,
