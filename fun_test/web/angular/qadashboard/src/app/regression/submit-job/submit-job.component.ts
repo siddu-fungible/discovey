@@ -495,6 +495,9 @@ export class SubmitJobComponent implements OnInit {
     if (!this.usingSavedConfig) {
       if (this.suiteSelectionMode === 'BY_SUITE') {
         payload["suite_id"] = this.selectedSuite.id;
+        if (this.selectedSuite.name === "storage_sanity.json") {
+          this.selectedTestBedType = "fs-6";
+        }
       } else {
         payload["script_pk"] = this.selectedScriptPk;
       }
