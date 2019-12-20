@@ -846,13 +846,6 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        # for f1_index in range(self.NUM_F1S):
-        #    if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
-        #        continue
-        # if post_processing_error_found:
-        #    pass
-        # fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
-
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
         try:
@@ -1915,7 +1908,14 @@ class Fs(object, ToDictMixin):
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
                     fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True)
-            fun_test.simple_assert(not self.errors_detected, "Error detected")
+                    try:
+                        if self.errors_detected \
+                                and self.get_revision() in ["2"] \
+                                and any("bug_check" in error_detected for error_detected in self.errors_detected):
+                            fun_test.test_assert(self.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+            fun_test.simple_assert(not self.errors_detected, "Errors detected")
         return True
 
     def get_f1_0(self):
