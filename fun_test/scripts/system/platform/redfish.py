@@ -21,6 +21,31 @@ class MyScript(FunTestScript):
         pass
 
 
+class LinuxAdditions(Linux):
+
+    def ifconfig(self, **kwargs):
+        result = []
+        cmd = "ifconfig"
+        for i in kwargs:
+            cmd += " -" + i
+        ifconfig_output = self.command(cmd)
+        if ifconfig_output:
+            interfaces = ifconfig_output.split("\n\r")
+            for interface in interfaces:
+                one_data_set = {}
+                match_ifconfig = re.search(r"(?P<interface>\S+)[\s\S]*(HWaddr\s+(?P<hw_addr>\w+:\w+:\w+:\w+))?[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)[\s\S]"
+                                           r"*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)[\s\S]*", interface)
+                match_interface = re.match(r'(?P<interface>\S+)', interface)
+                match_ipv4 = re.search(r'(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
+                if match_ifconfig:
+                    one_data_set["interface"] = match_ifconfig.group("interface")
+                    one_data_set["ipv4"] = match_ifconfig.group("ipv4")
+                    one_data_set["ipv6"] = match_ifconfig.group("ipv6")
+                    one_data_set["hw_addr"] = match_ifconfig.group("hw_addr")
+                    result.append(one_data_set)
+        return result
+
+
 class Platform(ApcPduTestcase):
 
     def describe(self):
@@ -33,7 +58,7 @@ class Platform(ApcPduTestcase):
         self.initialize_job_inputs()
         self.initialize_variables()
         self.intialize_handles()
-        self.switch_to_py3_env()
+        # self.switch_to_py3_env()
 
     def run(self):
         self.chassis_power()
@@ -95,6 +120,8 @@ class Platform(ApcPduTestcase):
         self.f1_1_dpc = DpcshClient(target_ip=self.come_handle.host_ip,
                                     target_port=self.come_handle.get_dpc_port(1),
                                     verbose=False)
+        self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle,
+                             "fpga": self.fpga_handle}
 
     def switch_to_py3_env(self):
         self.qa_02.command("cd /local/auto_admin/.local/bin")
@@ -166,9 +193,13 @@ class Platform(ApcPduTestcase):
         fun_test.test_assert(True, "Temperature sensors healthy")
 
     def get_platform_drop_information(self, system="come"):
-        # todo: no idea
-        result = {"status":False, "dropname":""}
-        fun_test.log("Platform drop informtion: {}".format(""))
+        result = {"status": True, "data": {}}
+        handle = self.handles_list[system]
+        output = handle.command("uname -snrmpio")
+        uname_dict = self.parse_uname_a(output)
+        result["data"].update(uname_dict)
+        if not uname_dict:
+            result["status"] = False
         return result
 
     def set_platform_ip_information(self, system="come"):
@@ -177,46 +208,32 @@ class Platform(ApcPduTestcase):
         fun_test.log("Platform : {} IP set to : {}".format("", ""))
         return result
 
-    def get_platform_ip_information(self):
+    def get_platform_ip_information(self, system="come"):
         result = {"status": False, "data": {}}
-        handles_list = {"come": self.come_handle, "bmc": self.bmc_handle,
-                        "fpga": self.fpga_handle}
-        try:
-            for system, handle in handles_list.iteritems():
-                output = handle.command("ifconfig")
-                if system == "come" or system == "fpga":
-                    split_with = "flags"
-                elif system == "bmc":
-                    split_with = "Link"
-                interfaces = output.split(split_with)
-                for interface in interfaces:
-                    match_inet = re.search(r'inet\s+(addr:)?\s?(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
-                    match_inet6 = re.search(r'inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)', interface)
-                    if match_inet and match_inet6:
-                        ipv4 = match_inet.group("ipv4")
-                        ipv6 = match_inet6.group("ipv6")
-                        result["data"][system] = {"ipv4": ipv4, "ipv6": ipv6}
-                        fun_test.log("System : {} IP : {}".format(system, result["data"][system]))
-                result["status"] = True
-            fun_test.log("IPV6 addresses: {}".format(result))
-        except Exception as ex:
-            fun_test.log(ex)
-            result["status"] = False
+        handle = self.handles_list[system]
+        data = handle.ifconfig()
+        result["data"] = data
+        result["status"] = True
         return result
 
-    def set_platform_link(self):
-        # todo: need to verify with Parag if this is what we need to do
-        self.get_port_link_status()
-        cmd = "port enableall"
-        output = self.get_dpcsh_data_for_cmds(cmd)
-        result = {"status": True}
-        fun_test.sleep("Enabling all the ports", seconds=30)
-        self.get_port_link_status()
+    def set_platform_link(self, system="come", action="up"):
+        # action can be : ip or down
+        result = {"status": False, "data": "", "message": "set interface : {} to: {}"}
+        handle = self.handles_list[system]
+        ifconfig = self.get_platform_ip_information(system)["data"]
+        interface = ifconfig[0]["interface"]
+        output = handle.sudo_command("ifconfig {} {}".format(interface, action))
+        if "Cannot assign" in output:
+            result["status"] = False
+            result["message"] = "Unable to set interface : {}".format(interface)
+        else:
+            result["status"] = True
+            result["message"] = "set interface : {} to: {}".format(interface, action)
         return result
 
     def get_platform_link(self, f1=0):
-        # todo: Verify with Parag if this is what we want to do
         result = {"status": False}
+
         return result
 
     def get_platform_version_information(self):
@@ -279,6 +296,7 @@ class Platform(ApcPduTestcase):
         self.intialize_handles()
 
     def power_on(self):
+        # platform_cold_boot
         # todo: is it redfish or any other tool, what are the commands
         pass
 
@@ -294,7 +312,15 @@ class Platform(ApcPduTestcase):
         # todo: how to do this
         pass
 
+    def telnet_test(self):
+        pass
+
     def cleanup(self):
+        pass
+
+
+class FpgaConsole:
+    def asd(self):
         pass
 
 

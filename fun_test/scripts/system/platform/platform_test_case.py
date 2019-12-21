@@ -1,5 +1,5 @@
 from redfish import *
-
+import telnetlib
 
 class BasicCase(Platform):
     def describe(self):
@@ -9,8 +9,16 @@ class BasicCase(Platform):
 
     def setup(self):
         super(BasicCase, self).setup()
+        t = telnetlib.Telnet()
 
     def run(self):
+        import pexpect
+        h = pexpect.spawn("telnet fs-terminal 2015")
+        print h.expect("Escape")
+        h = pexpect.spawn("\n")
+
+
+
         self.get_platform_drop_information()
         self.set_platform_ip_information()
         self.get_platform_ip_information()
