@@ -32,7 +32,8 @@ else:
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
 logger.addHandler(hdlr=handler)
 
-ReleaseCatalogExecution.objects.all().delete()
+# ReleaseCatalogExecution.objects.all().delete()
+
 
 class FunTimer:
     def __init__(self, max_time=10000):
@@ -61,44 +62,77 @@ class CatalogExecutionStateMachine:
         build_number = get_build_number_for_latest(release_train=release_train)
         return build_number
 
-    def queue_job(self, catalog_execution, suite_execution):
+    def queue_job(self, catalog_execution, suite_execution, release_train, build_number):
 
-        environment = {"bundle_image_parameters": {"release_train": catalog_execution.release_train,
-                                                   "build_number": self.get_build_number(release_train=catalog_execution.release_train)}}
+        environment = {"bundle_image_parameters": {"release_train": release_train,
+                                                   "build_number": build_number},
+                       "test_bed_type": suite_execution["test_bed_name"]}
+
         job_id = queue_job3(suite_id=suite_execution["suite_id"],
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
                             tags=["release", catalog_execution.release_train],
                             test_bed_type=suite_execution["test_bed_name"],
                             environment=environment)
+        logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
+        time.sleep(15) # Prevent flooding as this code is not tested properly
         return job_id
 
     def process_submitted_releases(self):
+
         q = Q(deleted=False, state=JobStatusType.SUBMITTED)
         catalog_executions = ReleaseCatalogExecution.objects.filter(q)
         for catalog_execution in catalog_executions:
-            for suite_execution in catalog_execution.suite_executions:
-                valid_job_parameters = True
-                if not suite_execution["test_bed_name"]:
-                    valid_job_parameters = False
-                    suite_execution["error_message"] = "Test-bed is invalid"
-                if valid_job_parameters:
-                    job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
-                    suite_execution["job_id"] = job_id
-                    suite_execution["error_message"] = None
-            catalog_execution.state = JobStatusType.IN_PROGRESS
-            catalog_execution.started_date = get_current_time()
+            build_number = self.get_build_number(release_train=catalog_execution.release_train)
+            catalog_execution.build_number = build_number
+            if build_number:
+                skip = ReleaseCatalogExecution.objects.filter(release_train=catalog_execution.release_train,
+                                                              build_number=build_number,
+                                                              description=catalog_execution.description).count() > 0
+                if not skip:
+                    for suite_execution in catalog_execution.suite_executions:
+                        valid_job_parameters = True
+                        if not suite_execution["test_bed_name"]:
+                            valid_job_parameters = False
+                            suite_execution["error_message"] = "Test-bed is invalid"
+                        if valid_job_parameters:
+                            job_id = self.queue_job(catalog_execution=catalog_execution,
+                                                    suite_execution=suite_execution,
+                                                    release_train=catalog_execution.release_train,
+                                                    build_number=build_number)
+                            if job_id:
+                                suite_execution["job_id"] = job_id
+                                suite_execution["error_message"] = None
+                            else:
+                                suite_execution["job_id"] = None
+
+                    catalog_execution.state = JobStatusType.IN_PROGRESS
+                    catalog_execution.started_date = get_current_time()
+                else:
+                    logger.info("Skipping Release: {} Build-number: {}".format(catalog_execution.release_train,
+                                                                               catalog_execution.build_number))
+
+            else:
+                error_message = "{}: Unable determine build number for {}".format(catalog_execution,
+                                                                                  catalog_execution.release_train)
+                catalog_execution.error_message = error_message
+                logger.exception(error_message)
+
             catalog_execution.save()
 
     def process_in_progress_releases(self):
         q = Q(deleted=False, state=JobStatusType.IN_PROGRESS)
         catalog_executions = ReleaseCatalogExecution.objects.filter(q)
         for catalog_execution in catalog_executions:
+            logger.info("{}: Processing in progress release".format(catalog_execution))
             for suite_execution in catalog_execution.suite_executions:
                 valid_job_parameters = True
                 if not suite_execution["test_bed_name"]:
+
                     valid_job_parameters = False
                     suite_execution["error_message"] = "Test-bed is invalid"
+                    logger.error('{}: SuID: {} Test-bed is invalid'.format(catalog_execution, suite_execution["suite_id"]))
+
                 if valid_job_parameters:
                     if not suite_execution["job_id"] or \
                             ("re_run_request_submitted" in suite_execution
@@ -106,7 +140,10 @@ class CatalogExecutionStateMachine:
                         existing_job_id = None
                         if suite_execution["job_id"]:
                             existing_job_id = suite_execution["job_id"]
-                        job_id = self.queue_job(catalog_execution=catalog_execution, suite_execution=suite_execution)
+                        job_id = self.queue_job(catalog_execution=catalog_execution,
+                                                suite_execution=suite_execution,
+                                                release_train=catalog_execution.release_train,
+                                                build_number=catalog_execution.build_number)
                         suite_execution["job_id"] = job_id
                         if existing_job_id:
                             if "run_history" not in suite_execution:
@@ -116,6 +153,8 @@ class CatalogExecutionStateMachine:
                                                                    "job_result": existing_job.result})
                         suite_execution["re_run_request_submitted"] = False
                         suite_execution["error_message"] = None
+                else:
+                    logger.error('{}: SuID: {} is invalid'.format(catalog_execution, suite_execution["suite_id"]))
             catalog_execution.save()
 
         # Prepare to change the state of the release
@@ -141,6 +180,7 @@ class CatalogExecutionStateMachine:
                         catalog_execution.result = RESULTS["PASSED"]
                     else:
                         catalog_execution.result = RESULTS["FAILED"]
+                    logger.info("{}: Setting result: {}".format(catalog_execution, catalog_execution.result))
             catalog_execution.save()
 
     def clone_execution(self, execution):
@@ -173,6 +213,7 @@ class CatalogExecutionStateMachine:
                        master_execution_id=catalog_execution.id)
                 recurrent_catalog_executions = ReleaseCatalogExecution.objects.filter(q2)
                 if not recurrent_catalog_executions.count():
+                    logger.error("{}: Re-spawning ".format(catalog_execution))
                     self.re_spawn(catalog_execution=catalog_execution)
 
     def run(self):
@@ -183,6 +224,8 @@ class CatalogExecutionStateMachine:
 
 if __name__ == "__main__":
     while True:
-        Daemon.get(name=DAEMON_NAME).beat()
+        daemon = Daemon.get(name=DAEMON_NAME)
+        daemon.beat()
         CatalogExecutionStateMachine().run()
         time.sleep(15)
+        logger.setLevel(daemon.logging_level)

@@ -48,6 +48,8 @@
             [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
       <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
       </span>
+       <span class="fun-action-link" (click)="showScriptPath = !showScriptPath">Show
+    script path</span>
     </div>
   </div>
 
@@ -60,6 +62,7 @@
       <td class="fun-table-header">Description</td>
       <td class="fun-table-header">Categories</td>
       <td class="fun-table-header" *ngIf="mode === Mode.DEFAULT"></td>
+      <td *ngIf="showScriptPath" class="fun-table-header">Script path</td>
     </tr>
     <tr *ngFor="let suite of suites; let suiteIndex=index">
       <td *ngIf="multiSelect"><input type="checkbox" [checked]="suite.selected" [(ngModel)]="suite.selected"/></td>
@@ -99,7 +102,9 @@
       <td *ngIf="mode === Mode.DEFAULT">
         <i (click)="onDeleteSuite(suite)" class="fa fa-trash-o" style="font-size:20px; color: red"></i>
       </td>
-
+      <td *ngIf="showScriptPath">
+        <ul *ngFor="let entry of suite.entries"><li>{{ entry.script_path }}</li></ul>
+      </td>
     </tr>
   </table>
 

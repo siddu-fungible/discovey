@@ -1,4 +1,4 @@
-import {Component, OnInit, forwardRef, Output, EventEmitter, Input} from '@angular/core';
+import {Component, OnInit, forwardRef, Output, EventEmitter, Input, OnChanges} from '@angular/core';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validator, NG_VALIDATORS} from "@angular/forms";
 
 @Component({
@@ -17,7 +17,8 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, Validator, NG_VALI
       multi: true,
     }]
 })
-export class JsonInputComponent implements OnInit, ControlValueAccessor {
+export class JsonInputComponent implements OnInit, ControlValueAccessor, OnChanges {
+  @Input() initialValue: string = null;
   @Input() ensureArrayOfNumbers: boolean = false;
   @Output() dataChanged = new EventEmitter<string>();
   @Input() numRows: number = 6; // number of rows for the text-area
@@ -33,8 +34,15 @@ export class JsonInputComponent implements OnInit, ControlValueAccessor {
   }
 
   ngOnInit() {
+    if (this.initialValue) {
+      this.jsonString = JSON.stringify(this.initialValue);
+    }
   }
-
+  ngOnChanges() {
+    if (this.initialValue) {
+      this.jsonString = JSON.stringify(this.initialValue);
+    }
+  }
   public registerOnTouched() {
   }
 

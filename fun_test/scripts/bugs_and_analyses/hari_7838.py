@@ -143,6 +143,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = False
+        if "bootargs" in job_inputs:
+            self.bootargs = job_inputs["bootargs"]
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
 
@@ -660,6 +662,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
+
+        """
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
@@ -733,7 +737,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fs.cleanup()
 
         self.storage_controller.disconnect()
-
+        """
+        pass
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
     def describe(self):

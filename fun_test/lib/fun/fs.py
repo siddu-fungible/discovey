@@ -231,6 +231,8 @@ class Bmc(Linux):
     def come_reset(self, come, max_wait_time=180, power_cycle=True, non_blocking=None):
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         ipmi_details = self._get_ipmi_details()
+        if self.fs.get_revision() in ["2"]:
+            ipmi_details = None
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=max_wait_time,
                                                                ipmi_details=ipmi_details,
                                                                power_cycle=power_cycle),
@@ -277,10 +279,10 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def u_boot_command(self, f1_index, command, timeout=15, expected=None):
+    def u_boot_command(self, f1_index, command, timeout=15, expected=None, write_on_trigger=None):
         nc = self.nc[f1_index]
         nc.write(command + "\n")
-        output = nc.read_until(expected_data=expected, timeout=timeout)
+        output = nc.read_until(expected_data=expected, timeout=timeout, write_on_trigger=write_on_trigger)
         self.detect_version(output)
 
         fun_test.log(message=output, context=self.context)
@@ -363,29 +365,34 @@ class Bmc(Linux):
             self.command("rm -f {}".format(uart_log_file_name))
         fun_test.log("Netcat: open {}:{}".format(self.host_ip, self.SERIAL_PROXY_PORTS[f1_index]))
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
-
+        """
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
             write_on_trigger = {"Autoboot in": "noboot"}
+    
         fun_test.execute_thread_after(0,
                                       nc.read_until,
                                       expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=30,
+                                      timeout=60,
                                       write_on_trigger=write_on_trigger,
                                       read_buffer=20)
-
+        """
         return True
 
-    def get_preamble(self, f1_index):
+    def get_preamble(self, f1_index, auto_boot=False):
         nc = self.nc[f1_index]
-        seconds = 5
-        if self.fs.get_revision() in ["2"]:
-            seconds = 20
-        fun_test.sleep("Reading preamble", context=self.context, seconds=seconds)
-        nc.stop_reading()
-        output = nc.get_buffer()
-        fun_test.log(message=output, context=self.context)
+        write_on_trigger = None
+        if not auto_boot:
+            write_on_trigger = {"Autoboot in": "noboot"}
+        output = self.u_boot_command(command="",
+                            timeout=90,
+                            expected=self.U_BOOT_F1_PROMPT,
+                            f1_index=f1_index,
+                            write_on_trigger=write_on_trigger)
+        # nc.stop_reading()
+        # output = nc.get_buffer()
+        # fun_test.log(message=output, context=self.context)
         return output
 
     def validate_u_boot_version(self, output, minimum_date):
@@ -841,13 +848,6 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-        # for f1_index in range(self.NUM_F1S):
-        #    if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
-        #        continue
-        # if post_processing_error_found:
-        #    pass
-        # fun_test.simple_assert(not post_processing_error_found, "Post-processing failed. Please check for error regex", context=self.context)
-
     def post_process_uart_log(self, f1_index, file_name):
         regex_found = None
         try:
@@ -910,6 +910,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
+                try:
+                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                        rotated_log_filename = rotated_log_file["filename"]
+                        self.command('rm {}'.format(rotated_log_filename))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -1011,29 +1018,19 @@ class BootupWorker(Thread):
                             fpga.reset_f1(f1_index=f1_index)
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
-
-
-
-                    if fs.tftp_image_path:
-                        preamble = bmc.get_preamble(f1_index=f1_index)
+                        preamble = bmc.get_preamble(f1_index=f1_index, auto_boot=fs.is_auto_boot())
                         if fs.validate_u_boot_version:
                             fun_test.log("Preamble: {}".format(preamble))
-                            """
-                            try:
-                                fun_test.test_assert(
-                                    bmc.validate_u_boot_version(output=preamble, minimum_date=fs.MIN_U_BOOT_DATE),
-                                    "Validate preamble", context=self.context)
-                            except Exception as ex:
-                                fun_test.critical(ex)
-                            """
-
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,
                                                              boot_args=boot_args, gateway_ip=fs.gateway_ip,
                                                              mpg_ips=fs.mpg_ips),
                             message="U-Bootup f1: {} complete".format(f1_index),
+
                             context=self.context)
+
+
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
@@ -1047,9 +1044,19 @@ class BootupWorker(Thread):
 
                 come = fs.get_come()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_REBOOT_INITIATE)
-                fun_test.test_assert(expression=fs.come_reset(power_cycle=self.power_cycle_come, non_blocking=self.non_blocking),
-                                     message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
-                                     context=self.context)
+                if fs.get_revision() not in ["2"]:
+                    fun_test.test_assert(expression=fs.come_reset(power_cycle=self.power_cycle_come, non_blocking=self.non_blocking),
+                                         message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
+                                         context=self.context)
+                else:
+                    try:
+                        fun_test.test_assert(expression=fs.come_reset(power_cycle=False, non_blocking=self.non_blocking),
+                                             message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
+                                             context=self.context)
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                        fs.apc_power_cycle()
+                        raise ex
 
             self.worker = ComEInitializationWorker(fs=self.fs)
             self.worker.run()
@@ -1570,12 +1577,12 @@ class ComE(Linux):
             if f1_index == self.disable_f1_index:
                 continue
 
-            try:
-                if self.hbm_dump_enabled:
-                    self.hbm_dump(f1_index=f1_index)
+            # try:
+            #    if self.hbm_dump_enabled:
+            #        self.hbm_dump(f1_index=f1_index)
 
-            except Exception as ex:
-                fun_test.critical(str(ex))
+            # except Exception as ex:
+            #    fun_test.critical(str(ex))
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
             fun_test.scp(source_file_path=self.get_dpc_log_path(f1_index=f1_index), source_ip=self.host_ip, source_password=self.ssh_password, source_username=self.ssh_username, target_file_path=artifact_file_name)
             fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
@@ -1682,7 +1689,11 @@ class Fs(object, ToDictMixin):
                  spec=None,
                  already_deployed=None,
                  revision=None,
-                 fs_parameters=None):
+                 fs_parameters=None,
+                 fpga_telnet_ip=None,
+                 fpga_telnet_port=None,
+                 fpga_telnet_username=None,
+                 fpga_telnet_password=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -1690,6 +1701,12 @@ class Fs(object, ToDictMixin):
         self.fpga_mgmt_ip = fpga_mgmt_ip
         self.fpga_mgmt_ssh_username = fpga_mgmt_ssh_username
         self.fpga_mgmt_ssh_password = fpga_mgmt_ssh_password
+
+        self.fpga_telnet_ip = fpga_telnet_ip
+        self.fpga_telnet_port = fpga_telnet_port
+        self.fpga_telnet_username = fpga_telnet_username
+        self.fpga_telnet_password = fpga_telnet_password
+
         self.come_mgmt_ip = come_mgmt_ip
         self.come_mgmt_ssh_username = come_mgmt_ssh_username
         self.come_mgmt_ssh_password = come_mgmt_ssh_password
@@ -1708,7 +1725,7 @@ class Fs(object, ToDictMixin):
             except:
                 pass
             if is_number and bundle_build_number < 0:
-                fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                fun_test.log("Build number set to -1 so resetting bundle image parameters. Received bundle number: {}".format(bundle_build_number))
                 self.bundle_image_parameters = None
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
@@ -1895,6 +1912,7 @@ class Fs(object, ToDictMixin):
                         continue
                     fun_test.log("Errors were detected. Starting HBM dump")
                     f1.hbm_dump_complete = True
+                    self.get_come().setup_hbm_tools()
                     self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
@@ -1919,7 +1937,16 @@ class Fs(object, ToDictMixin):
             if self.errors_detected:
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
-            fun_test.simple_assert(not self.errors_detected, "Error detected")
+                    fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True, result=fun_test.FAILED)
+                    try:
+                        if self.errors_detected \
+                                and self.get_revision() in ["2"] \
+                                and any("bug_check" in error_detected for error_detected in self.errors_detected):
+                            fun_test.add_checkpoint("Crash detected, so doing a full power-cycle")
+                            fun_test.test_assert(self.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+            fun_test.simple_assert(not self.errors_detected, "Errors detected")
         return True
 
     def get_f1_0(self):
@@ -1974,7 +2001,7 @@ class Fs(object, ToDictMixin):
                     except:
                         pass
                     if is_number and int(bundle_image_parameters["build_number"]) < 0:
-                        fun_test.log("Build number set to -1 so resetting bundle image parameters")
+                        fun_test.log("Build number set to -1 so resetting bundle image parameters. Received: {}".format(bundle_image_parameters["build_number"]))
                         bundle_image_parameters = None
             # fun_test.test_assert(tftp_image_path, "TFTP image path: {}".format(tftp_image_path), context=context)
 
@@ -2019,6 +2046,12 @@ class Fs(object, ToDictMixin):
                   bundle_image_parameters=bundle_image_parameters,
                   already_deployed=already_deployed,
                   fs_parameters=fs_parameters)
+
+        if "telnet_ip" in fpga_spec:
+            fs_obj.fpga_telnet_ip = fpga_spec["telnet_ip"]
+            fs_obj.fpga_telnet_port = fpga_spec.get("telnet_port", None)
+            fs_obj.fpga_telnet_username = fpga_spec.get("telnet_username", None)
+            fs_obj.fpga_telnet_password = fpga_spec.get("telnet_password", None)
         if already_deployed:
             fs_obj.re_initialize()
         return fs_obj
@@ -2213,16 +2246,36 @@ class Fs(object, ToDictMixin):
         self.bmc.bundle_compatible = self.bundle_compatible
         return self.bmc
 
-    def get_fpga(self):
-        if not self.fpga:
-            if self.fpga_mgmt_ip:
-                self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
+    def get_terminal(self):
+        return self.get_fpga(terminal=True)
+
+    def get_fpga(self, terminal=False):
+        result = None
+        if not terminal:
+            if not self.fpga:
+                if self.fpga_mgmt_ip:
+                    self.fpga = Fpga(host_ip=self.fpga_mgmt_ip,
+                                     ssh_username=self.fpga_mgmt_ssh_username,
+                                     ssh_password=self.fpga_mgmt_ssh_password,
+                                     set_term_settings=True,
+                                     disable_f1_index=self.disable_f1_index,
+                                     context=self.context)
+            result = self.fpga
+        else:
+            telnet_object = Fpga(host_ip=self.fpga_telnet_ip,
                                  ssh_username=self.fpga_mgmt_ssh_username,
                                  ssh_password=self.fpga_mgmt_ssh_password,
                                  set_term_settings=True,
                                  disable_f1_index=self.disable_f1_index,
-                                 context=self.context)
-        return self.fpga
+                                 context=self.context,
+                                 telnet_username=self.fpga_telnet_username,
+                                 telnet_password=self.fpga_telnet_password,
+                                 telnet_ip=self.fpga_telnet_ip,
+                                 telnet_port=self.fpga_telnet_port,
+                                 use_telnet=True)
+            telnet_object.set_prompt_terminator('# ')
+            result = telnet_object
+        return result
 
     def get_come(self, clone=False):
         if not self.come:
@@ -2417,9 +2470,12 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main2__":
-    fs = Fs.get(AssetManager().get_fs_by_name(name="fs-9"), "funos-f1.stripped.gz")
-    fs.get_bmc().position_support_scripts()
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"))
+    terminal = fs.get_terminal()
+    terminal.command("pwd")
+    terminal.command("ifconfig")
+    # fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
     # fs.come_initialize()
     # fs.come_reset()
@@ -2428,7 +2484,7 @@ if __name__ == "__main2__":
     # come.setup_dpc()
 
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
     output = come.pre_reboot_cleanup()
     i = 0

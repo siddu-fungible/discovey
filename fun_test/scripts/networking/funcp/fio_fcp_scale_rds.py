@@ -17,7 +17,6 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.fun.fs import Fs
 from lib.fun.fs import Bmc
-
 import re
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
@@ -83,12 +82,16 @@ def get_nvme_device(host_obj):
             nvme_list_dict = json.loads(nvme_list_raw, strict=False)
 
     nvme_device_list = []
+    print "NVME list devices is " + str(nvme_list_dict["Devices"])
     for device in nvme_list_dict["Devices"]:
         if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"]:
             nvme_device_list.append(device["DevicePath"])
         elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
-            if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+            if 'FS1600' in device["ModelNumber"].strip():
                 nvme_device_list.append(device["DevicePath"])
+            else:
+                if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                    nvme_device_list.append(device["DevicePath"])
     fio_filename = str(':'.join(nvme_device_list))
 
     return fio_filename
@@ -257,7 +260,6 @@ class RDSVolumePerformanceScript(FunTestScript):
 
         testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         nu_host = True
-
         ##################################
         #  Get Host list connected to FS #
         ##################################
@@ -370,31 +372,31 @@ class RDSVolumePerformanceScript(FunTestScript):
                                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
             params[storage_fs]['f11_ip'] = params[storage_fs]['f11_ip'].strip()
             params[storage_fs]['come_handle'].disconnect()
+            if 0:
+                fs_bmc = storage_fs.replace("-", "") + "-bmc"
+                bmc_username = "sysadmin"
+                bmc_passwd = "superuser"
 
-            fs_bmc = storage_fs.replace("-", "") + "-bmc"
-            bmc_username = "sysadmin"
-            bmc_passwd = "superuser"
+                bmc_handle = Bmc(host_ip=fs_bmc,
+                                 ssh_username=bmc_username,
+                                 ssh_password=bmc_passwd,
+                                 set_term_settings=True,
+                                 disable_uart_logger=False)
+                bmc_handle.command("killall microcom")
+                bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
+                bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
 
-            bmc_handle = Bmc(host_ip=fs_bmc,
-                             ssh_username=bmc_username,
-                             ssh_password=bmc_passwd,
-                             set_term_settings=True,
-                             disable_uart_logger=False)
-            bmc_handle.command("killall microcom")
-            bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
-            bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
-
-
-            try:
-                ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
-            except ValueError:
-                fun_test.log("F10 loop-back IP {} is not valid".format(params[storage_fs]['f10_ip']))
-                fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(params[storage_fs]['f10_ip']))
-            try:
-                ipaddress.ip_address(unicode(params[storage_fs]['f11_ip'].strip()))
-            except ValueError:
-                fun_test.log("F11 loop-back IP {} is not valid".format(params[storage_fs]['f11_ip']))
-                fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(params[storage_fs]['f11_ip']))
+            if 0:
+                try:
+                    ipaddress.ip_address(unicode(params[storage_fs]['f10_ip'].strip()))
+                except ValueError:
+                    fun_test.log("F10 loop-back IP {} is not valid".format(params[storage_fs]['f10_ip']))
+                    fun_test.simple_assert(False, "F10 loop-back IP {} is in wrong format".format(params[storage_fs]['f10_ip']))
+                try:
+                    ipaddress.ip_address(unicode(params[storage_fs]['f11_ip'].strip()))
+                except ValueError:
+                    fun_test.log("F11 loop-back IP {} is not valid".format(params[storage_fs]['f11_ip']))
+                    fun_test.simple_assert(False, "F11 loop-back IP {} is in wrong format".format(params[storage_fs]['f11_ip']))
 
         # Parse the json file
         # testcase = self.__class__.__name__

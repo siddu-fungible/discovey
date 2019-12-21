@@ -268,7 +268,8 @@ class StripeVolumeLevelScript(FunTestScript):
                 if self.come_obj[0].check_file_directory_exists(path=path):
                     self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                     # Restarting run_sc with -c option
-                    self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                    self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                             timeout=self.run_sc_restart_timeout)
                     fun_test.test_assert_expected(
                         expected=0, actual=self.come_obj[0].exit_status(),
                         message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
@@ -389,7 +390,8 @@ class StripeVolumeLevelScript(FunTestScript):
                         if self.come_obj[0].check_file_directory_exists(path=path):
                             self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                             # restarting run_sc with -c option
-                            self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                            self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                     timeout=self.run_sc_restart_timeout)
                             fun_test.test_assert_expected(
                                 expected=0, actual=self.come_obj[0].exit_status(),
                                 message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "

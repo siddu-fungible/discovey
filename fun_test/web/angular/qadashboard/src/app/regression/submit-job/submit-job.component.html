@@ -256,7 +256,7 @@
             <app-section-horizontal-line [text]="'Suite/Script selection'"></app-section-horizontal-line>
           </td>
         </tr>
-        <tr>
+        <tr *ngIf="!usingSavedConfig">
           <td><input (change)="suiteSelectionMode = 'BY_SUITE'" type="radio"
                      [checked]="suiteSelectionMode === 'BY_SUITE'"> By suite
           </td>
@@ -264,7 +264,7 @@
                      [checked]="suiteSelectionMode === 'BY_SCRIPT'"> By script
           </td>
         </tr>
-        <tr *ngIf="suiteSelectionMode === 'BY_SUITE'">
+        <tr *ngIf="!usingSavedConfig && (suiteSelectionMode === 'BY_SUITE')">
           <td class="no-wrap" colspan="2">
 
             <div class="fun-panel">
@@ -302,15 +302,23 @@
               </div>
             </div>
             <br>
-
-
           </td>
         </tr>
-        <tr *ngIf="suiteSelectionMode === 'BY_SCRIPT'">
+        <tr *ngIf="!usingSavedConfig && (suiteSelectionMode === 'BY_SCRIPT')">
           <td colspan="2">
             <app-script-selector [resetEvent]="resetScriptSelector"
+                                 (singleSelectScriptPath)="singleSelectScriptPathEvent($event)"
                                  (singleSelectPk)="singleSelectPkEvent($event)"></app-script-selector>
           </td>
+        </tr>
+        <tr *ngIf="usingSavedConfig">
+          <td *ngIf="savedConfigSuiteId">
+            Saved suite: {{ savedConfigSuiteName }} ({{ savedConfigSuiteId }})
+          </td>
+          <td *ngIf="selectedScriptPk">
+            Saved script: {{ selectedScriptPath }}
+          </td>
+
         </tr>
         <tr>
           <td colspan="2">
@@ -345,7 +353,7 @@
             <label>Inputs (JSON): </label>
           </td>
           <td>
-            <app-json-input (dataChanged)="jobInputsChanged($event)"></app-json-input>
+            <app-json-input [initialValue]="jobInputs" (dataChanged)="jobInputsChanged($event)"></app-json-input>
           </td>
         </tr>
         <tr *ngIf="selectedTestBedType">
@@ -397,14 +405,20 @@
       </table>
       <div style="padding: 5px;">
         <ng-container *ngIf="!submitting">
-          <button [disabled]="!selectedSuite && !selectedScriptPk"
-                  [ngClass]="{'disabled': !selectedSuite && !selectedScriptPk}" (click)="submitClick()"
+          <button [disabled]="(!usingSavedConfig && !selectedSuite && !selectedScriptPk) || (usingSavedConfig && !savedConfigSuiteId && !selectedScriptPk)"
+                  [ngClass]="{'disabled': (!usingSavedConfig && !selectedSuite && !selectedScriptPk) || (usingSavedConfig && !savedConfigSuiteId && !selectedScriptPk)}" (click)="submitClick()"
                   class="btn btn-primary">Submit
           </button>
+
+          &nbsp;&nbsp;
+          <span *ngIf="mode === Mode.REGULAR && !savedJobUrl && !usingSavedConfig && (selectedSuite || selectedScriptPk)" class="fun-action-link" (click)="submitClick(true)">save configuration</span>
           <button *ngIf="selectedSuite && !(suiteSelectionMode !== 'BY_SCRIPT')" (click)="ngOnInit()"
                   class="btn">Clear
           </button>
         </ng-container>
+        <br>
+        <span [@show] *ngIf="savedJobUrl" style="background-color: #dcdcdc">{{ savedJobUrl }}</span>
+        &nbsp;&nbsp;<span *ngIf="savedJobUrl" class="fun-action-link" (click)="savedJobUrl = null">dismiss</span>
         <fun-spinner [status]="submitting"></fun-spinner>
 
       </div>
@@ -542,10 +556,10 @@
               </table>
             </div>
           </ng-container>
-
-
         </div>
       </div>
   </div>
   </div>
 </div>
+
+<!--button (click)="test()">Test</button-->

@@ -81,3 +81,22 @@ export class SuiteExecutions extends Api {
 }
 
 
+export class SavedJobConfigs extends Api {
+  classType = SavedJobConfigs;
+  url = "/api/v1/regression/saved_configs";
+  id: number;
+  config: any = null;
+
+  public getUrl(params) {
+    let url = this.url;
+    if (params.hasOwnProperty('id')) {
+      url = `${url}/${params.id}`;
+    }
+    return url;
+  }
+
+  serialize() {
+    return {config: this.config};
+  }
+}
+

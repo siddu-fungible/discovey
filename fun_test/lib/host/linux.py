@@ -112,6 +112,7 @@ class Linux(object, ToDictMixin):
                  set_term_settings=True,
                  context=None,
                  ipmi_info=None,
+                 use_telnet=None,
                  **kwargs):
 
         self.host_ip = host_ip
@@ -139,6 +140,7 @@ class Linux(object, ToDictMixin):
         self.extra_attributes = kwargs
         self.context = context
         self.ipmi_info = ipmi_info
+        self.use_telnet = use_telnet
         if self.extra_attributes:
             if "ipmi_info" in self.extra_attributes:
                 self.ipmi_info = self.extra_attributes["ipmi_info"]
@@ -241,6 +243,9 @@ class Linux(object, ToDictMixin):
             if self.ssh_username == 'root':
                 self.prompt_terminator = self.root_prompt_terminator
             expects[2] = self.prompt_terminator + r'$'
+            expects[3] = 'Escape character is'
+            expects[4] = 'login:'
+
 
             attempt = 0
             loop_count_max = 10
@@ -284,7 +289,7 @@ class Linux(object, ToDictMixin):
                     telnet_command = 'telnet -l {} {} {}'.format(self.telnet_username, self.host_ip, self.telnet_port)
                     self.logger.log(telnet_command)
                     self.handle = pexpect.spawn(telnet_command,
-                                                env={"TERM": "dumb"},
+                                                env={"TERM": "dumb", "PATH": "$PATH:/usr/local/bin:/usr/bin"},
                                                 maxread=4096)
 
                 # self.handle.logfile_read = sys.stdout
@@ -317,6 +322,10 @@ class Linux(object, ToDictMixin):
                             self.command("")
 
                             break
+                        elif i == 3:
+                            self.sendline("")
+                        elif i == 4:
+                            self.sendline("{}".format(self.telnet_username))
                     except Exception as ex:
                         attempt += 1
                         retry_sleep = 1

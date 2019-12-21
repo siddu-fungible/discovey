@@ -14,6 +14,8 @@ import {SuiteEditorService} from "../suite-editor/suite-editor.service";
 import {CommonService} from "../../services/common/common.service";
 import {TestBedService} from "../test-bed/test-bed.service";
 import {RegressionService} from "../regression.service";
+import {SavedJobConfigs} from "../definitions";
+import {showAnimation} from "../../animations/generic-animations";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -42,7 +44,7 @@ class BuildType {
         animate(1, style({ opacity: 1.0 }))
       ]),
       state('*', style({ opacity: 1.0 })),
-    ])]
+    ]), showAnimation]
 })
 export class SubmitJobComponent implements OnInit {
   DEFAULT_TEST_BED: string = "fs-6";
@@ -83,6 +85,7 @@ export class SubmitJobComponent implements OnInit {
   tftpImagePath: string = "stable-funos-f1.stripped.gz";
   // bootArgs: string = "app=hw_hsu_test --dpc-server --dpc-uart --csr-replay --serdesinit --all_100g";
   bootArgs: string = "";
+  savedJobUrl: string = "";
 
 
   funOsMakeFlags: string = null;
@@ -97,6 +100,7 @@ export class SubmitJobComponent implements OnInit {
   releaseBuild: boolean = true;
 
   selectedScriptPk: number = null;
+  selectedScriptPath: string = null;
   resetScriptSelector: boolean = false;
   privateFunosTgzUrl: string = null;
 
@@ -118,6 +122,9 @@ export class SubmitJobComponent implements OnInit {
   Mode = Mode;
   BuildType = BuildType;
   buildType: BuildType = BuildType.WITH_JENKINS_BUILD;
+  usingSavedConfig: boolean = false;
+  savedConfigSuiteId: number = null;
+  savedConfigSuiteName: string = null;
 
   // For Triaging
   triageTypes = [{value: 6, description: "Pass or Fail"}, {value: 7, description: "Regex match"}];  //Taken from TriagingTypes
@@ -184,6 +191,8 @@ export class SubmitJobComponent implements OnInit {
     this.fetchTestBeds();
     this.fetchSuites();
     this.emailOnFailOnly = false;
+    this.selectedTestBedType = this.DEFAULT_TEST_BED;
+
   }
 
   fetchSuites() {
@@ -210,8 +219,123 @@ export class SubmitJobComponent implements OnInit {
           this.dryRun = true;
         }
       }
+      if (params.hasOwnProperty('saved_job_config')) {
+        let savedJobId = parseInt(params["saved_job_config"]);
+        this.usingSavedConfig = true;
+        this.fetchSavedJobConfig(savedJobId);
+
+      }
       return of(params);
     }))
+  }
+
+  fetchSavedJobConfig(id) {
+    let savedJobConfig = new SavedJobConfigs();
+    savedJobConfig.get(savedJobConfig.getUrl({id: id})).subscribe(response => {
+      let payload = response.config;
+      // auto populate
+      this.selectedTestBedType = payload.test_bed_type;
+      this.buildUrl = payload.build_url;
+      this.schedulingType = payload.scheduling_type;
+      this.emailOnFailOnly = payload.email_on_fail_only;
+
+      let payloadEnvironment = payload.environment;
+      if (payloadEnvironment.hasOwnProperty('tftp_image_path')) {
+        this.buildType = this.BuildType.TFTP_IMAGE_PATH;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('bundle_image_parameters')) {
+        this.buildType = this.BuildType.USE_BUNDLE_IMAGE;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('with_stable_master')) {
+        this.buildType = this.BuildType.WITH_STABLE_MASTER;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('with_jenkins_build')) {
+        this.buildType = this.BuildType.WITH_JENKINS_BUILD;
+        let buildParameters = payloadEnvironment.build_parameters;
+        if (buildParameters.hasOwnProperty('RELEASE_BUILD')) {
+          this.releaseBuild = buildParameters.RELEASE_BUILD;
+        }
+        if (buildParameters.hasOwnProperty('FUNOS_MAKEFLAGS')) {
+          this.funOsMakeFlags = buildParameters.FUNOS_MAKEFLAGS;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunOS')) {
+          this.branchFunOs = buildParameters.BRANCH_FunOS;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunSDK')) {
+          this.branchFunSdk = buildParameters.BRANCH_FunSDK;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunControlPlane')) {
+          this.branchFunControlPlane = buildParameters.BRANCH_FunControlPlane;
+        }
+        if (buildParameters.hasOwnProperty('SKIP_DASM_C')) {
+          this.skipDasmC = buildParameters.SKIP_DASM_C;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunTools')) {
+          this.branchFunTools = buildParameters.BRANCH_FunTools;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunHW')) {
+          this.branchFunHw = buildParameters.BRANCH_FunHW;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_FunJenkins')) {
+          this.branchFunJenkins = buildParameters.BRANCH_FunJenkins;
+        }
+        if (buildParameters.hasOwnProperty('BRANCH_fungible_host_drivers')) {
+          this.branchFungibleHostDrivers = buildParameters.BRANCH_fungible_host_drivers;
+        }
+      }
+
+      if (payloadEnvironment.hasOwnProperty('private_funos_tgz_url')) {
+        this.privateFunosTgzUrl = payloadEnvironment.private_funos_tgz_url;
+      }
+
+
+      if (payload.hasOwnProperty('job_inputs')) {
+        this.jobInputs = payload.job_inputs;
+      }
+
+      if (payload.hasOwnProperty('rich_inputs')) {
+        this.richBootArgs = payload.rich_inputs;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('csi_perf')) {
+        this.csiPerf = payloadEnvironment.csi_perf;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('csi_cache_miss')) {
+        this.csiCacheMiss = payloadEnvironment.csi_cache_miss;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('dry_run')) {
+        this.dryRun = payloadEnvironment.dry_run;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('hbm_dump')) {
+        this.hbmDump = payloadEnvironment.hbm_dump;
+      }
+
+      if (payload.hasOwnProperty('description')) {
+        this.description = payload.description;
+      }
+
+      if (payload.hasOwnProperty('suite_id') && (payload.suite_id)) {
+        this.savedConfigSuiteId = payload.suite_id;
+        if (payload.hasOwnProperty('saved_suite_name'))  {
+          this.savedConfigSuiteName = payload.saved_suite_name;
+        }
+      } else if (payload.hasOwnProperty('script_pk')) {
+        this.selectedScriptPk = payload.script_pk;
+        if (payload.hasOwnProperty('saved_script_path')) {
+          this.selectedScriptPath = payload.saved_script_path;
+        }
+      }
+
+      let i = 0;
+    }, error => {
+      this.logger.error(`Unable to fetch saved job config`, error);
+    })
   }
 
   validateShas() {
@@ -257,7 +381,7 @@ export class SubmitJobComponent implements OnInit {
       Object.keys(this.testBedTypes).map(key => {
         this.testBedNames.push(key);
         this.testBedNames.sort();
-        this.selectedTestBedType = this.DEFAULT_TEST_BED;
+
       })
 
     })
@@ -361,17 +485,30 @@ export class SubmitJobComponent implements OnInit {
   }
 
 
-  submitClick() {
+  submitClick(saveConfiguration?) {
 
     let self = this;
 
     this.jobId = null;
     let payload = {};
 
-    if (this.suiteSelectionMode === 'BY_SUITE') {
-      payload["suite_id"] = this.selectedSuite.id;
+    if (!this.usingSavedConfig) {
+      if (this.suiteSelectionMode === 'BY_SUITE') {
+        payload["suite_id"] = this.selectedSuite.id;
+        if (this.selectedSuite.name === "storage_sanity.json") {
+          this.selectedTestBedType = "fs-6";
+        }
+      } else {
+        payload["script_pk"] = this.selectedScriptPk;
+      }
+
     } else {
-      payload["script_pk"] = this.selectedScriptPk;
+      if (this.savedConfigSuiteId) {
+        payload["suite_id"] = this.savedConfigSuiteId;
+      } else {
+        payload["script_pk"] = this.selectedScriptPk;
+      }
+
     }
 
     if (!this.selectedUser) {
@@ -498,7 +635,7 @@ export class SubmitJobComponent implements OnInit {
       });
     }
 
-    if (this.mode === Mode.REGULAR) {
+    if (this.mode === Mode.REGULAR && !saveConfiguration) {
       this.submitting = "Submitting job";
       let ctrl = this;
       this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
@@ -512,6 +649,22 @@ export class SubmitJobComponent implements OnInit {
         ctrl.submitting = null;
       });
     }
+    if (saveConfiguration) {
+      let savedJobConfigObject = new SavedJobConfigs();
+      savedJobConfigObject.config = payload;
+      if (this.selectedSuite) {
+        savedJobConfigObject.config["saved_suite_id"] = this.selectedSuite.id;
+        savedJobConfigObject.config["saved_suite_name"] = this.selectedSuite.name;
+      } else if (this.selectedScriptPk) {
+        savedJobConfigObject.config["saved_script_path"] = this.selectedScriptPath;
+      }
+
+      savedJobConfigObject.create(savedJobConfigObject.url, savedJobConfigObject.serialize()).subscribe(response => {
+        this.savedJobUrl = `${window.location.origin}/regression/submit_job_page?saved_job_config=${savedJobConfigObject.id}`;
+      }, error => {
+        this.logger.error(`Unable to save configuration`);
+      })
+    }
 
   }
 
@@ -521,7 +674,9 @@ export class SubmitJobComponent implements OnInit {
     this.selectedScriptPk = pk;
   }
 
-
+  singleSelectScriptPathEvent(scriptPath) {
+    this.selectedScriptPath = scriptPath;
+  }
 
   isTestBedFs(): boolean {
     let result = null;
@@ -540,7 +695,7 @@ export class SubmitJobComponent implements OnInit {
   }
 
   test() {
-    console.log(this.currentTriageType);
+    console.log(this.selectedTestBedType);
   }
 
   _hasKey(o, key) {
@@ -580,5 +735,13 @@ export class SubmitJobComponent implements OnInit {
       this.csiCacheMiss = false;
     }
   }
+
+  dismissSavedJobUrl() {
+    this.savedJobUrl = null;
+  }
+
+  /*test() {
+    console.log(this.selectedTestBedType);
+  }*/
 
 }

@@ -86,6 +86,10 @@ class CatalogTestCase(models.Model):
         return str(self.jira_id)
 
 
+class SavedJobConfig(FunModel):
+    config = JSONField(default=None, null=True)
+
+
 class TestBed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
@@ -386,11 +390,16 @@ class ReleaseCatalogExecution(FunModel):
     description = models.TextField(default="TBD")
     recurring = models.BooleanField(default=True)
     release_train = models.TextField(default="master", null=True)
+    build_number = models.TextField(default="latest", null=True)
     master_execution_id = models.IntegerField(default=None, null=True)
     suite_executions = JSONField(default=None, null=True)
     ready_for_execution = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
-    
+    error_message = models.TextField(default=None, null=True)
+
+    def __str__(self):
+        return "CID: {} ME: {}".format(self.id, self.master_execution_id)
+
 
 class ReleaseCatalog(FunModel):
     name = models.TextField(default="TBD")
@@ -694,6 +703,7 @@ class Daemon(FunModel):
     name = models.TextField(unique=True)
     daemon_id = models.IntegerField()
     heart_beat_time = models.DateTimeField(default=datetime.now)
+    logging_level = models.IntegerField(default=logging.DEBUG)
 
     def beat(self):
         self.heart_beat_time = get_current_time()

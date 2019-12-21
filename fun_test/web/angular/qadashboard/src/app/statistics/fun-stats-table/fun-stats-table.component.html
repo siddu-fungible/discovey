@@ -3,23 +3,27 @@
     <td *ngFor="let header of tableHeaders" class="fun-table-header">{{ header }}</td>
   </tr>
   <tr *ngFor="let data of filteredTableData">
-    <td *ngFor="let d of data" style="vertical-align: top; text-align: left">
-          <span *ngIf="d.showSliced">{{ d.slicedValue }}
+    <td *ngFor="let d of data; let index = index" style="vertical-align: top; text-align: left">
+      <ng-container *ngIf="index !== 0 || !dataIsTimeSeries">
+         <span *ngIf="d.showSliced">{{ d.slicedValue }}
             <span class="fun-action-link" (click)="expandSlicedString(d)"> ...expand</span>
           </span>
-      <ng-container *ngIf="d.stringType">
+        <ng-container *ngIf="d.stringType">
             <span *ngIf="!d.showSliced">{{ d.originalValue }}
               <span *ngIf="d.originalStringValue.length > characterLimit" class="fun-action-link"
-              (click)="expandSlicedString(d)">...hide</span>
+                    (click)="expandSlicedString(d)">...hide</span>
             </span>
-      </ng-container>
-      <ng-container *ngIf="!d.stringType">
+        </ng-container>
+        <ng-container *ngIf="!d.stringType">
             <span *ngIf="!d.showSliced"><pre>{{ d.originalValue | json }}</pre>
               <span *ngIf="d.originalStringValue.length > characterLimit"
-                            class="fun-action-link" (click)="expandSlicedString(d)"> ...hide</span>
+                    class="fun-action-link" (click)="expandSlicedString(d)"> ...hide</span>
             </span>
+        </ng-container>
       </ng-container>
-
+      <ng-container *ngIf="index === 0 && dataIsTimeSeries">
+        {{ getPrettyTime(d.originalValue) }}
+      </ng-container>
     </td>
   </tr>
 </table>

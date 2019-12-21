@@ -245,7 +245,8 @@ api_v1_urls = [
     url(r'^mq_broker/publish$', mq_broker.publish),
     url(r'^mq_broker/message_types$', mq_broker.message_types),
     url(r'^regression/time_series_types$', regression.time_series_types),
-    url(r'^regression/job_status_types$', regression.job_status_types)
+    url(r'^regression/job_status_types$', regression.job_status_types),
+    url(r'^regression/saved_configs/?(\d+)?$', regression.saved_configs)
 ]
 
 site_under_construction = False

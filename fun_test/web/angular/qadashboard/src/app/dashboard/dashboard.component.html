@@ -1,16 +1,19 @@
 <div class="flex-container">
+  <div class="dashboard-card">
+    <h5>Release progress</h5>
+    <app-release-summary-widget>
 
-</div>
+    </app-release-summary-widget>
+  </div>
 
-<div class="flex-container">
   <div class="dashboard-card">
     <app-performance-summary-widget></app-performance-summary-widget>
   </div>
-  <div class="dashboard-card">
+  <!--div class="dashboard-card">
     <app-regression-summary-widget></app-regression-summary-widget>
-  </div>
+  </div-->
   <div class="dashboard-card">
-    Release progress <a href="http://qa-ubuntu-02/testrail/index.php">(Testrail)</a>
+    <h5><a href="http://qa-ubuntu-02/testrail/index.php">Testrail</a></h5>
     <div>
       <a
         href="http://qa-ubuntu-02/testrail/index.php?/runs/view/25&group_by=cases:section_id&group_order=asc">Inspur</a>
@@ -38,7 +41,6 @@
                                 [titleUrl]="'/regression?tag=networking-sanity&suite_path=networking_funeth_sanity.json'"></app-suite-execution-widget>
   </div>
 </div>
-
 
 
 

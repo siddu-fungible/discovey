@@ -105,6 +105,10 @@ class ECVolumeLevelScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "rxlog" in job_inputs:
+            self.rxlog = job_inputs["rxlog"]
+        else:
+            self.rxlog = False
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -151,6 +155,8 @@ class ECVolumeLevelScript(FunTestScript):
                 self.bootargs[i] += " --mgmt"
                 if self.disable_wu_watchdog:
                     self.bootargs[i] += " --disable-wu-watchdog"
+                if self.rxlog:
+                    self.bootargs[i] += " --rxlog"
 
             for dut_index in self.available_dut_indexes:
                 self.topology_helper.set_dut_parameters(dut_index=dut_index,
@@ -245,7 +251,8 @@ class ECVolumeLevelScript(FunTestScript):
                     if self.come_obj[0].check_file_directory_exists(path=path):
                         self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                         # Restarting run_sc with -c option
-                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                 timeout=self.run_sc_restart_timeout)
                         fun_test.test_assert_expected(
                             expected=0, actual=self.come_obj[0].exit_status(),
                             message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
@@ -369,7 +376,8 @@ class ECVolumeLevelScript(FunTestScript):
                             if self.come_obj[0].check_file_directory_exists(path=path):
                                 self.come_obj[0].command("cd {}".format(self.sc_script_dir))
                                 # restarting run_sc with -c option
-                                self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script))
+                                self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
+                                                         timeout=self.run_sc_restart_timeout)
                                 fun_test.test_assert_expected(
                                     expected=0, actual=self.come_obj[0].exit_status(),
                                     message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "

@@ -1,4 +1,8 @@
-<br />
-<div class="container">
-Test Container
-</div>
+<div>
+   <div *ngFor="let flatNode of flatNodes">
+     <div *ngIf="!flatNode.hide" class="fun-action-link" (click)="clickNode(flatNode)">
+       <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
+                         </span>{{ flatNode.name }}
+     </div>
+   </div>
+ </div>

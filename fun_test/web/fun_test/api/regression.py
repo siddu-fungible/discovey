@@ -5,7 +5,7 @@ from web.fun_test.models import TestBed, Asset
 from django.db.models import Q
 from web.fun_test.models import SuiteExecution, TestCaseExecution, TestbedNotificationEmails, LastSuiteExecution
 from web.fun_test.models import ScriptInfo, RegresssionScripts, SuiteReRunInfo, TestCaseInfo
-from web.fun_test.models import ReleaseCatalog
+from web.fun_test.models import ReleaseCatalog, SavedJobConfig
 from scheduler.scheduler_global import SchedulingType
 from scheduler.scheduler_global import SchedulerStates
 from fun_settings import TEAM_REGRESSION_EMAIL, SCRIPTS_DIR
@@ -598,7 +598,7 @@ def test_case_time_series(request, suite_execution_id):
             query["data.checkpoint_index"] = checkpoint_filter
 
         if collection:
-            result = list(collection.find(query))
+            result = list(collection.find(query).sort('epoch_time'))
     return result
 
 
@@ -764,6 +764,24 @@ def release_catalog_executions(request, id):
             execution.save()
         result = True
     return result
+
+
+@csrf_exempt
+@api_safe_json_response
+def saved_configs(request, id):
+    result = None
+    if request.method == "GET":
+        if id:
+            id = int(id)
+            saved_job_config = SavedJobConfig.objects.get(id=id)
+            result = saved_job_config.to_dict()
+    if request.method == "POST":
+        request_json = json.loads(request.body)
+        execution = SavedJobConfig(**request_json)
+        execution.save()
+        result = execution.to_dict()
+    return result
+
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
