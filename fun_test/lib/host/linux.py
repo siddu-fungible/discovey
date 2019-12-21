@@ -2911,11 +2911,12 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ifconfig(self, *args):
+    def ifconfig(self, interface="", action=None):
+
         result = []
         cmd = "ifconfig"
-        for i in args:
-            cmd += " -" + i
+        if interface and action:
+            cmd += " " + interface + " " + action
         ifconfig_output = self.command(cmd)
         if ifconfig_output:
             interfaces = ifconfig_output.split("\n\r")
@@ -2961,10 +2962,9 @@ class Linux(object, ToDictMixin):
         output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
-            match_pattern = re.search(r'(?P<key>[\w ]+):\s+(?P<value>\w+)', line)
-            match_pattern = re.search(r'(?P<key>[\w ]+):\s+(?P<value>\w+)', line)
+            match_pattern = re.search(r'(?P<key>[\w- ]+):\s+(?P<value>\w+)', line)
             if match_pattern:
-                key = match_pattern.group("key")
+                key = match_pattern.group("key").lower()
                 key = key.replace(" ", "_")
                 value = match_pattern.group("value")
                 result[key] = value

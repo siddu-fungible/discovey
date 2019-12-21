@@ -111,6 +111,22 @@ class Fpga(Linux):
         self.handle.expect(self.prompt_terminator, timeout=1)
         return True
 
+    def switch_to_bmc_console(self, time_out=60):
+        self.command("pwd")
+        self.sendline("./BMC_console.sh {}".format(time_out))
+        self.sendline(chr(0))
+        try:
+            self.handle.expect("login", timeout=5)
+            self.sendline("sysadmin")
+            self.sendline(chr(0))
+            self.handle.expect("Password", timeout=5)
+            self.sendline("superuser")
+            self.sendline(chr(0))
+        except:
+            pass
+        self.command("pwd")
+        self.command("pwd")
+        self.command("pwd")
 
 class Bmc(Linux):
     # UART_LOG_LISTENER_FILE = "uart_log_listener.py"

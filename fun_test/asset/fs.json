@@ -1090,7 +1090,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs142-fpga",
       "telnet_ip": "fs-terminal",
-      "telnet_port": 2005,
+      "telnet_port": 2013,
       "telnet_username": "root",
       "telnet_password": "fun123"
     },
@@ -1123,7 +1123,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs143-fpga",
       "telnet_ip": "fs-terminal",
-      "telnet_port": 2013,
+      "telnet_port": 2005,
       "telnet_username": "root",
       "telnet_password": "fun123"
     },
