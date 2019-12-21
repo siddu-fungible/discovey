@@ -8,6 +8,7 @@ import re
 from lib.fun.fs import ComE, Bmc, Fpga
 from lib.host.dpcsh_client import DpcshClient
 from scripts.storage.pocs.apple.apc_pdu_auto import ApcPduTestcase
+from lib.fun.fs import *
 
 
 class MyScript(FunTestScript):
@@ -115,13 +116,14 @@ class Platform(ApcPduTestcase):
                                 ssh_username=self.fs['fpga']['mgmt_ssh_username'],
                                 ssh_password=self.fs['fpga']['mgmt_ssh_password'])
         self.f1_0_dpc = DpcshClient(target_ip=self.come_handle.host_ip,
-                                    target_port=self.come_handle.get_dpc_port(0),
+                                    target_port=self.come_handle.get_dpc_port(0, statistics=True),
                                     verbose=False)
         self.f1_1_dpc = DpcshClient(target_ip=self.come_handle.host_ip,
-                                    target_port=self.come_handle.get_dpc_port(1),
+                                    target_port=self.come_handle.get_dpc_port(1, statistics=True),
                                     verbose=False)
-        self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle,
-                             "fpga": self.fpga_handle}
+        fs = Fs.get(self.fs)
+        self.fpga_console_handle = fs.get_terminal()
+        self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
 
     def switch_to_py3_env(self):
         self.qa_02.command("cd /local/auto_admin/.local/bin")
@@ -193,13 +195,12 @@ class Platform(ApcPduTestcase):
         fun_test.test_assert(True, "Temperature sensors healthy")
 
     def get_platform_drop_information(self, system="come"):
-        result = {"status": True, "data": {}}
+        result = {"status": False, "data": {}}
         handle = self.handles_list[system]
-        output = handle.command("uname -snrmpio")
-        uname_dict = self.parse_uname_a(output)
-        result["data"].update(uname_dict)
-        if not uname_dict:
-            result["status"] = False
+        output = handle.uname()
+        if output:
+            result["status"] = True
+            result["data"] = output
         return result
 
     def set_platform_ip_information(self, system="come"):
@@ -212,33 +213,59 @@ class Platform(ApcPduTestcase):
         result = {"status": False, "data": {}}
         handle = self.handles_list[system]
         data = handle.ifconfig()
-        result["data"] = data
-        result["status"] = True
-        return result
-
-    def set_platform_link(self, system="come", action="up"):
-        # action can be : ip or down
-        result = {"status": False, "data": "", "message": "set interface : {} to: {}"}
-        handle = self.handles_list[system]
-        ifconfig = self.get_platform_ip_information(system)["data"]
-        interface = ifconfig[0]["interface"]
-        output = handle.sudo_command("ifconfig {} {}".format(interface, action))
-        if "Cannot assign" in output:
-            result["status"] = False
-            result["message"] = "Unable to set interface : {}".format(interface)
-        else:
+        if data:
+            result["data"] = data
             result["status"] = True
-            result["message"] = "set interface : {} to: {}".format(interface, action)
         return result
 
-    def get_platform_link(self, f1=0):
-        result = {"status": False}
-
+    def set_platform_link(self, system="bmc", action="up"):
+        # action can be : up or down
+        result = {"status": False, "data": "", "message": ""}
+        if system == "bmc":
+            interface = "bond0"
+            max_time = 10
+            self.fpga_console_handle.switch_to_bmc_console(max_time)
+            timer = FunTimer(max_time=max_time)
+            self.fpga_console_handle.command("pwd")
+            output = self.fpga_console_handle.ifconfig(interface, action)
+            output = self.fpga_console_handle.ifconfig(interface, action)
+            if "Cannot assign" in output:
+                result["status"] = False
+                result["message"] = "Unable to set interface : {}".format(interface)
+            else:
+                result["status"] = True
+                result["message"] = "set interface : {} to: {}".format(interface, action)
+                result["data"] = output
+            fun_test.sleep("For BMC console to close", seconds=timer.remaining_time())
         return result
 
-    def get_platform_version_information(self):
-        # todo: how to get the version
-        result = {"status": False, "linkparams": ""}
+    def get_platform_link(self, system="bmc"):
+        result = {"status": False, "link_detected": False}
+        if system == "bmc":
+            interface = "bond0"
+            max_time = 10
+            self.fpga_console_handle.switch_to_bmc_console(max_time)
+            timer = FunTimer(max_time=max_time)
+            self.fpga_console_handle.command("pwd")
+            self.fpga_console_handle.ethtool(interface)
+            output = self.fpga_console_handle.ethtool(interface)
+            if output:
+                result["status"] = True
+                result["link_detected"] = True if output.get("link_detected", "no") == "yes" else False
+            fun_test.sleep("For BMC console to close", seconds=timer.remaining_time())
+        return result
+
+    def get_platform_version_information(self, system="bmc"):
+        result = {"status": False, "data": {}}
+        handle = self.handles_list[system]
+        output = handle.command("cat /etc/lsb-release")
+        if output:
+            if "No such file" not in output:
+                lines = output.split("\n")
+                result["status"] = True
+                for line in lines:
+                    k, v = line.split("=")
+                    result["data"][k] = v.strip().replace("\"", "")
         return result
 
     # def get_platform_ip_information(self):

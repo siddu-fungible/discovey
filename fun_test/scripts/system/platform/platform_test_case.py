@@ -1,6 +1,8 @@
 from redfish import *
 import telnetlib
 
+
+
 class BasicCase(Platform):
     def describe(self):
         self.set_test_details(id=1,
@@ -12,20 +14,16 @@ class BasicCase(Platform):
         t = telnetlib.Telnet()
 
     def run(self):
-        import pexpect
-        h = pexpect.spawn("telnet fs-terminal 2015")
-        print h.expect("Escape")
-        h = pexpect.spawn("\n")
-
-
-
         self.get_platform_drop_information()
+
         self.set_platform_ip_information()
         self.get_platform_ip_information()
+
         self.set_platform_link()
         self.get_platform_link()
+
         self.get_platform_version_information()
-        self.get_platform_ip_information()
+
         self.get_ssd_info()
         self.get_port_link_status()
         self.read_fans_data()
