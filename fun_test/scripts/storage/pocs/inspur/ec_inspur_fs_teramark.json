@@ -47,7 +47,6 @@
     "api_server_username": "admin",
     "api_server_password": "password",
     "install": "fresh",
-    "sc_db_directories": ["/var/opt/fungible/elasticsearch", "/var/opt/fungible/cassandra"],
     "sc_script_dir": "/opt/fungible/StorageController/etc",
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
