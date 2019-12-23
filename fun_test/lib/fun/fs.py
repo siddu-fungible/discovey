@@ -116,10 +116,10 @@ class Fpga(Linux):
         self.sendline("./BMC_console.sh {}".format(time_out))
         self.sendline(chr(0))
         try:
-            self.handle.expect("login", timeout=5)
+            self.handle.expect("login", timeout=10)
             self.sendline("sysadmin")
             self.sendline(chr(0))
-            self.handle.expect("Password", timeout=5)
+            self.handle.expect("Password", timeout=10)
             self.sendline("superuser")
             self.sendline(chr(0))
         except:

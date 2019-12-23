@@ -323,13 +323,31 @@ class Platform(ApcPduTestcase):
         self.intialize_handles()
 
     def power_on(self):
-        # platform_cold_boot
-        # todo: is it redfish or any other tool, what are the commands
-        pass
+        result = {"status": False}
+        apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
+                         password=self.apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
+        fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+        outlet_on = self.match_success(apc_outlet_on_msg)
+        fun_test.test_assert(outlet_on, "Power on FS")
+        result["status"] = True
+        apc_pdu.disconnect()
+        return result
 
     def power_off(self):
-        # todo: is it redfish or any other tool, what are the commands
-        pass
+        result = {"status": False}
+        apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
+                         password=self.apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
+        fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+        outlet_off = self.match_success(apc_outlet_off_msg)
+        fun_test.test_assert(outlet_off, "Power down FS")
+        result["status"] = True
+        apc_pdu.disconnect()
+        return result
+
 
     def connect_get_set_get_jtag(self):
         # todo: how to do this

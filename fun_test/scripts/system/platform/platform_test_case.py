@@ -11,11 +11,9 @@ class BasicCase(Platform):
 
     def setup(self):
         super(BasicCase, self).setup()
-        t = telnetlib.Telnet()
 
     def run(self):
         self.get_platform_drop_information()
-
         self.set_platform_ip_information()
         self.get_platform_ip_information()
 
@@ -26,11 +24,14 @@ class BasicCase(Platform):
 
         self.get_ssd_info()
         self.get_port_link_status()
+
         self.read_fans_data()
         self.read_dpu_data()
+
         self.reboot()
         self.power_on()
         self.power_off()
+
         self.connect_get_set_get_jtag()
         self.connect_get_set_get_i2c()
 
@@ -41,6 +42,22 @@ class BasicCase(Platform):
         self.validate_fans()
         self.validate_temperaure_sensors()
         fun_test.log("\nFan speed: {}\nTemperature : {}".format(fan_speed, temperature))
+
+
+class First(Platform):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="",
+                              steps="""""")
+
+    def setup(self):
+        pass
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        pass
 
 
 if __name__ == "__main__":
