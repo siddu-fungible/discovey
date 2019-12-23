@@ -151,7 +151,7 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
         if ping_count > ping_timeout:
             ping_timeout = ping_count+10
         result = True
-        output = linux_obj.command(command="sudo ping %s -i %s -c %s -q" % (hosts, ping_interval, ping_count),
+        output = linux_obj.command(command="sudo ping %s -i %s -c %s" % (hosts, ping_interval, ping_count),
                                    timeout=ping_timeout)
         m = re.search(r'(\d+)%\s+packet\s+loss', output)
         if m:
