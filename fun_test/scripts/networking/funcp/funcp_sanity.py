@@ -89,7 +89,8 @@ class BringupControlPlane(FunTestCase):
         if enable_bgp:
             abstract_key = "abstract_configs_bgp"
 
-        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=True), message="Bringup FunCP")
+        fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=True, persistent_redis=False),
+                             message="Bringup FunCP")
         funcp_obj.assign_mpg_ips(static=self.server_key["fs"][fs_name]["mpg_ips"]["static"],
                                  f1_1_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg1"],
                                  f1_0_mpg=self.server_key["fs"][fs_name]["mpg_ips"]["mpg0"])
@@ -202,7 +203,7 @@ class TestPings(FunTestCase):
                               summary="Test Pings",
                               steps="""
                                   1. Test Pings from docker
-                                  2. Test Pings from HU host
+                                  2. Test Pings from HU host 
                                   """)
 
     def setup(self):
