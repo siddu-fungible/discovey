@@ -439,10 +439,18 @@ class SrpingLoopBack(FunTestCase):
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f10_host_client = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
                                                         server_ip=f10_hosts[0]["ipaddr"], timeout=120)
+            f10_server_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f10_host", 2)
+                f10_server_pid += 1  # Counter to check before initiating kill
+                if f10_server_pid == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+            f10_client_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f10_host", 2)
+                f10_client_pid += 1  # Counter to check before initiating kill
+                if f10_client_pid == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_client["cmd_pid"])
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
                                                              client_cmd=True)
@@ -455,10 +463,18 @@ class SrpingLoopBack(FunTestCase):
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f11_host_client = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
                                                         server_ip=f11_hosts[0]["ipaddr"], timeout=120)
+            f11_server_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Srping server on f11_host", 2)
+                f11_server_pid += 1  # Counter to check before initiating kill
+                if f11_server_pid == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
+            f11_client_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f11_host", 2)
+                f11_client_pid += 1  # Counter to check before initiating kill
+                if f11_client_pid == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_client["cmd_pid"])
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping",
                                                              debug=tool_debug)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="srping",
@@ -537,10 +553,18 @@ class RpingLoopBack(FunTestCase):
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
             f10_host_client = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
+            f10_server_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f10_host", 2)
+                f10_server_pid += 1  # Counter to check before initiating kill
+                if f10_server_pid == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+            f10_client_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f10_host", 2)
+                f10_client_pid += 1  # Counter to check before initiating kill
+                if f10_client_pid == 60:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_client["cmd_pid"])
             f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
                                                              client_cmd=True)
@@ -552,10 +576,18 @@ class RpingLoopBack(FunTestCase):
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_client = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=120)
+            f11_server_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
                 fun_test.sleep("Rping server on f11_host", 2)
+                f11_server_pid += 1  # Counter to check before initiating kill
+                if f11_server_pid == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
+            f11_client_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f11_host", 2)
+                f11_client_pid += 1  # Counter to check before initiating kill
+                if f11_client_pid == 60:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_client["cmd_pid"])
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping",
                                                              debug=tool_debug,)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="rping",
