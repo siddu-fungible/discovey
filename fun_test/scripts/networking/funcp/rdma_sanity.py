@@ -410,6 +410,10 @@ class SrpingLoopBack(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+
         if self.random_io:
             io_list = []
             while True:
@@ -504,6 +508,10 @@ class RpingLoopBack(FunTestCase):
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
 
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+
         if self.random_io:
             io_list = []
             while True:
@@ -597,6 +605,10 @@ class SrpingSeqIoTest(FunTestCase):
         # Kill all RDMA tools
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
+
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
 
         if self.mtu != 0:
             f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
@@ -705,6 +717,10 @@ class RpingSeqIoTest(FunTestCase):
         # Kill all RDMA tools
         f10_host_roce.cleanup()
         f11_host_roce.cleanup()
+
+        # Check if ping works before running tests
+        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
+        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
 
         if self.mtu != 0:
             f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
