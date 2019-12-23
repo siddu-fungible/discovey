@@ -437,6 +437,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     fun_test.sleep(
                         "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
                     fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
+            # Asserting if expected containers are not UP status
             fun_test.simple_assert(not container_chk_timer.is_expired(),
                                    "TFTP image boot: init-fs1600 enabled: Expected containers are running")
             # Cleaning up DB by restarting run_sc.py script with -c option
