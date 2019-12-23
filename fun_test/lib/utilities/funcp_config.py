@@ -188,7 +188,7 @@ class FunControlPlaneBringup:
         fun_test.test_assert(fs.come.setup_dpc(), "Setup DPC")
         fun_test.test_assert(fs.come.is_dpc_ready(), "DPC ready")
 
-    def bringup_funcp(self, prepare_docker=True, ep=False):
+    def bringup_funcp(self, prepare_docker=True, ep=False, persistent_redis=False):
         linux_obj_come = Linux(host_ip=self.fs_spec['come']['mgmt_ip'],
                                ssh_username=self.fs_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.fs_spec['come']['mgmt_ssh_password'])
@@ -216,7 +216,9 @@ class FunControlPlaneBringup:
             sections = ['Cloning into \'FunSDK\'', 'Cloning into \'fungible-host-drivers\'', 'Prepare End']
             for section in sections:
                 fun_test.test_assert(section in prepare_docker_output, "{} seen".format(section))
-
+        if not persistent_redis:
+            linux_obj_come.sudo_command("rm /var/opt/fungible/F1-0/lib/redis/6380/*")
+            linux_obj_come.sudo_command("rm /var/opt/fungible/F1-1/lib/redis/6380/*")
         linux_obj_come.command(command="cd /mnt/keep/FunSDK/")
         fun_test.log("")
         fun_test.log("=========================")
