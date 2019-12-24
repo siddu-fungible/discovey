@@ -359,7 +359,7 @@ class RDSVolumePerformanceScript(FunTestScript):
         else:
             fun_test.shared_variables["cleanup_blt"] = False
 
-        TestbedSetup()
+        #TestbedSetup()
 
         testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         nu_host = True
@@ -475,7 +475,7 @@ class RDSVolumePerformanceScript(FunTestScript):
                                                               "grep -e 'inet ' | awk -F ' ' '{print $2}'")
             params[storage_fs]['f11_ip'] = params[storage_fs]['f11_ip'].strip()
             params[storage_fs]['come_handle'].disconnect()
-            if 1:
+            if 0:
                 fs_bmc = storage_fs.replace("-", "") + "-bmc"
                 bmc_username = "sysadmin"
                 bmc_passwd = "superuser"
@@ -669,6 +669,7 @@ class RDSVolumePerformanceScript(FunTestScript):
 
                 n = n + 1
 
+        time.sleep(30)
 
         # Do a nvme connect from each host to the NVMe/TCP controller
         for host in host_list:
