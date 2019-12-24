@@ -1190,6 +1190,7 @@ class ComE(Linux):
     HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
+    SC_LOG_PATH = "/var/log/sc"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1254,6 +1255,20 @@ class ComE(Linux):
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
         return True
+
+    def upload_sc_logs(self):
+        result = None
+        tar_timeout = 120
+        try:
+            if self.list_files(self.SC_LOG_PATH):
+                sc_tar_file_path = "/tmp/{}_sc.tgz".format(fun_test.get_suite_execution_id())
+                self.command("tar -cvzf {} {}".format(sc_tar_file_path, self.SC_LOG_PATH),
+                             timeout=tar_timeout)
+                self.list_files(sc_tar_file_path)
+                result = sc_tar_file_path
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
@@ -1596,6 +1611,22 @@ class ComE(Linux):
                                         asset_id=asset_id,
                                         artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                         artifact_sub_category=self.fs.ArtifactSubCategory.COME)
+
+        # Fetch sc logs if they exist
+        sc_logs_path = self.upload_sc_logs()
+        if sc_logs_path:
+            uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="sc_log.tgz",
+                                                     linux_obj=self,
+                                                     source_file_path=sc_logs_path,
+                                                     display_name="sc logs tgz",
+                                                     asset_type=asset_type,
+                                                     asset_id=asset_id,
+                                                     artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                     artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                     is_large_file=True,
+                                                     timeout=240)
+            if uploaded_path:
+                fun_test.log("sc log uploaded to {}".format(uploaded_path))
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
