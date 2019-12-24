@@ -388,7 +388,7 @@ class Bmc(Linux):
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
-            write_on_trigger = {"Autoboot in": "noboot"}
+            write_on_trigger = {"Autoboot in": "noboot\n"}
         output = self.u_boot_command(command="",
                             timeout=90,
                             expected=self.U_BOOT_F1_PROMPT,
@@ -1627,6 +1627,7 @@ class ComE(Linux):
                                                      timeout=240)
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
+            self.command("rm {}".format(sc_logs_path))
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
