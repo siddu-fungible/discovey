@@ -486,21 +486,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
-        come_reboot = False
-        try:
-            for index in xrange(self.num_duts):
-                stop_containers = self.funcp_obj[index].stop_container()
-                fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                              message="Docker containers are stopped")
-                self.come_obj[index].command("sudo rmmod funeth")
-                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                              message="funeth module is unloaded")
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            come_reboot = True
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
+        pass
 
 
 class MultiNvmeConnect(FunTestCase):

@@ -663,20 +663,6 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
                 come_reboot = True
 
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            try:
-                for index in xrange(self.num_duts):
-                    stop_containers = self.funcp_obj[index].stop_container()
-                    fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                                  message="Docker containers are stopped")
-                    self.come_obj[index].command("sudo rmmod funeth", timeout=180)
-                    fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                                  message="funeth module is unloaded")
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                come_reboot = True
-
 
 class ECVolumeLevelTestcase(FunTestCase):
 
