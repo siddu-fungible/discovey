@@ -266,7 +266,11 @@ class Bmc(Linux):
         result = fun_test.PASSED
         if phase == BootPhases.FS_BRING_UP_ERROR:
             result = fun_test.FAILED
-        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context, result=result)
+        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase),
+                                context=self.context,
+                                result=result,
+                                expected=True,
+                                actual=False)
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def detect_version(self, output):
@@ -1088,7 +1092,8 @@ class BootupWorker(Thread):
             fun_test.add_checkpoint(result=fun_test.FAILED,
                                     expected=False,
                                     actual=True,
-                                    checkpoint="Bringup error")
+                                    checkpoint="Bringup error",
+                                    context=fs.context)
             raise ex
 
 
