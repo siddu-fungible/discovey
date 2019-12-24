@@ -151,7 +151,9 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.test_assert(command_result["status"], "Enabling counters on DUT")
 
         self.ec_info["cntrlr_uuid"] = utils.generate_uuid()
-        command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ec_info["cntrlr_uuid"],
+        command_result = self.storage_controller.create_controller(ctrlr_id=0,
+                                                                   ctrlr_uuid=self.ec_info["cntrlr_uuid"],
+                                                                   ctrlr_type="BLOCK",
                                                                    transport=self.attach["transport"],
                                                                    huid=self.attach["huid"],
                                                                    ctlid=self.attach["ctlid"],

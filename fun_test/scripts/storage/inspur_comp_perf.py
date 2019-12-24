@@ -211,10 +211,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])["status"],
                                  "ip_cfg configured on DUT instance")
             self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+            command_result = self.storage_controller.create_controller(ctrlr_id=0,
+                                                                       ctrlr_uuid=self.ctrlr_uuid,
+                                                                       ctrlr_type="BLOCK",
                                                                        transport=self.attach_transport,
                                                                        remote_ip=self.remote_ip,
-                                                                       nqn=self.nvme_subsystem,
+                                                                       subsys_nqn=self.nvme_subsystem,
+                                                                       host_nqn=self.remote_ip,
                                                                        port=self.transport_port,
                                                                        command_duration=self.command_timeout)
             fun_test.log(command_result)

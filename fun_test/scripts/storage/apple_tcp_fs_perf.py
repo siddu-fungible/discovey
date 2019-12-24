@@ -371,10 +371,13 @@ class StripedVolumePerformanceTestcase(FunTestCase):
 
                 # Create NVMe-OF controller
                 command_result = self.storage_controller.create_controller(
+                    ctrlr_id=host_index,
                     ctrlr_uuid=cur_uuid,
+                    ctrlr_type="BLOCK",
                     transport=unicode.upper(nvme_transport),
                     remote_ip=tb_config['tg_info'][host_index]['iface_ip'],
-                    nqn=self.nqn,
+                    subsys_nqn=self.nqn,
+                    host_nqn=tb_config['tg_info'][host_index]['iface_ip'],
                     port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
 
                 fun_test.log(command_result)

@@ -864,10 +864,13 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
             # Create TCP controller
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=0,
                 ctrlr_uuid=self.ctrlr_uuid,
+                ctrlr_type="BLOCK",
                 transport=unicode.upper(self.transport_type),
                 remote_ip=self.remote_ip,
-                nqn=self.nqn,
+                subsys_nqn=self.nqn,
+                host_nqn=self.remote_ip,
                 port=self.transport_port,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)

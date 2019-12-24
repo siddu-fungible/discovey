@@ -261,10 +261,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             nvme_transport = self.transport_type
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=0,
                 ctrlr_uuid=self.ctrlr_uuid,
+                ctrlr_type="BLOCK",
                 transport=unicode.upper(nvme_transport),
                 remote_ip=tb_config['tg_info'][0]['iface_ip'],
-                nqn=self.nqn,
+                subsys_nqn=self.nqn,
+                host_nqn=tb_config['tg_info'][0]['iface_ip'],
                 port=tb_config['dut_info'][0]['tcp_port'], command_duration=5)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Create storage controller for TCP with uuid {} on DUT".
