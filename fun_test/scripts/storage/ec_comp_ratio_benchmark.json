@@ -6,7 +6,7 @@
     "huid": 7,
     "ctlid": 0,
     "syslog_level": 2,
-    "reboot_timeout": 480,
+    "reboot_timeout": 600,
     "ethernet_adapter": "Mellanox",
     "csr_network": {
       "0": {
