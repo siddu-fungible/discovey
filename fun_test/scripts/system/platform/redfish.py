@@ -34,8 +34,9 @@ class LinuxAdditions(Linux):
             interfaces = ifconfig_output.split("\n\r")
             for interface in interfaces:
                 one_data_set = {}
-                match_ifconfig = re.search(r"(?P<interface>\S+)[\s\S]*(HWaddr\s+(?P<hw_addr>\w+:\w+:\w+:\w+))?[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)[\s\S]"
-                                           r"*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)[\s\S]*", interface)
+                match_ifconfig = re.search(
+                    r"(?P<interface>\S+)[\s\S]*(HWaddr\s+(?P<hw_addr>\w+:\w+:\w+:\w+))?[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)[\s\S]"
+                    r"*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)[\s\S]*", interface)
                 match_interface = re.match(r'(?P<interface>\S+)', interface)
                 match_ipv4 = re.search(r'(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
                 if match_ifconfig:
@@ -48,6 +49,7 @@ class LinuxAdditions(Linux):
 
 
 class Platform(ApcPduTestcase):
+    DROP_FILE_PATH = "fs_drop_version.json"
 
     def describe(self):
         self.set_test_details(id=1,
@@ -59,7 +61,6 @@ class Platform(ApcPduTestcase):
         self.initialize_job_inputs()
         self.initialize_variables()
         self.intialize_handles()
-        # self.switch_to_py3_env()
 
     def run(self):
         self.chassis_power()
@@ -71,6 +72,8 @@ class Platform(ApcPduTestcase):
         self.check_nu_ports(self.expected_ports_up)
 
     def redfishtool(self, bmc_ip, username, password, sub_command=None, **kwargs):
+        if not getattr(self, "in_py3_env", False):
+            self.switch_to_py3_env()
         cmd = "python3 redfishtool -r {bmc_ip} -u {username} -p {password}".format(bmc_ip=bmc_ip,
                                                                                    username=username,
                                                                                    password=password)
@@ -90,6 +93,12 @@ class Platform(ApcPduTestcase):
         for k, v in config_dict.iteritems():
             setattr(self, k, v)
 
+    def initialize_test_case_variables(self, test_case_name):
+        test_case_dict = getattr(self, test_case_name, {})
+        for k, v in test_case_dict.iteritems():
+            setattr(self, k, v)
+        fun_test.log("Initialized the test case variables: {}".format(test_case_dict))
+
     def initialize_job_inputs(self):
         job_inputs = fun_test.get_job_inputs()
         fun_test.log("Input: {}".format(job_inputs))
@@ -100,10 +109,6 @@ class Platform(ApcPduTestcase):
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(fs_name)
-
-        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
-        fun_test.simple_assert(service_host_spec, "Service host spec")
-        self.qa_02 = Linux(**service_host_spec)
 
     def intialize_handles(self):
         self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -123,10 +128,15 @@ class Platform(ApcPduTestcase):
                                     verbose=False)
         fs = Fs.get(self.fs)
         self.fpga_console_handle = fs.get_terminal()
+        
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        self.qa_02 = Linux(**service_host_spec)
         self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
 
     def switch_to_py3_env(self):
         self.qa_02.command("cd /local/auto_admin/.local/bin")
+        self.in_py3_env = True
 
     def chassis_power(self):
         sub_command = "Chassis -1 Power"
@@ -173,7 +183,8 @@ class Platform(ApcPduTestcase):
         fans = output["Fans"]
         for fan in fans:
             fan_status = fan["Status"]
-            if (fan_status["Health"] == "OK") and (fan_status["State"] == "Enabled") and (fan["Reading"] <= fan["MaxReadingRange"]):
+            if (fan_status["Health"] == "OK") and (fan_status["State"] == "Enabled") and (
+                    fan["Reading"] <= fan["MaxReadingRange"]):
                 result = True
             else:
                 result = False
@@ -186,7 +197,8 @@ class Platform(ApcPduTestcase):
         temperature_sensors = output["Temperatures"]
         for sensor in temperature_sensors:
             sensor_status = sensor["Status"]
-            if (sensor_status["Health"] == "OK") and (sensor_status["State"] == "Enabled") and sensor["ReadingCelsius"] < sensor["UpperThresholdFatal"]:
+            if (sensor_status["Health"] == "OK") and (sensor_status["State"] == "Enabled") and sensor[
+                "ReadingCelsius"] < sensor["UpperThresholdFatal"]:
                 result = True
             else:
                 result = False
@@ -197,10 +209,14 @@ class Platform(ApcPduTestcase):
     def get_platform_drop_information(self, system="come"):
         result = {"status": False, "data": {}}
         handle = self.handles_list[system]
+        if system == "fpga":
+            # FPGA sometimes is found to not run the command at once
+            handle.uname()
         output = handle.uname()
         if output:
             result["status"] = True
             result["data"] = output
+            fun_test.log("Drop info of system: {} {}".format(system, output))
         return result
 
     def set_platform_ip_information(self, system="come"):
@@ -218,41 +234,35 @@ class Platform(ApcPduTestcase):
             result["status"] = True
         return result
 
-    def set_platform_link(self, system="bmc", action="up"):
+    def set_platform_link(self, system="bmc", action="up", max_time=40):
         # action can be : up or down
         result = {"status": False, "data": "", "message": ""}
         if system == "bmc":
             interface = "bond0"
-            max_time = 10
-            self.fpga_console_handle.switch_to_bmc_console(max_time)
-            timer = FunTimer(max_time=max_time)
-            self.fpga_console_handle.command("pwd")
-            output = self.fpga_console_handle.ifconfig(interface, action)
-            output = self.fpga_console_handle.ifconfig(interface, action)
-            if "Cannot assign" in output:
-                result["status"] = False
-                result["message"] = "Unable to set interface : {}".format(interface)
-            else:
+            self.bmc_console.ifconfig(interface, action)
+            output = self.bmc_console.ifconfig(interface, action)
+            if "Cannot assign" not in output or "No such device" not in output:
                 result["status"] = True
                 result["message"] = "set interface : {} to: {}".format(interface, action)
                 result["data"] = output
-            fun_test.sleep("For BMC console to close", seconds=timer.remaining_time())
+            else:
+                result["status"] = False
+                result["message"] = "Unable to set interface : {}".format(interface)
         return result
 
-    def get_platform_link(self, system="bmc"):
+    def switch_to_bmc_console(self, max_time=100):
+        self.fpga_console_handle.switch_to_bmc_console(max_time)
+        self.bmc_console = self.fpga_console_handle
+
+
+    def get_platform_link(self, system="bmc", interface="bond0"):
         result = {"status": False, "link_detected": False}
         if system == "bmc":
-            interface = "bond0"
-            max_time = 10
-            self.fpga_console_handle.switch_to_bmc_console(max_time)
-            timer = FunTimer(max_time=max_time)
-            self.fpga_console_handle.command("pwd")
-            self.fpga_console_handle.ethtool(interface)
-            output = self.fpga_console_handle.ethtool(interface)
+            self.bmc_console.ethtool(interface)
+            output = self.bmc_console.ethtool(interface)
             if output:
                 result["status"] = True
                 result["link_detected"] = True if output.get("link_detected", "no") == "yes" else False
-            fun_test.sleep("For BMC console to close", seconds=timer.remaining_time())
         return result
 
     def get_platform_version_information(self, system="bmc"):
@@ -313,14 +323,16 @@ class Platform(ApcPduTestcase):
         result = {"status": False}
         return result
 
-    def reboot(self, system="come", max_wait_time=180):
+    def reboot_system(self, system="come", max_wait_time=180, non_blocking=True):
+        result = False
         if system == "come":
-            self.come_handle.reboot(max_wait_time=max_wait_time)
+            result = self.come_handle.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking)
         elif system == "bmc":
-            self.bmc_handle.reboot(max_wait_time=max_wait_time)
+            result = self.bmc_handle.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking)
         elif system == "fpga":
-            self.fpga_handle.reboot(max_wait_time=max_wait_time)
+            result = self.fpga_handle.reboot(max_wait_time=max_wait_time, non_blocking=non_blocking)
         self.intialize_handles()
+        return result
 
     def power_on(self):
         result = {"status": False}
@@ -348,7 +360,6 @@ class Platform(ApcPduTestcase):
         apc_pdu.disconnect()
         return result
 
-
     def connect_get_set_get_jtag(self):
         # todo: how to do this
         pass
@@ -363,11 +374,129 @@ class Platform(ApcPduTestcase):
     def cleanup(self):
         pass
 
+    def verify_drop_version(self, system):
+        result = False
+        drop_info = self.get_platform_drop_information(system=system)
+        if drop_info["status"]:
+            drop_data = drop_info["data"]
+            config_dict = utils.parse_file_to_json(self.DROP_FILE_PATH)
+            known_drop_info = config_dict[self.fs["name"]][system]
+            result = all([drop_data[k] == v for k, v in known_drop_info.iteritems()])
+            keyword = "match" if result else "mismatch"
+            fun_test.log("DROP info of {} {}: \nExpected : {} \nActual: {}".format(system,
+                                                                                   keyword,
+                                                                                   known_drop_info,
+                                                                                   drop_data))
+        else:
+            fun_test.log("Unable to get the drop information for system: {}".format(system))
+        return result
+    
+    def check_if_redfish_is_active(self):
+        output = self.chassis_power()
+        result = True if output else False
+        keyword = "" if result else "in-"
+        fun_test.log("Redfishtool is {}active".format(keyword))
+        return result
 
-class FpgaConsole:
-    def asd(self):
+    def check_bmc_serial_console(self):
+        bmc_console_time = 40
+        timer = FunTimer(max_time=bmc_console_time)
+        self.fpga_console_handle.switch_to_bmc_console(bmc_console_time)
+        self.fpga_console_handle.ifconfig()
+        ifconfig = self.fpga_console_handle.ifconfig()
+        bond0 = {}
+        bmc_ip = self.name_to_ip("bmc")
+        for interface in ifconfig:
+            if interface["interface"] == "bond0":
+                bond0 = interface
+                break
+        if bond0.get("ipv4", "") == bmc_ip:
+            result = True
+            fun_test.log("BMC serial successful")
+            fun_test.sleep("For BMC console to disconnect", seconds=timer.remaining_time())
+        else:
+            result = False
+            fun_test.log("Unable to establish BMC serial")
+        return result
+
+    def name_to_ip(self, system):
+        result = False
+        try:
+            host_name = self.fs[system]["mgmt_ip"]
+            result = socket.gethostbyname(host_name)
+        except Exception as ex:
+            fun_test.critical(ex)
+        return result
+
+    def ensure_host_is_down(self, max_wait_time, system="come"):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.fs[system]['mgmt_ip'], count=5)
+        if not ping_result:
+            result = True
+        return result
+
+    def check_if_system_is_down(self, system="come", time_out=30):
+        handle = self.handles_list[system]
+        system_down = handle.ensure_host_is_down(time_out)
+        fun_test.test_assert(system_down, system + " is down")
+        fun_test.shared_variables["{}_is_down".format(system)] = system_down
+
+    def get_mac_n_ip_addr_info_of_systems(self):
+        result = {}
+
+        come_interface = "enp3s0f0"
+        system = "come"
+        come_ifconfig = self.get_interface(come_interface, system)
+        result[system] = come_ifconfig
+
+        bmc_interface = "bond0"
+        system = "bmc"
+        bmc_ifconfig = self.get_interface(bmc_interface, system)
+        result[system] = bmc_ifconfig
+
+
+        fpga_interface = "eth0"
+        system = "fpga"
+        fpga_ifconfig = self.get_interface(fpga_interface, system)
+        result[system] = fpga_ifconfig
+
+        return result
+
+    def get_interface(self, interface, system="come"):
+        result = False
+        handle = self.handles_list[system]
+        if system == "fpga":
+            handle.ifconfig()
+        ifconfig = handle.ifconfig()
+        for each_interface in ifconfig:
+            if each_interface.get("interface", "") == interface:
+                result = each_interface
+                break
+        fun_test.simple_assert(result, "Get data for the interface :{} on system : {}".format(interface, system))
+        return result
+
+    def compare_two_dict(self, dict_1, dict_2):
+        result = True
+        for system, ip_data in dict_1.iteritems():
+            match = all([dict_1[system][k] == dict_2[system][k] for k, v in ip_data.iteritems()])
+            fun_test.simple_assert(match, "{} ip mac details match".format(system))
+        fun_test.test_assert(True, "System IP and MAC matches with the data before reboot")
+        return result
+
+    def check_ipmitoll(self):
+        # todo : complete this function
         pass
-
 
 if __name__ == "__main__":
     myscript = MyScript()

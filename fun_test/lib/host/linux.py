@@ -2963,7 +2963,7 @@ class Linux(object, ToDictMixin):
         output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
-            match_pattern = re.search(r'(?P<key>[\w- ]+):\s+(?P<value>\w+)', line)
+            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>\w+)', line)
             if match_pattern:
                 key = match_pattern.group("key").lower()
                 key = key.replace(" ", "_")
@@ -2973,6 +2973,24 @@ class Linux(object, ToDictMixin):
 
     def set_telnet(self):
         self.use_telnet = True
+
+    def ensure_host_is_down(self, max_wait_time=30):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.host_ip, count=5)
+        if not ping_result:
+            result = True
+        return result
 
 
 class LinuxBackup:

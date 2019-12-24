@@ -125,8 +125,7 @@ class Fpga(Linux):
         except:
             pass
         self.command("pwd")
-        self.command("pwd")
-        self.command("pwd")
+
 
 class Bmc(Linux):
     # UART_LOG_LISTENER_FILE = "uart_log_listener.py"

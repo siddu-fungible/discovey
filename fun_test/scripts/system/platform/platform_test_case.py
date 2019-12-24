@@ -2,7 +2,6 @@ from redfish import *
 import telnetlib
 
 
-
 class BasicCase(Platform):
     def describe(self):
         self.set_test_details(id=1,

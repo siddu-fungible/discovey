@@ -117,7 +117,6 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
-
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                     ssh_username=self.fs['come']['mgmt_ssh_username'],
                                     ssh_password=self.fs['come']['mgmt_ssh_password'])
