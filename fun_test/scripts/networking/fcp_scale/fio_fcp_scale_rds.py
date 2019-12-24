@@ -360,7 +360,7 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["cleanup_blt"] = False
 
         host_handle = {}
-        for host in fun_test.shared_variables["fio_clients"]:
+        for host in fun_test.shared_variables["fio_clients"].split(","):
             fun_test.log("Rebooting host: {}".format(host))
             host_handle[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
             host_handle[host].reboot(non_blocking=True)
@@ -368,7 +368,7 @@ class RDSVolumePerformanceScript(FunTestScript):
 
         TestbedSetup()
 
-        for host in fun_test.shared_variables["fio_clients"]:
+        for host in fun_test.shared_variables["fio_clients"].split(","):
             # Ensure all hosts are up after reboot
             fun_test.test_assert(host_handle[host].ensure_host_is_up(max_wait_time=240),
                                  message="Ensure Host {} is reachable after reboot".format(host))
