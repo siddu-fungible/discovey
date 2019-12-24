@@ -380,6 +380,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     continue
                 bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                 name="bond0")
+                if not bond_interfaces_status:
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                        container_name=container_name, name="bond0", flip_interface=True)
                 fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                               message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up

@@ -819,12 +819,14 @@ class StorageFsTemplate(object):
         nc.disconnect()
         return True
 
-    def is_bond_interface_up(self, container_name, name, bond_bringup_timeout=BOND_BRINGUP_TIMEOUT, **kwargs):
+    def is_bond_interface_up(self, container_name, name, bond_bringup_timeout=BOND_BRINGUP_TIMEOUT,
+                             flip_interface=False, **kwargs):
         """
         :param container_name: String
         :param name: String: Interface Name
         :param bond_bringup_timeout: Integer: Timeout value
         :param kwargs: provisional for future use
+        :param flip_interface: Whether to flip interface or not
         :return: Boolean: True for Success, False for Failure
         """
         result = False
@@ -844,6 +846,12 @@ class StorageFsTemplate(object):
             if not match:
                 fun_test.sleep("{} interface is still not in running state..".format(bond_dict["name"]), 10)
                 fun_test.log("Remaining Time: {}\n".format(interface_status_timer.remaining_time()))
+                if flip_interface:
+                    fun_test.critical("Flipping {} interface".format(bond_dict["name"]))
+                    bond_status = container_obj.ifconfig_up_down(interface=bond_dict["name"], action="down")
+                    fun_test.sleep("Disabling {} interface".format(bond_dict["name"]), 2)
+                    bond_status = container_obj.ifconfig_up_down(interface=bond_dict["name"], action="up")
+                    fun_test.sleep("Enabling {} interface".format(bond_dict["name"]), 2)
             else:
                 result = True
                 break
