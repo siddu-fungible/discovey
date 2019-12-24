@@ -502,10 +502,13 @@ class StripeVolumeTestCase(FunTestCase):
                 self.nqn = "nqn" + str(host_index + 1)
 
                 # Create NVMe-OF controller
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
+                command_result = self.storage_controller.create_controller(ctrlr_id=host_index,
+                                                                           ctrlr_uuid=cur_uuid,
+                                                                           ctrlr_type="BLOCK",
                                                                            transport=unicode.upper(nvme_transport),
                                                                            remote_ip=self.final_host_ips[host_index],
-                                                                           nqn=self.nqn,
+                                                                           subsys_nqn=self.nqn,
+                                                                           host_nqn=self.final_host_ips[host_index],
                                                                            port=self.transport_port,
                                                                            command_duration=5)
 

@@ -619,10 +619,13 @@ class MultiNvmeConnect(FunTestCase):
             self.vol_list[i]["ctrl_uuid"] = cur_uuid
             self.vol_list[i]["nqn"] = nqn
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=i,
                 ctrlr_uuid=cur_uuid,
+                ctrlr_type="BLOCK",
                 transport=unicode.upper(self.transport_type),
                 remote_ip=self.host_ips[i],
-                nqn=nqn,
+                subsys_nqn=nqn,
+                host_nqn=self.host_ips[i],
                 port=self.transport_port,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)

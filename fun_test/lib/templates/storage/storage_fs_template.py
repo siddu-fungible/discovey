@@ -679,7 +679,7 @@ class StorageFsTemplate(object):
             handle = self.container_info[container_name]
         return handle
 
-    def configure_bond_interface(self, container_name, name, ip, slave_interface_list = [],
+    def configure_bond_interface(self, container_name, name, ip, slave_interface_list=[],
                                  bond_bringup_timeout=BOND_BRINGUP_TIMEOUT, **kwargs):
         """
         :param docker_handle:

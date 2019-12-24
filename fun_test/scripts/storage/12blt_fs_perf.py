@@ -265,11 +265,13 @@ class BLTVolumePerformanceTestcase(FunTestCase):
 
             # Create Controller
             self.ctrlr_uuid = utils.generate_uuid()
-            command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+            command_result = self.storage_controller.create_controller(ctrlr_id=1,
+                                                                       ctrlr_uuid=self.ctrlr_uuid,
+                                                                       ctrlr_type="BLOCK",
                                                                        transport="TCP",
-                                                                       remote_ip=tb_config['tg_info'][host_index][
-                                                                           'iface_ip'],
-                                                                       nqn=self.nqn,
+                                                                       remote_ip=tb_config['tg_info'][0]['iface_ip'],
+                                                                       subsys_nqn=self.nqn,
+                                                                       host_nqn=tb_config['tg_info'][0]['iface_ip'],
                                                                        port=tb_config['dut_info'][0]['tcp_port'])
             fun_test.test_assert(command_result["status"], "Create NVMe controller")
 

@@ -90,7 +90,9 @@ class ECVolumeLevelScript(FunTestScript):
 
         # create controller
         ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=ctrlr_uuid,
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_id=0,
+                                                                       ctrlr_uuid=ctrlr_uuid,
+                                                                       ctrlr_type="BLOCK",
                                                                        transport=self.transport,
                                                                        huid=self.huid,
                                                                        ctlid=self.ctlid,

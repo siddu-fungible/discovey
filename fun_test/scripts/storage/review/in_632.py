@@ -300,7 +300,9 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             # Create the controller
             self.ctrlr_uuid = utils.generate_uuid()
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=0,
                 ctrlr_uuid=self.ctrlr_uuid,
+                ctrlr_type="BLOCK",
                 transport="PCI",
                 fnid=tb_config['dut_info'][0]['fnid'],
                 ctlid=tb_config['dut_info'][0]['ctlid'],
