@@ -143,8 +143,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = False
-        if "bootargs" in job_inputs:
-            self.bootargs = job_inputs["bootargs"]
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
 
@@ -662,8 +660,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
-
-        """
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
@@ -719,8 +715,25 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
-        """
-        pass
+
+        try:
+            for index in xrange(self.num_duts):
+                stop_containers = self.funcp_obj[index].stop_container()
+                fun_test.test_assert_expected(expected=True, actual=stop_containers,
+                                              message="Docker containers are stopped")
+                self.come_obj[index].command("sudo rmmod funeth")
+                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
+                                              message="funeth module is unloaded")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            come_reboot = True
+
+        fun_test.log("FS cleanup")
+        for fs in fun_test.shared_variables["fs_objs"]:
+            fs.cleanup()
+
+        self.storage_controller.disconnect()
+
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -923,13 +936,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.ctrlr_uuid.append(cur_uuid)
                 nqn = "nqn" + str(i + 1)
                 self.nqn_list.append(nqn)
-                command_result = self.storage_controller.create_controller(ctrlr_id=i,
-                                                                           ctrlr_uuid=cur_uuid,
-                                                                           ctrlr_type="BLOCK",
+                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
                                                                            transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_ips[i],
-                                                                           subsys_nqn=nqn,
-                                                                           host_nqn=self.host_ips[i],
+                                                                           remote_ip=self.host_ips[i],nqn=nqn,
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
