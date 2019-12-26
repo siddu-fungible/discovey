@@ -49,6 +49,8 @@ class ElcomRebootTest(ApcPduTestcase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        elcom_info = self.fs.get("elcom_info")
+        outlet_list = elcom_info.get("outlet_list")
         fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
         fun_test.log("Checking if COMe is UP")
         come_up = come_handle.ensure_host_is_up()
@@ -56,12 +58,13 @@ class ElcomRebootTest(ApcPduTestcase):
                                 self.to_str(come_up), True, come_up)
         come_handle.destroy()
 
-        switch = ElcomPowerSwitch(self.apc_info['host_ip'], self.apc_info['username'], self.apc_info['password'])
+        switch = ElcomPowerSwitch(elcom_info['host_ip'], elcom_info['username'], elcom_info['password'])
         fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
-        outlet_off_msg = switch.off(str(self.outlet_no))
-        fun_test.log("PDU outlet off mesg {}".format(outlet_off_msg))
-        outlet_off = self.match_success(outlet_off_msg)
-        fun_test.test_assert(outlet_off, "Power down FS")
+        for outlet_no in outlet_list:
+            outlet_off_msg = switch.off(str(outlet_no))
+            fun_test.log("PDU outlet off message {} for outlet: {}".format(outlet_off_msg, outlet_no))
+            outlet_off = self.match_success(outlet_off_msg)
+            fun_test.test_assert(outlet_off, "Power down outlet: {}".format(outlet_no))
 
         fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
@@ -70,10 +73,11 @@ class ElcomRebootTest(ApcPduTestcase):
         fun_test.test_assert(come_down, "COMe is Down")
         come_handle.destroy()
 
-        outlet_on_msg = switch.on(str(self.outlet_no))
-        fun_test.log("APC PDU outlet on message {}".format(outlet_on_msg))
-        outlet_on = self.match_success(outlet_on_msg)
-        fun_test.test_assert(outlet_on, "Power on FS")
+        for outlet_no in outlet_list:
+            outlet_on_msg = switch.on(str(outlet_no))
+            fun_test.log("APC PDU outlet on message {} outlet: {}".format(outlet_on_msg, outlet_no))
+            outlet_on = self.match_success(outlet_on_msg)
+            fun_test.test_assert(outlet_on, "Power on outlet: {}".format(outlet_no))
         switch.close()
         come_handle.destroy()
         come_handle.destroy()
