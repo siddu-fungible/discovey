@@ -777,18 +777,59 @@ class FunTest:
             f.write(contents)
         return os.path.basename(artifact_file)
 
-    def get_test_case_artifact_file_name(self, post_fix_name):
+    def get_test_case_artifact_file_name(self, post_fix_name, is_large_file=False):
         log_prefix = ""
         if self.log_prefix:
             log_prefix = "_{}".format(self.log_prefix)
-        artifact_file = self.get_logs_directory() + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
+        artifact_file = self.get_logs_directory(is_large_file=is_large_file) + "/" + log_prefix + self.script_file_name + "_" + str(self.get_suite_execution_id()) + "_" + str(self.get_test_case_execution_id()) + "_" + post_fix_name
         return artifact_file
+
+    def upload_artifact(self, local_file_name_post_fix,
+                        linux_obj,
+                        source_file_path,
+                        display_name,
+                        asset_type,
+                        asset_id,
+                        artifact_category="general",
+                        artifact_sub_category="general",
+                        is_large_file=False,
+                        timeout=240):
+        result = None
+        try:
+            artifact_file_name = self.get_test_case_artifact_file_name(local_file_name_post_fix,
+                                                                       is_large_file=is_large_file)
+
+            if fun_test.scp(source_ip=linux_obj.host_ip,
+                            source_file_path=source_file_path,
+                            source_username=linux_obj.ssh_username,
+                            source_password=linux_obj.ssh_password,
+                            target_file_path=artifact_file_name,
+                            timeout=timeout):
+                if not is_large_file:
+                    self.add_auxillary_file(description=display_name,
+                                            filename=artifact_file_name,
+                                            asset_type=asset_type,
+                                            asset_id=asset_id,
+                                            artifact_category=artifact_category,
+                                            artifact_sub_category=artifact_sub_category)
+
+                result = artifact_file_name
+            else:
+                fun_test.critical("scp failed")
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def enable_pause_on_failure(self):
         self.pause_on_failure = True
 
-    def get_logs_directory(self):
-        return self.logs_dir
+    def get_logs_directory(self, is_large_file=False):
+        result = self.logs_dir
+        if is_large_file and self.suite_execution_id:
+            directory_path = "{}/s_{}".format(LARGE_FILE_STORE, self.suite_execution_id)
+            os.system("mkdir -p {}".format(directory_path))
+            result = directory_path
+        return result
 
     def disable_pause_on_failure(self):
         self.pause_on_failure = False

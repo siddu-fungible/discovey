@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
-    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop",
-                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --nofreeze --funtop"],
+    "bootargs": ["app=mdt_test,load_mods workload=storage cc_huid=3 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --funtop",
+                 "app=mdt_test,load_mods workload=storage cc_huid=2 --serial --disable-wu-watchdog --dpc-server --dpc-uart --mgmt --all_10g --funtop"],
     "dut_start_index": 0,
     "host_start_index": 0,
     "update_workspace": false,

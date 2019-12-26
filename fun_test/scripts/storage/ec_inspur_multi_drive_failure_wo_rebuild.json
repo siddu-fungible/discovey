@@ -1,6 +1,6 @@
 {
   "GlobalSetup": {
-    "bootargs": "app=mdt_test,load_mods --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze",
+    "bootargs": "app=mdt_test,load_mods --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g",
     "disable_f1_index": 1,
     "f1_in_use": 0,
     // Script won't disturb the syslog_level setting, if it is set to "default". If any other level is needed set this config to that level in int format
