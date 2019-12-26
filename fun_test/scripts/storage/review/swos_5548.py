@@ -513,28 +513,6 @@ class ECVolumeLevelScript(FunTestScript):
                 fun_test.critical(str(ex))
                 come_reboot = True
 
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            try:
-                for index in xrange(self.num_duts):
-                    stop_containers = self.funcp_obj[index].stop_container()
-                    fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                                  message="Docker containers are stopped")
-                    self.come_obj[index].command("sudo rmmod funeth")
-                    fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                                  message="funeth module is unloaded")
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                come_reboot = True
-        try:
-            if come_reboot:
-                self.fs.fpga_initialize()
-                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-                self.fs.come_reset(max_wait_time=self.reboot_timeout)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        self.topology.cleanup()
-
 
 class ECVolumeLevelTestcase(FunTestCase):
 
@@ -634,12 +612,15 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             # Attaching/Exporting all the EC/LS volumes to the external server
             self.ctrlr_uuid = []
-            for host_name in self.host_info:
+            for index, host_name in enumerate(self.host_info):
                 self.ctrlr_uuid.append(utils.generate_uuid())
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                command_result = self.storage_controller.create_controller(ctrlr_id=index,
+                                                                           ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                           ctrlr_type="BLOCK",
                                                                            transport=self.attach_transport,
                                                                            remote_ip=self.host_info[host_name]["ip"][0],
-                                                                           nqn=self.nvme_subsystem,
+                                                                           subsys_nqn=self.nvme_subsystem,
+                                                                           host_nqn=self.host_info[host_name]["ip"][0],
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)

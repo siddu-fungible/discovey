@@ -281,7 +281,11 @@ class Bmc(Linux):
         result = fun_test.PASSED
         if phase == BootPhases.FS_BRING_UP_ERROR:
             result = fun_test.FAILED
-        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase), context=self.context, result=result)
+        fun_test.add_checkpoint(checkpoint="F1_{}: Started boot phase: {}".format(index, phase),
+                                context=self.context,
+                                result=result,
+                                expected=True,
+                                actual=False)
         fun_test.log_section(message="F1_{}:{}".format(index, phase), context=self.context)
 
     def detect_version(self, output):
@@ -399,7 +403,7 @@ class Bmc(Linux):
         nc = self.nc[f1_index]
         write_on_trigger = None
         if not auto_boot:
-            write_on_trigger = {"Autoboot in": "noboot"}
+            write_on_trigger = {"Autoboot in": "noboot\n"}
         output = self.u_boot_command(command="",
                             timeout=90,
                             expected=self.U_BOOT_F1_PROMPT,
@@ -946,7 +950,6 @@ class BootupWorker(Thread):
         fs = self.fs
         bmc = self.fs.get_bmc()
         fpga = self.fs.get_fpga()
-        come = fs.get_come()
         try:
             fs.set_boot_phase(BootPhases.FS_BRING_UP_BMC_INITIALIZE)
             fun_test.test_assert(expression=fs.bmc_initialize(), message="BMC initialize", context=self.context)
@@ -973,7 +976,7 @@ class BootupWorker(Thread):
                     come.detect_pfs()
                 except Exception as ex:
                     fun_test.add_checkpoint("PFs were not detecting. Doing a full power-cycle now")
-                    fun_test.test_assert(self.fs.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
                     fs.come = None
                     fs.bmc = None
                     come = fs.get_come()
@@ -992,7 +995,7 @@ class BootupWorker(Thread):
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
-                    come.sudo_command("/opt/fungible/etc/ResetFs1600.sh")
+                    come.fs_reset()
                 except Exception as ex:
                     pass
 
@@ -1070,7 +1073,7 @@ class BootupWorker(Thread):
                                              context=self.context)
                     except Exception as ex:
                         fun_test.critical(str(ex))
-                        fs.apc_power_cycle()
+                        fs.reset(hard=False)
                         raise ex
 
             self.worker = ComEInitializationWorker(fs=self.fs)
@@ -1103,7 +1106,8 @@ class BootupWorker(Thread):
             fun_test.add_checkpoint(result=fun_test.FAILED,
                                     expected=False,
                                     actual=True,
-                                    checkpoint="Bringup error")
+                                    checkpoint="Bringup error",
+                                    context=fs.context)
             raise ex
 
 
@@ -1200,6 +1204,9 @@ class ComE(Linux):
     HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
+    SC_LOG_PATH = "/var/log/sc"
+
+    FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1210,6 +1217,13 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
+
+    def fs_reset(self):
+        try:
+            self.sudo_command(self.FS_RESET_COMMAND, timeout=120)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
@@ -1264,6 +1278,20 @@ class ComE(Linux):
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
         return True
+
+    def upload_sc_logs(self):
+        result = None
+        tar_timeout = 120
+        try:
+            if self.list_files(self.SC_LOG_PATH):
+                sc_tar_file_path = "/tmp/{}_sc.tgz".format(fun_test.get_suite_execution_id())
+                self.command("tar -cvzf {} {}".format(sc_tar_file_path, self.SC_LOG_PATH),
+                             timeout=tar_timeout)
+                self.list_files(sc_tar_file_path)
+                result = sc_tar_file_path
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
@@ -1345,7 +1373,7 @@ class ComE(Linux):
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
         self.sudo_command("chmod 777 {}".format(target_file_name))
-        self.sudo_command("{} install".format(target_file_name), timeout=500)
+        self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
         return True
@@ -1606,6 +1634,23 @@ class ComE(Linux):
                                         asset_id=asset_id,
                                         artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                         artifact_sub_category=self.fs.ArtifactSubCategory.COME)
+
+        # Fetch sc logs if they exist
+        sc_logs_path = self.upload_sc_logs()
+        if sc_logs_path:
+            uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="sc_log.tgz",
+                                                     linux_obj=self,
+                                                     source_file_path=sc_logs_path,
+                                                     display_name="sc logs tgz",
+                                                     asset_type=asset_type,
+                                                     asset_id=asset_id,
+                                                     artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                     artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                     is_large_file=True,
+                                                     timeout=240)
+            if uploaded_path:
+                fun_test.log("sc log uploaded to {}".format(uploaded_path))
+            self.command("rm {}".format(sc_logs_path))
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -1958,7 +2003,7 @@ class Fs(object, ToDictMixin):
                                 and self.get_revision() in ["2"] \
                                 and any("bug_check" in error_detected for error_detected in self.errors_detected):
                             fun_test.add_checkpoint("Crash detected, so doing a full power-cycle")
-                            fun_test.test_assert(self.apc_power_cycle(), "APC power-cycle complete. Devices are up")
+                            fun_test.test_assert(self.reset(), "FS reset complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
             fun_test.simple_assert(not self.errors_detected, "Errors detected")
@@ -2418,36 +2463,48 @@ class Fs(object, ToDictMixin):
         result = True
         return result
 
-    def apc_power_cycle(self):
-        fun_test.simple_assert(expression=self.apc_info, context=self.context, message="APC info is missing")
-        apc_pdu = ApcPdu(context=self.context, **self.apc_info)
-        power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
-        fun_test.simple_assert(expression=power_cycle_result,
-                               context=self.context,
-                               message="APC power-cycle result")
-        try:
-            apc_pdu.disconnect()
-        except:
-            pass
+    def reset(self, hard=False):
+        if hard:
+            fun_test.simple_assert(expression=self.apc_info, context=self.context, message="APC info is missing")
+            apc_pdu = ApcPdu(context=self.context, **self.apc_info)
+            power_cycle_result = apc_pdu.power_cycle(self.apc_info["outlet_number"])
+            fun_test.simple_assert(expression=power_cycle_result,
+                                   context=self.context,
+                                   message="APC power-cycle result")
+            try:
+                apc_pdu.disconnect()
+            except:
+                pass
 
-        self.reset_device_handles()
+            self.reset_device_handles()
+        else:
+            come = self.get_come()
+            come.fs_reset()
+            self.reset_device_handles()
+        fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
+        return True
 
+    def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 10
         fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
-                                 context=self.context, message="FPGA reachable after APC power-cycle")
-            fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
+                                 context=self.context, message="FPGA reachable after reset")
+            if validate_uptime:
+                fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
 
         bmc = self.get_bmc()
         fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
-                             context=self.context, message="BMC reachable after APC power-cycle")
-        fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+                             context=self.context, message="BMC reachable after reset")
+
+        if validate_uptime:
+            fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
         come = self.get_come()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
-                                                               power_cycle=False), message="ComE reachable after APC power-cycle")
-        fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+                                                               power_cycle=False), message="ComE reachable after reset")
+        if validate_uptime:
+            fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
 
         return True

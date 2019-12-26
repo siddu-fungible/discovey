@@ -315,7 +315,9 @@ class MemVolPerformanceTestcase(FunTestCase):
             self.ctrlr_uuid = utils.generate_uuid()
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=0,
                 ctrlr_uuid=self.ctrlr_uuid,
+                ctrlr_type="BLOCK",
                 transport="PCI",
                 huid=tb_config['dut_info'][0]['huid'],
                 ctlid=tb_config['dut_info'][0]['ctlid'],

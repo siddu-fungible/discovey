@@ -201,6 +201,107 @@ def storage_cleanup(storage_obj, command_timeout=5):
                                                format(vol_type, vol_uuid))
     storage_obj.disconnect()
 
+class FunCPSetup:
+
+    def __init__(self, f1_0_mpg, f1_1_mpg, test_bed_type, abstract_config_f1_0, abstract_config_f1_1,
+                 update_funcp=False):
+        self.funcp_obj = FunControlPlaneBringup(fs_name=test_bed_type)
+        self.update_funcp = update_funcp
+        self.f1_0_mpg = f1_0_mpg
+        self.f1_1_mpg = f1_1_mpg
+        self.abstract_config_f1_0 = abstract_config_f1_0
+        self.abstract_config_f1_1 = abstract_config_f1_1
+
+    def bringup(self, fs):
+        self.funcp_obj.bringup_funcp(prepare_docker=self.update_funcp)
+        self.funcp_obj.assign_mpg_ips(static=True, f1_1_mpg=self.f1_1_mpg, f1_0_mpg=self.f1_0_mpg,
+                                      f1_0_mpg_netmask="255.255.255.0",
+                                      f1_1_mpg_netmask="255.255.255.0"
+                                      )
+        self.funcp_obj.funcp_abstract_config(abstract_config_f1_0=self.abstract_config_f1_0,
+                                             abstract_config_f1_1=self.abstract_config_f1_1)
+
+def TestbedSetup():
+        global funcp_obj, servers_list, test_bed_type
+        testbed_info = fun_test.parse_file_to_json(
+            fun_test.get_script_parent_directory() + '/testbed_inputs.json')
+        test_bed_type = fun_test.get_job_environment_variable('test_bed_type')
+        fun_test.shared_variables["test_bed_type"] = test_bed_type
+        fun_test.shared_variables['testbed_info'] = testbed_info
+        fun_test.shared_variables["pcie_host_result"] = True
+        fun_test.shared_variables["host_ping_result"] = True
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+
+        if "enable_fcp_rds" in job_inputs:
+            enable_fcp_rds = job_inputs["enable_fcp_rds"]
+            fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
+        else:
+            enable_fcp_rds = False
+            fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
+
+        # Removing any funeth driver from COMe and and all the connected server
+        threads_list = []
+        single_f1 = False
+
+        if test_bed_type == 'fs-fcp-scale' or test_bed_type == 'fs-fcp-scale-networking':
+            fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
+            fs_index = 0
+        else:
+            single_f1 = True
+            fs_list = [test_bed_type]
+            test_bed_type = 'fs-fcp-scale'
+        # for fs_name in fs_list:
+        #
+        #     thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=clean_testbed, fs_name=fs_name,
+        #                                               hu_host_list=testbed_info['fs'][test_bed_type][fs_name]
+        #                                               ['hu_host_list'])
+        #     threads_list.append(thread_id)
+        #
+        # for thread_id in threads_list:
+        #     fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+
+        # Boot up FS1600
+
+        topology_helper = TopologyHelper()
+        for fs_name in fs_list:
+            fs_name = str(fs_name)
+            # FS-39 issue
+            # if fs_name == "fs-39":
+            #     continue
+            abstract_json_file0 = \
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
+                    'abtract_config_f1_0']
+            abstract_json_file1 = \
+                fun_test.get_script_parent_directory() + testbed_info['fs'][test_bed_type][fs_name][
+                    'abtract_config_f1_1']
+            funcp_obj = FunCPSetup(test_bed_type=fs_name,
+                                   update_funcp=testbed_info['fs'][test_bed_type][fs_name]['prepare_docker'],
+                                   f1_1_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg1']),
+                                   f1_0_mpg=str(testbed_info['fs'][test_bed_type][fs_name]['mpg0']),
+                                   abstract_config_f1_0=abstract_json_file0,
+                                   abstract_config_f1_1=abstract_json_file1
+                                   )
+            index = testbed_info['fs'][test_bed_type][fs_name]['index']
+            if single_f1:
+                index = 0
+            f10_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_0']
+            f11_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_1']
+            if enable_fcp_rds:
+                f10_bootarg += " rdstype=fcp"
+                f11_bootarg += " rdstype=fcp"
+            topology_helper.set_dut_parameters(dut_index=index,
+                                               f1_parameters={0: {"boot_args": f10_bootarg},
+                                                              1: {"boot_args": f11_bootarg}},
+                                               fun_cp_callback=funcp_obj.bringup)
+
+        topology = topology_helper.deploy()
+
+        fun_test.shared_variables["topology"] = topology
+        fun_test.test_assert(topology, "Topology deployed")
 
 class RDSVolumePerformanceScript(FunTestScript):
     def describe(self):
@@ -257,6 +358,20 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["cleanup_blt"] = job_inputs["cleanup_blt"]
         else:
             fun_test.shared_variables["cleanup_blt"] = False
+
+        host_handle = {}
+        for host in fun_test.shared_variables["fio_clients"].split(","):
+            fun_test.log("Rebooting host: {}".format(host))
+            host_handle[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
+            host_handle[host].reboot(non_blocking=True)
+            host_handle[host].disconnect()
+
+        TestbedSetup()
+
+        for host in fun_test.shared_variables["fio_clients"].split(","):
+            # Ensure all hosts are up after reboot
+            fun_test.test_assert(host_handle[host].ensure_host_is_up(max_wait_time=240),
+                                 message="Ensure Host {} is reachable after reboot".format(host))
 
         testbed_info = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         nu_host = True
@@ -385,6 +500,11 @@ class RDSVolumePerformanceScript(FunTestScript):
                 bmc_handle.command("killall microcom")
                 bmc_handle.start_uart_log_listener(f1_index=0, serial_device='/dev/ttyS0')
                 bmc_handle.start_uart_log_listener(f1_index=1, serial_device='/dev/ttyS2')
+
+                # Get uart log file
+                for index in [0,1]:
+                    uart_log_file = bmc_handle.get_f1_uart_log_file_name(index)
+                    print "Uart log file is for f1 index %s is %s " %(str(index),uart_log_file)
 
             if 0:
                 try:
@@ -561,6 +681,7 @@ class RDSVolumePerformanceScript(FunTestScript):
 
                 n = n + 1
 
+        time.sleep(30)
 
         # Do a nvme connect from each host to the NVMe/TCP controller
         for host in host_list:
@@ -635,6 +756,9 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.sleep("Pre-condition done", 10)
 
     def cleanup(self):
+
+        fun_test.log("Cleanup")
+        fun_test.shared_variables["topology"].cleanup()
         if 1:
             # Cleanup the NVMe setup
             if fun_test.shared_variables["cleanup"]:
@@ -835,9 +959,6 @@ class BLTFioRandWrite(BLTVolumePerformanceTestcase):
         self.set_test_details(id=1,
                               summary="Random Write performance of BLT volume over NVMe FunTCP FCP",
                               steps=''' ''')
-
-    def run(self):
-        pass
 
 
 class BLTFioRandRead(BLTVolumePerformanceTestcase):

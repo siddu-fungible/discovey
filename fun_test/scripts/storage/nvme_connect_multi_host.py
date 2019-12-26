@@ -238,6 +238,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                             break
                         else:
                             fun_test.sleep("for the run_sc docker container to start", 1)
+                            fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                     else:
                         fun_test.critical(
                             "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
@@ -268,6 +269,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     break
                 else:
                     fun_test.sleep("waiting for API server to be up", 10)
+                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
             fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
@@ -277,6 +279,11 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     continue
                 bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                 name="bond0")
+                # If bond interface is still not in UP and RUNNING state, flip it
+                if not bond_interfaces_status:
+                    fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                        container_name=container_name, name="bond0", flip_interface=True)
                 fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                               message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
@@ -402,9 +409,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                         bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
                             container_name=container_name,
                             name="bond0")
+                        # If bond interface is still not in UP and RUNNING state, flip it
+                        if not bond_interfaces_status:
+                            fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                                         "speculated time, flipping it..")
+                            bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                container_name=container_name, name="bond0", flip_interface=True)
                         fun_test.test_assert_expected(
                             expected=True, actual=bond_interfaces_status,
-                            message="Bundle Image boot: Bond Interface is Up & Running")
+                            message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
                     # Configure dataplane ip as database is cleaned up
                     # Getting all the DUTs of the setup
                     nodes = self.sc_api.get_dpu_ids()
@@ -486,21 +499,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
-        come_reboot = False
-        try:
-            for index in xrange(self.num_duts):
-                stop_containers = self.funcp_obj[index].stop_container()
-                fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                              message="Docker containers are stopped")
-                self.come_obj[index].command("sudo rmmod funeth")
-                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                              message="funeth module is unloaded")
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            come_reboot = True
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
+        pass
 
 
 class MultiNvmeConnect(FunTestCase):
@@ -619,10 +618,13 @@ class MultiNvmeConnect(FunTestCase):
             self.vol_list[i]["ctrl_uuid"] = cur_uuid
             self.vol_list[i]["nqn"] = nqn
             command_result = self.storage_controller.create_controller(
+                ctrlr_id=i,
                 ctrlr_uuid=cur_uuid,
+                ctrlr_type="BLOCK",
                 transport=unicode.upper(self.transport_type),
                 remote_ip=self.host_ips[i],
-                nqn=nqn,
+                subsys_nqn=nqn,
+                host_nqn=self.host_ips[i],
                 port=self.transport_port,
                 command_duration=self.command_timeout)
             fun_test.log(command_result)

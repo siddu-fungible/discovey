@@ -145,8 +145,8 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
     fun_test.log("Pings from Hosts")
     fun_test.log("================")
     linux_obj = Linux(host_ip=host, ssh_username=username, ssh_password=password)
+    linux_obj.command(command="ifconfig -a")
     for hosts in ips:
-        linux_obj.command(command="ifconfig -a")
         ping_timeout = 60
         if ping_count > ping_timeout:
             ping_timeout = ping_count+10
@@ -160,7 +160,6 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
                 result &= True
             else:
                 result &= False
-        linux_obj.disconnect()
 
         if result:
             fun_test.log("%s can reach %s" % (host, hosts))
@@ -169,6 +168,7 @@ def test_host_pings(host, ips, username="localadmin", password="Precious1*", str
                 fun_test.test_assert(False, 'Cannot ping host')
             else:
                 fun_test.critical("%s cannot reach %s" % (host, hosts))
+    linux_obj.disconnect()
 
 
 def setup_nu_host(funeth_obj):
