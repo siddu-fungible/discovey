@@ -1059,7 +1059,7 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "192.168.8.222"
+      "mgmt_ip": "192.168.8.240"
     },
     "elcom_info": {
       "username": "admin",
