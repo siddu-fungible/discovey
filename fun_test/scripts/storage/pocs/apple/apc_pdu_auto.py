@@ -125,17 +125,6 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.set_prompt_terminator(r'# $')
 
             self.reboot_test()
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-            self.fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
-                                    ssh_username=self.fs['fpga']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['fpga']['mgmt_ssh_password'])
-
             self.basic_checks()
             self.data_integrity_check()
 
