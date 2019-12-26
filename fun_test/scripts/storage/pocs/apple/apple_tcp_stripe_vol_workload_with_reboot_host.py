@@ -233,6 +233,7 @@ class StripeVolHostRebootTestScript(FunTestScript):
                             break
                         else:
                             fun_test.sleep("for the run_sc docker container to start", 1)
+                            fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
                     else:
                         fun_test.critical(
                             "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
@@ -263,6 +264,7 @@ class StripeVolHostRebootTestScript(FunTestScript):
                     break
                 else:
                     fun_test.sleep("waiting for API server to be up", 10)
+                    fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
             fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
                                    message="Bundle Image boot: API server is up")
             fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
@@ -272,6 +274,11 @@ class StripeVolHostRebootTestScript(FunTestScript):
                     continue
                 bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                 name="bond0")
+                # If bond interface is still not in UP and RUNNING state, flip it
+                if not bond_interfaces_status:
+                    fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                        container_name=container_name, name="bond0", flip_interface=True)
                 fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                               message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
@@ -397,9 +404,15 @@ class StripeVolHostRebootTestScript(FunTestScript):
                         bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
                             container_name=container_name,
                             name="bond0")
+                        # If bond interface is still not in UP and RUNNING state, flip it
+                        if not bond_interfaces_status:
+                            fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                                         "speculated time, flipping it..")
+                            bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                container_name=container_name, name="bond0", flip_interface=True)
                         fun_test.test_assert_expected(
                             expected=True, actual=bond_interfaces_status,
-                            message="Bundle Image boot: Bond Interface is Up & Running")
+                            message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
                     # Configure dataplane ip as database is cleaned up
                     # Getting all the DUTs of the setup
                     nodes = self.sc_api.get_dpu_ids()

@@ -380,6 +380,11 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     continue
                 bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                 name="bond0")
+                # If bond interface is still not in UP and RUNNING state, flip it
+                if not bond_interfaces_status:
+                    fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                        container_name=container_name, name="bond0", flip_interface=True)
                 fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                               message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
@@ -512,9 +517,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                         bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
                             container_name=container_name,
                             name="bond0")
+                        # If bond interface is still not in UP and RUNNING state, flip it
+                        if not bond_interfaces_status:
+                            fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                                         "speculated time, flipping it..")
+                            bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                container_name=container_name, name="bond0", flip_interface=True)
                         fun_test.test_assert_expected(
                             expected=True, actual=bond_interfaces_status,
-                            message="Bundle Image boot: Bond Interface is Up & Running")
+                            message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
                     # Configure dataplane ip as database is cleaned up
                     # Getting all the DUTs of the setup
                     nodes = self.sc_api.get_dpu_ids()
@@ -944,13 +955,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.ctrlr_uuid.append(cur_uuid)
                 nqn = "nqn" + str(i + 1)
                 self.nqn_list.append(nqn)
-                command_result = self.storage_controller.create_controller(ctrlr_id=i,
-                                                                           ctrlr_uuid=cur_uuid,
-                                                                           ctrlr_type="BLOCK",
+                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
                                                                            transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_ips[i],
-                                                                           subsys_nqn=nqn,
-                                                                           host_nqn=self.host_ips[i],
+                                                                           remote_ip=self.host_ips[i],nqn=nqn,
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)

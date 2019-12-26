@@ -14,6 +14,6 @@
   "reboot_machine_test": false,
   "check_docker": true,
   "expected_dockers": 3,
-  "end_sleep": 300,
+  "end_sleep": 30,
   "check_portal": false
 }

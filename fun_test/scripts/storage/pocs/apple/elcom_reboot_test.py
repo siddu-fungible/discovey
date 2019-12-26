@@ -15,9 +15,9 @@ class ElcomRebootTest(ApcPduTestcase):
         super(ElcomRebootTest, self).run()
 
     def basic_checks(self):
+        super(ElcomRebootTest, self).basic_checks()
         self.collect_bmc_logs()
         self.collect_fpga_logs()
-        super(ElcomRebootTest, self).basic_checks()
 
     def data_integrity_check(self):
         pass
@@ -26,12 +26,14 @@ class ElcomRebootTest(ApcPduTestcase):
                        expected_ports_up=None,
                        f1=0):
         self.get_dpcsh_data_for_cmds("port enableall", f1)
+        fun_test.sleep("Before issuing the command 2nd time", seconds=5)
+        self.get_dpcsh_data_for_cmds("port enableall", f1)
         fun_test.sleep("Before checking port status", seconds=40)
         super(ElcomRebootTest, self).check_nu_ports(expected_ports_up, f1)
 
     def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
         result = True
-        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no + 1)
         if link_status:
             for port_type, ports_list in expected_port_up.iteritems():
                 for each_port in ports_list:
@@ -49,6 +51,8 @@ class ElcomRebootTest(ApcPduTestcase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        elcom_info = self.fs.get("elcom_info")
+        outlet_list = elcom_info.get("outlet_list")
         fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
         fun_test.log("Checking if COMe is UP")
         come_up = come_handle.ensure_host_is_up()
@@ -56,12 +60,13 @@ class ElcomRebootTest(ApcPduTestcase):
                                 self.to_str(come_up), True, come_up)
         come_handle.destroy()
 
-        switch = ElcomPowerSwitch(self.apc_info['host_ip'], self.apc_info['username'], self.apc_info['password'])
+        switch = ElcomPowerSwitch(elcom_info['host_ip'], elcom_info['username'], elcom_info['password'])
         fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
-        outlet_off_msg = switch.off(str(self.outlet_no))
-        fun_test.log("PDU outlet off mesg {}".format(outlet_off_msg))
-        outlet_off = self.match_success(outlet_off_msg)
-        fun_test.test_assert(outlet_off, "Power down FS")
+        for outlet_no in outlet_list:
+            outlet_off_msg = switch.off(str(outlet_no))
+            fun_test.log("PDU outlet off message {} for outlet: {}".format(outlet_off_msg, outlet_no))
+            outlet_off = self.match_success(outlet_off_msg)
+            fun_test.test_assert(outlet_off, "Power down outlet: {}".format(outlet_no))
 
         fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
@@ -70,10 +75,11 @@ class ElcomRebootTest(ApcPduTestcase):
         fun_test.test_assert(come_down, "COMe is Down")
         come_handle.destroy()
 
-        outlet_on_msg = switch.on(str(self.outlet_no))
-        fun_test.log("APC PDU outlet on message {}".format(outlet_on_msg))
-        outlet_on = self.match_success(outlet_on_msg)
-        fun_test.test_assert(outlet_on, "Power on FS")
+        for outlet_no in outlet_list:
+            outlet_on_msg = switch.on(str(outlet_no))
+            fun_test.log("APC PDU outlet on message {} outlet: {}".format(outlet_on_msg, outlet_no))
+            outlet_on = self.match_success(outlet_on_msg)
+            fun_test.test_assert(outlet_on, "Power on outlet: {}".format(outlet_no))
         switch.close()
         come_handle.destroy()
         come_handle.destroy()
@@ -82,24 +88,30 @@ class ElcomRebootTest(ApcPduTestcase):
     def collect_bmc_logs(self):
         bmc_logs = {}
         bmc_logs_file_name = fun_test.get_test_case_artifact_file_name(
-            post_fix_name="important_bmc_logs_iteration_{}.txt".format(self.pc_no))
-        fun_test.add_auxillary_file(description="BMC logs Iteration: {}".format(self.pc_no), filename=bmc_logs_file_name)
+            post_fix_name="important_bmc_logs_iteration_{}.txt".format(self.pc_no + 1))
+        fun_test.add_auxillary_file(description="BMC logs Iteration: {}".format(self.pc_no + 1),
+                                    filename=bmc_logs_file_name)
         bmc_logs['lanplus_sdr_logs'] = self.lanplus_sdr()
         bmc_logs['lanplus_sensor_log'] = self.lanplus_sensor()
         bmc_logs['f1_power_log'] = self.f1_power()
         bmc_logs['var_logs'] = self.bmc_var_logs()
+        bmc_logs['FS_Details'] = self.fs_details()
         self.add_logs_to_file(bmc_logs_file_name, bmc_logs)
 
     def collect_fpga_logs(self):
+        self.fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
+                                ssh_username=self.fs['fpga']['mgmt_ssh_username'],
+                                ssh_password=self.fs['fpga']['mgmt_ssh_password'])
         fpga_logs = {}
         fpga_logs_file_name = fun_test.get_test_case_artifact_file_name(
-            post_fix_name="important_fpga_logs_iteration_{}.txt".format(self.pc_no))
-        fun_test.add_auxillary_file(description="FPGA logs Iteration: {}".format(self.pc_no),
+            post_fix_name="important_fpga_logs_iteration_{}.txt".format(self.pc_no + 1))
+        fun_test.add_auxillary_file(description="FPGA logs Iteration: {}".format(self.pc_no + 1),
                                     filename=fpga_logs_file_name)
         fpga_logs["BootUpLog.txt"] = self.boot_up_log_txt()
         fpga_logs["boot-up.log"] = self.boot_up_log()
         fpga_logs["messages"] = self.messages_log()
         self.add_logs_to_file(fpga_logs_file_name, fpga_logs)
+        self.fpga_handle.destroy()
 
     def boot_up_log_txt(self):
         output = self.fpga_handle.command("cat /home/root/BootUpLog.txt")
@@ -132,6 +144,10 @@ class ElcomRebootTest(ApcPduTestcase):
         output = self.bmc_handle.command("/mnt/sdmmc0p1/scripts/f1_power.sh")
         return output
 
+    def fs_details(self):
+        output = self.bmc_handle.command("/mnt/sdmmc0p1/scripts/FS_Detail.sh", timeout=300)
+        return output
+
     def bmc_var_logs(self):
         result = ""
         var_logs_list = ["alert.log", "btmp", "debug.log", "err.log", "messages", "redis-server.log", "syslog", "wtmp",
@@ -145,15 +161,32 @@ class ElcomRebootTest(ApcPduTestcase):
     def collect_uart_logs(self):
         self.bmc_handle.set_prompt_terminator(r'# $')
         # Capture the UART logs also
-        artifact_file_name_f1_0 = self.bmc_handle.get_uart_log_file(0, "Iteration_{}".format(self.pc_no))
-        artifact_file_name_f1_1 = self.bmc_handle.get_uart_log_file(1, "Iteration_{}".format(self.pc_no))
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no), filename=artifact_file_name_f1_0)
-        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no), filename=artifact_file_name_f1_1)
+        artifact_file_name_f1_0 = self.bmc_handle.get_uart_log_file(0, "Iteration_{}".format(self.pc_no + 1))
+        artifact_file_name_f1_1 = self.bmc_handle.get_uart_log_file(1, "Iteration_{}".format(self.pc_no + 1))
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no + 1),
+                                    filename=artifact_file_name_f1_0)
+        fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no + 1),
+                                    filename=artifact_file_name_f1_1)
 
-
+    def collect_fun_os_logs(self):
+        bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                         ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                         ssh_password=self.fs['bmc']['mgmt_ssh_password'],
+                         set_term_settings=True,
+                         disable_uart_logger=False,
+                         bundle_compatible=True)
+        artifact_file_name_f1_0 = bmc_handle.get_uart_log_file(0)
+        artifact_file_name_f1_1 = bmc_handle.get_uart_log_file(1)
+        fun_test.add_auxillary_file(description="DUT_0_F1_0 UART Log", filename=artifact_file_name_f1_0)
+        fun_test.add_auxillary_file(description="DUT_0_F1_1 UART Log", filename=artifact_file_name_f1_1)
 
     def cleanup(self):
-        pass
+        try:
+            self.collect_fun_os_logs()
+            self.collect_bmc_logs()
+            self.collect_fpga_logs()
+        except:
+            fun_test.log("Unable to collect the logs")
 
 
 class ElcomPowerSwitch:
