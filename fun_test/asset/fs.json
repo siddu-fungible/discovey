@@ -1061,9 +1061,9 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "192.168.8.222"
     },
-    "apc_info": {
+    "elcom_info": {
       "username": "admin",
-      "outlet_number": 1,
+      "outlet_list": [1, 4],
       "password": "Precious1*",
       "host_ip": "192.168.8.125"
     }
