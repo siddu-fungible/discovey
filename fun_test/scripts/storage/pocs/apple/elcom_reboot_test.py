@@ -145,7 +145,7 @@ class ElcomRebootTest(ApcPduTestcase):
         return output
 
     def fs_details(self):
-        output = self.bmc_handle.command("/mnt/sdmmc0p1/scripts/FS_Detail.sh")
+        output = self.bmc_handle.command("/mnt/sdmmc0p1/scripts/FS_Detail.sh", timeout=300)
         return output
 
     def bmc_var_logs(self):
