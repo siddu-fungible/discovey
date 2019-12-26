@@ -154,10 +154,12 @@ class ElcomRebootTest(ApcPduTestcase):
         fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_0 UART Log".format(self.pc_no), filename=artifact_file_name_f1_0)
         fun_test.add_auxillary_file(description="Iteration {}:  DUT_0_fs-65_F1_1 UART Log".format(self.pc_no), filename=artifact_file_name_f1_1)
 
-
-
     def cleanup(self):
-        pass
+        try:
+            self.collect_bmc_logs()
+            self.collect_fpga_logs()
+        except:
+            fun_test.log("Unable to collect the logs")
 
 
 class ElcomPowerSwitch:
