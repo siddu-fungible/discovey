@@ -15,9 +15,9 @@ class ElcomRebootTest(ApcPduTestcase):
         super(ElcomRebootTest, self).run()
 
     def basic_checks(self):
+        super(ElcomRebootTest, self).basic_checks()
         self.collect_bmc_logs()
         self.collect_fpga_logs()
-        super(ElcomRebootTest, self).basic_checks()
 
     def data_integrity_check(self):
         pass
