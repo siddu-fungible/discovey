@@ -372,6 +372,11 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                     continue
                 bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                 name="bond0")
+                # If bond interface is still not in UP and RUNNING state, flip it
+                if not bond_interfaces_status:
+                    fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                        container_name=container_name, name="bond0", flip_interface=True)
                 fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                               message="Bundle Image boot: Bond Interface is Up & Running")
             # If fresh install, configure dataplane ip as database is cleaned up
@@ -407,18 +412,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 pass
         elif self.tftp_image_path:
             fun_test.log("TFTP image installation")
-            # Check the init-fs1600 service is running
-            # If so check all the required dockers are running
+            # Check the init-fs1600 service is running, check all the required dockers are running
             fun_test.simple_assert(init_fs1600_status(self.come_obj[0]),
                                    "TFTP image boot: init-fs1600 service status: enabled")
-            # init-fs1600 service is enabled, checking if all the required containers are running
             expected_containers = ['F1-0', 'F1-1', 'run_sc']
             container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
             while not container_chk_timer.is_expired():
                 container_names = self.funcp_obj[0].get_container_names(
                     stop_run_sc=False, include_storage=True)['container_name_list']
                 if all(container in container_names for container in expected_containers):
-                    # expected_containers_up = True
                     fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are up and running")
                     break
                 else:
@@ -500,9 +502,15 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                         bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
                             container_name=container_name,
                             name="bond0")
+                        # If bond interface is still not in UP and RUNNING state, flip it
+                        if not bond_interfaces_status:
+                            fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                                         "speculated time, flipping it..")
+                            bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                container_name=container_name, name="bond0", flip_interface=True)
                         fun_test.test_assert_expected(
                             expected=True, actual=bond_interfaces_status,
-                            message="Bundle Image boot: Bond Interface is Up & Running")
+                            message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
                     # Configure dataplane ip as database is cleaned up
                     # Getting all the DUTs of the setup
                     nodes = self.sc_api.get_dpu_ids()
