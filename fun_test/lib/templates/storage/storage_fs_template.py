@@ -855,6 +855,4 @@ class StorageFsTemplate(object):
             else:
                 result = True
                 break
-        else:
-            fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
         return result
