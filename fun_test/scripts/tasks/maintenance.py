@@ -8,7 +8,7 @@ from scheduler.scheduler_global import JobStatusType
 from datetime import timedelta
 from fun_global import get_current_time
 from fun_settings import TFTP_DIRECTORY, TESTRAIL_BACKUP_DIRECTORY
-
+from fun_settings import LARGE_FILE_STORE
 
 class MaintenanceScript(FunTestScript):
     def describe(self):
@@ -221,6 +221,39 @@ class BackupTestRail(FunTestCase):
     def cleanup(self):
         pass
 
+
+class CleanupLargeStoreDirectory(FunTestCase):
+    MAX_DAYS_IN_PAST = 3
+    def describe(self):
+        self.set_test_details(id=9, summary="Cleanup large directory store", steps=""" """)
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def run(self):
+
+        pattern = "{}/s_*".format(LARGE_FILE_STORE)
+        directories = glob.glob(pattern)
+        for directory in directories:
+            suite_execution_id = None
+            try:
+                suite_execution_id = directory.replace(LARGE_FILE_STORE, "").replace("/s_", "")
+                suite_execution_id = int(suite_execution_id)
+
+            except Exception as ex:
+                continue
+            if suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
+                time_in_the_past = get_current_time() - timedelta(days=self.MAX_DAYS_IN_PAST)
+                if suite_execution.completed_time < time_in_the_past and suite_execution.state <= JobStatusType.COMPLETED:
+                    if "large" in directory:
+                        os.system("rm -rf {}".format(directory))
+
+
+
 if __name__ == "__main__":
     myscript = MaintenanceScript()
     myscript.add_test_case(ManageSsh())
@@ -231,4 +264,5 @@ if __name__ == "__main__":
     myscript.add_test_case(RemoveOldCollections())
     myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.add_test_case(BackupTestRail())
+    myscript.add_test_case(CleanupLargeStoreDirectory())
     myscript.run()

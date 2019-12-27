@@ -2545,9 +2545,9 @@ class Fs(object, ToDictMixin):
 
 if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"))
-    terminal = fs.get_terminal()
-    terminal.command("pwd")
-    terminal.command("ifconfig")
+    #terminal = fs.get_terminal()
+    #terminal.command("pwd")
+    #terminal.command("ifconfig")
     # fs.get_bmc().position_support_scripts()
     # fs.bootup(reboot_bmc=False)
     # fs.come_initialize()
@@ -2555,6 +2555,8 @@ if __name__ == "__main__":
     # come = fs.get_come()
     # come.detect_pfs()
     # come.setup_dpc()
+    fs.re_initialize()
+    i = fs.bam()
 
 
 if __name__ == "__main2__":
