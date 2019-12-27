@@ -958,6 +958,7 @@ class BootupWorker(Thread):
                 fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
                 try:
+                    come.initialize()
                     come.detect_pfs()
                     fun_test.test_assert(self.fs.health(), "FS is healthy")
                 except Exception as ex:
@@ -2252,6 +2253,7 @@ class Fs(object, ToDictMixin):
         self.get_fpga()
         self.get_come()
         self.set_f1s()
+        self.come.initialize(disable_f1_index=self.disable_f1_index)
         self.come.setup_dpc()
 
 
@@ -2555,6 +2557,8 @@ if __name__ == "__main__":
     # come = fs.get_come()
     # come.detect_pfs()
     # come.setup_dpc()
+    # come = fs.get_come()
+    # come.command("ls -ltr")
     fs.re_initialize()
     i = fs.bam()
 
