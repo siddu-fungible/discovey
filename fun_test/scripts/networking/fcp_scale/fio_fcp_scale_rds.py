@@ -292,7 +292,11 @@ def TestbedSetup():
             f11_bootarg = testbed_info['fs'][test_bed_type][fs_name]['bootargs_f1_1']
             if enable_fcp_rds:
                 f10_bootarg += " rdstype=fcp"
+
                 f11_bootarg += " rdstype=fcp"
+
+            #f10_bootarg += " syslog=6"
+            #f11_bootarg += " syslog=6"
             topology_helper.set_dut_parameters(dut_index=index,
                                                f1_parameters={0: {"boot_args": f10_bootarg},
                                                               1: {"boot_args": f11_bootarg}},
@@ -346,6 +350,10 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["num_vols"] = job_inputs["num_vols"]
         else:
             fun_test.shared_variables["num_vols"] = 1
+        if "fpg_mtu" in job_inputs:
+            fun_test.shared_variables["fpg_mtu"] = job_inputs["fpg_mtu"]
+        else:
+            fun_test.shared_variables["fpg_mtu"] = 9000
         if "num_servers" in job_inputs:
             fun_test.shared_variables["num_servers"] = job_inputs["num_servers"]
         else:
@@ -360,6 +368,7 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["cleanup_blt"] = False
 
         host_handle = {}
+
         for host in fun_test.shared_variables["fio_clients"].split(","):
             fun_test.log("Rebooting host: {}".format(host))
             host_handle[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
@@ -422,6 +431,7 @@ class RDSVolumePerformanceScript(FunTestScript):
             hosts_dict[hosts]["hu_int_ip"] = hosts_dict[hosts]["handle"].command(
                 "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
                     hosts_dict[hosts]["hu_int_name"])).strip()
+            #hosts_dict[hosts]["handle"].sudo_command("ifconfig enp216s0 mtu 8986")
             hosts_dict[hosts]["handle"].disconnect()
 
         fun_test.shared_variables["host_list"] = host_list
@@ -473,6 +483,11 @@ class RDSVolumePerformanceScript(FunTestScript):
             params[storage_fs]['f10_handle'] = StorageController(target_ip=params[storage_fs]['come_ip'], target_port=42220)
             params[storage_fs]['f11_handle'] = StorageController(target_ip=params[storage_fs]['come_ip'], target_port=42221)
 
+            if fun_test.shared_variables["fpg_mtu"] != 9000:
+                fpg_mtu = fun_test.shared_variables["fpg_mtu"]
+                for f in ["F1-0", "F1-1"]:
+                    for p in [0,2,4,6,8,10,12,14]:
+                        params[storage_fs]['come_handle'].command("docker exec -it %s ifconfig fpg%s mtu %s" %(str(f),str(p),str(fpg_mtu)))
             # Get loop back IP:
             # f10_storage_loop_ip = storage_fs_come_obj.command("docker exec -it F1-0 ifconfig lo:0 | "
             #                                                   "grep -e 'inet ' | awk -F ' ' '{print $2}'")
@@ -574,8 +589,8 @@ class RDSVolumePerformanceScript(FunTestScript):
 
             # Create BLT volumes
 
-
-            params[f1_used] = {}
+            if f1_used not in params:
+                params[f1_used] = {}
             params[f1_used]['vol' + volume_index] = []
             blt_uuid = utils.generate_uuid()
             params[f1_used]['vol' + volume_index] = blt_uuid
@@ -594,19 +609,27 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.test_assert(command_result["status"], "Creation of BLT volume {}".format(volume_name))
 
             # Create RDS controllers
-            params[f1_used]['rds_ctrl' + volume_index] = []
-            rds_ctrl_uuid = utils.generate_uuid()
-            params[f1_used]['rds_ctrl' + volume_index] = rds_ctrl_uuid
-            rds_ctrl_name = f1_used + '_' + 'rds_ctrl' + volume_index
 
-            command_result = params[fs_name][f1_index + '_handle'].create_controller(ctrlr_uuid=rds_ctrl_uuid,
-                                                                                  transport="TCP",
-                                                                                  nqn=rds_ctrl_name,
-                                                                                  port=ipcfg_port,
-                                                                                  remote_ip=params[rds_fs_name][rds_f1_index + '_ip'],
-                                                                                  command_duration=command_timeout)
-            fun_test.simple_assert(command_result["status"],
-                                   "Create RDS controller on {}".format(f1_used))
+            if 'rds_ctrl_uuid' not in params[f1_used].keys():
+                print " F1_used is %s , params is %s " %(f1_used,str(params[f1_used].keys()))
+                params[f1_used]['rds_ctrl_uuid'] = []
+                rds_ctrl_uuid = utils.generate_uuid()
+                params[f1_used]['rds_ctrl_uuid'] = rds_ctrl_uuid
+                rds_ctrl_name = f1_used + '_' + 'rds_ctrl'
+
+                command_result = params[fs_name][f1_index + '_handle'].create_controller(ctrlr_uuid=rds_ctrl_uuid,
+                                                                                      transport="RDS",
+                                                                                      nqn=rds_ctrl_name,
+                                                                                      port=ipcfg_port,
+                                                                                      remote_ip=params[rds_fs_name][rds_f1_index + '_ip'],
+                                                                                      command_duration=command_timeout)
+                fun_test.simple_assert(command_result["status"],
+                                       "Create RDS controller on {}".format(f1_used))
+
+                #print " rds_ctrl_uuid " + str(params[f1_used].keys())
+            else:
+                rds_ctrl_uuid = params[f1_used]['rds_ctrl_uuid']
+
 
             # Attach BLT volume to RDS controller
             command_result = params[fs_name][f1_index + '_handle'].attach_volume_to_controller(
@@ -618,19 +641,21 @@ class RDSVolumePerformanceScript(FunTestScript):
                                    "Attaching RDS controller to BLT {}".format(volume_name))
 
             # Create RDS volume on remote F1
-            params[rds_f1]['rds_vol' + volume_index] = []
+            rds_vol_name = 'rds_vol_' + f1_used + "_" + str(volume_index)
+            #if 'rds_vol' + f1_used not in params[rds_f1].keys():
+            params[rds_f1][rds_vol_name] = []
             rds_vol_uuid = utils.generate_uuid()
-            params[rds_f1]['rds_vol' + volume_index] = rds_vol_uuid
-            rds_vol_name = rds_f1 + '_' + 'rds_vol' + volume_index
+            params[rds_f1][rds_vol_name] = rds_vol_uuid
+            rds_vol_name = rds_vol_name
 
             command_result = params[rds_fs_name][rds_f1_index + '_handle'].create_volume(type="VOL_TYPE_BLK_RDS",
                                                                               capacity=blt_capacity,
-                                                                              transport="TCP",
+                                                                              transport="RDS",
                                                                               block_size=blt_blk_size,
                                                                               name=rds_vol_name,
                                                                               uuid=rds_vol_uuid,
                                                                               remote_nsid=int(volume_index),
-                                                                              connections=4,
+                                                                              connections=1,
                                                                               remote_ip=params[fs_name][f1_index + '_ip'],
                                                                               port=ipcfg_port,
                                                                               command_duration=command_timeout)
@@ -640,18 +665,18 @@ class RDSVolumePerformanceScript(FunTestScript):
 
         n = 0
 
-        # Create NVME TCP controller for each RDS volume
+        # Create NVME TCP controller for each host and attach RDS volume to it
         for key in params[rds_f1].keys():
             if 'rds_vol' in key:
                 rds_vol_uuid = params[rds_f1][key]
-                volume_index = int(key.split('rds_vol')[1])
+                volume_index = int(key.split('_')[-1])
                 if n >= len(host_list):
                     n = 0
                 host = host_list[n]
                 if not host in params:
                     params[host] = {}
 
-                if 'nvme_tcp_uuid' in host:
+                if 'nvme_tcp_uuid' in params[host].keys():
                     nvme_tcp_uuid = params[host]['nvme_tcp_uuid']
                 else:
                     nvme_tcp_uuid = utils.generate_uuid()
@@ -674,7 +699,7 @@ class RDSVolumePerformanceScript(FunTestScript):
                 # Attach NVME/TCP controller to the RDS volume
                 command_result = params[rds_fs_name][rds_f1_index + '_handle'].attach_volume_to_controller(
                     ctrlr_uuid=nvme_tcp_uuid,
-                    ns_id=volume_index,
+                    ns_id=int(volume_index),
                     vol_uuid=rds_vol_uuid,
                     command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"], "Attach RDS_vol_{} to controller id {}".format(str(rds_vol_uuid),str(nvme_tcp_uuid)))
@@ -849,6 +874,7 @@ class BLTVolumePerformanceTestcase(FunTestCase):
             print "Hosts_dict is " + str(hosts_dict)
             #one_host = hosts_dict.keys()[0]
             #self.fio_cmd_args["numjobs"] = self.fio_cmd_args["numjobs"] * len(hosts_dict[one_host]["nvme_device"].split(':'))
+
             for hosts in hosts_dict:
                 hosts_dict[hosts]["nvme_device"] = get_nvme_device(hosts_dict[hosts]["handle"])
                 if 0:
