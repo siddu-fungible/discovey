@@ -223,7 +223,7 @@ class BackupTestRail(FunTestCase):
 
 
 class CleanupLargeStoreDirectory(FunTestCase):
-    MAX_DAYS_IN_PAST = 3
+    MAX_DAYS_IN_PAST = 2
     def describe(self):
         self.set_test_details(id=9, summary="Cleanup large directory store", steps=""" """)
 

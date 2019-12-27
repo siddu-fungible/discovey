@@ -1,4 +1,6 @@
 import json
+
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -115,6 +117,7 @@ def get_script_content(request):
 
 @csrf_exempt
 @never_cache
+@login_required
 def angular_home(request):
     angular_home = 'qa_dashboard/angular_home_development.html'
     site_version = SiteConfig.get_version()
