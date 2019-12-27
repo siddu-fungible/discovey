@@ -245,7 +245,7 @@ class TcClosing(FunTestCase):
 
 
     def describe(self):
-        self.set_test_details(id=4, summary="Test TCP Closing state",
+        self.set_test_details(id=5, summary="Test TCP Closing state",
                               steps="""
                                 Test scenarios covered:
                                TCP Closing state
