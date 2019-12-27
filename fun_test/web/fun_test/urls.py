@@ -279,17 +279,14 @@ if not site_under_construction:
         url(r'^users', include(users_urls)),
         url(r'^mq_broker', include(mq_broker_urls)),
         url(r'^api/v1/', include(api_v1_urls)),
-        url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s')),
-        url(r'accounts/')
+        url(r'^(?P<path>font.*$)', RedirectView.as_view(url='/static/%(path)s'))
     ]
 else:
     urlpatterns = [url(r'^admin/', admin.site.urls),
                    url(r'.*', common_views.site_under_construction)]
 
 urlpatterns += staticfiles_urlpatterns()
-urlpatterns += [
-    path('accounts/', include('django.contrib.auth.urls')),
-]
+
 
 if settings.DEBUG:
     import debug_toolbar

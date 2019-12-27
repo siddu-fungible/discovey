@@ -117,7 +117,6 @@ def get_script_content(request):
 
 @csrf_exempt
 @never_cache
-@login_required
 def angular_home(request):
     angular_home = 'qa_dashboard/angular_home_development.html'
     site_version = SiteConfig.get_version()
