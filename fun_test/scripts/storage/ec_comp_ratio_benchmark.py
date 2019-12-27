@@ -128,10 +128,13 @@ class ECVolumeLevelScript(FunTestScript):
 
         # create controller
         self.ctrlr_uuid = utils.generate_uuid()
-        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid,
+        fun_test.test_assert(self.storage_controller.create_controller(ctrlr_id=0,
+                                                                       ctrlr_uuid=self.ctrlr_uuid,
+                                                                       ctrlr_type="BLOCK",
                                                                        transport=self.attach_transport,
                                                                        remote_ip=remote_ip,
-                                                                       nqn=self.nvme_subsystem,
+                                                                       subsys_nqn=self.nvme_subsystem,
+                                                                       host_nqn=remote_ip,
                                                                        port=self.transport_port,
                                                                        command_duration=self.command_timeout)['status'],
                              message="Create Storage Controller for {} with controller uuid {} on DUT".format(

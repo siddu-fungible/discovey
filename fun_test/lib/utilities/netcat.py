@@ -37,14 +37,14 @@ class Netcat:
                         new_data = s.recv(read_buffer)
                         self.buffer += new_data
                         if write_on_trigger:
-                            # remove_list = []
+                            remove_list = []
                             for key, value in write_on_trigger.iteritems():
                                 if key in self.buffer:
                                     self.write(value)
                                     fun_test.log("==> {}".format(value))
-                                    # remove_list.append(key)
-                            # for key in remove_list:
-                            #    del write_on_trigger[key]
+                                    remove_list.append(key)
+                            for key in remove_list:
+                                del write_on_trigger[key]
                     if not new_data or expected_data in self.buffer:
                         return_from_function = True
                         break

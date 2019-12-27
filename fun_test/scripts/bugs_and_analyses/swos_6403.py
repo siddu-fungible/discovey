@@ -383,11 +383,15 @@ class WorkloadTriggerTestCase(FunTestCase):
             for index, host_name in enumerate(self.host_info):
                 if index == 0:
                     self.ctrlr_uuid.append(utils.generate_uuid())
-                    command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                    command_result = self.storage_controller.create_controller(ctrlr_id=index,
+                                                                               ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                               ctrlr_type="BLOCK",
                                                                                transport=self.transport_type.upper(),
                                                                                remote_ip=
                                                                                self.host_info[host_name]["ip"][0],
-                                                                               nqn=self.nvme_subsystem,
+                                                                               subsys_nqn=self.nvme_subsystem,
+                                                                               host_nqn=
+                                                                               self.host_info[host_name]["ip"][0],
                                                                                port=self.transport_port,
                                                                                command_duration=self.command_timeout)
                     fun_test.log(command_result)

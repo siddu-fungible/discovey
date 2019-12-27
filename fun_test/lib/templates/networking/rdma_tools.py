@@ -445,6 +445,6 @@ class Rocetools:
                 result &= False
         self.host.disconnect()
         if result:
-            fun_test.log("Can reach %s".format(ip))
+            fun_test.log("Can reach {}".format(ip))
         else:
-            fun_test.test_assert(False, "Cannot ping host %s".format(ip))
+            fun_test.test_assert(False, "Cannot ping host {}".format(ip))

@@ -282,6 +282,11 @@ class ECVolumeLevelScript(FunTestScript):
                         continue
                     bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
                                                                                     name="bond0")
+                    # If bond interface is still not in UP and RUNNING state, flip it
+                    if not bond_interfaces_status:
+                        fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+                        bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                            container_name=container_name, name="bond0", flip_interface=True)
                     fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
                                                   message="Bundle Image boot: Bond Interface is Up & Running")
                 # If fresh install, configure dataplane ip as database is cleaned up
@@ -407,9 +412,15 @@ class ECVolumeLevelScript(FunTestScript):
                             bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
                                 container_name=container_name,
                                 name="bond0")
+                            # If bond interface is still not in UP and RUNNING state, flip it
+                            if not bond_interfaces_status:
+                                fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                                             "speculated time, flipping it..")
+                                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
+                                    container_name=container_name, name="bond0", flip_interface=True)
                             fun_test.test_assert_expected(
                                 expected=True, actual=bond_interfaces_status,
-                                message="Bundle Image boot: Bond Interface is Up & Running")
+                                message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
                         # Configure dataplane ip as database is cleaned up
                         # Getting all the DUTs of the setup
                         nodes = self.sc_api.get_dpu_ids()
@@ -668,10 +679,13 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.ctrlr_uuid = []
             for host_name in self.host_info:
                 self.ctrlr_uuid.append(utils.generate_uuid())
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=self.ctrlr_uuid[-1],
+                command_result = self.storage_controller.create_controller(ctrlr_id=0,
+                                                                           ctrlr_uuid=self.ctrlr_uuid[-1],
+                                                                           ctrlr_type="BLOCK",
                                                                            transport=self.attach_transport,
                                                                            remote_ip=self.host_info[host_name]["ip"][0],
-                                                                           nqn=self.nvme_subsystem,
+                                                                           subsys_nqn=self.nvme_subsystem,
+                                                                           host_nqn=self.host_info[host_name]["ip"][0],
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)

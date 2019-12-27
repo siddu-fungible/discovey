@@ -412,38 +412,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
-        """
-        try:
-            for index in xrange(self.num_duts):
-                # stop_containers = self.funcp_obj[index].stop_container()
-                # fun_test.test_assert_expected(expected=True, actual=stop_containers,
-                                              message="Docker containers are stopped")
-                self.come_obj[index].command("sudo rmmod funeth")
-                fun_test.test_assert_expected(expected=0, actual=self.come_obj[index].exit_status(),
-                                              message="funeth module is unloaded")
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            come_reboot = True
-        """
-
-        '''
-        # disabling COMe reboot in cleanup section as, setup bring-up handles it through COMe power-cycle
-        try:
-            if come_reboot:
-                self.fs.fpga_initialize()
-                fun_test.log("Unexpected exit: Rebooting COMe to ensure next script execution won't ged affected")
-                self.fs.come_reset(max_wait_time=self.reboot_timeout)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        '''
-
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
-
-        self.storage_controller.disconnect()
-        self.topology.cleanup()     # Why is this needed?
-
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -643,9 +611,12 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.ctrlr_uuid.append(cur_uuid)
                 nqn = "nqn" + str(i + 1)
                 self.nqn_list.append(nqn)
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
+                command_result = self.storage_controller.create_controller(ctrlr_id=i,
+                                                                           ctrlr_uuid=cur_uuid,
+                                                                           ctrlr_type="BLOCK",
                                                                            transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_ips[i],nqn=nqn,
+                                                                           remote_ip=self.host_ips[i], subsys_nqn=nqn,
+                                                                           host_nqn=self.host_ips[i],
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
