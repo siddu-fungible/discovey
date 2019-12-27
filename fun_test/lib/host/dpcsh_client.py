@@ -138,7 +138,8 @@ class DpcshClient(object):
         fun_test.log("Command: {}".format(result["command"]))
         fun_test.log("Status: {}".format(result["status"]))
         fun_test.log("Data: {}". format(json.dumps(result["data"], indent=4)))
-        # fun_test.log("Raw output: {}".format(result["raw_output"]))
+        if "status" in result and not result["status"]:
+            fun_test.log("Raw output: {}".format(result["raw_output"]))
 
     def json_execute(self, verb, data=None, command_duration=1, sleep_duration=0.1, tid=0, chunk=4096):
         jdict = None
