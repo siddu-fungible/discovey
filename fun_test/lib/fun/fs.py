@@ -959,8 +959,9 @@ class BootupWorker(Thread):
                 come = fs.get_come()
                 try:
                     come.detect_pfs()
+                    fun_test.test_assert(self.fs.health(), "FS is healthy")
                 except Exception as ex:
-                    fun_test.add_checkpoint("PFs were not detecting. Doing a full power-cycle now")
+                    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
                     fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
                     fs.come = None
                     fs.bmc = None
@@ -1314,6 +1315,9 @@ class ComE(Linux):
                 fun_test.critical(str(ex))
         return result
 
+    def diags(self):
+        self.command("dmesg")
+        self.command("cat /var/log/syslog")
 
     def stop_cclinux_service(self):
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
@@ -1339,7 +1343,12 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
-        self.stop_cclinux_service()
+        try:
+            self.stop_cclinux_service()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            self.diags()
+
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
             fun_test.simple_assert(build_number, "Getting latest build number")
@@ -2341,6 +2350,13 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
+
+    def health(self):
+        result = None
+        bam_result = self.bam()
+        if bam_result["status"]:
+            result = True
+        return result
 
     def bam(self, command_duration=2):
         result = {"status": False}
