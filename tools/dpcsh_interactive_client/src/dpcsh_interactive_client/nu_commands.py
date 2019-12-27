@@ -2149,7 +2149,7 @@ class PeekCommands(object):
                         def get_sorted_dict(result):
                             sorted_dict = OrderedDict()
                             result_keys = sorted(result)
-                            if len(result_keys) == TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER:
+                            if len(result_keys) % (TOTAL_VPS_PER_CORE * TOTAL_CORES_PER_CLUSTER) == 0:
                                 result_keys.insert(0, result_keys[-2])
                                 result_keys.insert(1, result_keys[-1])
                                 del result_keys[-1]

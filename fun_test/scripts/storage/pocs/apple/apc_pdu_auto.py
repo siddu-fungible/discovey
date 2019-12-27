@@ -48,8 +48,6 @@ class ApcPduTestcase(FunTestCase):
     def setup(self):
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         self.fs = AssetManager().get_fs_by_name(self.testbed_type)
-        self.apc_info = self.fs.get("apc_info", None)
-        self.outlet_no = self.apc_info.get("outlet_number", None)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
         fun_test.log(json.dumps(self.fs, indent=4))
@@ -127,17 +125,6 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.set_prompt_terminator(r'# $')
 
             self.reboot_test()
-            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
-                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
-            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
-                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
-                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
-            self.bmc_handle.set_prompt_terminator(r'# $')
-            self.fpga_handle = Fpga(host_ip=self.fs['fpga']['mgmt_ip'],
-                                    ssh_username=self.fs['fpga']['mgmt_ssh_username'],
-                                    ssh_password=self.fs['fpga']['mgmt_ssh_password'])
-
             self.basic_checks()
             self.data_integrity_check()
 
@@ -240,6 +227,8 @@ class ApcPduTestcase(FunTestCase):
         come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                            ssh_username=self.fs['come']['mgmt_ssh_username'],
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
+        apc_info = self.fs.get("apc_info")
+        outlet_no = apc_info.get("outlet_number")
         try:
             fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
@@ -249,11 +238,11 @@ class ApcPduTestcase(FunTestCase):
                                     self.to_str(come_up), True, come_up)
             come_handle.destroy()
 
-            apc_pdu = ApcPdu(host_ip=self.apc_info['host_ip'], username=self.apc_info['username'],
-                             password=self.apc_info['password'])
+            apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
+                             password=apc_info['password'])
             fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
-            apc_outlet_off_msg = apc_pdu.outlet_off(self.outlet_no)
+            apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
             fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
             outlet_off = self.match_success(apc_outlet_off_msg)
             fun_test.test_assert(outlet_off, "Power down FS")
@@ -264,7 +253,7 @@ class ApcPduTestcase(FunTestCase):
             come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
             fun_test.test_assert(come_down, "COMe is Down")
 
-            apc_outlet_on_msg = apc_pdu.outlet_on(self.outlet_no)
+            apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
             fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
             outlet_on = self.match_success(apc_outlet_on_msg)
             fun_test.test_assert(outlet_on, "Power on FS")

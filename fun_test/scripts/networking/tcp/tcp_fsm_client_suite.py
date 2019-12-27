@@ -241,6 +241,54 @@ class TcFinWait2(FunTestCase):
 
 
 
+class TcClosing(FunTestCase):
+
+
+    def describe(self):
+        self.set_test_details(id=5, summary="Test TCP Closing state",
+                              steps="""
+                                Test scenarios covered:
+                               TCP Closing state
+                              """)
+
+    def setup(self):
+        try:
+            self.linux_obj = Linux(host_ip=host_name, ssh_username=host_username, ssh_password=host_passwd)
+
+            self.linux_obj.command("cd " + script_location)
+            self.linux_obj.command("rm -rf " + script_results_file)
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+    def run(self):
+        try:
+            if subtests == 'all':
+                self.linux_obj.sudo_command("./tcp_functional.py -b fs -p -t tc_closing",timeout=script_timeout )
+            else:
+                self.linux_obj.sudo_command(
+                    "./tcp_functional.py -b fs -p -t tc_closing --ts " + subtests, timeout=script_timeout )
+            return True
+        except Exception as e:
+            fun_test.critical("Error" + e)
+            return False
+
+    def cleanup(self):
+        results = self.linux_obj.read_file(script_results_file)
+        key = ''
+        value = False
+        m = re.search("(\S+)\s+\|\s+Result\s+:\s+(PASS|FAIL)",results)
+        if m:
+            key = m.group(1)
+            value = m.group(2)
+            if value == "FAIL":
+                res = False
+            else:
+                res = True
+        fun_test.test_assert(expression=res, message=key + '=' + value)
+        self.linux_obj.disconnect()
+
+
+
 if __name__ == '__main__':
     ts = ScriptSetup()
 
@@ -250,5 +298,7 @@ if __name__ == '__main__':
         ts.add_test_case(TcFinWait1())
     if execute_test == 'sanity' or execute_test == 'tc_fin_wait_2':
         ts.add_test_case(TcFinWait2())
+    if execute_test == 'sanity' or execute_test == 'tc_closing':
+        ts.add_test_case(TcClosing())
 
     ts.run()

@@ -146,8 +146,7 @@ class ECVolumeSanityScript(FunTestScript):
         # set_syslog_level(storage_controller, fun_test.shared_variables['syslog_level'])
 
         self.pcap_pid = host_obj.tcpdump_capture_start(interface=test_interface_name,
-                                                  tcpdump_filename="/tmp/nvme_connect.pcap",
-                                                  snaplen=1500)
+                                                       tcpdump_filename="/tmp/nvme_connect.pcap", snaplen=1500)
         if self.pcap_pid:
             fun_test.log("Started packet capture in {}".format(self.end_host_name))
             self.pcap_started = True
@@ -156,10 +155,11 @@ class ECVolumeSanityScript(FunTestScript):
             fun_test.critical("Unable to start packet capture in {}".format(self.end_host_name))
 
         # execute nvme connect
-        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
-                                                                         test_network["f1_loopback_ip"],
-                                                                         self.transport_port,
-                                                                         self.nvme_subsystem)
+        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}".format(self.attach_transport.lower(),
+                                                                               test_network["f1_loopback_ip"],
+                                                                               self.transport_port,
+                                                                               self.nvme_subsystem,
+                                                                               remote_ip)
         if hasattr(self, "io_queues") and self.io_queues:
             nvme_connect_cmd += " -i {}".format(self.io_queues)
 

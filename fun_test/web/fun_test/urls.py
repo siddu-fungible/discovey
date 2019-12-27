@@ -34,6 +34,8 @@ from django.views.generic import RedirectView
 from fun_global import is_development_mode
 from django.conf import settings
 import os
+from django.contrib.auth import views as auth_views, urls
+
 
 regression_urls = [
     url(r'^$', views.angular_home),
@@ -284,6 +286,7 @@ else:
                    url(r'.*', common_views.site_under_construction)]
 
 urlpatterns += staticfiles_urlpatterns()
+
 
 if settings.DEBUG:
     import debug_toolbar
