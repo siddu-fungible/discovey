@@ -75,7 +75,9 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_volumes": 6,
-      "transport_port": 1099
+      "transport_port": 1099,
+      "remote_transport": "RDS",
+      "remote_connection": 2
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -131,7 +133,9 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_volumes": 6,
-      "transport_port": 1099
+      "transport_port": 1099,
+      "remote_transport": "RDS",
+      "remote_connection": 2
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -185,7 +189,9 @@
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_volumes": 6,
-      "transport_port": 1099
+      "transport_port": 1099,
+      "remote_transport": "RDS",
+      "remote_connection": 2
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -238,8 +244,10 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "transport_port": 1099
+      "num_volumes": 6,
+      "transport_port": 1099,
+      "remote_transport": "RDS",
+      "remote_connection": 2
     },
     "num_ssd": 12,
     "command_timeout": 30,
