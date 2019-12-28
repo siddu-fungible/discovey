@@ -49,6 +49,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     if "transport_port" not in ec_info:
         ec_info["transport_port"] = 1099
 
+    if "remote_transport" not in ec_info:
+        ec_info["remote_transport"] = "RDS"
+
+    if "remote_connections" not in ec_info:
+        ec_info["remote_connections"] = 1
+
     num_f1 = len(ec_info["storage_controller_list"])
 
     # If hosting_f1_list is not provided then the first volume will be host in first F1, second volume in second F1 and
@@ -164,6 +170,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
         # Configuring the controller in all the F1s for the current volume
         cur_vol_host_f1 = ec_info["hosting_f1_list"][num]
+        host_f1_ip = ec_info["f1_ips"][cur_vol_host_f1]
         cur_plex_to_f1_map = plex_to_f1_map[num]
         hosting_sc = ec_info["storage_controller_list"][cur_vol_host_f1]
         for index, sc in enumerate(ec_info["storage_controller_list"]):
@@ -173,7 +180,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 transport = "TCP"
                 remote_ip = ec_info["host_ips"][num]
             else:
-                transport = "RDS"
+                transport = ec_info["remote_transport"]
                 remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
 
             # Check whether the controller for the given remote IP and transport is already created in this current
@@ -188,12 +195,12 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 nqn += 1
 
                 ec_info["uuids"][num]["ctlr"].append(ctrlr_uuid)
-                ec_info[sc][remote_ip][transport]["ctlr_id"] = ctrlr_uuid
+                ec_info[sc][remote_ip][transport]["ctrlr_uuid"] = ctrlr_uuid
                 ec_info[sc][remote_ip][transport]["nqn"] = "nqn" + str(nqn)
 
                 command_result = sc.create_controller(ctrlr_uuid=ctrlr_uuid, transport=transport, remote_ip=remote_ip,
-                                                      nqn="nqn" + str(nqn), port=1099,
-                                                      command_duration=command_timeout)
+                                                      port=1099, subsys_nqn="nqn" + str(nqn), host_nqn=remote_ip,
+                                                      ctrlr_id=0, ctrlr_type="BLOCK", command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"],
                                      "Configuring {} transport Storage Controller for {} remote IP on DUT {}".
                                      format(transport, remote_ip, index))
@@ -204,9 +211,9 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
             else:
                 fun_test.log("Skipping the controller creation, because controller for the remote IP {} with the {} "
                              "transport is already created with the controller ID: {}".
-                             format(remote_ip, transport, ec_info[sc][remote_ip][transport]["ctlr_id"]))
+                             format(remote_ip, transport, ec_info[sc][remote_ip][transport]["ctrlr_uuid"]))
                 if index == cur_vol_host_f1:
-                    ec_info["attach_ctlr"][num] = ec_info[sc][remote_ip][transport]["ctlr_id"]
+                    ec_info["attach_ctlr"][num] = ec_info[sc][remote_ip][transport]["ctrlr_uuid"]
                     ec_info["attach_nqn"][num] = ec_info[sc][remote_ip][transport]["nqn"]
 
         """
@@ -249,11 +256,11 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 if sc_index != cur_vol_host_f1:
                     f1_ns_id[sc_index] += 1
                     ns_id = f1_ns_id[sc_index]
-                    ec_info["rds_nsid"][num].append((ns_id, ec_info["f1_ips"][sc_index]))
+                    ec_info["rds_nsid"][num].append((sc_index, ns_id, ec_info["f1_ips"][sc_index]))
                     remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
-                    transport = "RDS"
+                    transport = ec_info["remote_transport"]
                     command_result = sc.attach_volume_to_controller(
-                        ctrlr_uuid=ec_info[sc][remote_ip][transport]["ctlr_id"], ns_id=ns_id, vol_uuid=this_uuid,
+                        ctrlr_uuid=ec_info[sc][remote_ip][transport]["ctrlr_uuid"], ns_id=ns_id, vol_uuid=this_uuid,
                         command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"],
                                          "Attaching {} {} {} {} bytes volume on DUT {}".
@@ -263,13 +270,17 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 plex_num += 1
 
         # Configuring RDS volume in the hosting F1 for all the remote BLTs
-        for cur_ns_id, cur_f1_ip in ec_info["rds_nsid"][num]:
+        for sc_index, cur_ns_id, cur_f1_ip in ec_info["rds_nsid"][num]:
+            sc = ec_info["storage_controller_list"][sc_index]
             this_uuid = utils.generate_uuid()
             ec_info["uuids"][num]["rds"].append(this_uuid)
             command_result = hosting_sc.create_volume(
                 type="VOL_TYPE_BLK_RDS", capacity=ec_info["volume_capacity"][num]["ndata"],
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
-                remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, command_duration=command_timeout)
+                remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, connections=ec_info["remote_connection"],
+                ctrlr_id=0, host_nqn=ec_info["f1_ips"][cur_vol_host_f1],
+                subsys_nqn=ec_info[sc][host_f1_ip][ec_info["remote_transport"]]["nqn"],
+                command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on DUT {}".format(cur_ns_id, cur_f1_ip, cur_vol_host_f1))
         """
