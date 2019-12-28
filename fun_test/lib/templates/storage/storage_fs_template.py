@@ -170,6 +170,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
 
         # Configuring the controller in all the F1s for the current volume
         cur_vol_host_f1 = ec_info["hosting_f1_list"][num]
+        host_f1_ip = ec_info["f1_ips"][cur_vol_host_f1]
         cur_plex_to_f1_map = plex_to_f1_map[num]
         hosting_sc = ec_info["storage_controller_list"][cur_vol_host_f1]
         for index, sc in enumerate(ec_info["storage_controller_list"]):
@@ -278,7 +279,8 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 block_size=ec_info["volume_block"]["ndata"], name="RDS" + "_" + this_uuid[-4:], uuid=this_uuid,
                 remote_nsid=cur_ns_id, remote_ip=cur_f1_ip, group_id=num+1, connections=ec_info["remote_connection"],
                 ctrlr_id=0, host_nqn=ec_info["f1_ips"][cur_vol_host_f1],
-                subsys_nqn=ec_info[sc][cur_f1_ip][ec_info["remote_transport"]]["nqn"], command_duration=command_timeout)
+                subsys_nqn=ec_info[sc][host_f1_ip][ec_info["remote_transport"]]["nqn"],
+                command_duration=command_timeout)
             fun_test.test_assert(command_result["status"], "Creating RDS volume for the remote BLT {} in remote F1 {} "
                                                            "on DUT {}".format(cur_ns_id, cur_f1_ip, cur_vol_host_f1))
         """
