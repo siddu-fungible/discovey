@@ -16,6 +16,7 @@ import {TestBedService} from "../test-bed/test-bed.service";
 import {RegressionService} from "../regression.service";
 import {SavedJobConfigs} from "../definitions";
 import {showAnimation} from "../../animations/generic-animations";
+import {UserProfile} from "../../login/definitions";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -105,7 +106,6 @@ export class SubmitJobComponent implements OnInit {
   privateFunosTgzUrl: string = null;
 
   suiteSelectionMode: string = "BY_SUITE";
-  selectedUser: any = null;
   users: any = null;
   BOOT_ARGS_REPLACEMENT_STRING: string = "rpl_:";
   description: string = null;
@@ -136,6 +136,7 @@ export class SubmitJobComponent implements OnInit {
   currentTriageType: number = null;
   regexMatchString: string = null;
 
+  userProfile: UserProfile = null;
 
   withStableMaster = {debug: false, stripped: true};
   bundleImageParameters = {release_train: null, build_number: "latest"};
@@ -172,14 +173,17 @@ export class SubmitJobComponent implements OnInit {
     this.schedulingOptions = false;
     this.jobId = null;
     let self = this;
+    this.userProfile = this.commonService.getUserProfile();
+    if (!this.userProfile) {
+      this.logger.error("Unable to fetch user profile");
+      return;
+    }
     this.getQueryParam().subscribe((response) => {
       this.queryParams = response;
       let queryParamString = "";
       if (this.mode === Mode.TASK) {
         queryParamString = "?suite_type=task";
       }
-
-
 
     });
 
@@ -511,14 +515,14 @@ export class SubmitJobComponent implements OnInit {
 
     }
 
-    if (!this.selectedUser) {
+    if (!this.userProfile) {
       return this.logger.error("Please select a user");
     }
     payload["build_url"] = this.buildUrl;
     payload["tags"] = this._getSelectedtags();
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
-    payload["submitter_email"] = this.selectedUser.email;
+    payload["submitter_email"] = this.userProfile.user.email;
 
     if (this.emails) {
       this.emails = this.emails.split(",");
@@ -621,7 +625,7 @@ export class SubmitJobComponent implements OnInit {
         this.regexMatchString,
         this.fromFunOsSha,
         this.toFunOsSha,
-        this.selectedUser.email, payload).subscribe((response) => {
+        this.userProfile.user.email, payload).subscribe((response) => {
           ctrl.submitting = null;
           this.logger.success("Submitted triage");
           let triageId = response;

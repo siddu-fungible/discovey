@@ -589,6 +589,7 @@
       "mgmt_ip": "fs38-come"
     },
     "name": "fs-38",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",

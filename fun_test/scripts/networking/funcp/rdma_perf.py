@@ -181,6 +181,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
+            f10_instance = fs.get_f1(index=0)
+            f11_instance = fs.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
             come_obj = fs.get_come()
             fun_test.shared_variables["come_obj"] = come_obj
             come_obj.sudo_command("netplan apply")
@@ -238,6 +242,10 @@ class BringupSetup(FunTestCase):
             fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
             come_obj = fs_obj.get_come()
             fun_test.shared_variables["come_obj"] = come_obj
+            f10_instance = fs_obj.get_f1(index=0)
+            f11_instance = fs_obj.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
 
             fun_test.log("Getting host info")
             host_dict = {"f1_0": [], "f1_1": []}
@@ -416,6 +424,8 @@ class BwTest(FunTestCase):
         qp_list = fun_test.shared_variables["qp_list"]
         come_obj = fun_test.shared_variables["come_obj"]
         roce_speed = fun_test.shared_variables["test_speed"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
@@ -469,6 +479,11 @@ class BwTest(FunTestCase):
             for qp in qp_list:
                 f10_pid_list = []
                 f11_pid_list = []
+
+                # FCP stats before test on F10 & F11
+                f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
                 # Start servers on F1_0
                 for index in range(total_link_bw):
                     f10_server = f10_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
@@ -478,6 +493,7 @@ class BwTest(FunTestCase):
                     f10_pid_list.append(pid_dict)
                 fun_test.sleep("Servers started for {} BW test with size={} & qp={}".format(self.rt, size, qp),
                                seconds=5)
+
                 # Start clients on F1_1
                 for index in range(total_link_bw):
                     f11_client = f11_hosts[index]["roce_handle"].ib_bw_test(test_type=self.rt, perf=True, size=size,
@@ -518,6 +534,42 @@ class BwTest(FunTestCase):
                             if wait_time == 0:
                                 print "******** QP didn't clear on server *****************"
                                 fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
+
+                # FCP stats after test on F10 & F11
+                f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+                if self.fcp:
+                    f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                        fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                    # NFCP counters check
+                    counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                    for cname in counter_names:
+                        try:
+                            counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                           f10_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                            counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                           f11_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                        except:
+                            fun_test.critical("NFCP counter issue")
+
                 avg_bandwidth = 0
                 msg_rate = 0
                 bw_peak_gbps = 0
@@ -580,6 +632,8 @@ class LatencyTest(FunTestCase):
         f11_hosts = fun_test.shared_variables["f11_hosts"]
         qp_list = fun_test.shared_variables["qp_list"]
         roce_speed = fun_test.shared_variables["test_speed"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
@@ -633,6 +687,11 @@ class LatencyTest(FunTestCase):
         for size in self.io_size:
             f10_pid_list = []
             f11_pid_list = []
+
+            # FCP stats before test on F10 & F11
+            f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
             # Start servers on F1_0
             for index in range(total_link_bw):
                 f10_server = f10_hosts[index]["roce_handle"].ib_lat_test(test_type=self.rt, perf=True, size=size,
@@ -681,6 +740,42 @@ class LatencyTest(FunTestCase):
                         if wait_time == 0:
                             print "******** QP didn't clear on server *****************"
                             fun_test.test_assert(False, "QP is not clearing on server, aborting test case")
+
+            # FCP stats after test on F10 & F11
+            f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+            if self.fcp:
+                f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                    fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                # NFCP counters check
+                counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                for cname in counter_names:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                       f10_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                        counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                       f11_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                    except:
+                        fun_test.critical("NFCP counter issue")
+
             min_latency = 0
             max_latency = 0
             avg_latency = 0

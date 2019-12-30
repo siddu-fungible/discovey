@@ -245,7 +245,8 @@ class Linux(object, ToDictMixin):
                 self.prompt_terminator = self.root_prompt_terminator
             expects[2] = self.prompt_terminator + r'$'
             expects[3] = 'Escape character is'
-            expects[4] = 'login:'
+            if self.use_telnet:
+                expects[4] = 'login:'
 
 
             attempt = 0

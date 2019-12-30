@@ -9,6 +9,7 @@ import {CommonService} from "../../services/common/common.service";
 import {TestBedService} from "./test-bed.service";
 import {UserService} from "../../services/user/user.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {UserProfile} from "../../login/definitions";
 
 enum EditMode {
   NONE = 0,
@@ -49,15 +50,13 @@ export class TestBedComponent implements OnInit {
   EditMode = EditMode;
   users: any = null;
   lockPanelHeader: string = null;
-  selectedUser: any = null;
-  assetSelectedUser: any = null;
   assets = null;
   driver = null;
   refreshing: string = null;
   userMap: any = null;
   tempDescription: string;
   tempNote: string;
-
+  userProfile: UserProfile = null;
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
 
 
@@ -71,6 +70,11 @@ export class TestBedComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.userProfile = this.commonService.getUserProfile();
+    if (!this.userProfile) {
+      this.loggerService.error("Unable to fetch user profile");
+      return;
+    }
     // fetchUsers
     // fetchTestbeds
     this.driver = new Observable(observer => {
@@ -123,7 +127,6 @@ export class TestBedComponent implements OnInit {
         this.assets = response;
         this.assets.map((asset) => {
           asset.applyingManualLock = false;
-          asset.selectedUser = null;
           if (asset.type === 'DUT') {
             dutAssets.push(asset);
           }
@@ -287,19 +290,12 @@ export class TestBedComponent implements OnInit {
 
 
   onLockSubmit() {
-    if (!this.selectedUser) {
-      return this.loggerService.error("Please select a user");
-    }
-    console.log(this.selectedUser);
-    console.log(this.schedulingTime.hour);
-    console.log(this.schedulingTime.minute);
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_submitter_email: this.selectedUser.email,
+    let payload = {manual_lock_submitter_email: this.userProfile.user.email,
     manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
     manual_lock_extension_minute: this.schedulingTime.minute, note: this.currentTestBed.note};
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Lock request submitted");
-      this.selectedUser = null;
       this.schedulingTime.hour = 1;
       this.schedulingTime.minute = 1;
       this.refreshTestBeds();
@@ -356,14 +352,10 @@ export class TestBedComponent implements OnInit {
   }
 
   lockAsset(asset) {
-    if (!asset.selectedUser) {
-      return this.loggerService.error('Please select a user');
-    }
     let name = asset.name;
-    this.service.lockAsset(name, asset.type, asset.selectedUser).subscribe((response) => {
+    this.service.lockAsset(name, asset.type, this.userProfile.user.email).subscribe((response) => {
       this.loggerService.success(`Asset ${name} lock submitted`);
       asset.applyingManualLock = false;
-      asset.selectedUser = null;
       this.refreshAll();
     }, error => {
       this.loggerService.error(`Unable to lock asset: ${name}`);
@@ -441,7 +433,7 @@ export class TestBedComponent implements OnInit {
   onAssetLockSubmit() {
     console.log(this.assetLockInfo);
     let totalMinutes = this.assetLockInfo.schedulingTime.hour * 60 + this.assetLockInfo.schedulingTime.minute;
-    this.service.lockAsset(this.assetLockInfo.asset.name, this.assetLockInfo.asset.type, this.assetLockInfo.user.email, totalMinutes).subscribe(response => {
+    this.service.lockAsset(this.assetLockInfo.asset.name, this.assetLockInfo.asset.type, this.userProfile.user.email, totalMinutes).subscribe(response => {
       this.loggerService.success("Lock request submitted");
       this.assetLockInfo.clear();
       this.refreshAll();

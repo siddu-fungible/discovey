@@ -3,6 +3,8 @@ import os
 
 # os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
 # django.setup()
+from django.dispatch import receiver
+
 from fun_settings import COMMON_WEB_LOGGER_NAME
 from django.db import models
 from fun_global import RESULTS
@@ -18,6 +20,8 @@ from asset.asset_global import AssetType
 from rest_framework.serializers import ModelSerializer
 from django.utils import timezone
 import logging
+from django.contrib.auth.models import User as AuthUser
+from django.db.models.signals import post_save
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -861,6 +865,21 @@ class TaskStatus(models.Model):
 
 class TestbedNotificationEmails(FunModel):
     email = models.EmailField(max_length=30, unique=True)
+
+class Profile(models.Model):
+    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE)
+
+@receiver(post_save, sender=AuthUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+    if instance and not created:
+        if not Profile.objects.filter(user=instance).exists():
+            Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=AuthUser)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
 
 if not is_lite_mode():
     from web.fun_test.metrics_models import *

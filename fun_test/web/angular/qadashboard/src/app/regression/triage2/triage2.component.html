@@ -2,14 +2,6 @@
 
   <form style="padding-top: 10px;" [formGroup]="submissionForm">
     <table>
-      <tr class="form-group">
-        <td><label class="control-label col-sm-2" for="submitter">Submitter: </label></td>
-        <td><select class="form-control" id="submitter" formControlName="submitter">
-          <option *ngFor="let user of users" [value]="user.email">{{ user.first_name }} {{ user.last_name }}
-            ({{ user.email }})
-          </option>
-        </select></td>
-      </tr>
 
       <tr class="form-group">
         <td><label class="control-label col-sm-2" for="triage_type">Type: </label></td>
