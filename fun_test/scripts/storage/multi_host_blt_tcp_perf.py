@@ -955,9 +955,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 self.ctrlr_uuid.append(cur_uuid)
                 nqn = "nqn" + str(i + 1)
                 self.nqn_list.append(nqn)
-                command_result = self.storage_controller.create_controller(ctrlr_uuid=cur_uuid,
+                command_result = self.storage_controller.create_controller(ctrlr_id=i,
+                                                                           ctrlr_uuid=cur_uuid,
+                                                                           ctrlr_type="BLOCK",
                                                                            transport=self.transport_type.upper(),
-                                                                           remote_ip=self.host_ips[i],nqn=nqn,
+                                                                           remote_ip=self.host_ips[i],
+                                                                           subsys_nqn=nqn,
+                                                                           host_nqn=self.host_ips[i],
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
