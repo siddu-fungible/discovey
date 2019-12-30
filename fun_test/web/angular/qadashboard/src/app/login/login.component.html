@@ -1,0 +1,23 @@
+<div class="login-box-container">
+  <div class="login-box">
+    <div class="fun-panel">
+      <div class="fun-panel-header" style="text-align: center">
+        Login
+      </div>
+      <div class="fun-panel-body" style="display: flex; align-items: flex-start; flex-direction: column; justify-items: center">
+        <div style="align-self: center">
+          E-mail: <input type="email" [(ngModel)]="email" style="width: 300px">
+        </div>
+        <br>
+        <div style="align-self: center">
+          <button [ngClass]="{'fun-button-disabled': !email}" class="fun-button-submit" (click)="login()">Login</button>
+        </div>
+
+      </div>
+      <button (click)="logout()">Logout</button>
+
+    </div>
+
+  </div>
+</div>
+

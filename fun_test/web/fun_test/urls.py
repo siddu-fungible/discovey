@@ -29,12 +29,14 @@ from web.fun_test.api import site_config
 from web.fun_test.api import scheduler_api
 from web.fun_test.api import daemons
 from web.fun_test.api import mq_broker
+from web.fun_test.authentication import login, logout
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import RedirectView
 from fun_global import is_development_mode
 from django.conf import settings
 import os
 from django.contrib.auth import views as auth_views, urls
+from web.fun_test.api.user_profile import user_profiles
 
 
 regression_urls = [
@@ -248,8 +250,12 @@ api_v1_urls = [
     url(r'^mq_broker/message_types$', mq_broker.message_types),
     url(r'^regression/time_series_types$', regression.time_series_types),
     url(r'^regression/job_status_types$', regression.job_status_types),
-    url(r'^regression/saved_configs/?(\d+)?$', regression.saved_configs)
+    url(r'^regression/saved_configs/?(\d+)?$', regression.saved_configs),
+    url(r'^login$', login),
+    url(r'^logout$', logout),
+    url(r'^user_profiles$', user_profiles)
 ]
+
 
 site_under_construction = False
 if "SITE_UNDER_CONSTRUCTION" in os.environ:
@@ -265,6 +271,7 @@ if not site_under_construction:
         url(r'^get_script_content', views.get_script_content, name='get_script_content'),
         # url(r'^tools/', include('tools.urls')),
         url(r'^regression/', include(regression_urls)),
+        url(r'^login', views.angular_home),
         url(r'^daemons/', include(daemon_urls)),
         url(r'^tcm/', include(tcm_urls)),  # related to test-case manangement
         url(r'^metrics/', include(metric_urls)),  # related to metrics, performance statistics

@@ -100,16 +100,6 @@
                 <div class="modal-body">
                 <table style="float:left">
                   <tr>
-                      <label for="submitter">Submitter:&nbsp;</label>
-                      <select id="submitter" [(ngModel)]="selectedUser">
-                        <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
-                          ({{ user.email }})
-                        </option>
-                      </select>
-                      &nbsp;
-                      <a href="/users" target="_blank">Add user</a>
-                  </tr>
-                  <tr>
                     <td colspan="2">
                       <table>
                         <tr>
@@ -179,7 +169,7 @@
             </td>
             <td class="hover-cell">
               <ng-container *ngIf="manualStatus[testBed.name].manualLock">
-                {{ userMap[manualStatus[testBed.name].manualLockSubmitter].first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter].last_name.charAt(0)}}
+                {{ userMap[manualStatus[testBed.name].manualLockSubmitter]?.first_name }} {{ userMap[manualStatus[testBed.name].manualLockSubmitter]?.last_name.charAt(0)}}
 <!--                <i class="fa fa-pencil hover-icon" style="font-size:14px; float: right" (click)="onEditNote(testBed)"></i>&nbsp;-->
                  <span class="pseudo-anchor fun-button-secondary" [ngClass]="{'fun-button-secondary-active' : testBed.editingNote}" (click)="testBed.editingNote = true; onEditNote(testBed)"> Edit note</span>&nbsp;
 
@@ -231,10 +221,6 @@
             </td>
             <td>{{ asset.type }}</td>
             <td>{{ asset.manual_lock_user }}
-              <!--span *ngIf="asset.manual_lock_user" class="pseudo-anchor"
-                    (click)="unlockAsset(asset)"> Un-lock</span>
-              <span *ngIf="!asset.applyingManualLock && !asset.manual_lock_user" class="pseudo-anchor"
-                    (click)="asset.applyingManualLock = true">Apply manual-lock</span-->
               <ng-container *ngIf="asset.applyingManualLock && !asset.manual_lock_user">
                 Applying manual-lock
               </ng-container>
@@ -259,18 +245,6 @@
                   <div class="modal-body">
                     <table style="float:left">
                       <tr>
-                        <td class="no-wrap">
-                          <label for="asset-submitter">Submitter&nbsp;</label>
-                          <select id="asset-submitter" [(ngModel)]="assetLockInfo.user">
-                            <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
-                              ({{ user.email }})
-                            </option>
-                          </select>
-                          &nbsp;
-                          <a href="/users" target="_blank">Add user</a>
-                        </td>
-                      </tr>
-                      <tr>
                         <td colspan="2">
                           <table>
                             <tr>
@@ -286,7 +260,7 @@
                       </tr>
                       <tr>
                         <span class="fun-cancel-link" (click)="modal.dismiss();">Cancel</span>
-                        <button [ngClass]="{'fun-disabled': !assetLockInfo.user }" class="fun-button-submit" (click)="modal.close(true); onAssetLockSubmit();"> Submit</button>
+                        <button class="fun-button-submit" (click)="modal.close(true); onAssetLockSubmit();"> Submit</button>
                       </tr>
                     </table>
                   </div>
@@ -305,15 +279,11 @@
                   </div>
               </ng-template>
 
-              <select *ngIf="asset.applyingManualLock" id="assetSelectedUser" [(ngModel)]="asset.selectedUser">
-                <option *ngFor="let user of users" [ngValue]="user.email">{{ user.email }}
-                </option>
-              </select>
               <ng-container *ngIf="asset.applyingManualLock">
                 <span><i class="fa fa-check fa-fw tick-color" (click)="lockAsset(asset)"></i>
                 </span>
                 <span><i class="fa fa-times fa-fw close-color"
-                         (click)="asset.applyingManualLock = false; asset.selectedUser = null"></i>
+                         (click)="asset.applyingManualLock = false;"></i>
                 </span>
               </ng-container>
 
