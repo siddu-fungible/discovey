@@ -1185,7 +1185,7 @@ class ComEInitializationWorker(Thread):
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [42220, 42221]
-    DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
+    DEFAULT_STATISTICS_DPC_PORT = [40220, 40221]
     DEFAULT_CSI_PERF_DPC_PORT = [46220, 46221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
@@ -2558,7 +2558,7 @@ if __name__ == "__main__":
 
 if __name__ == "__main2__":
     come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
-    output = come.pre_reboot_cleanup()
+    # output = come.pre_reboot_cleanup()
     i = 0
     #come.setup_hbm_tools()
     #print come.setup_tools()

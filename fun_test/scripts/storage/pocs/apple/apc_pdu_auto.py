@@ -392,6 +392,8 @@ class ApcPduTestcase(FunTestCase):
             run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
             output = self.come_handle.command(run_cmd)
             result = self.parse_dpcsh_output(output)
+            if "result" in result:
+                result = result["result"]
             self.come_handle.exit_sudo()
         except:
             fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))

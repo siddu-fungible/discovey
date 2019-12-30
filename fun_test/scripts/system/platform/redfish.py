@@ -22,29 +22,246 @@ class MyScript(FunTestScript):
         pass
 
 
-class LinuxAdditions(Linux):
+class IpmiTool:
+    IPMIUSERNAME = "admin"
+    IPMIPASSWORD = "admin"
 
-    def ifconfig(self, **kwargs):
-        result = []
-        cmd = "ifconfig"
-        for i in kwargs:
-            cmd += " -" + i
-        ifconfig_output = self.command(cmd)
-        if ifconfig_output:
-            interfaces = ifconfig_output.split("\n\r")
-            for interface in interfaces:
-                one_data_set = {}
-                match_ifconfig = re.search(
-                    r"(?P<interface>\S+)[\s\S]*(HWaddr\s+(?P<hw_addr>\w+:\w+:\w+:\w+))?[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)[\s\S]"
-                    r"*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)[\s\S]*", interface)
-                match_interface = re.match(r'(?P<interface>\S+)', interface)
-                match_ipv4 = re.search(r'(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
-                if match_ifconfig:
-                    one_data_set["interface"] = match_ifconfig.group("interface")
-                    one_data_set["ipv4"] = match_ifconfig.group("ipv4")
-                    one_data_set["ipv6"] = match_ifconfig.group("ipv6")
-                    one_data_set["hw_addr"] = match_ifconfig.group("hw_addr")
-                    result.append(one_data_set)
+    def initialise_fs(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+
+    def intialize_qa_02(self):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        self.qa_02 = Linux(**service_host_spec)
+
+    def ipmitool(self, sub_command=None):
+        if not getattr(self, "fs", False):
+            self.initialise_fs()
+        cmd = "ipmitool -I lanplus -H {} -U {} -P {}".format(self.fs['bmc']['mgmt_ip'], self.IPMIUSERNAME, self.IPMIPASSWORD)
+        if sub_command:
+            cmd += " " + sub_command
+        if not getattr(self, "qa_02", False):
+            self.intialize_qa_02()
+        output = self.qa_02.command(cmd)
+        return output
+
+    def check_ipmi_tool_connect(self):
+        output = self.ipmitool("raw")
+        result = False if "Unable to establish" in output else True
+        return result
+
+    def ipmitool_sdr(self):
+        result = {"status": True, "data": {}}
+        sub_command = "sdr"
+        output = self.ipmitool(sub_command)
+        data = self.parse_sdr(output)
+        if data:
+            result["status"] = True
+            result["data"] = data
+        return result
+
+    def ipmitool_reset(self, action="soft"):
+        # TODO: this is little conofusing heere with warm and soft reboots
+        result = {"status": True, "data": {}}
+        if action == "warm":
+            action = "cycle"
+        sub_command = "chassis power {}".format(action)
+        output = self.ipmitool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        else:
+            result["status"] = False
+        return result
+
+    def parse_sdr(self, data):
+        lines = data.split("\n")
+        result = {}
+        for line in lines:
+            cols = line.split("|")
+            cols_strip = [x.strip() for x in cols]
+            result[cols_strip[0]] = {}
+            match_readings = re.search(r'(\d+)\s+([\w ]+)', cols_strip[1])
+            match_hexa = re.search(r'\d+x\d+', cols_strip[1])
+            if match_readings:
+                result[cols_strip[0]]["reading"] = int(match_readings.group(1))
+                result[cols_strip[0]]["unit"] = match_readings.group(2)
+            if match_hexa:
+                result[cols_strip[0]]["reading"] = match_hexa.group(0)
+            result[cols_strip[0]]["status"] = cols_strip[2]
+        return result
+
+    def verify_ipmi_sdr_info(self, rpm_threshold=20000, exhaust_threshold=90, inlet_threshold=90,
+                             f1_temperature=90):
+        sdr = self.ipmitool_sdr()
+        result = self.validate_sdr_data(sdr, rpm_threshold, exhaust_threshold, inlet_threshold, f1_temperature)
+        fun_test.test_assert(result, "Validated sensor data with ipmitool sdr")
+        return result
+
+    def validate_sdr_data(self, sdr_output, rpm_threshold=20000, exhaust_threshold=90, inlet_threshold=90,
+                          f1_temperature=90):
+        result = True
+        sdr_data = sdr_output["data"]
+        for sensor, readings in sdr_data.iteritems():
+            if readings.get("unit", False):
+                if not readings["status"] == "ok":
+                    result = False
+                    break
+                if "Fan" in sensor:
+                    if readings["reading"] > rpm_threshold:
+                        result = False
+                        break
+                if "Inlet" in sensor:
+                    if readings["reading"] > inlet_threshold:
+                        result = False
+                        break
+                if "Exhaust" in sensor:
+                    if readings["reading"] > exhaust_threshold:
+                        result = False
+                        break
+                if "F1" in sensor:
+                    if readings["reading"] > f1_temperature:
+                        result = False
+                        break
+
+        if result:
+            fun_test.test_assert(result, "Validated Fan readings")
+            fun_test.test_assert(result, "Validated Inlet readings")
+            fun_test.test_assert(result, "Validated Exhaust readings")
+            fun_test.test_assert(result, "Validated F1 readings")
+        else:
+            fun_test.log("Error with sensor: {} readings: {}".format(sensor, readings))
+        return result
+
+
+class RedFishTool:
+    REDFISH_USERNAME = "Administrator"
+    REDFISH_PASSWORD = "superuser"
+
+    def switch_to_py3_env(self):
+        self.qa_02.command("cd /local/auto_admin/.local/bin")
+        self.in_py3_env = True
+
+    def intialize_qa_02(self):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        fun_test.simple_assert(service_host_spec, "Service host spec")
+        self.qa_02 = Linux(**service_host_spec)
+
+    def initialise_fs(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+
+    def check_if_redfish_is_active(self):
+        response = self.chassis_power()
+        result = True if response["status"] else False
+        keyword = "" if result else "in-"
+        fun_test.log("Redfishtool is {}active".format(keyword))
+        return result
+
+    def redfishtool(self, sub_command=None, **kwargs):
+        if not getattr(self, "in_py3_env", False):
+            self.switch_to_py3_env()
+        if not getattr(self, "fs", False):
+            self.initialise_fs()
+        cmd = "python3 redfishtool -A Basic -S Always -r {bmc_ip} -u {username} -p {password}".format(
+            bmc_ip=self.fs["bmc"]["mgmt_ip"],
+            username=self.REDFISH_USERNAME,
+            password=self.REDFISH_PASSWORD)
+        for k, v in kwargs.iteritems():
+            cmd += " -" + k + " " + v
+        if sub_command:
+            cmd += " " + sub_command
+
+        output = self.qa_02.command(cmd)
+        json_output = self.parse_output(output)
+        return json_output
+
+    def parse_output(self, data):
+        result = {}
+        data = data.replace('\r', '')
+        data = data.replace('\n', '')
+        # \s+=>\s+(?P<json_output>{.*})
+        match_output = re.search(r'(?P<json_output>{.*})', data)
+        if match_output:
+            try:
+                result = json.loads(match_output.group('json_output'))
+            except:
+                fun_test.log("Unable to parse the output obtained from dpcsh")
+        return result
+
+    def read_fans_data(self):
+        # todo: check with Parag if just fan speed is enough
+        result = {"status": False, "data": {}}
+        response = self.chassis_thermal()
+        if response["status"]:
+            fans = response["data"]["Fans"]
+            for fan in fans:
+                result["data"][fan["Name"]] = fan["Reading"]
+            result["status"] = True
+        fun_test.simple_assert(result["status"], "Read fan speed")
+        fun_test.log("Fan Readings: {}".format(result["data"])) if (result["status"]) else None
+        return result
+
+    def chassis_power(self):
+        result = {"status": False, "data":{}}
+        sub_command = "Chassis -1 Power"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def chassis_thermal(self):
+        result = {"status": False, "data": {}}
+        sub_command = "Chassis -1 Thermal"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def get_temperature(self):
+        result = {}
+        response = self.chassis_thermal()
+        if response["status"]:
+            temperatures = response["data"]["Temperatures"]
+            for temperature in temperatures:
+                result[temperature["Name"]] = temperature["ReadingCelsius"]
+        return result
+
+    def validate_fans(self):
+        result = False
+        response = self.chassis_thermal()
+        if response["status"]:
+            fans = response["data"]["Fans"]
+            for fan in fans:
+                fan_status = fan["Status"]
+                if (fan_status["Health"] == "OK") and (fan_status["State"] == "Enabled") and (
+                        fan["Reading"] <= fan["MaxReadingRange"] and fan["Reading"] >= fan["MinReadingRange"]):
+                    result = True
+                else:
+                    result = False
+                fun_test.simple_assert(result, "Fan : {} is healthy".format(fan["Name"]))
+            fun_test.log("Successfully validated all the fans")
+
+        fun_test.test_assert(result, "Fans healthy")
+        return result
+
+    def validate_temperaure_sensors(self):
+        result = False
+        response = self.chassis_thermal()
+        if response["status"]:
+            temperature_sensors = response["data"]["Temperatures"]
+            for sensor in temperature_sensors:
+                sensor_status = sensor["Status"]
+                if (sensor_status["Health"] == "OK") and (sensor_status["State"] == "Enabled") and sensor["ReadingCelsius"] < sensor["UpperThresholdFatal"]:
+                    result = True
+                else:
+                    result = False
+                fun_test.simple_assert(result, "Temperature Sensor : {} is healthy".format(sensor["Name"]))
+            fun_test.log("validated all the temperature sensors")
+        fun_test.test_assert(result, "Temperature sensors healthy")
         return result
 
 
@@ -63,28 +280,7 @@ class Platform(ApcPduTestcase):
         self.intialize_handles()
 
     def run(self):
-        self.chassis_power()
-        self.chassis_thermal()
-        fan_speed = self.read_fans_data()
-        temperature = self.get_temperature()
-        fun_test.log("\nFan speed: {}\nTemperature : {}".format(fan_speed, temperature))
-        self.check_ssd_status(self.expected_ssds)
-        self.check_nu_ports(self.expected_ports_up)
-
-    def redfishtool(self, bmc_ip, username, password, sub_command=None, **kwargs):
-        if not getattr(self, "in_py3_env", False):
-            self.switch_to_py3_env()
-        cmd = "python3 redfishtool -r {bmc_ip} -u {username} -p {password}".format(bmc_ip=bmc_ip,
-                                                                                   username=username,
-                                                                                   password=password)
-        for k, v in kwargs.iteritems():
-            cmd += " -" + k + " " + v
-        if sub_command:
-            cmd += " " + sub_command
-
-        output = self.qa_02.command(cmd)
-        json_output = self.parse_output(output)
-        return json_output
+        pass
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -95,6 +291,8 @@ class Platform(ApcPduTestcase):
 
     def initialize_test_case_variables(self, test_case_name):
         test_case_dict = getattr(self, test_case_name, {})
+        if not test_case_dict:
+            fun_test.critical("Unable to find the test case: {} in the json file".format(test_case_name))
         for k, v in test_case_dict.iteritems():
             setattr(self, k, v)
         fun_test.log("Initialized the test case variables: {}".format(test_case_dict))
@@ -127,84 +325,18 @@ class Platform(ApcPduTestcase):
                                     target_port=self.come_handle.get_dpc_port(1, statistics=True),
                                     verbose=False)
         fs = Fs.get(self.fs)
+        fs.cleanup_attempted = True
         self.fpga_console_handle = fs.get_terminal()
-        
+
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         fun_test.simple_assert(service_host_spec, "Service host spec")
         self.qa_02 = Linux(**service_host_spec)
         self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
 
-    def switch_to_py3_env(self):
-        self.qa_02.command("cd /local/auto_admin/.local/bin")
-        self.in_py3_env = True
-
-    def chassis_power(self):
-        sub_command = "Chassis -1 Power"
-        additional = {"A": "Basic", "S": "Always"}
-        output = self.redfishtool(self.fs['bmc']['mgmt_ip'], self.credentials["username"], self.credentials["password"],
-                                  sub_command, **additional)
-        return output
-
-    def chassis_thermal(self):
-        sub_command = "Chassis -1 Thermal"
-        additional = {"A": "Basic", "S": "Always"}
-        output = self.redfishtool(self.fs['bmc']['mgmt_ip'], self.credentials["username"], self.credentials["password"],
-                                  sub_command, **additional)
-        return output
-
-    def get_temperature(self):
-        result = {}
-        output = self.chassis_thermal()
-        temperatures = output["Temperatures"]
-        for temperature in temperatures:
-            result[temperature["Name"]] = temperature["ReadingCelsius"]
-        return result
-
-    def parse_output(self, data):
-        result = {}
-        data = data.replace('\r', '')
-        data = data.replace('\n', '')
-        # \s+=>\s+(?P<json_output>{.*})
-        match_output = re.search(r'(?P<json_output>{.*})', data)
-        if match_output:
-            try:
-                result = json.loads(match_output.group('json_output'))
-            except:
-                fun_test.log("Unable to parse the output obtained from dpcsh")
-        return result
-
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, peek=True):
-        result = getattr(self, "f1_{}_dpc".format(f1)).command(cmd, legacy=True)
-        fun_test.simple_assert(result["status"], "Get DPCSH Data")
-        return result["data"]
-
-    def validate_fans(self):
-        output = self.chassis_thermal()
-        fans = output["Fans"]
-        for fan in fans:
-            fan_status = fan["Status"]
-            if (fan_status["Health"] == "OK") and (fan_status["State"] == "Enabled") and (
-                    fan["Reading"] <= fan["MaxReadingRange"]):
-                result = True
-            else:
-                result = False
-            fun_test.simple_assert(result, "Fan : {} is healthy".format(fan["Name"]))
-        fun_test.log("Successfully validated all the fans")
-        fun_test.test_assert(True, "Fans healthy")
-
-    def validate_temperaure_sensors(self):
-        output = self.chassis_thermal()
-        temperature_sensors = output["Temperatures"]
-        for sensor in temperature_sensors:
-            sensor_status = sensor["Status"]
-            if (sensor_status["Health"] == "OK") and (sensor_status["State"] == "Enabled") and sensor[
-                "ReadingCelsius"] < sensor["UpperThresholdFatal"]:
-                result = True
-            else:
-                result = False
-            fun_test.simple_assert(result, "Temperature Sensor : {} is healthy".format(sensor["Name"]))
-        fun_test.log("Successfully validated all the temperature sensors")
-        fun_test.test_assert(True, "Temperature sensors healthy")
+    # def get_dpcsh_data_for_cmds(self, cmd, f1=0, peek=True):
+    #     result = getattr(self, "f1_{}_dpc".format(f1)).command(cmd, legacy=True)
+    #     fun_test.simple_assert(result["status"], "Get DPCSH Data")
+    #     return result["data"]
 
     def get_platform_drop_information(self, system="come"):
         result = {"status": False, "data": {}}
@@ -254,7 +386,6 @@ class Platform(ApcPduTestcase):
         self.fpga_console_handle.switch_to_bmc_console(max_time)
         self.bmc_console = self.fpga_console_handle
 
-
     def get_platform_link(self, system="bmc", interface="bond0"):
         result = {"status": False, "link_detected": False}
         if system == "bmc":
@@ -302,21 +433,7 @@ class Platform(ApcPduTestcase):
             fun_test.log("Port linkstatus: {}".format(data))
         return result
 
-    def read_fans_data(self):
-        # todo: check with Parag if just fan speed is enough
-        result = {"status": False, "data": {}}
-        try:
-            output = self.chassis_thermal()
-            fans = output["Fans"]
-            for fan in fans:
-                result["data"][fan["Name"]] = fan["Reading"]
-            result["status"] = True
-        except Exception as ex:
-            fun_test.log(ex)
-            result = {"status": False}
-        fun_test.simple_assert(result["status"], "Read fan speed")
-        fun_test.log("Fan Readings: {}".format(result["data"])) if (result["status"]) else None
-        return result
+
 
     def read_dpu_data(self):
         # todo: dont know how to read the dpu data
@@ -390,17 +507,11 @@ class Platform(ApcPduTestcase):
         else:
             fun_test.log("Unable to get the drop information for system: {}".format(system))
         return result
-    
-    def check_if_redfish_is_active(self):
-        output = self.chassis_power()
-        result = True if output else False
-        keyword = "" if result else "in-"
-        fun_test.log("Redfishtool is {}active".format(keyword))
-        return result
 
     def check_bmc_serial_console(self):
         bmc_console_time = 40
         timer = FunTimer(max_time=bmc_console_time)
+        self.fpga_console_handle.command("pwd")
         self.fpga_console_handle.switch_to_bmc_console(bmc_console_time)
         self.fpga_console_handle.ifconfig()
         ifconfig = self.fpga_console_handle.ifconfig()
@@ -465,7 +576,6 @@ class Platform(ApcPduTestcase):
         bmc_ifconfig = self.get_interface(bmc_interface, system)
         result[system] = bmc_ifconfig
 
-
         fpga_interface = "eth0"
         system = "fpga"
         fpga_ifconfig = self.get_interface(fpga_interface, system)
@@ -497,6 +607,55 @@ class Platform(ApcPduTestcase):
     def check_ipmitoll(self):
         # todo : complete this function
         pass
+
+    def check_if_f1s_detected(self):
+        fun_test.log("Check if F1_0 is detected")
+        self.check_pci_dev(f1=0)
+
+        fun_test.log("Check if F1_1 is detected")
+        self.check_pci_dev(f1=1)
+
+    def check_ssd_via_dpcsh(self):
+        fun_test.log("Checking if SSD's are Active on F1_0")
+        self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+
+        fun_test.log("Checking if SSD's are Active on F1_1")
+        self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+
+    def check_ssd_via_fpga(self):
+        self.fpga_handle.command("cd apps")
+        output = self.fpga_handle.command("./regop -b 0xff200510 -s 0x100 -o 0x0 -c 5 -v 0x2f")
+        output = self.fpga_handle.command("./regop -b 0xff200510 -s 0x100 -o 0x0 -c 5 -v 0x2f")
+        regop_output = self.parse_fpga_ssd_output(output)
+        self.verify_fpga_ssd_data(regop_output, self.expected_ssds_f1_0)
+
+        output = self.fpga_handle.command("./regop -b 0xff200910 -s 0x100 -o 0x0 -c 5 -v 0x2f")
+        regop_output = self.parse_fpga_ssd_output(output)
+        self.verify_fpga_ssd_data(regop_output, self.expected_ssds_f1_1)
+
+    def parse_fpga_ssd_output(self, output):
+        result = {}
+        lines = output.split("\n")
+        ssd_count = 0
+        for line in lines:
+            match_ssd = re.search(r"OFFSET.*:(?P<hex_value>\w+)", line)
+            if match_ssd:
+                result[ssd_count] = match_ssd.group("hex_value")
+                ssd_count += 1
+        return result
+
+    def verify_fpga_ssd_data(self, regop_output, expected_ssds_up):
+        ssd_status_list = [hex_value[-3:] == "000" for ssd, hex_value in regop_output.iteritems()]
+        ssds_up = ssd_status_list.count(True)
+        fun_test.log("ssd status list(1-12): " + str(ssd_status_list))
+        fun_test.test_assert_expected(expected=expected_ssds_up, actual=ssds_up, message="SSD count")
+
+    def intialize_bmc_handle(self):
+        self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+        self.bmc_handle.set_prompt_terminator(r'~ #')
+
 
 if __name__ == "__main__":
     myscript = MyScript()

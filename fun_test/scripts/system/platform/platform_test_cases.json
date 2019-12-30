@@ -16,41 +16,49 @@
     "fpga_up_time_within": 180,
     "reboot_machine_test": false,
     "apc_pdu_power_cycle_test": false,
-    "check_docker": false,
+    "check_docker": true,
     "expected_dockers": 3,
     "check_portal": false,
     "check_ssd": true,
-    "expected_ssds_f1_0": 3,
-    "expected_ssds_f1_1": 3,
-    "check_ports": true,
-    "expected_nu_ports_f1_0": {
-      "NU": [],
-      "HNU": []
-    },
-    "expected_nu_ports_f1_1": {
-      "NU": [],
-      "HNU": []
-    }
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "check_ports": true
   },
   "BootSequenceBMC": {
     "bmc_up_time_within": 180,
     "reboot_machine_test": false,
     "apc_pdu_power_cycle_test": false,
-    "check_docker": false,
+    "check_docker": true,
     "expected_dockers": 3,
     "check_portal": false,
     "check_ssd": true,
-    "expected_ssds_f1_0": 3,
-    "expected_ssds_f1_1": 3,
-    "check_ports": true,
-    "expected_nu_ports_f1_0": {
-      "NU": [],
-      "HNU": []
-    },
-    "expected_nu_ports_f1_1": {
-      "NU": [],
-      "HNU": []
-    }
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "check_ports": true
+  },
+  "BootSequenceCOMe": {
+    "come_up_time_within": 300,
+    "reboot_machine_test": false,
+    "apc_pdu_power_cycle_test": false,
+    "check_docker": true,
+    "expected_dockers": 3,
+    "check_portal": false,
+    "check_ssd": true,
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "check_ports": true
   },
   "BMCLinkToggle": {
     "bmc_up_time_within": 180
@@ -89,5 +97,19 @@
     "bmc_reboot": true,
     "apc_pdu_power_cycle_test": false,
     "reboot_machine_test": false
+  },
+  "PCIEDiscoverySSDviaRC": {
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2
+  },
+  "HostConnectionViaPCIEBus": {
+    "volume_creation_details": {
+      "name": "platform_raw_volume_1",
+      "capacity": 32212254720,
+      "encrypt": true,
+      "stripe_count": 6,
+      "pvol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "compression_effort": 0
+    }
   }
 }

@@ -299,7 +299,7 @@ class Linux(object, ToDictMixin):
                 current_loop_count = 0
                 while current_loop_count < loop_count_max:
                     try:
-                        i = self.handle.expect(expects.values(), timeout=20)
+                        i = self.handle.expect(expects.values(), timeout=30)
                         if i == 0:
                             self._debug_expect_buffer()
                             if not self.use_telnet:
