@@ -5,8 +5,7 @@
         <td>
           <a href="/regression/releases">{{ description.key }}</a>
         </td>
-        <td *ngFor="let execution of description.value.executions">
-
+        <td *ngFor="let execution of description.value.executions | slice: 0:5">
           <a href="/regression/release_detail/{{ execution.id }}">
             <ng-container *ngIf="jobStatusTypes && (execution.state <= jobStatusTypes.COMPLETED) && (execution.state > jobStatusTypes.UNKNOWN)">
               <ng-container *ngIf="execution.result === 'PASSED'">
@@ -22,7 +21,6 @@
               <small>({{ execution?.build_number }})</small>
             </ng-container>
           </a>
-
         </td>
       </tr>
     </table>

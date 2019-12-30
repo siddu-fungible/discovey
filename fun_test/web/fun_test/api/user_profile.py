@@ -35,7 +35,7 @@ def user_profiles(request):
                              "id": profile.user.id}
                 result["user"] = user_dict
             except ObjectDoesNotExist:
-                error_message = "Unable to retrieve profile for {}".format(request.user)
+                error_message = "Unable to retrieve profile for {}. Please contact john.abraham@fungible.com".format(request.user)
                 logger.error(error_message)
                 raise Exception(error_message)
         else:
