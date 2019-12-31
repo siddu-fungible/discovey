@@ -7,14 +7,25 @@ class Netcat:
     def __init__(self, ip, port):
         self.buffer = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((ip, port))
+        self.ip = ip
+        self.port = port
+        self.socket.connect((self.ip, self.port))
+        self.terminate = None
+        self.stop_reading_trigger = False
+
+    def re_connect(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.ip, self.port))
         self.terminate = None
         self.stop_reading_trigger = False
 
     def read(self, length=1024):
         return self.socket.recv(length)
 
-    def read_until(self, expected_data, timeout=15, write_on_trigger=None, read_buffer=1024):
+    def read_until(self, expected_data, timeout=15, write_on_trigger=None, read_buffer=1024, close_on_write_trigger=False):
+        write_trigger_sent = False
+        if not self.socket:
+            self.re_connect()
         self.stop_reading_trigger = False
         self.buffer = ""
         if timeout:
@@ -40,9 +51,10 @@ class Netcat:
                             remove_list = []
                             for key, value in write_on_trigger.iteritems():
                                 if key in self.buffer:
-                                    self.write(value)
+                                    self.write(value, all=True)
                                     fun_test.log("==> {}".format(value))
                                     remove_list.append(key)
+                                    write_trigger_sent = True
                             for key in remove_list:
                                 del write_on_trigger[key]
                     if not new_data or expected_data in self.buffer:
@@ -54,6 +66,8 @@ class Netcat:
 
             time.sleep(0.00001)
         self.stop_reading_trigger = False
+        if write_trigger_sent and close_on_write_trigger:  # Couldn't find a reliable way to flush in a blocking socket
+            self.close()
         return self.buffer
 
     def stop_reading(self):
@@ -67,12 +81,18 @@ class Netcat:
     def clear_buffer(self):
         self.buffer = ""
 
-    def write(self, data):
-        self.socket.send(data)
+    def write(self, data, all=False):
+        if not self.socket:
+            self.re_connect()
+        if not all:
+            self.socket.send(data)
+        else:
+            self.socket.sendall(data)
 
     def close(self):
         self.terminate = True
         self.socket.close()
+        self.socket = None
         return self.buffer
 
 if __name__ == "__main__":
