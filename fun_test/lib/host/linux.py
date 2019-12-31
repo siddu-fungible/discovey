@@ -2930,6 +2930,13 @@ class Linux(object, ToDictMixin):
                 match_ehter = re.search(r'[\s\S]*ether\s+(?P<ether>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
                 match_hwaddr = re.search(r'[\s\S]*HWaddr\s+(?P<HWaddr>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
 
+                if not match_ipv4:
+                    fun_test.test_assert(False, "IPv4 address available for the interface: {}".format(interface))
+                if not match_ipv6:
+                    fun_test.test_assert(False, "IPv6 address available for the interface: {}".format(interface))
+                if not(match_ehter or match_hwaddr):
+                    fun_test.test_assert(False, "Mac address available  for the interface: {}".format(interface))
+
                 if match_interface and (match_ipv4 or match_ipv6) and (match_ehter or match_hwaddr):
                     one_data_set["interface"] = match_interface.group("interface")
                     one_data_set["ipv4"] = match_ipv4.group("ipv4") if match_ipv4 else ""

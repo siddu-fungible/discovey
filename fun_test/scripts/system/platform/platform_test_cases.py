@@ -1,4 +1,4 @@
-from redfish import *
+from platform import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
 from scripts.storage.storage_api_helper import *
 
@@ -32,9 +32,6 @@ class DiscoverStaticIP(Platform):
         fun_test.test_assert(bmc_up, "BMC reachable")
         come_up = self.come_handle.is_host_up()
         fun_test.test_assert(come_up, "COMe reachable")
-
-    def cleanup(self):
-        pass
 
     def initialize_variables(self):
         fs_name = "fs-142"
@@ -112,11 +109,8 @@ class PlatformComponentVersioningDiscovery(Platform):
         come_verified = self.verify_drop_version(system="come")
         fun_test.test_assert(come_verified, message="COMe DROP version verified")
 
-    def cleanup(self):
-        pass
 
-
-class BootSequenceFPGA(Platform, ApcPduTestcase):
+class BootSequenceFPGA(Platform):
 
     def describe(self):
         self.set_test_details(id=29,
@@ -156,6 +150,11 @@ class BootSequenceFPGA(Platform, ApcPduTestcase):
         self.basic_checks()
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
+
+    def basic_checks(self):
+        ApcPduTestcase.basic_checks(self)
+        self.validate_fans()
+        self.validate_temperaure_sensors()
 
     def cleanup(self):
         pass
@@ -199,6 +198,11 @@ class BootSequenceBMC(Platform):
 
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
 
+    def basic_checks(self):
+        ApcPduTestcase.basic_checks(self)
+        self.validate_fans()
+        self.validate_temperaure_sensors()
+
     def cleanup(self):
         pass
 
@@ -234,6 +238,11 @@ class BootSequenceCOMe(Platform):
 
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
+
+    def basic_checks(self):
+        ApcPduTestcase.basic_checks(self)
+        self.validate_fans()
+        self.validate_temperaure_sensors()
 
     def cleanup(self):
         pass
@@ -596,7 +605,7 @@ if __name__ == "__main__":
         # BootSequenceFPGA,
         # BootSequenceBMC,
         # BootSequenceCOMe,
-        BMCLinkToggle,
+        # BMCLinkToggle,
         # BMCColdBoot,
         # BMCIPMIReset,
         # BMCTransportForCommunication,
@@ -610,6 +619,7 @@ if __name__ == "__main__":
         # PCIEDiscoverySSDviaRC,
         # PcieDeviceDetection,
         # HostConnectionViaPCIEBus
+
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

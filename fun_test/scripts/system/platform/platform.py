@@ -265,7 +265,7 @@ class RedFishTool:
         return result
 
 
-class Platform(ApcPduTestcase):
+class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
     DROP_FILE_PATH = "fs_drop_version.json"
 
     def describe(self):
@@ -488,9 +488,6 @@ class Platform(ApcPduTestcase):
     def telnet_test(self):
         pass
 
-    def cleanup(self):
-        pass
-
     def verify_drop_version(self, system):
         result = False
         drop_info = self.get_platform_drop_information(system=system)
@@ -655,6 +652,82 @@ class Platform(ApcPduTestcase):
                               ssh_username=self.fs['bmc']['mgmt_ssh_username'],
                               ssh_password=self.fs['bmc']['mgmt_ssh_password'])
         self.bmc_handle.set_prompt_terminator(r'~ #')
+
+    def dmesg(self, system="come", store_logs=False):
+        handle = self.handles_list[system]
+        output = handle.command("dmesg")
+        if store_logs:
+            test_case = self.__class__.__name__
+            filename = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_{}_logs.txt".format(test_case, system))
+            fun_test.add_auxillary_file(description="{} {} logs".format(test_case, system), filename=filename)
+            with open(filename, "w+") as f:
+                f.write(output)
+        return output
+
+    def collect_come_logs(self):
+        logs = {}
+        logs["Dmesg"] = self.come_handle.command("dmesg")
+        logs["Uname"] = self.come_handle.command("uname -a")
+        logs["DPU information"] = self.come_handle.command("lspci -vv -d 1dad:")
+        try:
+            logs["F1 0 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=0, get_raw_output=True)
+            logs["F1 1 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=1, get_raw_output=True)
+            logs["F1 0 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0, get_raw_output=True)
+            logs["F1 1 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=1, get_raw_output=True)
+        except:
+            fun_test.log("Unable to collect the DPCSH data")
+        self.add_these_logs(logs, "come")
+
+    def collect_bmc_logs(self):
+        logs = {}
+        logs["Dmesg"] = self.bmc_handle.command("dmesg")
+        logs["Uname"] = self.bmc_handle.command("uname -a")
+        self.add_these_logs(logs, "bmc")
+
+    def collect_fpga_logs(self):
+        logs = {}
+        logs["Dmesg"] = self.fpga_handle.command("dmesg")
+        logs["Uname"] = self.fpga_handle.command("uname -a")
+        self.add_these_logs(logs, "fpga")
+
+    def add_these_logs(self, log_dict, system):
+        result = ""
+        test_case = self.__class__.__name__
+        filename = fun_test.get_test_case_artifact_file_name(post_fix_name="{}_{}_logs.txt".format(test_case, system))
+        fun_test.add_auxillary_file(description="{} {} logs".format(test_case, system), filename=filename)
+        for k, v in log_dict.iteritems():
+            result += "\n\n\n" + "-"*60 + str(k) + "-"*60 + "\n\n" + str(v)
+        with open(filename, "w+") as f:
+            f.write(result)
+
+    def install_image(self, system="come"):
+        #todo
+        pass
+
+    def upgrade_image(self, system="come"):
+        # todo
+        pass
+
+    def downgrade_image(self):
+        # todo
+        pass
+
+    def disable_fans(self):
+        # todo
+        pass
+
+    def load_module(self, module_name):
+        # todo
+        pass
+
+    def unload_module(self, module_name):
+        # todo
+        pass
+
+    def cleanup(self):
+        self.collect_come_logs()
+        self.collect_bmc_logs()
+        self.collect_fpga_logs()
 
 
 if __name__ == "__main__":

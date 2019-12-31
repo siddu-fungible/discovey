@@ -115,6 +115,7 @@ class ApcPduTestcase(FunTestCase):
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
 
+
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                     ssh_username=self.fs['come']['mgmt_ssh_username'],
                                     ssh_password=self.fs['come']['mgmt_ssh_password'])
@@ -382,7 +383,7 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
         result = False
         try:
             self.come_handle.enter_sudo()
@@ -391,6 +392,8 @@ class ApcPduTestcase(FunTestCase):
                 self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
             run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
             output = self.come_handle.command(run_cmd)
+            if get_raw_output:
+                return output
             result = self.parse_dpcsh_output(output)
             if "result" in result:
                 result = result["result"]
