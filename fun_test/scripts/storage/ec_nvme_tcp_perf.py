@@ -277,17 +277,19 @@ class ECVolumeLevelTestcase(FunTestCase):
         if not fun_test.shared_variables["ec"]["nvme_connect"]:
             # Checking nvme-connect status
             if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
+                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}".format(self.attach_transport.lower(),
                                                                                  self.test_network["f1_loopback_ip"],
                                                                                  str(self.transport_port),
-                                                                                 self.nvme_subsystem)
+                                                                                 self.nvme_subsystem,
+                                                                                 self.remote_ip)
             else:
-                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+                nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
                     self.attach_transport.lower(),
                     self.test_network["f1_loopback_ip"],
                     self.transport_port,
                     self.nvme_subsystem,
-                    self.io_queues)
+                    self.io_queues,
+                    self.remote_ip)
 
             nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
             fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
