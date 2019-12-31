@@ -90,8 +90,8 @@ def single_fs_setup(obj):
         fun_test.log("F1 ip used for csi_perf_test: {}".format(obj.csi_f1_ip))
         obj.perf_listener_host = obj.topology_helper.get_available_perf_listener_hosts()
         fun_test.log("perf_listener_host used for current test: {}".format(obj.perf_listener_host))
-        for obj.perf_listener_host_name, csi_perf_host_obj in obj.perf_listener_host.iteritems():
-            perf_listner_test_interface = csi_perf_host_obj.get_test_interface(index=0)
+        for obj.perf_listener_host_name, obj.csi_perf_host_obj in obj.perf_listener_host.iteritems():
+            perf_listner_test_interface = obj.csi_perf_host_obj.get_test_interface(index=0)
             obj.perf_listener_ip = perf_listner_test_interface.ip.split('/')[0]
             fun_test.log("csi perf listener host ip is: {}".format(obj.perf_listener_ip))
         # adding csi perf bootargs if csi_perf is enabled
@@ -522,7 +522,7 @@ def single_fs_setup(obj):
                         actual=obj.funcp_obj[index].container_info[container_name].exit_status(),
                         message="TFTP Image boot: init-fs1600 disabled: Configure Static route")
         '''
-        return obj
+    return obj
 
 
 def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_depth, size, operation, write_iops,

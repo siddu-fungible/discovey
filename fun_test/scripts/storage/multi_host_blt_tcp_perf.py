@@ -207,9 +207,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Ensuring perf_host is able to ping F1 IP
         if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
-            csi_perf_host_instance = Linux(host_ip=csi_perf_host_obj.spec["host_ip"],
-                                           ssh_username=csi_perf_host_obj.spec["ssh_username"],
-                                           ssh_password=csi_perf_host_obj.spec["ssh_password"])
+            csi_perf_host_instance = Linux(host_ip=self.csi_perf_host_obj.spec["host_ip"],
+                                           ssh_username=self.csi_perf_host_obj.spec["ssh_username"],
+                                           ssh_password=self.csi_perf_host_obj.spec["ssh_password"])
             ping_status = csi_perf_host_instance.ping(dst=self.csi_f1_ip)
             fun_test.test_assert(ping_status, "Host {} is able to ping to F1 IP {}".
                                  format(self.perf_listener_host_name, self.csi_f1_ip))
