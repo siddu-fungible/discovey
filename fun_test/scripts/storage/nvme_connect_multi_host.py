@@ -617,16 +617,15 @@ class MultiNvmeConnect(FunTestCase):
             self.ctrlr_uuid.append(cur_uuid)
             self.vol_list[i]["ctrl_uuid"] = cur_uuid
             self.vol_list[i]["nqn"] = nqn
-            command_result = self.storage_controller.create_controller(
-                ctrlr_id=i,
-                ctrlr_uuid=cur_uuid,
-                ctrlr_type="BLOCK",
-                transport=unicode.upper(self.transport_type),
-                remote_ip=self.host_ips[i],
-                subsys_nqn=nqn,
-                host_nqn=self.host_ips[i],
-                port=self.transport_port,
-                command_duration=self.command_timeout)
+            command_result = self.storage_controller.create_controller(ctrlr_id=i,
+                                                                       ctrlr_uuid=cur_uuid,
+                                                                       ctrlr_type="BLOCK",
+                                                                       transport=unicode.upper(self.transport_type),
+                                                                       remote_ip=self.host_ips[i],
+                                                                       subsys_nqn=nqn,
+                                                                       host_nqn=self.host_ips[i],
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
                                  format(self.transport_type, cur_uuid))
@@ -994,13 +993,15 @@ class NVMeConnectWithSpurious(FunTestCase):
             self.ctrlr_uuid.append(cur_uuid)
             self.vol_list[i]["ctrl_uuid"] = cur_uuid
             self.vol_list[i]["nqn"] = nqn
-            command_result = self.storage_controller.create_controller(
-                ctrlr_uuid=cur_uuid,
-                transport=unicode.upper(self.transport_type),
-                remote_ip=self.host_ips[i],
-                nqn=nqn,
-                port=self.transport_port,
-                command_duration=self.command_timeout)
+            command_result = self.storage_controller.create_controller(ctrlr_id=i,
+                                                                       ctrlr_uuid=cur_uuid,
+                                                                       ctrlr_type="BLOCK",
+                                                                       transport=unicode.upper(self.transport_type),
+                                                                       remote_ip=self.host_ips[i],
+                                                                       subsys_nqn=nqn,
+                                                                       host_nqn=self.host_ips[i],
+                                                                       port=self.transport_port,
+                                                                       command_duration=self.command_timeout)
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "Creating controller for {} with uuid {} on DUT".
                                  format(self.transport_type, cur_uuid))
