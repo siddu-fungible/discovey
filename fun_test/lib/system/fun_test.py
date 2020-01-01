@@ -1026,6 +1026,7 @@ class FunTest:
     def add_time_series_log(self, data, epoch_time=None):
         if not epoch_time:
             epoch_time = get_current_epoch_time()
+        data = data.decode('utf-8', 'ignore')
         self.add_time_series_document(collection_name=self.get_time_series_collection_name(),
                                       epoch_time=epoch_time,
                                       type=TimeSeriesTypes.LOG,
