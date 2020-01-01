@@ -394,7 +394,7 @@ class Bmc(Linux):
                                      expected=self.U_BOOT_F1_PROMPT,
                                      f1_index=f1_index,
                                      write_on_trigger=write_on_trigger,
-                                     read_buffer=100,
+                                     read_buffer=512,
                                      close_on_write_trigger=True)
         # nc.stop_reading()
         # output = nc.get_buffer()
