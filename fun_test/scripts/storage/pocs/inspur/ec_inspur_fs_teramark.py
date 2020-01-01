@@ -116,534 +116,57 @@ class ECVolumeLevelScript(FunTestScript):
 
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        if self.testbed_type != "suite-based":
-            self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-            fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))
-            self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
-            self.available_hosts = self.fs_hosts_map[self.testbed_type]["host_info"]
-            self.full_dut_indexes = [int(i) for i in sorted(self.testbed_config["dut_info"].keys())]
-            # Skipping DUTs not required for this test
-            self.skip_dut_list = []
-            for index in xrange(0, self.dut_start_index):
-                self.skip_dut_list.append(index)
-            for index in xrange(self.dut_start_index + self.num_duts, len(self.full_dut_indexes)):
-                self.skip_dut_list.append(index)
-            fun_test.log("DUTs that will be skipped: {}".format(self.skip_dut_list))
-            self.available_dut_indexes = list(set(self.full_dut_indexes) - set(self.skip_dut_list))
-            self.available_dut_indexes = [int(i) for i in self.available_dut_indexes]
-            self.total_available_duts = len(self.available_dut_indexes)
-            fun_test.log("Total Available Duts: {}".format(self.total_available_duts))
-            self.topology_helper = TopologyHelper(spec=self.fs_hosts_map[self.testbed_type])
-            # Making topology helper to skip DUTs in this list to initialise
-            self.topology_helper.disable_duts(self.skip_dut_list)
-        # Pulling reserved DUTs and Hosts and test bed specific configuration if script is submitted with testbed-type
-        # suite-based
-        elif self.testbed_type == "suite-based":
-            self.topology_helper = TopologyHelper()
-            self.available_dut_indexes = self.topology_helper.get_available_duts().keys()
-            self.required_hosts = self.topology_helper.get_available_hosts()
-            self.testbed_config = self.topology_helper.spec
-            self.total_available_duts = len(self.available_dut_indexes)
+        self = single_fs_setup(self)
 
-        fun_test.test_assert(expression=self.num_duts <= self.total_available_duts, message="Testbed has enough DUTs")
+        # Forming shared variables for defined parameters
+        fun_test.shared_variables["topology"] = self.topology
+        fun_test.shared_variables["fs_obj"] = self.fs_objs
+        fun_test.shared_variables["come_obj"] = self.come_obj
+        fun_test.shared_variables["f1_obj"] = self.f1_objs
+        fun_test.shared_variables["sc_obj"] = self.sc_objs
+        fun_test.shared_variables["f1_ips"] = self.f1_ips
+        fun_test.shared_variables["host_handles"] = self.host_handles
+        fun_test.shared_variables["host_ips"] = self.host_ips
+        fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
+        fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
+        fun_test.shared_variables["num_f1s"] = self.num_f1s
+        fun_test.shared_variables["num_duts"] = self.num_duts
+        fun_test.shared_variables["syslog_level"] = self.syslog_level
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.tftp_image_path = fun_test.get_job_environment_variable("tftp_image_path")
-            self.bundle_image_parameters = fun_test.get_job_environment_variable("bundle_image_parameters")
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --mgmt"
-                if self.disable_wu_watchdog:
-                    self.bootargs[i] += " --disable-wu-watchdog"
-                if self.rxlog:
-                    self.bootargs[i] += " --rxlog"
+        for key in self.host_handles:
+            # Ensure all hosts are up after reboot
+            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                 message="Ensure Host {} is reachable after reboot".format(key))
 
-            for dut_index in self.available_dut_indexes:
-                self.topology_helper.set_dut_parameters(dut_index=dut_index,
-                                                        f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                                       1: {"boot_args": self.bootargs[1]}})
-            self.topology = self.topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
-
-            # Datetime required for daily Dashboard data filter
-            self.db_log_time = get_data_collection_time(tag="ec_inspur_fs_teramark_single_f1_single_vol")
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-
-            # Retrieving all Hosts list and filtering required hosts and forming required object lists out of it
-            if self.testbed_type != "suite-based":
-                hosts = self.topology.get_hosts()
-                fun_test.log("Available hosts are: {}".format(hosts))
-                required_host_index = []
-                self.required_hosts = OrderedDict()
-                for i in xrange(self.host_start_index, self.host_start_index + self.num_hosts):
-                    required_host_index.append(i)
-                fun_test.debug("Host index required for scripts: {}".format(required_host_index))
-                for j, host_name in enumerate(sorted(hosts)):
-                    if j in required_host_index:
-                        self.required_hosts[host_name] = hosts[host_name]
-
-            fun_test.log("Hosts that will be used for current test: {}".format(self.required_hosts.keys()))
-
-            self.hosts_test_interfaces = {}
-            self.host_handles = {}
-            self.host_ips = []
-            self.host_numa_cpus = {}
-            self.total_numa_cpus = {}
-            for host_name, host_obj in self.required_hosts.items():
-                # Retrieving host ips
-                if host_name not in self.hosts_test_interfaces:
-                    self.hosts_test_interfaces[host_name] = []
-                test_interface = host_obj.get_test_interface(index=0)
-                self.hosts_test_interfaces[host_name].append(test_interface)
-                host_ip = self.hosts_test_interfaces[host_name][-1].ip.split('/')[0]
-                self.host_ips.append(host_ip)
-                fun_test.log("Host-IP: {}".format(host_ip))
-                # Retrieving host handles
-                host_instance = host_obj.get_instance()
-                self.host_handles[host_ip] = host_instance
-
-            # Rebooting all the hosts in non-blocking mode before the test and getting NUMA cpus
-            for key in self.host_handles:
-                if self.override_numa_node["override"]:
-                    self.host_numa_cpus_filter = self.host_handles[key].lscpu(self.override_numa_node["override_node"])
-                    self.host_numa_cpus[key] = self.host_numa_cpus_filter[self.override_numa_node["override_node"]]
-                else:
-                    self.host_numa_cpus[key] = fetch_numa_cpus(self.host_handles[key], self.ethernet_adapter)
-
-                # Calculating the number of CPUs available in the given numa
-                self.total_numa_cpus[key] = 0
-                for cpu_group in self.host_numa_cpus[key].split(","):
-                    cpu_range = cpu_group.split("-")
-                    self.total_numa_cpus[key] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-                fun_test.log("Rebooting host: {}".format(key))
-                self.host_handles[key].reboot(non_blocking=True)
-            fun_test.log("NUMA CPU for Host: {}".format(self.host_numa_cpus))
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
-
-            # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
-            # for all the DUTs going to be used in the test
-            self.fs_obj = []
-            self.fs_spec = []
-            self.come_obj = []
-            self.f1_obj = {}
-            self.sc_obj = []
-            self.f1_ips = []
-            self.gateway_ips = []
-            for curr_index, dut_index in enumerate(self.available_dut_indexes):
-                self.fs_obj.append(self.topology.get_dut_instance(index=dut_index))
-                self.fs_spec.append(self.topology.get_dut(index=dut_index))
-                self.come_obj.append(self.fs_obj[curr_index].get_come())
-                self.f1_obj[curr_index] = []
-                for j in xrange(self.num_f1_per_fs):
-                    self.f1_obj[curr_index].append(self.fs_obj[curr_index].get_f1(index=j))
-                    self.sc_obj.append(self.f1_obj[curr_index][j].get_dpc_storage_controller())
-
-            # Bringing up of FunCP docker container if it is needed
-            self.funcp_obj = {}
-            self.funcp_spec = {}
-            self.funcp_obj[0] = StorageFsTemplate(self.come_obj[0])
-            if self.bundle_image_parameters:
-                fun_test.log("Bundle image installation")
-                if self.install == "fresh":
-                    # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
-                    fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
-                    path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
-                    if self.come_obj[0].check_file_directory_exists(path=path):
-                        self.come_obj[0].command("cd {}".format(self.sc_script_dir))
-                        # Restarting run_sc with -c option
-                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
-                                                 timeout=self.run_sc_restart_timeout)
-                        fun_test.test_assert_expected(
-                            expected=0, actual=self.come_obj[0].exit_status(),
-                            message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
-                        # Check if run_sc container is running
-                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                        timer = FunTimer(max_time=self.container_up_timeout)
-                        while not timer.is_expired():
-                            run_sc_name = self.come_obj[0].command(
-                                run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
-                            if run_sc_name:
-                                fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
-                                break
-                            else:
-                                fun_test.sleep("for the run_sc docker container to start", 1)
-                                fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
-                        else:
-                            fun_test.critical(
-                                "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
-                                "after cleaning up the DB".format(self.container_up_timeout))
-                            fun_test.test_assert(
-                                False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
-
-                self.funcp_spec[0] = self.funcp_obj[0].get_container_objs()
-                self.funcp_spec[0]["container_names"].sort()
-                # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-                # chances are that it may die within few seconds after restart
-                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                run_sc_name = self.come_obj[0].command(run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
-                fun_test.simple_assert(run_sc_name, "Bundle Image boot: run_sc: Container is up and running")
-
-                # Declaring SC API controller
-                self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
-                                                   api_server_port=self.api_server_port,
-                                                   username=self.api_server_username,
-                                                   password=self.api_server_password)
-
-                # Polling for API Server status
-                api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
-                while not api_server_up_timer.is_expired():
-                    api_server_response = self.sc_api.get_api_server_health()
-                    if api_server_response["status"]:
-                        fun_test.log("Bundle Image boot: API server is up and running")
-                        break
-                    else:
-                        fun_test.sleep("waiting for API server to be up", 10)
-                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
-                fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
-                                       message="Bundle Image boot: API server is up")
-                fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
-                # Check if bond interface status is Up and Running
-                for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
-                    if container_name == "run_sc":
-                        continue
-                    bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(container_name=container_name,
-                                                                                    name="bond0")
-                    # If bond interface is still not in UP and RUNNING state, flip it
-                    if not bond_interfaces_status:
-                        fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
-                        bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
-                            container_name=container_name, name="bond0", flip_interface=True)
-                    fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
-                                                  message="Bundle Image boot: Bond Interface is Up & Running")
-                # If fresh install, configure dataplane ip as database is cleaned up
-                if self.install == "fresh":
-                    # Getting all the DUTs of the setup
-                    nodes = self.sc_api.get_dpu_ids()
-                    fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
-                    for node_index, node in enumerate(nodes):
-                        # Extracting the DUT's bond interface details
-                        ip = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
-                        ip = ip.split('/')[0]
-                        subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
-                            str(node_index % 2)][str(0)]["subnet_mask"]
-                        route = self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                            str(0)]["route"][0]
-                        next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                        self.f1_ips.append(ip)
-
-                        fun_test.log(
-                            "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
-                            "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-                        # Configuring Dataplane IP
-                        result = self.sc_api.configure_dataplane_ip(
-                            dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                            use_dhcp=False)
-                        fun_test.log(
-                            "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
-                        fun_test.test_assert(
-                            result["status"],
-                            "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
-                else:
-                    # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
-                    pass
-            elif self.tftp_image_path:
-                fun_test.log("TFTP image installation")
-                # Check the init-fs1600 service is running, check all the required dockers are running
-                fun_test.simple_assert(init_fs1600_status(self.come_obj[0]),
-                                       "TFTP image boot: init-fs1600 service status: enabled")
-                expected_containers = ['F1-0', 'F1-1', 'run_sc']
-                container_chk_timer = FunTimer(max_time=(self.container_up_timeout * 2))
-                while not container_chk_timer.is_expired():
-                    container_names = self.funcp_obj[0].get_container_names(
-                        stop_run_sc=False, include_storage=True)['container_name_list']
-                    if all(container in container_names for container in expected_containers):
-                        fun_test.log("TFTP image boot: init-fs1600 enabled: Expected containers are up and running")
-                        break
-                    else:
-                        fun_test.sleep(
-                            "TFTP image boot: init-fs1600 enabled: waiting for expected containers to show up", 10)
-                        fun_test.log("Remaining Time: {}".format(container_chk_timer.remaining_time()))
-                # Asserting if expected containers are not UP status
-                fun_test.simple_assert(not container_chk_timer.is_expired(),
-                                       "TFTP image boot: init-fs1600 enabled: Expected containers are running")
-                # Cleaning up DB by restarting run_sc.py script with -c option
-                if self.install == "fresh":
-                    fun_test.log("TFTP image boot: init-fs1600 enabled: It's a fresh install. Cleaning up the database")
-                    path = "{}/{}".format(self.sc_script_dir, self.run_sc_script)
-                    if self.come_obj[0].check_file_directory_exists(path=path):
-                        self.come_obj[0].command("cd {}".format(self.sc_script_dir))
-                        # restarting run_sc with -c option
-                        self.come_obj[0].command("sudo ./{} -c restart".format(self.run_sc_script),
-                                                 timeout=self.run_sc_restart_timeout)
-                        fun_test.test_assert_expected(
-                            expected=0, actual=self.come_obj[0].exit_status(),
-                            message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
-                                    "restarted with cleanup")
-                        # Check if run_sc container is up and running
-                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                        timer = FunTimer(max_time=self.container_up_timeout)
-                        while not timer.is_expired():
-                            run_sc_name = self.come_obj[0].command(
-                                run_sc_status_cmd, timeout=self.command_timeout).split("\n")[0]
-                            if run_sc_name:
-                                fun_test.log("TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
-                                             "Container is up and running")
-                                break
-                            else:
-                                fun_test.sleep("for the run_sc docker container to start", 1)
-                                fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
-                        else:
-                            fun_test.critical(
-                                "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
-                                "restarted within {} seconds after cleaning up the DB".format(
-                                    self.container_up_timeout))
-                            fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
-                                                        "Cleaning DB and restarting run_sc container")
-
-                        self.funcp_spec[0] = self.funcp_obj[0].get_container_objs()
-                        self.funcp_spec[0]["container_names"].sort()
-                        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-                        # chances are that it may die within few seconds after restart
-                        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                        run_sc_name = self.come_obj[0].command(run_sc_status_cmd,
-                                                               timeout=self.command_timeout).split("\n")[0]
-                        fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
-                                                            "Container is up and running")
-
-                        # Declaring SC API controller
-                        self.sc_api = StorageControllerApi(api_server_ip=self.come_obj[0].host_ip,
-                                                           api_server_port=self.api_server_port,
-                                                           username=self.api_server_username,
-                                                           password=self.api_server_password)
-
-                        # Polling for API Server status
-                        api_server_up_timer = FunTimer(max_time=self.api_server_up_timeout)
-                        while not api_server_up_timer.is_expired():
-                            api_server_response = self.sc_api.get_api_server_health()
-                            if api_server_response["status"]:
-                                fun_test.log(
-                                    "TFTP Image boot: init-fs1600 enabled: API server is up and running")
-                                break
-                            else:
-                                fun_test.sleep(" waiting for API server to be up", 10)
-                                fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
-                        fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
-                                               message="TFTP Image boot: init-fs1600 enabled: API server is up")
-                        fun_test.sleep(
-                            "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-                        # Check if bond interface status is Up and Running
-                        for f1_index, container_name in enumerate(self.funcp_spec[0]["container_names"]):
-                            if container_name == "run_sc":
-                                continue
-                            bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
-                                container_name=container_name,
-                                name="bond0")
-                            # If bond interface is still not in UP and RUNNING state, flip it
-                            if not bond_interfaces_status:
-                                fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
-                                             "speculated time, flipping it..")
-                                bond_interfaces_status = self.funcp_obj[0].is_bond_interface_up(
-                                    container_name=container_name, name="bond0", flip_interface=True)
-                            fun_test.test_assert_expected(
-                                expected=True, actual=bond_interfaces_status,
-                                message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
-                        # Configure dataplane ip as database is cleaned up
-                        # Getting all the DUTs of the setup
-                        nodes = self.sc_api.get_dpu_ids()
-                        fun_test.test_assert(nodes,
-                                             "TFTP Image boot: init-fs1600 enabled: Getting UUIDs of all DUTs "
-                                             "in the setup")
-                        for node_index, node in enumerate(nodes):
-                            # Extracting the DUT's bond interface details
-                            ip = \
-                                self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                                    str(0)]["ip"]
-                            ip = ip.split('/')[0]
-                            subnet_mask = self.fs_spec[node_index / 2].spec["bond_interface_info"][
-                                str(node_index % 2)][str(0)]["subnet_mask"]
-                            route = \
-                                self.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                                    str(0)]["route"][0]
-                            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                            self.f1_ips.append(ip)
-
-                            fun_test.log(
-                                "TFTP Image boot: init-fs1600 enabled: Current {} node's bond0 is going to be "
-                                "configured with {} IP address with {} subnet mask with next hop set to {}".
-                                    format(node, ip, subnet_mask, next_hop))
-                            result = self.sc_api.configure_dataplane_ip(
-                                dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
-                                next_hop=next_hop,
-                                use_dhcp=False)
-                            fun_test.log("TFTP Image boot: init-fs1600 enabled: Dataplane IP configuration "
-                                         "result of {}: {}".format(node, result))
-                            fun_test.test_assert(result["status"],
-                                                 "TFTP Image boot: init-fs1600 enabled: Configuring {} DUT "
-                                                 "with Dataplane IP {}".format(node, ip))
-
-            # Forming shared variables for defined parameters
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs_obj"] = self.fs_obj
-            fun_test.shared_variables["come_obj"] = self.come_obj
-            fun_test.shared_variables["f1_obj"] = self.f1_obj
-            fun_test.shared_variables["sc_obj"] = self.sc_obj
-            fun_test.shared_variables["f1_ips"] = self.f1_ips
-            fun_test.shared_variables["host_handles"] = self.host_handles
-            fun_test.shared_variables["host_ips"] = self.host_ips
-            fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-            fun_test.shared_variables["num_f1s"] = self.num_f1s
-            fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
-
-            for key in self.host_handles:
-                # Ensure all hosts are up after reboot
-                fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                     message="Ensure Host {} is reachable after reboot".format(key))
-
-                # TODO: enable after mpstat check is added
-                """
-                # Check and install systat package
-                install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-                fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-                """
-                # Ensure required modules are loaded on host server, if not load it
-                for module in self.load_modules:
-                    module_check = self.host_handles[key].lsmod(module)
-                    if not module_check:
-                        self.host_handles[key].modprobe(module)
-                        module_check = self.host_handles[key].lsmod(module)
-                        fun_test.sleep("Loading {} module".format(module))
-                    fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-            # Ensuring connectivity from Host to F1's
-            for key in self.host_handles:
-                for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip)
-                    fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                         format(key, self.funcp_spec[0]["container_names"][index], ip))
-
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --csr-replay"
-                if self.disable_wu_watchdog:
-                    self.bootargs[i] += " --disable-wu-watchdog"
-
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                              1: {"boot_args": self.bootargs[1]}})
-            self.topology = topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
-
-            self.fs = self.topology.get_dut_instance(index=0)
-            self.f1 = self.fs.get_f1(index=self.f1_in_use)
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-
-            self.storage_controller = self.f1.get_dpc_storage_controller()
-
-            # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0, f1_index=self.f1_in_use)
-            for host_ip, host_info in fpg_connected_hosts.iteritems():
-                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
-                    continue
-                if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                    self.end_host = host_info["host_obj"]
-                    self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                    self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                    fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
-                    break
-            else:
-                fun_test.test_assert(False, "Host found with Test Interface")
-
-            self.test_network = self.csr_network[str(self.fpg_inteface_index)]
-            fun_test.shared_variables["end_host"] = self.end_host
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs"] = self.fs
-            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-            fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog_level"] = self.syslog_level
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
-            fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-            # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-            if self.override_numa_node["override_node"]:
-                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
-                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
-            else:
-                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
-
-            # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus = 0
-            for cpu_group in self.numa_cpus.split(","):
-                cpu_range = cpu_group.split("-")
-                self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
-            fun_test.shared_variables["numa_cpus"] = self.numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-
-            # Configuring Linux host
-            host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
-                                                  reboot_initiated_wait_time=self.reboot_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
-
-            interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                                 self.test_interface_name)
-            interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
-                                                                      self.test_network["test_interface_mac"])
-            link_up_cmd = "ip link set {} up".format(self.test_interface_name)
-            static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
-                                                   self.test_network["test_net_route"]["arp"])
-
-            interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
-                                                                    timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Configuring test interface IP address")
-
-            interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
-                                                              timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Assigning MAC to test interface")
-
-            link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Bringing up test link")
-
-            interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                                 action="up")
-            fun_test.test_assert(interface_up_status, "Bringing up test interface")
-
-            route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
-                                                          gateway=self.test_network["test_net_route"]["gw"],
-                                                          outbound_interface=self.test_interface_name,
-                                                          timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-
-            arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Adding static ARP to F1 route")
-
-            # Loading the nvme and nvme_tcp modules
+            # TODO: enable after mpstat check is added
+            """
+            # Check and install systat package
+            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+            """
+            # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
-                module_check = self.end_host.lsmod(module)
+                module_check = self.host_handles[key].lsmod(module)
                 if not module_check:
-                    self.end_host.modprobe(module)
-                    module_check = self.end_host.lsmod(module)
+                    self.host_handles[key].modprobe(module)
+                    module_check = self.host_handles[key].lsmod(module)
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
-        fun_test.shared_variables["testbed_config"] = self.testbed_config
+        # Ensuring connectivity from Host to F1's
+        for key in self.host_handles:
+            for index, ip in enumerate(self.f1_ips):
+                ping_status = self.host_handles[key].ping(dst=ip)
+                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
             if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["enable_funcp"]:
-                self.fs = self.fs_obj[0]
+                self.fs = self.fs_objs[0]
                 self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
                     self.testbed_config["workarounds"]["csr_replay"]:
