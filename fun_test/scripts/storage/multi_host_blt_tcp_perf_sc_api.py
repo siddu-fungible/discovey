@@ -469,7 +469,13 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching BLT volume {} to the host {}".
                                      format(self.thin_uuid_list[i], self.host_ips[ctrlr_index]))
-                self.nqn_list.append(attach_volume["data"]["nqn"])
+                # Extracting the NVMe subsys nqn from the volume attach output, which needs to be passed to the -n
+                # option in the NVMe connect command
+                subsys_nqn = attach_volume["data"].get("nqn")
+                subsys_nqn = attach_volume["data"].get("subsys_nqn")
+                fun_test.simple_assert(subsys_nqn, "Extracted the Subsys NQN to which volume {} got attached".
+                                       format(self.thin_uuid_list[i]))
+                self.nqn_list.append(subsys_nqn)
                 self.detach_uuid_list.append(attach_volume["data"]["uuid"])
 
             fun_test.shared_variables["detach_uuid_list"] = self.detach_uuid_list
