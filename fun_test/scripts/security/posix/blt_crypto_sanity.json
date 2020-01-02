@@ -1,0 +1,1205 @@
+{
+  "BLTKey256": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTKey256RW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"CEFAEDFE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTKey256RandRW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"CAFEBABE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTKey512": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FBADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTKey512RW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BAADA555\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTKey512RandRW": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": false,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_rwmixread": 30,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"0000000FF1CE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "WrongKey": {
+    // Volume count from here should have been 25 till CreateDelete512 test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 60,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "WrongTweak": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 6,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "CreateDelete256": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "CreateDelete512": {
+    "volume_count": 1,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT256": {
+    // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"1CEB00DA\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT256RW": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"E011CFD0\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT256RandRW": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"ABADBABE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT512": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BBADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT512RW": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FEEEFEEE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultipleBLT512RandRW": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_rwmixread": 30,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FACEFEED\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "EncryptDisable": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "disable"
+    },
+    "key_size": 43,
+    "xtweak_size": 7,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "traffic_parallel": true,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADC0DE\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 0, "decrypt_fails": 0, "decrypt_reqs": 0}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    }
+  },
+  "BLTRandomKey": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 20971520,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "MultiVolRandKeyRandCap": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTFioDetach": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": true,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 8)",
+      "(16, 16)",
+      "(32, 32)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTFioEncZeroPattern": {
+    // Volume count from here should have been 8 till end of test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": "Auto",
+      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_fatal": 1,
+      "verify_pattern": "0x000000000",
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 4)",
+      "(8, 4)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTFioEncDeadBeefPattern": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 134217728,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 2)",
+      "(16, 4)",
+      "(32, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  },
+  "BLTAlternateEncrypt": {
+    "volume_count": 2,
+    "volume_details": {
+      "capacity": 134217728,
+      "block_size": 4096,
+      "encrypt": "alternate"
+    },
+    "key_size": "random",
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": true,
+    "fio_cmd_args": {
+      "io_queues": 2,
+      "size": "4m",
+      "verify": "pattern",
+      "verify_fatal": 1,
+      "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
+      "timeout": 240
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
+    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+  }
+}
