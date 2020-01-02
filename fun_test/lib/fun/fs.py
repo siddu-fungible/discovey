@@ -298,10 +298,10 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def u_boot_command(self, f1_index, command, timeout=15, expected=None, write_on_trigger=None):
+    def u_boot_command(self, f1_index, command, timeout=15, expected=None, write_on_trigger=None, read_buffer=1024, close_on_write_trigger=False):
         nc = self.nc[f1_index]
         nc.write(command + "\n")
-        output = nc.read_until(expected_data=expected, timeout=timeout, write_on_trigger=write_on_trigger)
+        output = nc.read_until(expected_data=expected, timeout=timeout, write_on_trigger=write_on_trigger, read_buffer=read_buffer, close_on_write_trigger=close_on_write_trigger)
         self.detect_version(output)
 
         fun_test.log(message=output, context=self.context)
@@ -405,10 +405,12 @@ class Bmc(Linux):
         if not auto_boot:
             write_on_trigger = {"Autoboot in": "noboot\n"}
         output = self.u_boot_command(command="",
-                            timeout=90,
-                            expected=self.U_BOOT_F1_PROMPT,
-                            f1_index=f1_index,
-                            write_on_trigger=write_on_trigger)
+                                     timeout=90,
+                                     expected=self.U_BOOT_F1_PROMPT,
+                                     f1_index=f1_index,
+                                     write_on_trigger=write_on_trigger,
+                                     read_buffer=512,
+                                     close_on_write_trigger=True)
         # nc.stop_reading()
         # output = nc.get_buffer()
         # fun_test.log(message=output, context=self.context)
@@ -1039,8 +1041,8 @@ class BootupWorker(Thread):
                         else:
                             fs.get_bmc().reset_f1(f1_index=f1_index)
                         preamble = bmc.get_preamble(f1_index=f1_index, auto_boot=fs.is_auto_boot())
-                        if fs.validate_u_boot_version:
-                            fun_test.log("Preamble: {}".format(preamble))
+                        # if fs.validate_u_boot_version:
+                        #    fun_test.log("Preamble: {}".format(preamble))
                         fun_test.test_assert(
                             expression=bmc.u_boot_load_image(index=f1_index,
                                                              tftp_image_path=fs.tftp_image_path,

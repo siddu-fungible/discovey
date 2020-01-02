@@ -178,6 +178,7 @@ def filter_rcnvme_and_sum(dpcsh_data):
     result = {}
     allow = ["rcnvme_write_count", "rcnvme_read_count"]
     sum_read_count = 0
+    sum_write_count = 0
     if dpcsh_data:
         for ssd, value in dpcsh_data.iteritems():
             result[ssd] = {}
@@ -185,7 +186,10 @@ def filter_rcnvme_and_sum(dpcsh_data):
                 result[ssd][allowed] = value[allowed]
                 if allowed == "rcnvme_read_count":
                     sum_read_count += value[allowed]
+                elif allowed == "rcnvme_write_count":
+                    sum_write_count += value[allowed]
         result["100"] = {}
         result["100"]["rcnvme_read_count"] = sum_read_count
+        result["100"]["rcnvme_write_count"] = sum_write_count
     return result
 

@@ -28,9 +28,9 @@ def login(request):
                     auth_login(request, user)
                     result = True
             else:
-                raise Exception("Unable to authenticate user: {}".format(email))
+                raise Exception("Unable to authenticate user: {}. Please contact john.abraham@fungible.com".format(email))
         except ObjectDoesNotExist:
-            raise Exception("User {} does not exist".format(email))
+            raise Exception("User {} does not exist. Please contact john.abraham@fungible.com".format(email))
     if request.method == "GET":
         if request.user and request.user.is_authenticated():
             result = request.user.username
