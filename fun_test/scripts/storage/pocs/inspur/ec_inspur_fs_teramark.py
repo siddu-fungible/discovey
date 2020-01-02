@@ -164,14 +164,8 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
-            if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["enable_funcp"]:
-                self.fs = self.fs_objs[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["csr_replay"]:
-                self.fs = fun_test.shared_variables["fs"]
-                self.storage_controller = fun_test.shared_variables["storage_controller"]
+            self.fs = self.fs_objs[0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.remote_ip = fun_test.shared_variables["remote_ip"]
@@ -242,8 +236,6 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
-
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog_level = fun_test.shared_variables["syslog_level"]
         num_ssd = self.num_ssd
         fun_test.shared_variables["num_ssd"] = num_ssd
@@ -251,36 +243,22 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
-
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = fun_test.shared_variables["fs_obj"]
-            self.come_obj = fun_test.shared_variables["come_obj"]
-            self.f1 = fun_test.shared_variables["f1_obj"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
-            self.host_handles = fun_test.shared_variables["host_handles"]
-            self.host_ips = fun_test.shared_variables["host_ips"]
-            self.end_host = self.host_handles[self.host_ips[0]]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
-            self.num_f1s = fun_test.shared_variables["num_f1s"]
-            self.test_network = {}
-            self.test_network["f1_loopback_ip"] = self.f1_ips
-            self.remote_ip = self.host_ips[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
-            self.num_duts = fun_test.shared_variables["num_duts"]
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-            self.fs = fun_test.shared_variables["fs"]
-            self.end_host = fun_test.shared_variables["end_host"]
-            self.test_network = fun_test.shared_variables["test_network"]
-            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
+        self.fs = fun_test.shared_variables["fs_obj"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+        self.f1 = fun_test.shared_variables["f1_obj"][0][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_handles = fun_test.shared_variables["host_handles"]
+        self.host_ips = fun_test.shared_variables["host_ips"]
+        self.end_host = self.host_handles[self.host_ips[0]]
+        self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+        self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+        self.num_f1s = fun_test.shared_variables["num_f1s"]
+        self.test_network = {}
+        self.test_network["f1_loopback_ip"] = self.f1_ips
+        self.remote_ip = self.host_ips[0]
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
+        self.num_duts = fun_test.shared_variables["num_duts"]
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -356,26 +334,14 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             if not fun_test.shared_variables["ec"]["nvme_connect"]:
                 # Checking nvme-connect status
-                if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                        self.testbed_config["workarounds"]["enable_funcp"]:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, self.remote_ip)
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues), self.remote_ip)
+                if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                    nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
+                        format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                               str(self.transport_port), self.nvme_subsystem, self.remote_ip)
                 else:
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem)
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues))
-
+                    nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
+                        format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                               str(self.transport_port), self.nvme_subsystem, str(self.io_queues), self.remote_ip)
                 nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
                 fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
                 fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
