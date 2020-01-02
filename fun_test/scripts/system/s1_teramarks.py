@@ -229,7 +229,7 @@ class CryptoCCPSanityTc(PalladiumTc):
 
 
 class SoakFlowsMemcpy1MbNonCohTc(PalladiumTc):
-    boot_args = "app=soak_flows_memcpy_1MB_non_coh"
+    boot_args = "app=soak_flows_memcpy_64KB_non_coh"
     tags = "qa_s1_soak_flows_memcpy_non_coh"
     note = "soak flows memcpy 1mb non coh on S1"
     max_duration = 5000
