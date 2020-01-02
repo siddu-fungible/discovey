@@ -629,6 +629,9 @@ class SrpingSeqIoTest(FunTestCase):
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_count = fun_test.shared_variables["test_count"]
         tool_debug = fun_test.shared_variables["ping_debug"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -671,6 +674,10 @@ class SrpingSeqIoTest(FunTestCase):
         fun_test.log("Running tests for size {}".format(io_list))
 
         for size in io_list:
+            # FCP stats before test on F10 & F11
+            f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
             f10_host_test = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f11_host_test = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
@@ -693,6 +700,41 @@ class SrpingSeqIoTest(FunTestCase):
                                                            debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
+
+            # FCP stats after test on F10 & F11
+            f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+            if self.fcp:
+                f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                    fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                # NFCP counters check
+                counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                for cname in counter_names:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                       f10_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                        counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                       f11_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                    except:
+                        fun_test.critical("NFCP counter issue")
 
         fun_test.test_assert(True, "Srping {} IO test".format(test))
 
@@ -741,6 +783,9 @@ class RpingSeqIoTest(FunTestCase):
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_count = fun_test.shared_variables["test_count"]
         tool_debug = fun_test.shared_variables["ping_debug"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -783,6 +828,10 @@ class RpingSeqIoTest(FunTestCase):
         fun_test.log("Running tests for size {}".format(io_list))
 
         for size in io_list:
+            # FCP stats before test on F10 & F11
+            f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
             f10_host_test = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug)
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_test = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
@@ -805,6 +854,41 @@ class RpingSeqIoTest(FunTestCase):
                                                            debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f10_host_result, "F10_host result for size {}".format(size))
             fun_test.simple_assert(f11_host_result, "F11_host result for size {}".format(size))
+
+            # FCP stats after test on F10 & F11
+            f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+            f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+            if self.fcp:
+                f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                    fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                if counter_diff == 0:
+                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                # NFCP counters check
+                counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                for cname in counter_names:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                       f10_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                        counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                       f11_fcp_stats_before["data"][cname]
+                        if counter_diff != 0 and counter_diff > 500:
+                            fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                    except:
+                        fun_test.critical("NFCP counter issue")
 
         fun_test.test_assert(True, "Rping {} IO test".format(test))
 
@@ -854,6 +938,9 @@ class IbBwSeqIoTest(FunTestCase):
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_type_list = fun_test.shared_variables["test_type"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Check if ping works before running tests
         f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
@@ -906,6 +993,10 @@ class IbBwSeqIoTest(FunTestCase):
 
         for test in test_type_list:
             for size in io_list:
+                # FCP stats before test on F10 & F11
+                f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
                 f10_host_test = f10_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm)
                 f11_host_test = f11_host_roce.ib_bw_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                          server_ip=f10_hosts[0]["ipaddr"])
@@ -927,6 +1018,41 @@ class IbBwSeqIoTest(FunTestCase):
                                                                client_cmd=True)
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+                # FCP stats after test on F10 & F11
+                f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+                if self.fcp:
+                    f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                        fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                    # NFCP counters check
+                    counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                    for cname in counter_names:
+                        try:
+                            counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                           f10_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                            counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                           f11_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                        except:
+                            fun_test.critical("NFCP counter issue")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
@@ -1005,6 +1131,10 @@ class IbLatSeqIoTest(FunTestCase):
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_type_list = fun_test.shared_variables["test_type"]
 
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        self.fcp = fun_test.shared_variables["enable_fcp"]
+
         # Check if ping works before running tests
         f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
         f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
@@ -1054,6 +1184,10 @@ class IbLatSeqIoTest(FunTestCase):
 
         for test in test_type_list:
             for size in io_list:
+                # FCP stats before test on F10 & F11
+                f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
                 f10_host_test = f10_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm)
                 f11_host_test = f11_host_roce.ib_lat_test(test_type=test, size=size, rdma_cm=rdmacm,
                                                           server_ip=f10_hosts[0]["ipaddr"])
@@ -1075,6 +1209,41 @@ class IbLatSeqIoTest(FunTestCase):
                                                                client_cmd=True)
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+                # FCP stats after test on F10 & F11
+                f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+                if self.fcp:
+                    f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                        fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                    # NFCP counters check
+                    counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                    for cname in counter_names:
+                        try:
+                            counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                           f10_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                            counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                           f11_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                        except:
+                            fun_test.critical("NFCP counter issue")
 
             fun_test.test_assert(True, "IB_LAT {} test for {} IO".format(test, io_type))
 
@@ -1151,6 +1320,9 @@ class IbWriteScale(FunTestCase):
         f10_host_roce = fun_test.shared_variables["f10_host_roce"]
         f11_host_roce = fun_test.shared_variables["f11_host_roce"]
         test_type_list = fun_test.shared_variables["test_type"]
+        f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
+        f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -1198,6 +1370,10 @@ class IbWriteScale(FunTestCase):
         size = 1
         for test in test_type_list:
             for qp in qp_list:
+                # FCP stats before test on F10 & F11
+                f10_fcp_stats_before = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_before = f11_storage_controller.peek("stats/fcp/nu/global")
+
                 f10_pid_there = 0
                 f11_pid_there = 0
                 # Compute the tx_depth required for scaling.
@@ -1243,6 +1419,41 @@ class IbWriteScale(FunTestCase):
                                                                client_cmd=True)
                 fun_test.simple_assert(f10_host_result, "F10_host {} result of size {}".format(test, size))
                 fun_test.simple_assert(f11_host_result, "F11_host {} result of size {}".format(test, size))
+
+                # FCP stats after test on F10 & F11
+                f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
+                f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
+
+                if self.fcp:
+                    f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
+                        fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    if counter_diff == 0:
+                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+
+                    # NFCP counters check
+                    counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
+                    for cname in counter_names:
+                        try:
+                            counter_diff = f10_fcp_stats_after["data"][cname] - \
+                                           f10_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
+                            counter_diff = f11_fcp_stats_after["data"][cname] - \
+                                           f11_fcp_stats_before["data"][cname]
+                            if counter_diff != 0 and counter_diff > 500:
+                                fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
+                        except:
+                            fun_test.critical("NFCP counter issue")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
