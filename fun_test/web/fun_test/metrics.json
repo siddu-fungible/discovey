@@ -1633,7 +1633,7 @@
               {
                 "metric_model_name": "SoakFlowsMemcpy1MBNonCoh",
                 "name": "soak_flows_dma_memcpy_test_1MB",
-                "label": "Max DMA 1MB",
+                "label": "Max DMA 64KB",
                 "children": []
               },
               {
@@ -7219,7 +7219,7 @@
                 "metric_model_name": "SoakFlowsMemcpy1MBNonCoh",
                 "children": [],
                 "name": "soak_flows_dma_memcpy_test_1MB_S1",
-                "label": "Max DMA 1MB"
+                "label": "Max DMA 64KB"
               },
               {
                 "metric_model_name": "SoakDmaMemcpyCoherentPerformance",
