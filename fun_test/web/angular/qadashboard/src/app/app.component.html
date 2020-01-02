@@ -8,7 +8,8 @@
 
 
 <nav *ngIf="userProfileReady" class="navbar navbar-expand-lg fixed-top" style="background-color: #337ab7;">
-  <img src="/static/media/web_logo.png" height="40" width="120">
+  <a [routerLink]="['/']">
+    <img src="/static/media/web_logo.png" height="40" width="120"></a>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
           aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
