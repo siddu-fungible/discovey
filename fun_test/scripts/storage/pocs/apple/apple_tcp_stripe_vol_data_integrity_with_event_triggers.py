@@ -68,6 +68,10 @@ class WorkloadTriggerTestScript(FunTestScript):
             self.update_deploy_script = job_inputs["update_deploy_script"]
         if "num_hosts" in job_inputs:
             self.num_hosts = job_inputs["num_hosts"]
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = True
         fun_test.test_assert(expression=self.num_hosts >= 3, message="Test bed has minimum hosts (3) required")
 
         # Deploying of DUTs
