@@ -471,8 +471,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                      format(self.thin_uuid_list[i], self.host_ips[ctrlr_index]))
                 # Extracting the NVMe subsys nqn from the volume attach output, which needs to be passed to the -n
                 # option in the NVMe connect command
-                subsys_nqn = attach_volume["data"].get("nqn")
-                subsys_nqn = attach_volume["data"].get("subsys_nqn")
+                subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
+                    attach_volume["data"].get("nqn")
                 fun_test.simple_assert(subsys_nqn, "Extracted the Subsys NQN to which volume {} got attached".
                                        format(self.thin_uuid_list[i]))
                 self.nqn_list.append(subsys_nqn)

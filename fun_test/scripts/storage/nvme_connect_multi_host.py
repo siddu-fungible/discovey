@@ -432,11 +432,12 @@ class MultiNvmeConnect(FunTestCase):
 class NVMeConnectWithSpurious(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Attempting NVMe session from the attached host at the end of every 1024K spurious "
-                                      "connection in the middle 16K spurious connection",
+                              summary="Attempting NVMe session from the attached host at the end of every 1024K "
+                                      "spurious connection in the middle 16K spurious connection",
                               steps="""
         1. Create a BLT volume and attach it to network host H1.
-        2. From the network attached host establish a NVMe session with the F1, check the above volume is visible to the host and disconnect the NVMe session. 
+        2. From the network attached host establish a NVMe session with the F1, check the above volume is visible to 
+        the host and disconnect the NVMe session. 
         3. Attempt 1024 NVMe sessions from the non attached host H2.
         4. Repeat the above steps for N times
         """)
@@ -456,7 +457,7 @@ class NVMeConnectWithSpurious(FunTestCase):
                         self.transport_port,
                         nqn,
                         self.nvme_io_q,
-                        self.host_info[self.genuine_host]["ip"][0]), timeout=60)
+                        self.host_info[self.genuine_host]["ip"]), timeout=60)
                 fun_test.log(command_result)
             else:
                 command_result = host_handle.sudo_command(
@@ -464,7 +465,7 @@ class NVMeConnectWithSpurious(FunTestCase):
                                                                         self.test_network["f1_loopback_ip"],
                                                                         self.transport_port,
                                                                         nqn,
-                                                                        self.host_info[self.genuine_host]["ip"][0]),
+                                                                        self.host_info[self.genuine_host]["ip"]),
                     timeout=60)
         except Exception as ex:
             nvme_connect_failed = True
