@@ -112,7 +112,7 @@ class SoakFlowsMemcpy1MbNonCohTc(FunTestCase):
                   "MAX_DURATION": max_duration,
                   "RUN_MODE": "Batch",
                   "TAGS": tags,
-                  "NOTE": "soak flows memcpy 1mb non coh",
+                  "NOTE": "soak flows memcpy 64KB non coh",
                   "RELEASE_BUILD": "true"}
 
         build_result = jenkins_manager.build(params=params)
