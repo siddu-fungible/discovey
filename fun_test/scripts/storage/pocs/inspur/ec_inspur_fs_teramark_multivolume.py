@@ -262,8 +262,6 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         testcase = self.__class__.__name__
         self.sc_lock = Lock()
-
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
