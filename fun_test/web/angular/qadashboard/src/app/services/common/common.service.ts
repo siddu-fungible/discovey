@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
 import {ActivatedRoute} from "@angular/router";
+import {UserProfile} from "../../login/definitions";
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class CommonService {
   newAlert: boolean = false;
   announcementAvailable: boolean = false;
   TIMEZONE: string = "America/Los_Angeles";
-
+  userProfile: UserProfile = null;
   constructor(private route: ActivatedRoute) {
 
   }
@@ -219,4 +220,11 @@ export class CommonService {
     }))
   }
 
+  setUserProfile(userProfile) {
+    this.userProfile = userProfile;
+  }
+
+  getUserProfile() {
+    return this.userProfile;
+  }
 }

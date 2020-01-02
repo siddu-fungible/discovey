@@ -93,9 +93,9 @@ class DpcshClient(object):
             self.sendall(command, command_duration)
             time.sleep(sleep_duration)
             output = self._read(command_duration, chunk)
+            result["raw_output"] = output
             if output:
                 actual_output = self._parse_actual_output(output=output)
-                result["raw_output"] = output
                 try:
                     json_output = json.loads(actual_output.strip())
                     result["status"] = True

@@ -11,22 +11,6 @@
     </div>
     <div class="card-body">
       <table class="table table-nonfluid table-borderless">
-        <tr>
-          <td class="no-wrap">
-            <label for="submitter" class="required-label">Submitter</label>
-          </td>
-          <td>
-            <select id="submitter" [(ngModel)]="selectedUser">
-              <option *ngFor="let user of users" [ngValue]="user">{{ user.first_name }} {{ user.last_name }}
-                ({{ user.email }})
-              </option>
-            </select>
-            &nbsp;
-            <a href="/users" target="_blank">Can't find your name? Add user</a>
-          </td>
-        </tr>
-
-
         <ng-container *ngIf="mode === Mode.REGULAR || mode === Mode.TRIAGE">
           <ng-container *ngIf="mode === Mode.TRIAGE">
             <tr>

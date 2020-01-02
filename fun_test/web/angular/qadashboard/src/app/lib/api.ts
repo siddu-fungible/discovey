@@ -55,9 +55,9 @@ export abstract class Api {
     }))
   }
 
-  public getUrl(params) {
+  public getUrl(params?) {
     let url = this.url;
-    if (params.hasOwnProperty('execution_id')) {
+    if (params && params.hasOwnProperty('execution_id')) {
       url = `${url}/${params.execution_id}`;
     }
     return url;

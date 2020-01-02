@@ -7,6 +7,8 @@ import {switchMap} from "rxjs/operators";
 import {UserService} from "../../services/user/user.service";
 import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import {Title} from "@angular/platform-browser";
+import {UserProfile} from "../../login/definitions";
+import {CommonService} from "../../services/common/common.service";
 
 
 @Component({
@@ -17,7 +19,6 @@ import {Title} from "@angular/platform-browser";
 export class Triage2Component implements OnInit {
   submissionForm: any = null;
   users: any = null;
-  selectedUser: any = null;
   jenkinsParameters: any = null;
   triagingStateMap: {[key: string]: number} = {};
   triagingStringToCodeMap = {};
@@ -27,12 +28,15 @@ export class Triage2Component implements OnInit {
   commitsInBetween: any = null;
   validateShasStatus: string = null;
   triageTypes: any = null;
+  userProfile: UserProfile = null;
 
   constructor(private apiService: ApiService,
               private loggerService: LoggerService,
               private triageService: TriageService,
               private userService: UserService,
-              private formBuilder: FormBuilder, private title: Title) {
+              private formBuilder: FormBuilder,
+              private title: Title,
+              private commonService: CommonService) {
     this.createFormBuilder();
 
   }
@@ -93,6 +97,7 @@ export class Triage2Component implements OnInit {
 
   ngOnInit() {
     this.title.setTitle("Regression Finder");
+    this.userProfile = this.commonService.getUserProfile();
     new Observable(observer => {
       observer.next(true);
       return () => {
@@ -136,7 +141,7 @@ export class Triage2Component implements OnInit {
     payload["metric_id"] = this.submissionForm.value.metric_id;
     payload["from_fun_os_sha"] = this.submissionForm.value.from_fun_os_sha;
     payload["to_fun_os_sha"] = this.submissionForm.value.to_fun_os_sha;
-    payload["submitter_email"] = this.submissionForm.value.submitter;
+    payload["submitter_email"] = this.userProfile.user.email;
     payload["triage_type"] = this.submissionForm.value.triage_type;
     payload["regex_match_string"] = this.submissionForm.value.regex_match_string;
     payload["build_parameters"] = this.jenkinsParameters;

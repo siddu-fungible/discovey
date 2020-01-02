@@ -38,6 +38,7 @@ import {ReleaseCatalogsComponent} from "./regression/release-catalogs/release-ca
 import {DaemonsComponent} from "./daemons/daemons.component";
 import {BrokerTestComponent} from "./mq-broker/broker-test/broker-test.component";
 import {ReleaseDetailComponent} from "./regression/release-detail/release-detail.component";
+import {LoginComponent} from "./login/login.component";
 
 export function regressionHome(url: UrlSegment[]) {
   return url[0].path.endsWith("regression");
@@ -88,7 +89,8 @@ const routes: Routes = [
   { path: 'performance/admin', component: AdminComponent},
   { path: 'performance/score_table/:metricId', component: ScoresTableComponent},
   {path: 'daemons', component: DaemonsComponent},
-  {path: 'mq_broker/broker-test', component: BrokerTestComponent}
+  {path: 'mq_broker/broker-test', component: BrokerTestComponent},
+  {path: 'login', component: LoginComponent}
 ];
 
 @NgModule({

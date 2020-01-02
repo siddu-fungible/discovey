@@ -22,28 +22,6 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "csi_perf_pdtrace_hbm_size_kb": 204800,
-    "csr_network": {
-      "0": {
-        "test_interface_ip": "20.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:30",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "20.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      },
-      "4": {
-        "test_interface_ip": "21.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:31",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "21.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      }
-    },
     "api_server_port": 50220,
     "api_server_username": "admin",
     "api_server_password": "password",
@@ -98,8 +76,8 @@
     "fio_run_timeout": 150,
     "fio_size_timeout": 3600,
     "fio_modes": ["randrw"],
-    "fio_iodepth": [32, 64, 96, 128],
-    "full_run_iodepth": [64],
+    "fio_iodepth": [32, 64],
+    "full_run_iodepth": [4],
     "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
