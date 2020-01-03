@@ -372,6 +372,11 @@
           "port": "et-0/0/0"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg01-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-02": {
@@ -387,6 +392,11 @@
           "port": "et-0/0/1"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg02-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-03": {
@@ -402,6 +412,11 @@
           "port": "et-0/0/2"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg03-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-04": {
@@ -417,6 +432,11 @@
           "port": "et-0/0/3"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg04-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-05": {
@@ -432,6 +452,11 @@
           "port": "et-0/0/4"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg05-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-06": {
@@ -447,6 +472,11 @@
           "port": "et-0/0/5"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg06-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-07": {
@@ -462,6 +492,11 @@
           "port": "et-0/0/6"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg07-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-08": {
@@ -477,6 +512,11 @@
           "port": "et-0/0/7"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg08-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-09": {
@@ -492,6 +532,11 @@
           "port": "et-0/0/8"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg09-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-10": {
@@ -507,6 +552,11 @@
           "port": "et-0/0/9"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg10-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-11": {
@@ -522,6 +572,11 @@
           "port": "et-0/0/10"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg11-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-12": {
@@ -537,6 +592,11 @@
           "port": "et-0/0/11"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg12-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-13": {
@@ -552,6 +612,11 @@
           "port": "et-0/0/12"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg13-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "mktg-server-14": {
@@ -567,6 +632,11 @@
           "port": "et-0/0/13"
         }
       }
+    },
+    "ipmi_info": {
+      "host_ip": "mktg14-ilo.fungible.local",
+      "username": "admin",
+      "password": "admin"
     }
   },
   "cab02-qa-01": {
