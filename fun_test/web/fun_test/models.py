@@ -877,6 +877,9 @@ def create_user_profile(sender, instance, created, **kwargs):
         if not Profile.objects.filter(user=instance).exists():
             Profile.objects.create(user=instance)
 
+        if not User.objects.filter(email=instance.email).exists():
+            User(email=instance.email, first_name=instance.first_name, last_name=instance.last_name).save()
+
 @receiver(post_save, sender=AuthUser)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
