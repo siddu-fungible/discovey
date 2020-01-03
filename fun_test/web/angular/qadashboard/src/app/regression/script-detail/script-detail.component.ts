@@ -541,7 +541,7 @@ export class ScriptDetailComponent implements OnInit {
     this.logsAreTruncated = this.setMinimumTime();
   }
 
-  viewChartsClick(content) {
+  viewChartsClick(content?) {
     /*
     this.selectedStatisticsCategory = null;
     this.selectedStatisticsSubCategory = null;
