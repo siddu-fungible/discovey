@@ -52,6 +52,7 @@ def test_beds(request, id):
             all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
 
+            all_test_bed_specs = None
             for test_bed in all_test_beds:
                 t = {"name": test_bed.name,
                      "description": test_bed.description,
@@ -62,14 +63,16 @@ def test_beds(request, id):
                      "manual_lock_submitter": test_bed.manual_lock_submitter}
                 if not minimal:
                     if not test_bed.manual_lock:
+                        if not all_test_bed_specs:
+                            all_test_bed_specs = am.get_all_test_beds_specs()
                         asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
-                            test_bed_name=test_bed.name)
+                            test_bed_name=test_bed.name, all_test_bed_specs=all_test_bed_specs)
 
                         t["asset_level_manual_lock_status"] = {"asset_level_manual_locked": asset_level_manual_locked,
                                                                "error_message": error_message,
                                                                "asset_level_manual_lock_user": manual_lock_user}
 
-                    test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name)
+                    test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name, all_test_bed_specs=all_test_bed_specs)
 
                     t["automation_status"] = test_bed_availability
 
