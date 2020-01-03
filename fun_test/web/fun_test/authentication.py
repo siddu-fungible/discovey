@@ -20,6 +20,7 @@ def login(request):
         # username = request_json["username"]
         # password = request_json["password"]
         email = request_json["email"]
+        email = email.lower()
         try:
             user_object = User.objects.get(email=email)
             user = authenticate(username=user_object.username, password="fun123fun123")

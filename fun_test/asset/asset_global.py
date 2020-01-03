@@ -5,11 +5,9 @@ class AssetType(Codes):
     DUT = "DUT"
     HOST = "Host"
     PERFORMANCE_LISTENER_HOST = "Perf Listener"
-    # DUT_WITH_SERVERS = "DUT with server"
-    # DUT_WITH_SSDS = "DUT with SSD"
 
 
-class AssetHealth(Codes):
-    DEAD = 1
-    DISABLED = 10
-    ACTIVE = 50
+class AssetHealthStates(Codes):
+    UNHEALTHY = 20
+    PENDING_HEALTH_CHECK = 30
+    HEALTHY = 50

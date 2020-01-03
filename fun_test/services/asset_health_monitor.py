@@ -26,13 +26,13 @@ class TestBedWorker(Thread):
     def terminate(self):
         self.terminated = True
 
+
 class AssetHealthMonitor(Service):
     service_name = "asset_health_monitor"
     workers = {}
 
     def run(self):
         am = fun_test.get_asset_manager()
-
 
         while True:
             all_test_bed_specs = am.get_all_test_beds_specs()
@@ -46,8 +46,8 @@ class AssetHealthMonitor(Service):
                         self.workers[test_bed_name] = worker_thread
                         worker_thread.start()
                         self.get_logger().info("Started worker for {}".format(test_bed_name))
+            self.remove_stale_test_beds(all_test_bed_specs=all_test_bed_specs)
             time.sleep(10)
-
 
     def remove_stale_test_beds(self, all_test_bed_specs):
         test_beds_marked_for_deletion = []
@@ -58,7 +58,8 @@ class AssetHealthMonitor(Service):
 
         for test_bed_marked_for_deletion in test_beds_marked_for_deletion:
             del self.workers[test_bed_marked_for_deletion]
-            self.logger.info("Stale test-bed {} removed".format(worker_test_bed_name))
+            self.logger.info("Stale test-bed {} removed".format(test_bed_marked_for_deletion))
+
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()

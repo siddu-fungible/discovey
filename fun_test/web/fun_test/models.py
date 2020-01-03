@@ -16,12 +16,13 @@ from datetime import datetime, timedelta
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
 from django.contrib.postgres.fields import JSONField, ArrayField
 import json
-from asset.asset_global import AssetType
+from asset.asset_global import AssetType, AssetHealthStates
 from rest_framework.serializers import ModelSerializer
 from django.utils import timezone
 import logging
 from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_save
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -101,6 +102,10 @@ class TestBed(models.Model):
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
+    disabled = models.BooleanField(default=False)
+    health_check_enabled = models.BooleanField(default=True)
+    state_change_time = models.DateTimeField(default=timezone.now)
+    health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.name,
@@ -735,6 +740,10 @@ class Asset(FunModel):
     manual_lock_user = models.TextField(default=None, null=True)
     test_beds = JSONField(default=[])
     manual_lock_expiry_time = models.DateTimeField(default=timezone.now)
+    disabled = models.BooleanField(default=False)
+    health_check_enabled = models.BooleanField(default=True)
+    state_change_time = models.DateTimeField(default=timezone.now)
+    health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
 
     @staticmethod
     def add_update(name, type, job_ids=None):
@@ -877,8 +886,8 @@ def create_user_profile(sender, instance, created, **kwargs):
         if not Profile.objects.filter(user=instance).exists():
             Profile.objects.create(user=instance)
 
-        if not User.objects.filter(email=instance.email).exists():
-            User(email=instance.email, first_name=instance.first_name, last_name=instance.last_name).save()
+        if not User.objects.filter(email=instance.email.lower()).exists():
+            User(email=instance.email.lower(), first_name=instance.first_name, last_name=instance.last_name).save()
 
 @receiver(post_save, sender=AuthUser)
 def save_user_profile(sender, instance, **kwargs):
