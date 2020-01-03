@@ -2815,7 +2815,7 @@ class SoakFlowsMemcpy1MBNonCoh(models.Model):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_version = models.CharField(verbose_name="Version", max_length=50, default="")
 
-    input_name = models.CharField(max_length=30, verbose_name="soak flows dma memcpy test 64KB", default="soak_flows_dma_memcpy_test_64KB")
+    input_name = models.CharField(max_length=60, verbose_name="soak flows dma memcpy test 64KB", default="soak_flows_dma_memcpy_test_64KB")
     input_metric_name = models.CharField(max_length=60, verbose_name='Metric name', default="soak_flows_dma_memcpy_test_64kB")
     input_platform = models.TextField(default=FunPlatform.F1)
     input_variation = models.FloatField(verbose_name='variation', default=-1)
