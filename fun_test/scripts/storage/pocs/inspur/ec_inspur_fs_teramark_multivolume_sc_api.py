@@ -971,11 +971,11 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             except Exception as ex:
                 fun_test.critical(str(ex))
-
+            self.nqn_list = []
             host_ips = []
             count = 0
             for index, host_name in enumerate(self.host_info):
-                host_ips.append(self.host_info[host_name]["ip"][0])
+                host_ips.append(self.host_info[host_name]["ip"][index])
 
             for num in xrange(self.ec_info["num_volumes"]):
 
@@ -988,93 +988,94 @@ class ECVolumeLevelTestcase(FunTestCase):
                 attach_volume = sc.volume_attach_remote(vol_uuid=response["data"]["uuid"],
                                                         transport=self.attach_transport.upper(),
                                                         remote_ip=host_ips[num])
+                subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
+                    attach_volume["data"].get("nqn")
+                fun_test.simple_assert(subsys_nqn, "Extracted the Subsys NQN to which volume {} got attached".
+                                       format(response["data"]["uuid"]))
+                self.nqn_list.append(subsys_nqn)
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching EC volume {} to the host {}".
                                      format(response["data"]["uuid"], host_ips[num]))
 
             # Starting packet capture in all the hosts
-            pcap_started = {}
-            pcap_stopped = {}
-            pcap_pid = {}
-            for host_name in self.host_info:
-                host_handle = self.host_info[host_name]["handle"]
-                test_interface = self.host_info[host_name]["test_interface"].name
-                pcap_started[host_name] = False
-                pcap_stopped[host_name] = True
-                pcap_pid[host_name] = {}
-                pcap_pid[host_name] = host_handle.tcpdump_capture_start(interface=test_interface,
-                                                                        tcpdump_filename="/tmp/nvme_connect.pcap",
-                                                                        snaplen=1500)
-                if pcap_pid[host_name]:
-                    fun_test.log("Started packet capture in {}".format(host_name))
-                    pcap_started[host_name] = True
-                    pcap_stopped[host_name] = False
-                else:
-                    fun_test.critical("Unable to start packet capture in {}".format(host_name))
 
             fun_test.shared_variables["fio"] = {}
-            for host_name in self.host_info:
-                fun_test.shared_variables["ec"][host_name] = {}
+            for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]
-                if not fun_test.shared_variables["ec"]["nvme_connect"]:
-                    # Checking nvme-connect status
-                    if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                            self.testbed_config["workarounds"]["enable_funcp"]:
-                        if not hasattr(self, "nvme_io_queues") or (
-                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport,
-                                hostnqn=self.host_info[host_name]["ip"][0])
-                        else:
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport,
-                                nvme_io_queues=self.nvme_io_queues,
-                                hostnqn=self.host_info[host_name]["ip"][0])
-                    else:
-                        if not hasattr(self, "nvme_io_queues") or (
-                                hasattr(self, "nvme_io_queues") and self.nvme_io_queues == 0):
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport)
-                        else:
-                            nvme_connect_status = host_handle.nvme_connect(
-                                target_ip=self.test_network["f1_loopback_ip"], nvme_subsystem=self.nvme_subsystem,
-                                port=self.transport_port, transport=self.attach_transport,
-                                nvme_io_queues=self.nvme_io_queues)
+                host_ip = self.host_info[host_name]["ip"][index]
+                nqn = self.nqn_list[index]
+                host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+                host_handle.sudo_command("/etc/init.d/irqbalance stop")
+                irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
+                if "dead" in irq_bal_stat:
+                    fun_test.log("IRQ balance stopped on {}".format(host_name))
+                else:
+                    fun_test.log("IRQ balance not stopped on {}".format(host_name))
+                    install_status = host_handle.install_package("tuned")
+                    fun_test.test_assert(install_status, "tuned installed successfully")
 
-                    if pcap_started[host_name]:
-                        host_handle.tcpdump_capture_stop(process_id=pcap_pid[host_name])
-                        pcap_stopped[host_name] = True
+                    host_handle.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
 
-                    fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
+                command_result = host_handle.command("lsmod | grep -w nvme")
+                if "nvme" in command_result:
+                    fun_test.log("nvme driver is loaded")
+                else:
+                    fun_test.log("Loading nvme")
+                    host_handle.modprobe("nvme")
+                    host_handle.modprobe("nvme_core")
+                command_result = host_handle.lsmod("nvme_tcp")
+                if "nvme_tcp" in command_result:
+                    fun_test.log("nvme_tcp driver is loaded")
+                else:
+                    fun_test.log("Loading nvme_tcp")
+                    host_handle.modprobe("nvme_tcp")
+                    host_handle.modprobe("nvme_fabrics")
+                nvme_connect_cmd_res = None
+                host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
+                    nvme_connect_cmd_res = host_handle.sudo_command(
+                        "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.attach_transport),
+                                                                                  self.test_network["f1_loopback_ip"],
+                                                                                  self.transport_port, nqn,
+                                                                                  self.nvme_io_queues, host_ip))
+                    fun_test.log(nvme_connect_cmd_res)
+                else:
+                    nvme_connect_cmd_res = host_handle.sudo_command(
+                        "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.attach_transport),
+                                                                            self.test_network["f1_loopback_ip"],
+                                                                            self.transport_port, nqn, host_ip))
+                    fun_test.log(nvme_connect_cmd_res)
+                fun_test.test_assert(expression="error" not in nvme_connect_cmd_res,
+                                     message="nvme connect command succesful")
+                fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
+                host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
+                host_handle.sudo_command("dmesg")
 
-                    lsblk_output = host_handle.lsblk("-b")
-                    fun_test.simple_assert(lsblk_output, "Listing available volumes")
+                lsblk_output = host_handle.lsblk("-b")
+                fun_test.simple_assert(lsblk_output, "Listing available volumes")
+                fun_test.log("lsblk Output: \n{}".format(lsblk_output))
 
-                    # Checking that the above created BLT volume is visible to the end host
-                    self.host_info[host_name]["nvme_block_device_list"] = []
-                    volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
-                    for volume_name in lsblk_output:
-                        match = re.search(volume_pattern, volume_name)
-                        if match:
-                            self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
-                                                     str(match.group(2))
-                            self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_block_device)
-                            fun_test.log("NVMe Block Device/s: {}".
-                                         format(self.host_info[host_name]["nvme_block_device_list"]))
+                # Checking that the above created BLT volume is visible to the end host
+                self.host_info[host_name]["nvme_block_device_list"] = []
+                volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
+                for volume_name in lsblk_output:
+                    match = re.search(volume_pattern, volume_name)
+                    if match:
+                        self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
+                                                 str(match.group(2))
+                        self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_block_device)
+                        fun_test.log("NVMe Block Device/s: {}".
+                                     format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
-                                                  actual=len(self.host_info[host_name]["nvme_block_device_list"]),
-                                                  message="Expected NVMe devices are available")
-                    fun_test.shared_variables["ec"][host_name]["nvme_connect"] = True
+                fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
+                                              actual=len(self.host_info[host_name]["nvme_block_device_list"]),
+                                              message="Expected NVMe devices are available")
 
-                    self.host_info[host_name]["nvme_block_device_list"].sort()
-                    self.host_info[host_name]["fio_filename"] = \
-                        ":".join(self.host_info[host_name]["nvme_block_device_list"])
-                    fun_test.shared_variables["host_info"] = self.host_info
-                    fun_test.log("Hosts info: {}".format(self.host_info))
+                self.host_info[host_name]["nvme_block_device_list"].sort()
+                self.host_info[host_name]["fio_filename"] = ":".join(
+                    self.host_info[host_name]["nvme_block_device_list"])
+                fun_test.shared_variables["host_info"] = self.host_info
+                fun_test.log("Hosts info: {}".format(self.host_info))
 
             # Setting the required syslog level
             if self.syslog != "default":
