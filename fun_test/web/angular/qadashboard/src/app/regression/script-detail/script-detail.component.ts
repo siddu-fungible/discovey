@@ -125,6 +125,7 @@ export class ScriptDetailComponent implements OnInit {
   series = [1, 2, 3];
   artifacts: Artifact [] = null;
   artifactFilter = {assetType: null, assetId: null};
+  sidePanelOpen: boolean = false;
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -541,13 +542,16 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   viewChartsClick(content) {
+    /*
     this.selectedStatisticsCategory = null;
     this.selectedStatisticsSubCategory = null;
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
     }, (reason) => {
       console.log("Rejected");
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    });
+    });*/
+
+    this.sidePanelOpen = !this.sidePanelOpen;
   }
 
   addStatisticsCategory() {
@@ -604,5 +608,7 @@ export class ScriptDetailComponent implements OnInit {
   openTestCaseTablesPanelClick() {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
+
+
 
 }
