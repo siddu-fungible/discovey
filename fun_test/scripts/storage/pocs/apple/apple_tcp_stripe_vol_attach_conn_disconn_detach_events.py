@@ -68,6 +68,10 @@ class StripeVolAttachDetachTestScript(FunTestScript):
             self.update_deploy_script = job_inputs["update_deploy_script"]
         if "num_hosts" in job_inputs:
             self.num_hosts = job_inputs["num_hosts"]
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = True
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
