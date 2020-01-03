@@ -132,181 +132,57 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
 
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
-        # Bringing up of FunCP docker container if it is needed
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self = single_fs_setup(self)
+        self = single_fs_setup(self)
 
-            # Forming shared variables for defined parameters
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs_objs"] = self.fs_objs
-            fun_test.shared_variables["come_obj"] = self.come_obj
-            fun_test.shared_variables["f1_objs"] = self.f1_objs
-            fun_test.shared_variables["sc_obj"] = self.sc_objs
-            fun_test.shared_variables["f1_ips"] = self.f1_ips
-            fun_test.shared_variables["host_info"] = self.host_info
-            fun_test.shared_variables["host_handles"] = self.host_handles
-            fun_test.shared_variables["host_ips"] = self.host_ips
-            fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-            fun_test.shared_variables["num_f1s"] = self.num_f1s
-            fun_test.shared_variables["num_duts"] = self.num_duts
-            fun_test.shared_variables["syslog"] = self.syslog
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
+        # Forming shared variables for defined parameters
+        fun_test.shared_variables["topology"] = self.topology
+        fun_test.shared_variables["fs_objs"] = self.fs_objs
+        fun_test.shared_variables["come_obj"] = self.come_obj
+        fun_test.shared_variables["f1_objs"] = self.f1_objs
+        fun_test.shared_variables["sc_obj"] = self.sc_objs
+        fun_test.shared_variables["f1_ips"] = self.f1_ips
+        fun_test.shared_variables["host_info"] = self.host_info
+        fun_test.shared_variables["host_handles"] = self.host_handles
+        fun_test.shared_variables["host_ips"] = self.host_ips
+        fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
+        fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
+        fun_test.shared_variables["num_f1s"] = self.num_f1s
+        fun_test.shared_variables["num_duts"] = self.num_duts
+        fun_test.shared_variables["syslog"] = self.syslog
+        fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-            for key in self.host_handles:
-                # Ensure all hosts are up after reboot
-                fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                     message="Ensure Host {} is reachable after reboot".format(key))
+        for key in self.host_handles:
+            # Ensure all hosts are up after reboot
+            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+                                 message="Ensure Host {} is reachable after reboot".format(key))
 
-                # TODO: enable after mpstat check is added
-                """
-                # Check and install systat package
-                install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-                fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-                """
-                # Ensure required modules are loaded on host server, if not load it
-                for module in self.load_modules:
-                    module_check = self.host_handles[key].lsmod(module)
-                    if not module_check:
-                        self.host_handles[key].modprobe(module)
-                        module_check = self.host_handles[key].lsmod(module)
-                        fun_test.sleep("Loading {} module".format(module))
-                    fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-            # Ensuring connectivity from Host to F1's
-            for key in self.host_handles:
-                for index, ip in enumerate(self.f1_ips):
-                    ping_status = self.host_handles[key].ping(dst=ip)
-                    fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                         format(key, self.funcp_spec[0]["container_names"][index], ip))
-
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-
-            for i in range(len(self.bootargs)):
-                self.bootargs[i] += " --csr-replay"
-
-            topology_helper = TopologyHelper()
-            topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]},
-                                                              1: {"boot_args": self.bootargs[1]}})
-            #topology_helper.set_dut_parameters(f1_parameters={0: {"boot_args": self.bootargs[0]}}, disable_f1_index=1)
-            self.topology = topology_helper.deploy()
-            fun_test.test_assert(self.topology, "Topology deployed")
-
-            self.fs = self.topology.get_dut_instance(index=0)
-            self.f1 = self.fs.get_f1(index=self.f1_in_use)
-            self.db_log_time = get_data_collection_time()
-            fun_test.log("Data collection time: {}".format(self.db_log_time))
-
-            self.storage_controller = self.f1.get_dpc_storage_controller()
-
-            # Fetching Linux host with test interface name defined
-            fpg_connected_hosts = self.topology.get_host_instances_on_fpg_interfaces(dut_index=0,
-                                                                                     f1_index=self.f1_in_use)
-            for host_ip, host_info in fpg_connected_hosts.iteritems():
-                if self.testbed_type == "fs-6" and host_ip != "poc-server-01":
-                    continue
-                if "test_interface_name" in host_info["host_obj"].extra_attributes:
-                    self.end_host = host_info["host_obj"]
-                    self.test_interface_name = self.end_host.extra_attributes["test_interface_name"]
-                    self.fpg_inteface_index = host_info["interfaces"][self.f1_in_use].index
-                    fun_test.log("Test Interface is connected to FPG Index: {}".format(self.fpg_inteface_index))
-                    break
-            else:
-                fun_test.test_assert(False, "Host found with Test Interface")
-
-            self.test_network = self.csr_network[str(self.fpg_inteface_index)]
-            fun_test.shared_variables["end_host"] = self.end_host
-            fun_test.shared_variables["topology"] = self.topology
-            fun_test.shared_variables["fs"] = self.fs
-            fun_test.shared_variables["f1_in_use"] = self.f1_in_use
-            fun_test.shared_variables["test_network"] = self.test_network
-            fun_test.shared_variables["syslog"] = self.syslog
-            fun_test.shared_variables["db_log_time"] = self.db_log_time
-            fun_test.shared_variables["storage_controller"] = self.storage_controller
-
-            # Fetching NUMA node from Network host for mentioned Ethernet Adapter card
-            if self.override_numa_node["override_node"]:
-                self.numa_cpus_filter = self.end_host.lscpu(self.override_numa_node["override_node"])
-                self.numa_cpus = self.numa_cpus_filter[self.override_numa_node["override_node"]]
-            else:
-                self.numa_cpus = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
-
-            # Calculating the number of CPUs available in the given numa
-            self.total_numa_cpus = 0
-            for cpu_group in self.numa_cpus.split(","):
-                cpu_range = cpu_group.split("-")
-                self.total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
-
-            fun_test.log("Total CPUs: {}".format(self.total_numa_cpus))
-            fun_test.shared_variables["numa_cpus"] = self.numa_cpus
-            fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-
-            # Configuring Linux host
-            host_up_status = self.end_host.reboot(timeout=self.command_timeout, max_wait_time=self.reboot_timeout,
-                                                  reboot_initiated_wait_time=self.reboot_timeout)
-            fun_test.test_assert(host_up_status, "End Host {} is up".format(self.end_host.host_ip))
-
-            interface_ip_config = "ip addr add {} dev {}".format(self.test_network["test_interface_ip"],
-                                                                 self.test_interface_name)
-            interface_mac_config = "ip link set {} address {}".format(self.test_interface_name,
-                                                                      self.test_network["test_interface_mac"])
-            link_up_cmd = "ip link set {} up".format(self.test_interface_name)
-            static_arp_cmd = "arp -s {} {}".format(self.test_network["test_net_route"]["gw"],
-                                                   self.test_network["test_net_route"]["arp"])
-
-            interface_ip_config_status = self.end_host.sudo_command(command=interface_ip_config,
-                                                                    timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Configuring test interface IP address")
-
-            interface_mac_status = self.end_host.sudo_command(command=interface_mac_config,
-                                                              timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Assigning MAC to test interface")
-
-            link_up_status = self.end_host.sudo_command(command=link_up_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Bringing up test link")
-
-            interface_up_status = self.end_host.ifconfig_up_down(interface=self.test_interface_name,
-                                                                 action="up")
-            fun_test.test_assert(interface_up_status, "Bringing up test interface")
-
-            route_add_status = self.end_host.ip_route_add(network=self.test_network["test_net_route"]["net"],
-                                                          gateway=self.test_network["test_net_route"]["gw"],
-                                                          outbound_interface=self.test_interface_name,
-                                                          timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(), message="Adding route to F1")
-
-            arp_add_status = self.end_host.sudo_command(command=static_arp_cmd, timeout=self.command_timeout)
-            fun_test.test_assert_expected(expected=0, actual=self.end_host.exit_status(),
-                                          message="Adding static ARP to F1 route")
-
-            # Loading the nvme and nvme_tcp modules
+            # TODO: enable after mpstat check is added
+            """
+            # Check and install systat package
+            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+            """
+            # Ensure required modules are loaded on host server, if not load it
             for module in self.load_modules:
-                module_check = self.end_host.lsmod(module)
+                module_check = self.host_handles[key].lsmod(module)
                 if not module_check:
-                    self.end_host.modprobe(module)
-                    module_check = self.end_host.lsmod(module)
+                    self.host_handles[key].modprobe(module)
+                    module_check = self.host_handles[key].lsmod(module)
                     fun_test.sleep("Loading {} module".format(module))
                 fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
-        fun_test.shared_variables["testbed_config"] = self.testbed_config
+        # Ensuring connectivity from Host to F1's
+        for key in self.host_handles:
+            for index, ip in enumerate(self.f1_ips):
+                ping_status = self.host_handles[key].ping(dst=ip)
+                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
         come_reboot = False
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
-            if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["enable_funcp"]:
-                self.fs = self.fs_objs[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["csr_replay"]:
-                self.fs = fun_test.shared_variables["fs"]
-                self.storage_controller = fun_test.shared_variables["storage_controller"]
+            self.fs = self.fs_objs[0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
                 self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
@@ -332,14 +208,6 @@ class MultiBLTVolumePerformanceScript(FunTestScript):
             except:
                 fun_test.log("Clean-up of volumes failed.")
 
-        fun_test.log("FS cleanup")
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            for fs in fun_test.shared_variables["fs_objs"]:
-                fs.cleanup()
-        else:
-            fun_test.shared_variables["fs"].cleanup()
-
 
 class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def describe(self):
@@ -348,8 +216,6 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
-
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog"]
 
         benchmark_parsing = True
@@ -424,37 +290,23 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
         fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "nvme_io_queues" in job_inputs:
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
-
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs = fun_test.shared_variables["fs_objs"]
-            self.come_obj = fun_test.shared_variables["come_obj"]
-            self.f1 = fun_test.shared_variables["f1_objs"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
-            self.host_info = fun_test.shared_variables["host_info"]
-            self.host_handles = fun_test.shared_variables["host_handles"]
-            self.host_ips = fun_test.shared_variables["host_ips"]
-            self.end_host = self.host_handles[self.host_ips[0]]
-            # self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-            # self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
-            self.num_f1s = fun_test.shared_variables["num_f1s"]
-            self.test_network = {}
-            self.test_network["f1_loopback_ip"] = self.f1_ips
-            self.remote_ip = self.host_ips[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
-            self.num_duts = fun_test.shared_variables["num_duts"]
-        elif "workarounds" in self.testbed_config and "csr_replay" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["csr_replay"]:
-            self.fs = fun_test.shared_variables["fs"]
-            self.end_host = fun_test.shared_variables["end_host"]
-            self.test_network = fun_test.shared_variables["test_network"]
-            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.storage_controller = fun_test.shared_variables["storage_controller"]
-            self.numa_cpus = fun_test.shared_variables["numa_cpus"]
-            self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"]
-            self.remote_ip = self.test_network["test_interface_ip"].split('/')[0]
-            fun_test.shared_variables["remote_ip"] = self.remote_ip
+        self.fs = fun_test.shared_variables["fs_objs"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+        self.f1 = fun_test.shared_variables["f1_objs"][0][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_info = fun_test.shared_variables["host_info"]
+        self.host_handles = fun_test.shared_variables["host_handles"]
+        self.host_ips = fun_test.shared_variables["host_ips"]
+        self.end_host = self.host_handles[self.host_ips[0]]
+        # self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+        # self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+        self.num_f1s = fun_test.shared_variables["num_f1s"]
+        self.test_network = {}
+        self.test_network["f1_loopback_ip"] = self.f1_ips
+        self.remote_ip = self.host_ips[0]
+        fun_test.shared_variables["remote_ip"] = self.remote_ip
+        self.num_duts = fun_test.shared_variables["num_duts"]
 
         if "blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]:
             fun_test.shared_variables["blt"] = {}

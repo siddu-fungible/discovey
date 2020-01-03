@@ -963,7 +963,7 @@ class SoakFlowsMemcpy1MbNonCohPerformanceTc(PalladiumPerformanceTc):
 
     def describe(self):
         self.set_test_details(id=60,
-                              summary="soak flows memcpy 1MB non coh performance",
+                              summary="soak flows memcpy 64KB non coh performance",
                               steps="Steps 1")
 
 

@@ -1,3 +1,5 @@
+
+
 <div class="fun-flex-container fun-action-nav">
   <app-back></app-back>
   <div class="fun-spacer"></div>
@@ -79,7 +81,12 @@
   </ng-template>
 </div>
 
-
+<div class="side-panel" [ngClass]="{'side-panel-open': sidePanelOpen}">
+  <div style="display: flex; align-items: flex-end; flex-direction: column">
+    <div class="fun-cancel-link" (click)="viewChartsClick()">Close</div>
+  </div>
+  <div>Chart selection options</div>
+</div>
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="" style="overflow: auto; height: 100%; width: 100%;">
   <div *ngIf="showingArtifactPanel" [@show]="showingArtifactPanel" style="padding: 10px">

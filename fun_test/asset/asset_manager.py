@@ -131,8 +131,8 @@ class AssetManager:
 
 
     @fun_test.safe
-    def check_test_bed_manual_locked(self, test_bed_name):
-        assets_required = self.get_assets_required(test_bed_name=test_bed_name)
+    def check_test_bed_manual_locked(self, test_bed_name, all_test_bed_specs=None):
+        assets_required = self.get_assets_required(test_bed_name=test_bed_name, all_test_bed_specs=all_test_bed_specs)
         return self.check_assets_are_manual_locked(assets_required=assets_required)
 
     @fun_test.safe
@@ -196,7 +196,7 @@ class AssetManager:
         return in_use, error_message, used_by_suite_id, asset_in_use
 
     @fun_test.safe
-    def get_test_bed_availability(self, test_bed_type, suite_base_test_bed_spec=None):
+    def get_test_bed_availability(self, test_bed_type, suite_base_test_bed_spec=None, all_test_bed_specs=None):
         from web.fun_test.models_helper import get_suite_executions_by_filter, is_test_bed_with_manual_lock
         from scheduler.scheduler_global import JobStatusType
         result = {}
@@ -215,7 +215,7 @@ class AssetManager:
         in_use, error_message, used_by_suite_id, asset_in_use = False, "", -1, None
         assets_required_for_test_bed = None
         if test_bed_type not in self.PSEUDO_TEST_BEDS:
-            assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type)
+            assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type, all_test_bed_specs=all_test_bed_specs)
             if "fs-41" in test_bed_type:
                 print ("TB: {}".format(test_bed_type))
             in_use, error_message, used_by_suite_id, asset_in_use = self.check_assets_in_use(test_bed_type=test_bed_type, assets_required=assets_required_for_test_bed)
@@ -271,8 +271,9 @@ class AssetManager:
         return result
 
     @fun_test.safe
-    def get_test_bed_spec(self, name):
-        all_test_bed_specs = self.get_all_test_beds_specs()
+    def get_test_bed_spec(self, name, all_test_bed_specs=None):
+        if not all_test_bed_specs:
+            all_test_bed_specs = self.get_all_test_beds_specs()
         result = all_test_bed_specs[name] if name in all_test_bed_specs else None
         return result
 
@@ -377,11 +378,11 @@ class AssetManager:
         return found
 
     @fun_test.safe
-    def get_assets_required(self, test_bed_name, with_pool_member_type_options=False):
+    def get_assets_required(self, test_bed_name, with_pool_member_type_options=False, all_test_bed_specs=None):
         from lib.topology.topology_helper import TopologyHelper
         assets_required = {}
         if test_bed_name not in self.PSEUDO_TEST_BEDS:
-            test_bed_spec = self.get_test_bed_spec(name=test_bed_name)
+            test_bed_spec = self.get_test_bed_spec(name=test_bed_name, all_test_bed_specs=all_test_bed_specs)
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for: {}".format(test_bed_name))
 
             th = TopologyHelper(spec=test_bed_spec)

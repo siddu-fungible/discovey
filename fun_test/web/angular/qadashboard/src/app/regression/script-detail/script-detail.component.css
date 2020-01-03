@@ -75,3 +75,18 @@ table {
   height: calc(60vh);
 }
 
+.side-panel  {
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  height: 250px;
+  background-color: rgb(227, 234, 242);
+
+  box-shadow: 0 0 10px;
+  overflow-x: hidden;
+  transition: 0.5s;
+}
+
+.side-panel-open {
+  width: 50%;
+}

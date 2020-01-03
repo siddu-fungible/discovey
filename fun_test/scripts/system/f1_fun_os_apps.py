@@ -89,7 +89,7 @@ class SoakFlowsBusyLoopTc(FunTestCase):
 class SoakFlowsMemcpy1MbNonCohTc(FunTestCase):
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Schedule Soak flows memcpy 1 mb non coh app on Jenkins",
+                              summary="Schedule Soak flows memcpy 64KB non coh app on Jenkins",
                               steps="""
         1. Steps 1
         2. Steps 2
@@ -105,14 +105,14 @@ class SoakFlowsMemcpy1MbNonCohTc(FunTestCase):
     def run(self):
         fun_test.add_checkpoint("Starting the jenkins build")
         jenkins_manager = JenkinsManager()
-        boot_args = "app=soak_flows_memcpy_1MB_non_coh"
+        boot_args = "app=soak_flows_memcpy_64KB_non_coh"
         max_duration = 5
         tags = "qa_soak_flows_memcpy_non_coh"
         params = {"BOOTARGS": boot_args,
                   "MAX_DURATION": max_duration,
                   "RUN_MODE": "Batch",
                   "TAGS": tags,
-                  "NOTE": "soak flows memcpy 1mb non coh",
+                  "NOTE": "soak flows memcpy 64KB non coh",
                   "RELEASE_BUILD": "true"}
 
         build_result = jenkins_manager.build(params=params)

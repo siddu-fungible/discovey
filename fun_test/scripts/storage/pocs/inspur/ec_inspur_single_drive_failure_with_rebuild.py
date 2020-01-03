@@ -136,10 +136,8 @@ class ECVolumeLevelScript(FunTestScript):
     def cleanup(self):
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
-            if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                    self.testbed_config["workarounds"]["enable_funcp"]:
-                self.fs = self.fs_obj[0]
-                self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+            self.fs = self.fs_obj[0]
+            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
                 self.attach_transport = fun_test.shared_variables["attach_transport"]
@@ -198,8 +196,6 @@ class ECVolumeLevelTestcase(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
-
-        self.testbed_config = fun_test.shared_variables["testbed_config"]
         self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -244,22 +240,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
-
-        if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                self.testbed_config["workarounds"]["enable_funcp"]:
-            self.fs_obj = fun_test.shared_variables["fs_obj"]
-            self.f1_in_use = fun_test.shared_variables["f1_in_use"]
-            self.come_obj = fun_test.shared_variables["come_obj"]
-            self.f1 = fun_test.shared_variables["f1_obj"][0][0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            self.f1_ips = fun_test.shared_variables["f1_ips"][0]
-            self.host_info = fun_test.shared_variables["host_info"]
-            self.num_f1s = fun_test.shared_variables["num_f1s"]
-            self.test_network = {}
-            self.test_network["f1_loopback_ip"] = self.f1_ips
-            self.num_duts = fun_test.shared_variables["num_duts"]
-            self.db_log_time = fun_test.shared_variables["db_log_time"]
-            self.num_hosts = len(self.host_info)
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_in_use = fun_test.shared_variables["f1_in_use"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+        self.f1 = fun_test.shared_variables["f1_obj"][0][0]
+        self.storage_controller = fun_test.shared_variables["sc_obj"][0]
+        self.f1_ips = fun_test.shared_variables["f1_ips"][0]
+        self.host_info = fun_test.shared_variables["host_info"]
+        self.num_f1s = fun_test.shared_variables["num_f1s"]
+        self.test_network = {}
+        self.test_network["f1_loopback_ip"] = self.f1_ips
+        self.num_duts = fun_test.shared_variables["num_duts"]
+        self.db_log_time = fun_test.shared_variables["db_log_time"]
+        self.num_hosts = len(self.host_info)
 
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
@@ -377,18 +370,16 @@ class ECVolumeLevelTestcase(FunTestCase):
                 host_handle = self.host_info[host_name]["handle"]
                 if not fun_test.shared_variables["ec"]["nvme_connect"]:
                     # Checking nvme-connect status
-                    if "workarounds" in self.testbed_config and "enable_funcp" in self.testbed_config["workarounds"] and \
-                            self.testbed_config["workarounds"]["enable_funcp"]:
-                        if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                       str(self.transport_port), self.nvme_subsystem,
-                                       self.host_info[host_name]["ip"])
-                        else:
-                            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q {}". \
-                                format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                       str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
-                                       self.host_info[host_name]["ip"], str(self.queue_size))
+                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
+                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                   str(self.transport_port), self.nvme_subsystem,
+                                   self.host_info[host_name]["ip"])
+                    else:
+                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q {}". \
+                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
+                                   self.host_info[host_name]["ip"], str(self.queue_size))
 
                     try:
                         nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
