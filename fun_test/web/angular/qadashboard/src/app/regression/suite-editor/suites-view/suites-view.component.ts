@@ -23,7 +23,8 @@ export class SuitesViewComponent implements OnInit {
   dropDownSettings = {};
   driver: Observable<any> = null;
   suitesCount: number = null;
-  RECORDS_PER_PAGE: number = 40;
+  DEFAULT_RECORDS_PER_PAGE: number = 40;
+  recordsPerPage: number = 40;
   currentPage = 1;
   pager: any = {};
   byNameSearchText: string = null;
@@ -35,9 +36,10 @@ export class SuitesViewComponent implements OnInit {
   Mode = Mode;
   mode: Mode = Mode.DEFAULT;
   showScriptPath: boolean = true;
+  showAllSuites: boolean = false;
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
-
+    this.recordsPerPage = this.DEFAULT_RECORDS_PER_PAGE;
 
   }
 
@@ -45,18 +47,18 @@ export class SuitesViewComponent implements OnInit {
   ngOnInit() {
     if (this.multiSelect) {
       this.mode = Mode.SELECTION;
-      this.RECORDS_PER_PAGE = 5;
+      this.recordsPerPage = 5;
     }
     this.driver =
       of(true).pipe(switchMap(response => {
         return this.service.categories();
       })).pipe(switchMap(response => {
         this.availableCategories = response;
-        return this.service.suites<number>(true, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        return this.service.suites<number>(true, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
       })).pipe(switchMap(suiteCount => {
         this.suitesCount = suiteCount;
-        this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.RECORDS_PER_PAGE);
-        return this.service.suites<Suite[]>(null, this.RECORDS_PER_PAGE, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.recordsPerPage);
+        return this.service.suites<Suite[]>(null, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
       })).pipe(switchMap((response: Suite []) => {
         //console.log(typeof response);
         //console.log(Object.prototype.toString.call(response[0]));
@@ -155,5 +157,15 @@ export class SuitesViewComponent implements OnInit {
 
   onCancelClick() {
     this.cancelSelection.emit();
+  }
+
+  showAllSuitesClick() {
+    this.showAllSuites = !this.showAllSuites;
+    if (!this.showAllSuites) {
+      this.recordsPerPage = this.DEFAULT_RECORDS_PER_PAGE;
+    } else {
+      this.recordsPerPage = this.suitesCount;
+    }
+    this.refreshAll();
   }
 }

@@ -48,8 +48,7 @@
             [ngClass]="{'fun-disabled': pager.currentPage === pager.totalPages}">
       <a [routerLink]="" (click)="setPage(pager.totalPages)">Last </a>
       </span>
-       <span class="fun-action-link" (click)="showScriptPath = !showScriptPath">Show
-    script path</span>
+       <span class="fun-action-link" (click)="showAllSuitesClick()">Show all suites</span>
     </div>
   </div>
 
