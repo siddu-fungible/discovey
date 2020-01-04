@@ -21,7 +21,7 @@ class TestBedWorker(Thread):
             time.sleep(5)
             test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
             if test_bed_objects.exists():
-                print "Test-bed worker: {}".format(self.test_bed_name)
+                # print "Test-bed worker: {}".format(self.test_bed_name)
                 test_bed_object = test_bed_objects[0]
                 if test_bed_object.disabled:
                     health_status = AssetHealthStates.DISABLED
@@ -75,4 +75,3 @@ class AssetHealthMonitor(Service):
 if __name__ == "__main__":
     service = AssetHealthMonitor()
     service.run()
-

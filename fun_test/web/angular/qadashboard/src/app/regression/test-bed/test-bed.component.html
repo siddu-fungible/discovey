@@ -10,6 +10,7 @@
           <tr>
             <th class="text-center test-bed-header" rowspan="2">Name</th>
             <th class="text-center test-bed-header" rowspan="2">Description</th>
+            <th class="text-center test-bed-header" rowspan="2">Health</th>
             <th class="text-center test-bed-header" colspan="2"><i class="fa fa-cogs" style="font-size:14px"></i>&nbsp;Regression
               lock
             </th>
@@ -26,11 +27,19 @@
           </tr>
 
           <tr *ngFor="let testBed of testBeds">
-            <td><a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a></td>
+            <td>
+              <div style="display: flex; flex-direction: row;">
+                <div style="width: 50%; align-self: center;">
+                  <a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a>
+                </div>
+                <div style="width: 50%">
+                  Enabled: <app-toggle-button [checked]="!testBed.disabled" (changed)="onToggleDisabled($event, testBed)"></app-toggle-button>
+                </div>
+              </div>
+            </td>
             <td class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i
               class="fa fa-pencil hover-icon" style="font-size:14px; float: right"
               (click)="onEditDescription(testBed)"></i>&nbsp;
-
               <div *ngIf="testBed.editingDescription">
                 <br>
                 <textarea rows="3" [(ngModel)]="testBed.description" style="min-width: 100%;"></textarea>
@@ -40,6 +49,28 @@
                 </div>
 
               </div>
+            </td>
+            <td>
+              <div style="display: flex; flex-direction: row">
+                <div style="width: 50%;align-self: center;">
+                  <ng-container [ngSwitch]="testBed.health_status">
+                    <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span tooltip placement="right"
+                        [tooltipContentString]="'Disabled'">&#128683;</span></ng-container>
+                    <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span tooltip placement="right"
+                        [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
+                    <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span tooltip placement="right"
+                        [tooltipContentString]="'Degrading'">&#9928;</span></ng-container>
+                    <ng-container *ngSwitchCase="assetHealthStates.HEALTHY"><span tooltip placement="right"
+                        [tooltipContentString]="'Healthy'">&#9728;</span></ng-container>
+                  </ng-container>
+                </div>
+
+                <div>
+                  <app-toggle-button style="width: 50%" tooltip placement="right"
+                        [tooltipContentString]="'Enable health-check'" [checked]="testBed.health_check_enabled" (changed)="onToggleHealthCheckEnabled($event, testBed)"></app-toggle-button>
+                </div>
+              </div>
+
 
             </td>
             <td style="padding: 10px">

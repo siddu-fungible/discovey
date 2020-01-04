@@ -10,5 +10,5 @@ class AssetType(Codes):
 class AssetHealthStates(Codes):
     DISABLED = 10
     UNHEALTHY = 20
-    PENDING_HEALTH_CHECK = 30
+    DEGRADING = 30
     HEALTHY = 50
