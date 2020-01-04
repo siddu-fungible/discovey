@@ -320,6 +320,12 @@ def show_dev():
     return sudo('lspci -d1dad: -Dnnmm')
 
 @roles('come')
+@task
+def show_ssd(index=0):
+    """Query fungible SSD device on pcie from COMe system"""
+    return dpcshF(index=index, cmd='peek nvme/ssds/info')
+
+@roles('come')
 @task 
 def rescan_pcie():
     """perform pcie rescan from COMe system"""
@@ -327,7 +333,7 @@ def rescan_pcie():
 
 ### no stable yet !!!
 @roles('bmc')
-#@task
+@task
 def bmcresetF(index=0):
     """ reset the chip from BMC system"""
     with cd('/mnt/sdmmc0p1/scripts'), settings( hide('stderr'), warn_only=True ):
@@ -621,7 +627,7 @@ def dpcshF(index=0, cmd=None):
     #if index == 1 and '0000:06:00.2' not in O:
     #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
     check_dpcsh_install_dependencies()
-    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and '0000:06:00.2' in O) else '/dev/null'
+    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and any(x in O for x in ['0000:05:00.2', '0000:06:00.2'])) else '/dev/null'
     with cd(dpcsh_directory):
         return sudo('./dpcsh --pcie_nvme_sock=%s --nvme_cmd_timeout=60000 --nocli %s' % (dev, cmd))
 
