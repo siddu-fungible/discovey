@@ -150,9 +150,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         self = single_fs_setup(self)
-        print("returned object self is: {}".format(self))
-        print("returned object self type is: {}".format(type(self)))
-        print("returned object self dir is: {}".format(dir(self)))
 
         # Forming shared variables for defined parameters
         fun_test.shared_variables["topology"] = self.topology
