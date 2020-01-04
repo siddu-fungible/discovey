@@ -106,6 +106,7 @@ class TestBed(models.Model):
     health_check_enabled = models.BooleanField(default=True)
     state_change_time = models.DateTimeField(default=timezone.now)
     health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
+    health_check_message = models.TextField(default="")
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.name,
@@ -113,6 +114,13 @@ class TestBed(models.Model):
                                        self.manual_lock,
                                        self.manual_lock_expiry_time,
                                        self.manual_lock_submitter)
+
+    def set_health(self, status, force_update=False, message=""):
+        if status != self.health_status or force_update:
+            self.health_status = status
+            self.state_change_time = get_current_time()
+            self.health_check_message = message
+            self.save()
 
 
 class CatalogSuite(models.Model):
@@ -744,6 +752,7 @@ class Asset(FunModel):
     health_check_enabled = models.BooleanField(default=True)
     state_change_time = models.DateTimeField(default=timezone.now)
     health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
+    health_check_message = models.TextField(default="")
 
     @staticmethod
     def add_update(name, type, job_ids=None):

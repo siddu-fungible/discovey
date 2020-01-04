@@ -4,6 +4,7 @@ from web.fun_test.django_interactive import *
 from threading import Thread
 import time
 from services.daemon_service import Service
+from asset.asset_global import AssetHealthStates
 
 
 class TestBedWorker(Thread):
@@ -16,9 +17,19 @@ class TestBedWorker(Thread):
 
     def run(self):
         while not self.terminated:
+            health_status = AssetHealthStates.HEALTHY
             time.sleep(5)
-            if TestBed.objects.filter(name=self.test_bed_name).exists():
+            test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
+            if test_bed_objects.exists():
                 print "Test-bed worker: {}".format(self.test_bed_name)
+                test_bed_object = test_bed_objects[0]
+                if test_bed_object.disabled:
+                    health_status = AssetHealthStates.DISABLED
+                elif test_bed_object.health_check_enabled:
+                    pass
+                elif not test_bed_object.health_check_enabled:
+                    health_status = AssetHealthStates.HEALTHY
+                test_bed_object.set_health(status=health_status)
             else:
                 self.logger.exception("Test-bed entry for {} not found".format(self.test_bed_name))
                 self.terminated = True
