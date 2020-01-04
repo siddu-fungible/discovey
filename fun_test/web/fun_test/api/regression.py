@@ -329,7 +329,11 @@ def assets(request, name, asset_type):
                               "manual_lock_user": one_asset.manual_lock_user,
                               "job_ids": one_asset.job_ids,
                               "test_beds": one_asset.test_beds,
-                              "manual_lock_expiry_time": one_asset.manual_lock_expiry_time}
+                              "manual_lock_expiry_time": one_asset.manual_lock_expiry_time,
+                              "disabled": one_asset.disabled,
+                              "health_status": one_asset.health_status,
+                              "health_check_enabled": one_asset.health_check_enabled,
+                              "health_check_message": one_asset.health_check_message}
                 result.append(one_record)
     elif request.method == "PUT":
         request_json = json.loads(request.body)
@@ -345,6 +349,10 @@ def assets(request, name, asset_type):
                     if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
+            if "disabled" in request_json:
+                asset.disabled = request_json["disabled"]
+            if "health_check_enabled" in request_json:
+                asset.health_check_enabled = request_json["health_check_enabled"]
             if "minutes" in request_json:
                 asset.manual_lock_expiry_time = get_current_time() + timedelta(minutes=int(request_json["minutes"]))
             asset.save()
