@@ -1208,6 +1208,7 @@ class ComE(Linux):
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
     def fs_reset(self):
+        fun_test.add_checkpoint(checkpoint="Resetting FS")
         try:
             self.sudo_command(self.FS_RESET_COMMAND, timeout=120)
         except Exception as ex:
@@ -1319,8 +1320,10 @@ class ComE(Linux):
         return result
 
     def diags(self):
-        self.command("dmesg")
-        self.command("cat /var/log/syslog")
+        fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
+        clone = self.clone()
+        clone.command("dmesg")
+        clone.command("cat /var/log/syslog")
 
     def stop_cclinux_service(self):
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
@@ -1351,6 +1354,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
             self.diags()
+            self.fs_reset()
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)

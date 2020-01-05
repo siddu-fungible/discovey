@@ -4,7 +4,7 @@ from web.fun_test.django_interactive import *
 from threading import Thread
 import time
 from services.daemon_service import Service
-from asset.asset_global import AssetHealthStates
+from asset.asset_global import AssetHealthStates, AssetType
 
 
 class TestBedWorker(Thread):
@@ -74,7 +74,15 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     am = fun_test.get_asset_manager()
-    assets_required = am.get_assets_required(test_bed_name="fs-11")
+    assets = am.get_assets_required(test_bed_name="fs-inspur")
+    for asset_type, asset_list in assets.iteritems():
+        if asset_type == AssetType.HOST:
+            for asset_name in asset_list:
+                print asset_name
+                am.get_linux_host
+        if asset_type == AssetType.PCIE_HOST:
+            for asset_name in asset_list:
+                print asset_name
     i = 0
     #service = AssetHealthMonitor()
     #service.run()
