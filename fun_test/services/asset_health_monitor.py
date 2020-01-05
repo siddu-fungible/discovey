@@ -74,15 +74,16 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     am = fun_test.get_asset_manager()
-    assets = am.get_assets_required(test_bed_name="fs-inspur")
+    assets = am.get_assets_required(test_bed_name="fs-11")
     for asset_type, asset_list in assets.iteritems():
-        if asset_type == AssetType.HOST:
+        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST]:
             for asset_name in asset_list:
                 print asset_name
-                am.get_linux_host
-        if asset_type == AssetType.PCIE_HOST:
-            for asset_name in asset_list:
-                print asset_name
+                linux_object = am.get_linux_host(name=asset_name)
+                if not linux_object:
+                    pass #TODO
+                else:
+                    health_result, error_message = linux_object.health()
     i = 0
     #service = AssetHealthMonitor()
     #service.run()
