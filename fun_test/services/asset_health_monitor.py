@@ -7,6 +7,8 @@ import time
 from services.daemon_service import Service
 from asset.asset_global import AssetHealthStates, AssetType
 
+UNHEALTHY_VERDICT_TIME = 4 * 60  # 10 mins
+
 
 class TestBedWorker(Thread):
     def __init__(self, test_bed_name, test_bed_spec, logger):
@@ -27,13 +29,75 @@ class TestBedWorker(Thread):
                 if test_bed_object.disabled:
                     health_status = AssetHealthStates.DISABLED
                 elif test_bed_object.health_check_enabled:
-                    pass
+                    self.check_health()
                 elif not test_bed_object.health_check_enabled:
                     health_status = AssetHealthStates.HEALTHY
                 test_bed_object.set_health(status=health_status)
             else:
                 self.logger.exception("Test-bed entry for {} not found".format(self.test_bed_name))
                 self.terminated = True
+
+    def check_health(self):
+        am = fun_test.get_asset_manager()
+        assets = am.get_assets_required(test_bed_name=self.test_bed_name)
+
+        for asset_type, asset_list in assets.iteritems():
+            issue_found = False
+            health_result, error_message = True, ""
+            if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+                only_reachability = False
+                if asset_type == AssetType.DUT:
+                    only_reachability = True
+
+                for asset_name in asset_list:
+                    asset_objects = Asset.objects.filter(name=asset_name, type=asset_type)
+                    asset_object = None
+
+                    if asset_objects.exists():
+                        asset_object = asset_objects.first()
+                    else:
+                        pass  #TODO
+                    instance = am.get_asset_instance(asset=asset_object)
+                    if not instance:
+                        pass  # TODO
+                    else:
+                        health_result, error_message = instance.health(only_reachability=only_reachability)
+                    self.set_health_status(asset_object=asset_object,
+                                           health_result=health_result,
+                                           error_message=error_message)
+
+                    if not health_result:
+                        issue_found = True
+                        break
+            if issue_found:
+                self.logger.exception("Issue found: {}, {}".format(health_result, error_message))
+                break
+
+
+    def set_health_status(self, asset_object, health_result, error_message):
+        health_status = AssetHealthStates.HEALTHY
+        if asset_object.disabled:
+            health_status = AssetHealthStates.DISABLED
+        else:
+            if not asset_object.health_check_enabled:
+                health_status = AssetHealthStates.HEALTHY
+            elif asset_object.health_check_enabled:
+                if health_result:
+                    health_status = AssetHealthStates.HEALTHY
+                elif not health_result:
+
+                    current_health_status = asset_object.health_status
+                    if current_health_status == AssetHealthStates.DEGRADING:
+                        time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
+
+                        if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
+                            health_status = AssetHealthStates.UNHEALTHY
+                            self.logger.exception("Setting {} to unhealthy".format(asset_object.name))
+                    else:
+                        health_status = AssetHealthStates.DEGRADING
+                        self.logger.exception("Setting {} to degrading".format(asset_object.name))
+
+        asset_object.set_health(status=health_status, message=error_message)
 
     def terminate(self):
         self.terminated = True
@@ -43,13 +107,15 @@ class AssetHealthMonitor(Service):
     service_name = "asset_health_monitor"
     workers = {}
 
-    def run(self):
+    def run(self, filter_test_bed_name=None):
         am = fun_test.get_asset_manager()
 
         while True:
             all_test_bed_specs = am.get_all_test_beds_specs()
             self.beat()
             for test_bed_name, test_bed_spec in all_test_bed_specs.iteritems():
+                if filter_test_bed_name and test_bed_name != filter_test_bed_name:
+                    continue
                 if test_bed_name not in am.PSEUDO_TEST_BEDS:
                     if test_bed_name not in self.workers:
                         worker_thread = TestBedWorker(test_bed_name=test_bed_name,
@@ -74,26 +140,5 @@ class AssetHealthMonitor(Service):
 
 
 if __name__ == "__main__":
-    am = fun_test.get_asset_manager()
-    assets = am.get_assets_required(test_bed_name="fs-118")
-    for asset_type, asset_list in assets.iteritems():
-        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
-            for asset_name in asset_list:
-                print asset_name
-                linux_object = am.get_linux_host(name=asset_name)
-                if not linux_object:
-                    pass #TODO
-                else:
-                    health_result, error_message = linux_object.health()
-        if asset_type == AssetType.DUT:
-            for asset_name in asset_list:
-                fs = Fs.get(am.get_fs_by_name(name="fs-118"))
-                if fs:
-                    health_result, error_message = fs.health(only_reachability=True)
-                    i = 0
-                else:
-                    pass #TODO
-
-    i = 0
-    #service = AssetHealthMonitor()
-    #service.run()
+    service = AssetHealthMonitor()
+    service.run(filter_test_bed_name="fs-118")

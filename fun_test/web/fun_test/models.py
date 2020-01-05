@@ -816,6 +816,14 @@ class Asset(FunModel):
         self.manual_lock_expiry_time += timedelta(minutes=minutes)
         self.save()
 
+    def set_health(self, status, force_update=False, message=""):
+        if status != self.health_status or force_update:
+            self.health_status = status
+            self.state_change_time = get_current_time()
+            self.health_check_message = message
+            self.save()
+
+
 class SuiteItems(models.Model):
     script_path = models.TextField()
     inputs = JSONField(default=None)

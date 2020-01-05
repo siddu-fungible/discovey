@@ -298,6 +298,15 @@ class AssetManager:
         return host
 
     @fun_test.safe
+    def get_asset_instance(self, asset):
+        instance = None
+        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
+            instance = self.get_linux_host(name=asset.name)
+        elif asset.type in AssetType.DUT:
+            instance = self.get_fs_by_name(name=asset.name)
+        return instance
+
+    @fun_test.safe
     def get_regression_service_host_spec(self):
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
         return host_spec

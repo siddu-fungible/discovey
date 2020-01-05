@@ -2634,7 +2634,7 @@ class Linux(object, ToDictMixin):
             return []
 
     @fun_test.safe
-    def health(self):
+    def health(self, only_reachability=False):
         return self.is_host_up(max_wait_time=60, with_error_details=True)
 
     @fun_test.safe
