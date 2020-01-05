@@ -298,12 +298,21 @@ class AssetManager:
         return host
 
     @fun_test.safe
+    def get_fs(self, name):
+        from lib.fun.fs import Fs
+        fs_spec = self.get_fs_spec(name=name)
+        fs = None
+        if fs_spec:
+            fs = Fs.get(fs_spec=fs_spec)
+        return fs
+
+    @fun_test.safe
     def get_asset_instance(self, asset):
         instance = None
         if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
             instance = self.get_linux_host(name=asset.name)
         elif asset.type in AssetType.DUT:
-            instance = self.get_fs_spec(name=asset.name)
+            instance = self.get_fs(name=asset.name)
         return instance
 
     @fun_test.safe

@@ -2369,13 +2369,25 @@ class Fs(object, ToDictMixin):
             if bam_result["status"]:
                 result = True
         else:
-            bmc = self.get_bmc()
-            health_result, health_error_message = bmc.is_host_up(max_wait_time=60, with_error_details=True)
+            try:
+                bmc = self.get_bmc()
+                health_result, health_error_message = bmc.is_host_up(max_wait_time=60, with_error_details=True)
+                if health_result:
+                    try:
+                        come = self.get_come()
+                        health_result, health_error_message = come.is_host_up(max_wait_time=60, with_error_details=True)
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    else:
+                        come.disconnect()
+                result = health_result, health_error_message
 
-            if health_result:
-                come = self.get_come()
-                health_result, health_error_message = come.is_host_up(max_wait_time=60, with_error_details=True)
-            result = health_result, health_error_message
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            else:
+                bmc.disconnect()
+
+
 
         return result
 
