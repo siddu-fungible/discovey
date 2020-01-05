@@ -364,6 +364,12 @@ class AssetManager:
                     if host.name == asset_name:
                         found = True
                         break
+            if asset_type == AssetType.PCIE_HOST:
+                hosts = topology.get_pcie_hosts()
+                for host_index, host in hosts.iteritems():
+                    if host.name == asset_name:
+                        found = True
+                        break
         return found
 
 
@@ -401,6 +407,11 @@ class AssetManager:
             perf_listener_hosts = topology.get_perf_listener_hosts()
             host_names = [host_obj.name for name, host_obj in perf_listener_hosts.iteritems()]
             assets_required[AssetType.PERFORMANCE_LISTENER_HOST] = host_names
+
+            pcie_hosts = topology.get_pcie_hosts()
+            host_names = [host_obj.name for name, host_obj in pcie_hosts.iteritems()]
+            assets_required[AssetType.PCIE_HOST] = host_names
+
         return assets_required
 
     @fun_test.safe

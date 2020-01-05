@@ -126,6 +126,7 @@ export class TestBedComponent implements OnInit {
         let dutAssets = [];
         let hostAssets = [];
         let perfListenerAssets = [];
+        let pcieHostAssets = [];
         /*let dutWithSsdsAssets = [];
         let dutWithServersAssets= [];*/
         this.assets = response;
@@ -140,15 +141,12 @@ export class TestBedComponent implements OnInit {
           if (asset.type === 'Perf Listener') {
             perfListenerAssets.push(asset);
           }
-          /*if (asset.type === 'DUT with server') {
-            dutWithServersAssets.push(asset);
+          if (asset.type === 'PCIE-host') {
+            pcieHostAssets.push(asset);
           }
-          if (asset.type === 'DUT with SSD') {
-            dutWithSsdsAssets.push(asset);
-          }*/
 
         });
-        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
+        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
         return of(true);
       }))
     } else {

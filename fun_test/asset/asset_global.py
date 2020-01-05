@@ -5,6 +5,7 @@ class AssetType(Codes):
     DUT = "DUT"
     HOST = "Host"
     PERFORMANCE_LISTENER_HOST = "Perf Listener"
+    PCIE_HOST = "PCIE-host"
 
 
 class AssetHealthStates(Codes):

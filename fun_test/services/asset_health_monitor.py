@@ -73,5 +73,8 @@ class AssetHealthMonitor(Service):
 
 
 if __name__ == "__main__":
-    service = AssetHealthMonitor()
-    service.run()
+    am = fun_test.get_asset_manager()
+    assets_required = am.get_assets_required(test_bed_name="fs-11")
+    i = 0
+    #service = AssetHealthMonitor()
+    #service.run()
