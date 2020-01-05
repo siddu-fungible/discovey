@@ -2362,11 +2362,21 @@ class Fs(object, ToDictMixin):
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
 
-    def health(self):
+    def health(self, only_reachability=False):
         result = None
-        bam_result = self.bam()
-        if bam_result["status"]:
-            result = True
+        if not only_reachability:
+            bam_result = self.bam()
+            if bam_result["status"]:
+                result = True
+        else:
+            bmc = self.get_bmc()
+            health_result, health_error_message = bmc.is_host_up(max_wait_time=60, with_error_details=True)
+
+            if health_result:
+                come = self.get_come()
+                health_result, health_error_message = come.is_host_up(max_wait_time=60, with_error_details=True)
+            result = health_result, health_error_message
+
         return result
 
     def bam(self, command_duration=2):

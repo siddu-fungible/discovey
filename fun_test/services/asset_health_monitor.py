@@ -1,6 +1,7 @@
 from lib.system.fun_test import *
 from web.fun_test.models import TestBed
 from web.fun_test.django_interactive import *
+from lib.fun.fs import Fs
 from threading import Thread
 import time
 from services.daemon_service import Service
@@ -74,9 +75,9 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     am = fun_test.get_asset_manager()
-    assets = am.get_assets_required(test_bed_name="fs-11")
+    assets = am.get_assets_required(test_bed_name="fs-118")
     for asset_type, asset_list in assets.iteritems():
-        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST]:
+        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
             for asset_name in asset_list:
                 print asset_name
                 linux_object = am.get_linux_host(name=asset_name)
@@ -84,6 +85,15 @@ if __name__ == "__main__":
                     pass #TODO
                 else:
                     health_result, error_message = linux_object.health()
+        if asset_type == AssetType.DUT:
+            for asset_name in asset_list:
+                fs = Fs.get(am.get_fs_by_name(name="fs-118"))
+                if fs:
+                    health_result, error_message = fs.health(only_reachability=True)
+                    i = 0
+                else:
+                    pass #TODO
+
     i = 0
     #service = AssetHealthMonitor()
     #service.run()
