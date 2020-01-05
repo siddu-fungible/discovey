@@ -25,7 +25,7 @@ class SetupBringup(FunTestScript):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                  '/ali_bmv_storage_sanity.json')
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(str(self.server_key["fs"][fs_name]["fs-name"]))
         servers_mode = self.server_key["fs"][fs_name]["hosts"]
         servers_list = []
 
@@ -200,7 +200,7 @@ class PingTest(FunTestCase):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
         topology = fun_test.shared_variables["topology"]
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(self.server_key["fs"][fs_name]["fs-name"]))
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(str(self.server_key["fs"][fs_name]["fs-name"]))
         print("\n================================")
         print("F1_0 DPC Stats")
         print("================================\n")

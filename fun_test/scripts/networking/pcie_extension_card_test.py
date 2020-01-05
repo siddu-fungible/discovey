@@ -20,7 +20,7 @@ class ScriptSetup(FunTestScript):
 
     def setup(self):
         global server_ip, bmc_reach, fpga_reach, server_reach, test_bed_spec
-        test_bed_spec = fun_test.get_asset_manager().get_fs_by_name("fs-11")
+        test_bed_spec = fun_test.get_asset_manager().get_fs_spec("fs-11")
         bmc_reach = False
         fpga_reach = False
         server_reach = False

@@ -36,7 +36,7 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         self.fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(self.fs_name)
+        self.fs = AssetManager().get_fs_spec(self.fs_name)
         self.apc_info = self.fs.get("apc_info", None)
         self.outlet_no = self.apc_info.get("outlet_number", None)
         self.validate = {"check_storage_controller": False,

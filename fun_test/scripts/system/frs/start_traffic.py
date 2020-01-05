@@ -323,7 +323,7 @@ class MyScript(FunTestScript):
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
         fun_test.log(json.dumps(self.fs, indent=4))
         if self.disable_f1_index == 0:
             self.run_on_f1 = [1]
@@ -1537,7 +1537,7 @@ class FrsTestCase(FunTestCase):
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
         fun_test.log(json.dumps(self.fs, indent=4))
         if self.disable_f1_index == 0:
             self.run_on_f1 = [1]

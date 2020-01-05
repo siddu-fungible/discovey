@@ -69,7 +69,7 @@ class PowerCycleFsWithPDU(FunTestScript):
         test_bed_spec = am.get_test_bed_spec(name=test_bed)
         fun_test.simple_assert(test_bed_spec, "Test-bed spec for {} is {}".format(test_bed_type, test_bed_spec))
         dut_name = test_bed_spec["dut_info"]["0"]["dut"]
-        fs_spec = am.get_fs_by_name(dut_name)
+        fs_spec = am.get_fs_spec(dut_name)
         fun_test.simple_assert(fs_spec, "FS spec for {} is {}".format(dut_name, fs_spec))
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
 

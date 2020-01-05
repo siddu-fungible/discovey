@@ -111,7 +111,7 @@ class AssetManager:
 
 
     @fun_test.safe
-    def get_fs_by_name(self, name):
+    def get_fs_spec(self, name):
         result = None
         fs_json = self.FS_SPEC
         json_spec = parse_file_to_json(file_name=fs_json)
@@ -303,7 +303,7 @@ class AssetManager:
         if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
             instance = self.get_linux_host(name=asset.name)
         elif asset.type in AssetType.DUT:
-            instance = self.get_fs_by_name(name=asset.name)
+            instance = self.get_fs_spec(name=asset.name)
         return instance
 
     @fun_test.safe

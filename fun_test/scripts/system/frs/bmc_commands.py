@@ -112,7 +112,7 @@ def new_power(bmc_handle):
 
 
 if __name__ == "__main__":
-    fs = AssetManager().get_fs_by_name("fs-65")
+    fs = AssetManager().get_fs_spec("fs-65")
     bmc_handle = Bmc(host_ip=fs['bmc']['mgmt_ip'],
                      ssh_username=fs['bmc']['mgmt_ssh_username'],
                      ssh_password=fs['bmc']['mgmt_ssh_password'],

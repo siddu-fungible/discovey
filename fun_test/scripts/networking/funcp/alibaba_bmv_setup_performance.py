@@ -60,7 +60,7 @@ class SetupBringup(fs_power_cycle_test.BootF1):
         linux_objs = funeth_obj.linux_obj_dict.values()
         server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                  '/ali_bmv_storage_sanity.json')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(server_key["fs"][fs_name]["fs-name"]))
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(str(server_key["fs"][fs_name]["fs-name"]))
         fun_test.log("Configure irq affinity")
         for hu in funeth_obj.hu_hosts:
             funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=funeth.CPU_LIST_HOST)

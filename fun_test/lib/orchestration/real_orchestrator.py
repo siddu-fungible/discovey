@@ -24,7 +24,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
 
         if "dut" in dut_obj.spec:
             dut_name = dut_obj.spec["dut"]
-            fs_spec = fun_test.get_asset_manager().get_fs_by_name(dut_name)
+            fs_spec = fun_test.get_asset_manager().get_fs_spec(dut_name)
             if "disable_f1_index" in dut_obj.spec:
                 disable_f1_index = dut_obj.spec["disable_f1_index"]
             boot_args = dut_obj.spec.get("custom_boot_args", None)

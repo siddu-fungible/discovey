@@ -44,31 +44,30 @@ class TestBedWorker(Thread):
         for asset_type, asset_list in assets.iteritems():
             issue_found = False
             health_result, error_message = True, ""
-            if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
-                only_reachability = False
-                if asset_type == AssetType.DUT:
-                    only_reachability = True
+            only_reachability = False
+            if asset_type == AssetType.DUT:
+                only_reachability = True
 
-                for asset_name in asset_list:
-                    asset_objects = Asset.objects.filter(name=asset_name, type=asset_type)
-                    asset_object = None
+            for asset_name in asset_list:
+                asset_objects = Asset.objects.filter(name=asset_name, type=asset_type)
+                asset_object = None
 
-                    if asset_objects.exists():
-                        asset_object = asset_objects.first()
-                    else:
-                        pass  #TODO
-                    instance = am.get_asset_instance(asset=asset_object)
-                    if not instance:
-                        pass  # TODO
-                    else:
-                        health_result, error_message = instance.health(only_reachability=only_reachability)
-                    self.set_health_status(asset_object=asset_object,
-                                           health_result=health_result,
-                                           error_message=error_message)
+                if asset_objects.exists():
+                    asset_object = asset_objects.first()
+                else:
+                    pass  #TODO
+                instance = am.get_asset_instance(asset=asset_object)
+                if not instance:
+                    pass  # TODO
+                else:
+                    health_result, error_message = instance.health(only_reachability=only_reachability)
+                self.set_health_status(asset_object=asset_object,
+                                       health_result=health_result,
+                                       error_message=error_message)
 
-                    if not health_result:
-                        issue_found = True
-                        break
+                if not health_result:
+                    issue_found = True
+                    break
             if issue_found:
                 self.logger.exception("Issue found: {}, {}".format(health_result, error_message))
                 break

@@ -2045,7 +2045,7 @@ class Fs(object, ToDictMixin):
             test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec), context=context)
             dut_name = test_bed_spec["dut_info"]["0"]["dut"]
-            fs_spec = am.get_fs_by_name(dut_name)
+            fs_spec = am.get_fs_spec(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
         if fs_parameters:
@@ -2565,7 +2565,7 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     #terminal = fs.get_terminal()
     #terminal.command("pwd")
     #terminal.command("ifconfig")

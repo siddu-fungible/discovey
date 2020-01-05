@@ -35,7 +35,7 @@ class FunControlPlaneBringup:
             self.boot_args_f1_1 = "app=load_mods cc_huid=2 --all_100g --dis-stats --dpc-server " \
                                   "--dpc-uart --mgmt"
 
-        self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)
+        self.fs_spec = fun_test.get_asset_manager().get_fs_spec(fs_name)
         self.fs_boot_number = None
         self.abstract_configs_f1_0 = None
         self.abstract_configs_f1_1 = None
