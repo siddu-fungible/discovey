@@ -1207,10 +1207,13 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
-    def fs_reset(self):
+    def fs_reset(self, clone=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
+        handle = self
+        if clone:
+            handle = self.clone()
         try:
-            self.sudo_command(self.FS_RESET_COMMAND, timeout=120)
+            handle.sudo_command(self.FS_RESET_COMMAND, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1354,7 +1357,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
             self.diags()
-            self.fs_reset()
+            self.fs_reset(clone=True)
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
