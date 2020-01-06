@@ -21,7 +21,7 @@ class ReportWorker(Thread):
 
             test_beds = TestBed.objects.all()
             for test_bed in test_beds:
-                if not test_bed.disabled and test_bed.health_check_enabled and (test_bed.health_status != AssetHealthStates.UNHEALTHY):
+                if not test_bed.disabled and test_bed.health_check_enabled and (test_bed.health_status == AssetHealthStates.UNHEALTHY):
                     test_bed_reports.append({"test_bed_name": test_bed.name,
                                              "health_status": test_bed.health_status,
                                              "health_check_message": test_bed.health_check_message})
