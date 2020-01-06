@@ -20,7 +20,7 @@ class TestBedWorker(Thread):
 
     def run(self):
         while not self.terminated:
-            health_status = AssetHealthStates.HEALTHY
+            health_status, health_check_error_message = AssetHealthStates.HEALTHY, ""
             time.sleep(5)
             test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
             if test_bed_objects.exists():
@@ -28,11 +28,13 @@ class TestBedWorker(Thread):
                 test_bed_object = test_bed_objects[0]
                 if test_bed_object.disabled:
                     health_status = AssetHealthStates.DISABLED
-                elif test_bed_object.health_check_enabled:
-                    self.check_health()
-                elif not test_bed_object.health_check_enabled:
-                    health_status = AssetHealthStates.HEALTHY
-                test_bed_object.set_health(status=health_status)
+                else:
+                    if test_bed_object.health_check_enabled:
+                        health_status, health_check_error_message = self.check_health()
+                    else:
+                        if test_bed_object.health_check_enabled:
+                            health_status = AssetHealthStates.HEALTHY
+                test_bed_object.set_health(status=health_status, message=health_check_error_message)
             else:
                 self.logger.exception("Test-bed entry for {} not found".format(self.test_bed_name))
                 self.terminated = True
@@ -41,8 +43,10 @@ class TestBedWorker(Thread):
         am = fun_test.get_asset_manager()
         assets = am.get_assets_required(test_bed_name=self.test_bed_name)
 
+        issue_found = False
+        health_result_for_test_bed, error_message_for_test_bed = AssetHealthStates.HEALTHY, ""
         for asset_type, asset_list in assets.iteritems():
-            issue_found = False
+
             health_result, error_message = True, ""
             only_reachability = False
             if asset_type == AssetType.DUT:
@@ -67,11 +71,15 @@ class TestBedWorker(Thread):
 
                 if not health_result:
                     issue_found = True
+                    error_message_for_test_bed = error_message
                     break
             if issue_found:
                 self.logger.exception("Issue found: {}, {}".format(health_result, error_message))
                 break
+        if issue_found:
+            health_result_for_test_bed = AssetHealthStates.UNHEALTHY
 
+        return health_result_for_test_bed, error_message_for_test_bed
 
     def set_health_status(self, asset_object, health_result, error_message):
         health_status = AssetHealthStates.HEALTHY
