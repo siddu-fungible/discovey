@@ -1,4 +1,5 @@
-from platform import *
+from lib.system.fun_test import *
+from scripts.system.platform.platform import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
 from scripts.storage.storage_api_helper import *
 
@@ -602,7 +603,7 @@ if __name__ == "__main__":
         # DiscoverDhcpIP,
         # AlternateCommunicationToBMC,
         # PlatformComponentVersioningDiscovery,
-        # BootSequenceFPGA,
+        BootSequenceFPGA,
         # BootSequenceBMC,
         # BootSequenceCOMe,
         # BMCLinkToggle,

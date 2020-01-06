@@ -1,8 +1,8 @@
+from lib.system.fun_test import fun_test
 import os
 from lib.host.linux import Linux
 from lib.host.storage_controller import StorageController
-from lib.system.fun_test import *
-from lib.system import utils
+# from lib.system import utils
 from asset.asset_manager import AssetManager
 import re
 from lib.fun.fs import ComE, Bmc, Fpga
