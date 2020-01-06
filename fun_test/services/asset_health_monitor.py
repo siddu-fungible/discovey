@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from web.web_global import JINJA_TEMPLATE_DIR
 
 
-UNHEALTHY_VERDICT_TIME = 2 * 60  # 10 mins
+UNHEALTHY_VERDICT_TIME = 10 * 60  # 10 mins
 
 
 class ReportWorker(Thread):
@@ -42,7 +42,7 @@ class ReportWorker(Thread):
                                  subject="ALERT: Asset health monitor",
                                  content=content)
 
-            time.sleep(60)
+            time.sleep(60 * 15)
 
 class TestBedWorker(Thread):
     def __init__(self, test_bed_name, test_bed_spec, logger, service):
