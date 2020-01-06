@@ -638,7 +638,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.log("FIO param --rwmixread is overridden by user to: --rwmixread={}".format(self.rwmixread))
         if "test_bs" in job_inputs:
             self.bs = job_inputs["test_bs"]
-            self.fio_cmd_args["multiple_jobs"] = re.sub(r"--bs=\d+ ", "--bs={} ".format(self.bs),
+            self.fio_cmd_args["multiple_jobs"] = re.sub(r"--bs=\w+ ", "--bs={} ".format(self.bs),
                                                         self.fio_cmd_args["multiple_jobs"])
             fun_test.log("FIO param --bs is overridden by user to: --bs={}".format(self.bs))
 
