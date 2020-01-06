@@ -10,7 +10,7 @@ from lib.orchestration.orchestrator import OrchestratorType
 from lib.topology.dut import Dut
 from fun_global import *
 from scheduler.scheduler_global import JobStatusType
-from asset.asset_global import AssetType
+from asset.asset_global import AssetType, AssetHealthStates
 import json
 
 
@@ -199,6 +199,7 @@ class AssetManager:
     def get_test_bed_availability(self, test_bed_type, suite_base_test_bed_spec=None, all_test_bed_specs=None):
         from web.fun_test.models_helper import get_suite_executions_by_filter, is_test_bed_with_manual_lock
         from scheduler.scheduler_global import JobStatusType
+        from web.fun_test.models import TestBed
         result = {}
         result["test_bed"] = test_bed_type
         result["status"] = False
@@ -206,11 +207,22 @@ class AssetManager:
         result["resources"] = None
         result["internal_resource_in_use"] = False  # set this if any DUT or Host within the test-bed is locked (shared asset)
 
+        test_bed_name = test_bed_type
+        if test_bed_type == "suite-based":
+            test_bed_name = suite_base_test_bed_spec.get("base_test_bed", None)
+
+        test_bed_objects = TestBed.objects.filter(name=test_bed_name)
+        if test_bed_objects.exists():
+            test_bed_object = test_bed_objects.first()
+            if test_bed_object.health_status != AssetHealthStates.HEALTHY:
+                result["status"] = False
+                result["message"] = "TB: {} is not healthy".format(test_bed_name)
+                return result
+
         if suite_base_test_bed_spec:
             return self.check_custom_test_bed_availability(custom_spec=suite_base_test_bed_spec)
 
         in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
-
 
         in_use, error_message, used_by_suite_id, asset_in_use = False, "", -1, None
         assets_required_for_test_bed = None

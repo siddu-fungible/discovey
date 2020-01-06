@@ -232,11 +232,11 @@ class QueueWorker(Thread):
                         if queued_job.is_suite_based():
                             suite_based_spec = get_suite_based_test_bed_spec(job_id=queued_job.job_id)
                             if not suite_based_spec:
-                                scheduler_logger.error(
-                                    "suite-based is requested for: {} but it is invalid".format(queued_job.job_id))
-                                queued_job.message = "Spec is invalid"
+                                error_message = "suite-based is requested for: {} but it is invalid".format(queued_job.job_id)
+                                scheduler_logger.error(error_message)
+                                queued_job.message = error_message
                                 queued_job.save()
-                                continue
+                                raise Exception(error_message)
 
                         if queued_job.test_bed_type not in not_available:
 

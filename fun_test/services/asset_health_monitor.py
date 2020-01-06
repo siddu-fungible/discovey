@@ -87,9 +87,11 @@ class TestBedWorker(Thread):
                             health_status = AssetHealthStates.HEALTHY
 
                 if test_bed_object.health_status != health_status:
-                    self.info("Status set to {}".format(health_status))
+                    self.info("Test-bed status set to {}".format(health_status))
                 if health_status == AssetHealthStates.UNHEALTHY:
                     self.alert("Status set to unhealthy")
+                if health_status == AssetHealthStates.DEGRADING:
+                    self.alert("Test-bed status set to degrading")
 
                 test_bed_object.set_health(status=health_status, message=health_check_error_message)
                 time.sleep(60)
@@ -104,6 +106,7 @@ class TestBedWorker(Thread):
         issue_found = False
         health_result_for_test_bed, error_message_for_test_bed = AssetHealthStates.HEALTHY, ""
         at_least_one_unhealthy = False
+        at_least_one_degrading = False
         for asset_type, asset_list in assets.iteritems():
 
             health_result, error_message = True, ""
@@ -129,6 +132,8 @@ class TestBedWorker(Thread):
                 final_health_status = self.set_health_status(asset_object=asset_object,
                                                              health_result=health_result,
                                                              error_message=error_message)
+                if final_health_status == AssetHealthStates.DEGRADING:
+                    at_least_one_degrading = True
                 if final_health_status == AssetHealthStates.UNHEALTHY:
                     at_least_one_unhealthy = True
                 if not health_result:
@@ -139,9 +144,15 @@ class TestBedWorker(Thread):
             if issue_found:
                 self.report_exception("Issue found: {}, {}".format(health_result, error_message))
                 break
-        if issue_found and at_least_one_unhealthy:
-            health_result_for_test_bed = AssetHealthStates.UNHEALTHY
-            self.alert("Setting Test-bed to unhealthy")
+
+        if issue_found:
+            if at_least_one_degrading:
+                health_result_for_test_bed = AssetHealthStates.DEGRADING
+                self.alert("Setting Test-bed to degrading")
+
+            if at_least_one_unhealthy:
+                health_result_for_test_bed = AssetHealthStates.UNHEALTHY
+                self.alert("Setting Test-bed to unhealthy")
 
         return health_result_for_test_bed, error_message_for_test_bed
 
