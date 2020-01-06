@@ -121,6 +121,10 @@ class TestBedWorker(Thread):
                 self.service.service_assert(instance, "Unable to retrieve asset instance for {}: {}".format(asset_type,
                                                                                                             asset_name))
                 health_result, error_message = instance.health(only_reachability=only_reachability)
+                try:
+                    instance.disconnect()
+                except:
+                    pass
                 final_health_status = self.set_health_status(asset_object=asset_object,
                                                              health_result=health_result,
                                                              error_message=error_message)
