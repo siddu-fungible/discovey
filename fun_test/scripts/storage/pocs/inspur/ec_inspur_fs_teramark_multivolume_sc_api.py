@@ -983,7 +983,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             self.ec_info["stripe_count"], self.ec_info["volume_types"]["ec"],
                                             self.ec_info["encrypt"], self.ec_info["allow_expansion"],
                                             self.ec_info["data_protection"], self.ec_info["compression_effort"])
-                print response["data"]["uuid"]
+                fun_test.log("Create EC volume API response: {}".format(response))
+
+                fun_test.test_assert(response["status"], "Create EC Volume {} with uuid {} on DUT".
+                                     format(count + 1, response["data"]["uuid"]))
 
                 attach_volume = sc.volume_attach_remote(vol_uuid=response["data"]["uuid"],
                                                         transport=self.attach_transport.upper(),
@@ -996,7 +999,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching EC volume {} to the host {}".
                                      format(response["data"]["uuid"], host_ips[num]))
-
+                count += 1
             # Starting packet capture in all the hosts
 
             fun_test.shared_variables["fio"] = {}
