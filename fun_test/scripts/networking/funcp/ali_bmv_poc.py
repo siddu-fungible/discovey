@@ -233,7 +233,7 @@ class CreateNamespaceVMs(FunTestCase):
 
     def run(self):
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.spec_file["fs"][fs_name]["fs-name"])
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(self.spec_file["fs"][fs_name]["fs-name"])
 
 
         servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"]
@@ -414,7 +414,7 @@ class LocalNamespace(FunTestCase):
     def run(self):
         global vm_volume_map
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.spec_file["fs"][fs_name]["fs-name"])
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(self.spec_file["fs"][fs_name]["fs-name"])
 
         servers_with_vms = self.spec_file["fs"][fs_name]["vm_config"]
 

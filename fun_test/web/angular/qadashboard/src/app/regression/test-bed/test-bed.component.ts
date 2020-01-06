@@ -10,6 +10,7 @@ import {TestBedService} from "./test-bed.service";
 import {UserService} from "../../services/user/user.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserProfile} from "../../login/definitions";
+import {Api, ApiType} from "../../lib/api";
 
 enum EditMode {
   NONE = 0,
@@ -58,6 +59,7 @@ export class TestBedComponent implements OnInit {
   tempNote: string;
   userProfile: UserProfile = null;
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
+  assetHealthStates: ApiType = new ApiType();
 
 
   constructor(private regressionService: RegressionService,
@@ -82,7 +84,9 @@ export class TestBedComponent implements OnInit {
       //observer.complete();
       return () => {
       };
-    }).pipe(
+    }).pipe(switchMap(response => {
+      return this.assetHealthStates.get('/api/v1/regression/asset_health_states');
+      }),
       switchMap(response => {
         return this.fetchTestBeds();
       }),
@@ -122,6 +126,7 @@ export class TestBedComponent implements OnInit {
         let dutAssets = [];
         let hostAssets = [];
         let perfListenerAssets = [];
+        let pcieHostAssets = [];
         /*let dutWithSsdsAssets = [];
         let dutWithServersAssets= [];*/
         this.assets = response;
@@ -136,15 +141,12 @@ export class TestBedComponent implements OnInit {
           if (asset.type === 'Perf Listener') {
             perfListenerAssets.push(asset);
           }
-          /*if (asset.type === 'DUT with server') {
-            dutWithServersAssets.push(asset);
+          if (asset.type === 'PCIE-host') {
+            pcieHostAssets.push(asset);
           }
-          if (asset.type === 'DUT with SSD') {
-            dutWithSsdsAssets.push(asset);
-          }*/
 
         });
-        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
+        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
         return of(true);
       }))
     } else {
@@ -451,6 +453,48 @@ export class TestBedComponent implements OnInit {
     }, error => {
       this.loggerService.error("Unable to extend duration");
     })
+  }
+
+  onToggleAssetDisabled(enabled, asset) {
+    alert("This feature is not yet implemented");
+    this.service.enableAsset(asset.name, asset.type, !enabled).subscribe(response => {
+
+    }, error => {
+      this.loggerService.error("Unable to toggle asset state");
+    })
+
+  }
+
+  onToggleAssetHealthCheckEnabled(enabled, asset) {
+    alert("This feature is not yet implemented");
+    asset.health_check_enabled = enabled;
+    this.service.healthCheckEnabledAsset(asset.name, asset.type, asset.health_check_enabled).subscribe(response => {
+
+    }, error => {
+      this.loggerService.error("Unable to toggle asset health check enabled");
+    })
+  }
+
+  onToggleDisabled(enabled, testBed) {
+    alert("This feature is not yet implemented");
+    testBed.disabled = !enabled;
+    let url = "/api/v1/regression/test_beds/" + testBed.id;
+    let payload = {disabled: testBed.disabled};
+    this.apiService.put(url, payload).subscribe(response => {
+    }, error => {
+      this.loggerService.error("Unable to change state");
+    });
+  }
+
+  onToggleHealthCheckEnabled(enabled, testBed) {
+    alert("This feature is not yet implemented");
+    testBed.health_check_enabled = enabled;
+    let url = "/api/v1/regression/test_beds/" + testBed.id;
+    let payload = {health_check_enabled: testBed.health_check_enabled};
+    this.apiService.put(url, payload).subscribe(response => {
+    }, error => {
+      this.loggerService.error("Unable to change health check");
+    });
   }
 
 }

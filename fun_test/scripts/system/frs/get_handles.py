@@ -3,7 +3,7 @@ from lib.fun.fs import ComE, Bmc
 
 
 def get_come_handle(fs_name):
-    fs = AssetManager().get_fs_by_name(fs_name)
+    fs = AssetManager().get_fs_spec(fs_name)
     come_handle = ComE(host_ip=fs['come']['mgmt_ip'],
                        ssh_username=fs['come']['mgmt_ssh_username'],
                        ssh_password=fs['come']['mgmt_ssh_password'])
@@ -12,7 +12,7 @@ def get_come_handle(fs_name):
 
 
 def get_bmc_handle(fs_name):
-    fs = AssetManager().get_fs_by_name(fs_name)
+    fs = AssetManager().get_fs_spec(fs_name)
     bmc_handle = Bmc(host_ip=fs['bmc']['mgmt_ip'],
                      ssh_username=fs['bmc']['mgmt_ssh_username'],
                      ssh_password=fs['bmc']['mgmt_ssh_password'],

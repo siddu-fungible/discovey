@@ -1,0 +1,39 @@
+<html>
+<div>
+    <h4>Test-bed alerts</h4>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Message</th>
+        </tr>
+        {% for test_bed_report in test_bed_reports %}
+            <tr>
+                <td>{{ test_bed_report.test_bed_name }}</td>
+                <td>{{ test_bed_report.health_status }}</td>
+                <td>{{ test_bed_report.health_check_message }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div>
+    <h4>Asset alerts</h4>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Message</th>
+        </tr>
+        {% for asset_report in asset_reports %}
+            <tr>
+                <td>{{ asset_report.asset_name }}</td>
+                <td>{{ asset_report.health_status }}</td>
+                <td>{{ asset_report.health_check_message }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+
+</html>

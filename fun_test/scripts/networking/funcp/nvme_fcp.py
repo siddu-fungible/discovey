@@ -383,7 +383,7 @@ class BringupSetup(FunTestCase):
             topology = th.get_expanded_topology()
             dut = topology.get_dut(index=0)
             dut_name = dut.get_name()
-            fs_spec = fun_test.get_asset_manager().get_fs_by_name(name=dut_name)
+            fs_spec = fun_test.get_asset_manager().get_fs_spec(name=dut_name)
             fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
             come_obj = fs_obj.get_come()
             f10_instance = fs_obj.get_f1(index=0)

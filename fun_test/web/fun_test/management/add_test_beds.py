@@ -86,7 +86,7 @@ for line in s.split("\n"):
         # print m.group(0)
         fs_number = int(m.group(1))
         fs_name = "fs-{}".format(fs_number)
-        existing_fs = a.get_fs_by_name(fs_name)
+        existing_fs = a.get_fs_spec(fs_name)
         d = {"name": fs_name,
              "fpga": get_fpga_details(fs_number),
              "come": get_come_details(fs_number),

@@ -5,11 +5,11 @@ class AssetType(Codes):
     DUT = "DUT"
     HOST = "Host"
     PERFORMANCE_LISTENER_HOST = "Perf Listener"
-    # DUT_WITH_SERVERS = "DUT with server"
-    # DUT_WITH_SSDS = "DUT with SSD"
+    PCIE_HOST = "PCIE-host"
 
 
-class AssetHealth(Codes):
-    DEAD = 1
+class AssetHealthStates(Codes):
     DISABLED = 10
-    ACTIVE = 50
+    UNHEALTHY = 20
+    DEGRADING = 30
+    HEALTHY = 50

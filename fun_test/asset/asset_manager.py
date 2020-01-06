@@ -111,7 +111,7 @@ class AssetManager:
 
 
     @fun_test.safe
-    def get_fs_by_name(self, name):
+    def get_fs_spec(self, name):
         result = None
         fs_json = self.FS_SPEC
         json_spec = parse_file_to_json(file_name=fs_json)
@@ -298,6 +298,24 @@ class AssetManager:
         return host
 
     @fun_test.safe
+    def get_fs(self, name):
+        from lib.fun.fs import Fs
+        fs_spec = self.get_fs_spec(name=name)
+        fs = None
+        if fs_spec:
+            fs = Fs.get(fs_spec=fs_spec)
+        return fs
+
+    @fun_test.safe
+    def get_asset_instance(self, asset):
+        instance = None
+        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
+            instance = self.get_linux_host(name=asset.name)
+        elif asset.type in AssetType.DUT:
+            instance = self.get_fs(name=asset.name)
+        return instance
+
+    @fun_test.safe
     def get_regression_service_host_spec(self):
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
         return host_spec
@@ -364,6 +382,12 @@ class AssetManager:
                     if host.name == asset_name:
                         found = True
                         break
+            if asset_type == AssetType.PCIE_HOST:
+                hosts = topology.get_pcie_hosts()
+                for host_index, host in hosts.iteritems():
+                    if host.name == asset_name:
+                        found = True
+                        break
         return found
 
 
@@ -401,6 +425,11 @@ class AssetManager:
             perf_listener_hosts = topology.get_perf_listener_hosts()
             host_names = [host_obj.name for name, host_obj in perf_listener_hosts.iteritems()]
             assets_required[AssetType.PERFORMANCE_LISTENER_HOST] = host_names
+
+            pcie_hosts = topology.get_pcie_hosts()
+            host_names = [host_obj.name for name, host_obj in pcie_hosts.iteritems()]
+            assets_required[AssetType.PCIE_HOST] = host_names
+
         return assets_required
 
     @fun_test.safe

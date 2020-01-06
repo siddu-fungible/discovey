@@ -201,6 +201,11 @@ class Codes:
                 result[value] = attribute
         return result
 
+    def get_maps(self):
+        return {"string_code_map": self.all_strings_to_code(),
+                "code_description_map": self.get_code_to_description_map()}
+
+
 class TimeSeriesTypes(Codes):
     SCRIPT_RUN_TIME = 10
     CONTEXT_INFO = 40

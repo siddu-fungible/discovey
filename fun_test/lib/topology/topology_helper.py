@@ -146,6 +146,12 @@ class TopologyHelper:
                     dut_interface_obj = dut_obj.add_interface(index=interface_index, type=interface_info['type'])
                     if "hosts" in interface_info:
                         dut_interface_obj.add_hosts(num_hosts=interface_info["hosts"], host_info=interface_info["host_info"])
+                        host_name = interface_info["host_info"]["name"]
+                        host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
+                        fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
+
+                        self.expanded_topology.add_pcie_host(host_name=host_name, host_obj=Host(name=host_name,
+                                                                                                spec=host_spec))
                     elif 'vms' in interface_info:
                         if 'type' not in interface_info:
                             raise FunTestLibException("We must define an interface type")

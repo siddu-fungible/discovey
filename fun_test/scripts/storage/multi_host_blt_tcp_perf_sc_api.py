@@ -150,9 +150,6 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         self = single_fs_setup(self)
-        print("returned object self is: {}".format(self))
-        print("returned object self type is: {}".format(type(self)))
-        print("returned object self dir is: {}".format(dir(self)))
 
         # Forming shared variables for defined parameters
         fun_test.shared_variables["topology"] = self.topology
@@ -228,7 +225,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
                 self.thin_uuid_list = fun_test.shared_variables["thin_uuid"]
-                self.nqn_list = fun_test.shared_variables["nqn_list"]
+                self.subsys_nqn_list = fun_test.shared_variables["subsys_nqn_list"]
                 self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
 
                 # Setting the syslog level back to 6
@@ -243,7 +240,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 # Executing NVMe disconnect from all the hosts
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
-                    nqn = self.nqn_list[index]
+                    nqn = self.subsys_nqn_list[index]
 
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(nqn)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
@@ -456,7 +453,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             # Create one TCP controller per host
             self.nvme_block_device = []
-            self.nqn_list = []
+            self.subsys_nqn_list = []
+            self.host_nqn_list = []
             self.detach_uuid_list = []
 
             # Attach controller to BLTs
@@ -473,13 +471,18 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 # option in the NVMe connect command
                 subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
                     attach_volume["data"].get("nqn")
-                fun_test.simple_assert(subsys_nqn, "Extracted the Subsys NQN to which volume {} got attached".
+                fun_test.simple_assert(subsys_nqn, "Extracted the controller's Subsys NQN to which volume {} got "
+                                                   "attached".format(self.thin_uuid_list[i]))
+                fun_test.simple_assert("host_nqn" in attach_volume["data"],
+                                       "Extracted the Controller's Host NQN to which volume {} got attached".
                                        format(self.thin_uuid_list[i]))
-                self.nqn_list.append(subsys_nqn)
+                host_nqn = attach_volume["data"]["host_nqn"]
+                self.subsys_nqn_list.append(subsys_nqn)
+                self.host_nqn_list.append(host_nqn)
                 self.detach_uuid_list.append(attach_volume["data"]["uuid"])
 
             fun_test.shared_variables["detach_uuid_list"] = self.detach_uuid_list
-            fun_test.shared_variables["nqn_list"] = self.nqn_list
+            fun_test.shared_variables["subsys_nqn_list"] = self.subsys_nqn_list
 
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
@@ -497,7 +500,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]
                 host_ip = self.host_info[host_name]["ip"]
-                nqn = self.nqn_list[index]
+                subsys_nqn = self.subsys_nqn_list[index]
+                host_nqn = self.host_nqn_list[index]
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
                 irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
@@ -530,14 +534,14 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
                                                                                   self.test_network["f1_loopback_ip"],
-                                                                                  self.transport_port, nqn,
-                                                                                  self.nvme_io_queues, host_ip))
+                                                                                  self.transport_port, subsys_nqn,
+                                                                                  self.nvme_io_queues, host_nqn))
                     fun_test.log(command_result)
                 else:
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
                                                                             self.test_network["f1_loopback_ip"],
-                                                                            self.transport_port, nqn, host_ip))
+                                                                            self.transport_port, subsys_nqn, host_nqn))
                     fun_test.log(command_result)
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
@@ -1024,7 +1028,7 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
-    #bltscript.add_test_case(MultiHostFioRandRead())
-    #bltscript.add_test_case(MultiHostFioRandWrite())
+    bltscript.add_test_case(MultiHostFioRandRead())
+    bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
     bltscript.run()

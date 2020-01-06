@@ -217,7 +217,7 @@ class TestPings(FunTestCase):
             test_host_pings(host=host, ips=ping_dict[host], strict=True)
 
         funcp_obj.test_cc_pings_fs()
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(self.server_key["fs"][fs_name]["fs-name"])
         if not funcp_obj.vlan1_ips:
             funcp_obj._get_vlan1_ips()
         if not funcp_obj.docker_names:

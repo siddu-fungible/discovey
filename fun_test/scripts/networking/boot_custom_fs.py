@@ -35,7 +35,7 @@ class BootFS(FunTestCase):
     def run(self):
 
         bootargs = "app=load_mods cc_huid=3 --fec sku=SKU_FS1600_0 --dis-stats --csr-replay --dpc-server --dpc-uart --serdesinit"
-        test_bed_spec = fun_test.get_asset_manager().get_fs_by_name("fs-7")
+        test_bed_spec = fun_test.get_asset_manager().get_fs_spec("fs-7")
         img_path = "funos-f1.stripped_24apr_funcp.gz"
         fs = Fs.get(fs_spec=test_bed_spec, tftp_image_path=img_path, boot_args=bootargs)
         fun_test.simple_assert(fs, "Succesfully fetched image, credentials and bootargs")

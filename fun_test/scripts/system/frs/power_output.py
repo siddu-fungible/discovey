@@ -37,7 +37,7 @@ class TestCase1(FunTestCase):
             if "interval" in job_inputs:
                 self.details["interval"] = job_inputs["interval"]
 
-        self.fs = AssetManager().get_fs_by_name(self.details["fs"])
+        self.fs = AssetManager().get_fs_spec(self.details["fs"])
         fun_test.log(json.dumps(self.fs, indent=4))
         fun_test.log("Details: {}, Input: {}".format(self.details, job_inputs))
         self.power_shell = fun_test.get_test_case_artifact_file_name(post_fix_name="power_shell_script_logs.txt")

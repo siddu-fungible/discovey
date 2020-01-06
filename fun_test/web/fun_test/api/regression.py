@@ -33,7 +33,9 @@ from bson import json_util
 from web.fun_test.models_helper import get_script_id
 from fun_global import TimeSeriesTypes
 from web.fun_test.models import ReleaseCatalogExecution
-import time, datetime
+import time
+import datetime
+from asset.asset_global import AssetHealthStates
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 
 @csrf_exempt
@@ -60,7 +62,11 @@ def test_beds(request, id):
                      "note": test_bed.note,
                      "manual_lock": test_bed.manual_lock,
                      "manual_lock_expiry_time": str(test_bed.manual_lock_expiry_time),
-                     "manual_lock_submitter": test_bed.manual_lock_submitter}
+                     "manual_lock_submitter": test_bed.manual_lock_submitter,
+                     "health_status": test_bed.health_status,
+                     "disabled": test_bed.disabled,
+                     "health_check_message": test_bed.health_check_message,
+                     "health_check_enabled": test_bed.health_check_enabled}
                 if not minimal:
                     if not test_bed.manual_lock:
                         if not all_test_bed_specs:
@@ -116,6 +122,10 @@ def test_beds(request, id):
             test_bed.description = request_json["description"]
         if "note" in request_json:
             test_bed.note = request_json["note"]
+        if "disabled" in request_json:
+            test_bed.disabled = request_json["disabled"]
+        if "health_check_enabled" in request_json:
+            test_bed.health_check_enabled = request_json["health_check_enabled"]
 
         this_is_extension_request = False
         if extension_hour is not None and extension_minute is not None:
@@ -319,7 +329,11 @@ def assets(request, name, asset_type):
                               "manual_lock_user": one_asset.manual_lock_user,
                               "job_ids": one_asset.job_ids,
                               "test_beds": one_asset.test_beds,
-                              "manual_lock_expiry_time": one_asset.manual_lock_expiry_time}
+                              "manual_lock_expiry_time": one_asset.manual_lock_expiry_time,
+                              "disabled": one_asset.disabled,
+                              "health_status": one_asset.health_status,
+                              "health_check_enabled": one_asset.health_check_enabled,
+                              "health_check_message": one_asset.health_check_message}
                 result.append(one_record)
     elif request.method == "PUT":
         request_json = json.loads(request.body)
@@ -335,6 +349,10 @@ def assets(request, name, asset_type):
                     if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
                 send_mail(to_addresses=to_addresses, subject="{} {}".format(asset.name, lock_or_unlock))
+            if "disabled" in request_json:
+                asset.disabled = request_json["disabled"]
+            if "health_check_enabled" in request_json:
+                asset.health_check_enabled = request_json["health_check_enabled"]
             if "minutes" in request_json:
                 asset.manual_lock_expiry_time = get_current_time() + timedelta(minutes=int(request_json["minutes"]))
             asset.save()
@@ -785,6 +803,13 @@ def saved_configs(request, id):
         result = execution.to_dict()
     return result
 
+
+@api_safe_json_response
+def asset_health_states(request):
+    result = None
+    if request.method == "GET":
+        result = AssetHealthStates().get_maps()
+    return result
 
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
