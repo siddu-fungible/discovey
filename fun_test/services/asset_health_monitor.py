@@ -11,7 +11,7 @@ from web.web_global import JINJA_TEMPLATE_DIR
 
 
 UNHEALTHY_VERDICT_TIME = 10 * 60  # 10 mins
-
+# start service by: nohup python asset_health_monitor.py >/dev/null 2>&1 &
 
 class ReportWorker(Thread):
     def run(self):
@@ -38,7 +38,7 @@ class ReportWorker(Thread):
                 env = Environment(loader=file_loader)
                 template = env.get_template('asset_health_monitor.html')
                 content = template.render(test_bed_reports=test_bed_reports, asset_reports=asset_reports)
-                data = send_mail(to_addresses=["john.abraham@fungible.com"],
+                data = send_mail(to_addresses=[TEAM_REGRESSION_EMAIL],
                                  subject="ALERT: Asset health monitor",
                                  content=content)
 
