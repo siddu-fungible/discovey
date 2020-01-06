@@ -209,15 +209,17 @@ class AssetManager:
 
         test_bed_name = test_bed_type
         if test_bed_type == "suite-based":
-            test_bed_name = suite_base_test_bed_spec.get("base_test_bed", None)
+            if suite_base_test_bed_spec:
+                test_bed_name = suite_base_test_bed_spec.get("base_test_bed", None)
 
-        test_bed_objects = TestBed.objects.filter(name=test_bed_name)
-        if test_bed_objects.exists():
-            test_bed_object = test_bed_objects.first()
-            if test_bed_object.health_status != AssetHealthStates.HEALTHY:
-                result["status"] = False
-                result["message"] = "TB: {} is not healthy".format(test_bed_name)
-                return result
+        if test_bed_name != "suite-based":
+            test_bed_objects = TestBed.objects.filter(name=test_bed_name)
+            if test_bed_objects.exists():
+                test_bed_object = test_bed_objects.first()
+                if test_bed_object.health_status != AssetHealthStates.HEALTHY:
+                    result["status"] = False
+                    result["message"] = "TB: {} is not healthy".format(test_bed_name)
+                    return result
 
         if suite_base_test_bed_spec:
             return self.check_custom_test_bed_availability(custom_spec=suite_base_test_bed_spec)
