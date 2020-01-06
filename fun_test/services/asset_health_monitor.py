@@ -33,13 +33,14 @@ class ReportWorker(Thread):
                                           "health_status": asset.health_status,
                                           "health_check_message": asset.health_check_message})
 
-            file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
-            env = Environment(loader=file_loader)
-            template = env.get_template('asset_health_monitor.html')
-            content = template.render(test_bed_reports=test_bed_reports, asset_reports=asset_reports)
-            data = send_mail(to_addresses=["john.abraham@fungible.com"],
-                             subject="ALERT: Asset health monitor",
-                             content=content)
+            if test_bed_reports or asset_reports:
+                file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
+                env = Environment(loader=file_loader)
+                template = env.get_template('asset_health_monitor.html')
+                content = template.render(test_bed_reports=test_bed_reports, asset_reports=asset_reports)
+                data = send_mail(to_addresses=[TEAM_REGRESSION_EMAIL],
+                                 subject="ALERT: Asset health monitor",
+                                 content=content)
 
             time.sleep(60)
 
