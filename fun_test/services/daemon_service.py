@@ -48,7 +48,7 @@ class Service:
 
     def service_assert(self, expression, log):
         if not expression:
-            self.error(message=expression)
+            self.error(message=log)
             self.report_exception(exception_log=log)
             raise Exception(log)
 
