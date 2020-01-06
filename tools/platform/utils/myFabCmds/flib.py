@@ -321,9 +321,37 @@ def show_dev():
 
 @roles('come')
 @task
+def ssdon(index=0, slot=0):
+    """poweron fungible SSD device on pcie from COMe system"""
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        O = dpcshF(index=index, cmd='slot output {"slot": %s, "type": "hotswap", "action":"on" }' % slot)
+        if '"result": true' not in O.stdout: raise "SSD slot %s power on failed ..." % slot
+        O = dpcshF(index=index, cmd='slot input {"slot": %s, "type":"powergood"}' % slot)
+        if '"input": 0' not in O.stdout: raise "SSD slot %s power still off ..." % slot
+        print "[%s] dpu=%s ssdslot=%s powered-on with success ..." % (env.host_string, index, slot)
+
+@roles('come')
+@task
+def ssdoff(index=0, slot=0):
+    """poweroff fungible SSD device on pcie from COMe system"""
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        O = dpcshF(index=index, cmd='slot output {"slot": %s, "type": "hotswap", "action":"off" }' % slot)
+        if '"result": true' not in O.stdout: raise "SSD slot %s power off failed ..." % slot
+        O = dpcshF(index=index, cmd='slot input {"slot": %s, "type":"powergood"}' % slot)
+        if '"input": 1' not in O.stdout: raise "SSD slot %s power still on ..." % slot
+        print "[%s] dpu=%s ssdslot=%s powered-off with success ..." % (env.host_string, index, slot)
+
+@roles('come')
+@task
 def show_ssd(index=0):
     """Query fungible SSD device on pcie from COMe system"""
     return dpcshF(index=index, cmd='peek nvme/ssds/info')
+
+@roles('come')
+@task
+def show_ports(index=0):
+    """Query fungible fpg device on pcie from COMe system"""
+    return dpcshF(index=index, cmd='port linkstatus')
 
 @roles('come')
 @task 
