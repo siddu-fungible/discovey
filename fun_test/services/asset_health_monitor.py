@@ -21,14 +21,14 @@ class ReportWorker(Thread):
 
             test_beds = TestBed.objects.all()
             for test_bed in test_beds:
-                if not test_bed.disabled and test_bed.health_check_enabled and (test_bed.health_status != AssetHealthStates.HEALTHY):
+                if not test_bed.disabled and test_bed.health_check_enabled and (test_bed.health_status != AssetHealthStates.UNHEALTHY):
                     test_bed_reports.append({"test_bed_name": test_bed.name,
                                              "health_status": test_bed.health_status,
                                              "health_check_message": test_bed.health_check_message})
 
             assets = Asset.objects.all()
             for asset in assets:
-                if not asset.disabled and asset.health_check_enabled and (asset.health_status != AssetHealthStates.HEALTHY):
+                if not asset.disabled and asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
                     asset_reports.append({"asset_name": asset.name,
                                           "health_status": asset.health_status,
                                           "health_check_message": asset.health_check_message})
