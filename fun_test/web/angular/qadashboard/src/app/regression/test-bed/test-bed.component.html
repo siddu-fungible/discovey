@@ -265,13 +265,13 @@
               <div style="display: flex; flex-direction: row">
                 <div style="width: 50%; align-self: center;">
                   <ng-container [ngSwitch]="asset.health_status">
-                    <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Disabled'">&#128683;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Degrading'">&#9928;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetHealthStates.HEALTHY"><span tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.HEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Healthy'">&#9728;</span></ng-container>
                   </ng-container>
                 </div>

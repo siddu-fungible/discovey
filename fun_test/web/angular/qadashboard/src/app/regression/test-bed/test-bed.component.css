@@ -84,3 +84,7 @@ table > tbody > tr > th, table > tbody > tr > td {
   display: flex;
   flex-direction: row;
 }
+
+.health-icon {
+  font-size: large;
+}
