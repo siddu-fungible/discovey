@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from web.web_global import JINJA_TEMPLATE_DIR
 
 
-UNHEALTHY_VERDICT_TIME = 4 * 60  # 10 mins
+UNHEALTHY_VERDICT_TIME = 2 * 60  # 10 mins
 
 
 class ReportWorker(Thread):
@@ -153,6 +153,7 @@ class TestBedWorker(Thread):
                 elif not health_result:
 
                     current_health_status = asset_object.health_status
+                    health_status = current_health_status
                     if current_health_status == AssetHealthStates.DEGRADING:
 
                         time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
@@ -216,5 +217,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-118")
+    # service.run(filter_test_bed_name="fs-63")
     service.run()
