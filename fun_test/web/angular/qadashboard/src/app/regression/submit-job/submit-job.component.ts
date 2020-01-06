@@ -250,10 +250,14 @@ export class SubmitJobComponent implements OnInit {
 
       if (payloadEnvironment.hasOwnProperty('bundle_image_parameters')) {
         this.buildType = this.BuildType.USE_BUNDLE_IMAGE;
+        this.bundleImageParameters.release_train = payloadEnvironment.bundle_image_parameters.release_train;
+        this.bundleImageParameters.build_number = payloadEnvironment.bundle_image_parameters.build_number;
       }
 
       if (payloadEnvironment.hasOwnProperty('with_stable_master')) {
         this.buildType = this.BuildType.WITH_STABLE_MASTER;
+        this.withStableMaster.debug = payloadEnvironment.with_stable_master.debug;
+        this.withStableMaster.stripped = payloadEnvironment.with_stable_master.stripped;
       }
 
       if (payloadEnvironment.hasOwnProperty('with_jenkins_build')) {
