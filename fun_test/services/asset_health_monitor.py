@@ -6,9 +6,42 @@ from threading import Thread
 import time
 from services.daemon_service import Service
 from asset.asset_global import AssetHealthStates, AssetType
+from jinja2 import Environment, FileSystemLoader, Template
+from web.web_global import JINJA_TEMPLATE_DIR
+
 
 UNHEALTHY_VERDICT_TIME = 4 * 60  # 10 mins
 
+
+class ReportWorker(Thread):
+    def run(self):
+        while True:
+            test_bed_reports = []
+            asset_reports = []
+
+            test_beds = TestBed.objects.all()
+            for test_bed in test_beds:
+                if not test_bed.disabled and test_bed.health_check_enabled and (test_bed.health_status != AssetHealthStates.HEALTHY):
+                    test_bed_reports.append({"test_bed_name": test_bed.name,
+                                             "health_status": test_bed.health_status,
+                                             "health_check_message": test_bed.health_check_message})
+
+            assets = Asset.objects.all()
+            for asset in assets:
+                if not asset.disabled and asset.health_check_enabled and (asset.health_status != AssetHealthStates.HEALTHY):
+                    asset_reports.append({"asset_name": asset.name,
+                                          "health_status": asset.health_status,
+                                          "health_check_message": asset.health_check_message})
+
+            file_loader = FileSystemLoader(JINJA_TEMPLATE_DIR)
+            env = Environment(loader=file_loader)
+            template = env.get_template('asset_health_monitor.html')
+            content = template.render(test_bed_reports=test_bed_reports, asset_reports=asset_reports)
+            data = send_mail(to_addresses=["john.abraham@fungible.com"],
+                             subject="ALERT: Asset health monitor",
+                             content=content)
+
+            time.sleep(60)
 
 class TestBedWorker(Thread):
     def __init__(self, test_bed_name, test_bed_spec, logger, service):
@@ -33,30 +66,34 @@ class TestBedWorker(Thread):
         self.service.report_exception(exception_log="{}: {}".format(self._get_base_log(), exception_log))
 
     def run(self):
-        while not self.terminated:
-            health_status, health_check_error_message = AssetHealthStates.HEALTHY, ""
-            time.sleep(5)
-            test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
-            if not test_bed_objects.exists():
-                self.terminated = True
-            self.service.service_assert(test_bed_objects.exists(), "Test-bed entry for {} not found".format(self.test_bed_name))
-            test_bed_object = test_bed_objects.first()
+        try:
+            while not self.terminated:
+                health_status, health_check_error_message = AssetHealthStates.HEALTHY, ""
+                time.sleep(5)
+                test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
+                if not test_bed_objects.exists():
+                    self.terminated = True
+                self.service.service_assert(test_bed_objects.exists(), "Test-bed entry for {} not found".format(self.test_bed_name))
+                test_bed_object = test_bed_objects.first()
 
-            if test_bed_object.disabled:
-                health_status = AssetHealthStates.DISABLED
-            else:
-                if test_bed_object.health_check_enabled:
-                    health_status, health_check_error_message = self.check_health()
+                if test_bed_object.disabled:
+                    health_status = AssetHealthStates.DISABLED
                 else:
                     if test_bed_object.health_check_enabled:
-                        health_status = AssetHealthStates.HEALTHY
+                        health_status, health_check_error_message = self.check_health()
+                    else:
+                        if test_bed_object.health_check_enabled:
+                            health_status = AssetHealthStates.HEALTHY
 
-            if test_bed_object.health_status != health_status:
-                self.info("Status set to {}".format(health_status))
-            if health_status == AssetHealthStates.UNHEALTHY:
-                self.alert("Status set to unhealthy")
+                if test_bed_object.health_status != health_status:
+                    self.info("Status set to {}".format(health_status))
+                if health_status == AssetHealthStates.UNHEALTHY:
+                    self.alert("Status set to unhealthy")
 
-            test_bed_object.set_health(status=health_status, message=health_check_error_message)
+                test_bed_object.set_health(status=health_status, message=health_check_error_message)
+        except Exception as ex:
+            self.report_exception(str(ex))
+            time.sleep(60)
 
     def check_health(self):
         am = fun_test.get_asset_manager()
@@ -137,6 +174,12 @@ class TestBedWorker(Thread):
 class AssetHealthMonitor(Service):
     service_name = "asset_health_monitor"
     workers = {}
+    report_worker = None
+
+    def __init__(self):
+        super(AssetHealthMonitor, self).__init__()
+        self.report_worker = ReportWorker()
+        self.report_worker.start()
 
     def run(self, filter_test_bed_name=None):
         am = fun_test.get_asset_manager()
@@ -172,4 +215,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    service.run(filter_test_bed_name="fs-118")
+    # service.run(filter_test_bed_name="fs-118")
+    service.run()
