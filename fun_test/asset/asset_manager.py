@@ -219,6 +219,8 @@ class AssetManager:
                 if test_bed_object.health_status != AssetHealthStates.HEALTHY:
                     result["status"] = False
                     result["message"] = "TB: {} is not healthy".format(test_bed_name)
+                    if test_bed_object.health_status != AssetHealthStates.DISABLED:
+                        result["message"] = "TB: {} is disabled".format(test_bed_name)
                     return result
 
         if suite_base_test_bed_spec:
