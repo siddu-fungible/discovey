@@ -154,10 +154,10 @@ class DataReconstructOnDiskFailScript(FunTestScript):
         # Forming shared variables for defined parameters
         fun_test.shared_variables["f1_in_use"] = self.f1_in_use
         fun_test.shared_variables["topology"] = self.topology
-        fun_test.shared_variables["fs_obj"] = self.fs_obj
+        fun_test.shared_variables["fs_obj"] = self.fs_objs
         fun_test.shared_variables["come_obj"] = self.come_obj
-        fun_test.shared_variables["f1_obj"] = self.f1_obj
-        fun_test.shared_variables["sc_obj"] = self.sc_obj
+        fun_test.shared_variables["f1_obj"] = self.f1_objs
+        fun_test.shared_variables["sc_obj"] = self.sc_objs
         fun_test.shared_variables["f1_ips"] = self.f1_ips
         fun_test.shared_variables["host_handles"] = self.host_handles
         fun_test.shared_variables["host_ips"] = self.host_ips
@@ -194,7 +194,7 @@ class DataReconstructOnDiskFailScript(FunTestScript):
     def cleanup(self):
         come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
-            self.fs = self.fs_obj[0]
+            self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][self.f1_in_use]
             try:
                 self.ec_info = fun_test.shared_variables["ec_info"]
