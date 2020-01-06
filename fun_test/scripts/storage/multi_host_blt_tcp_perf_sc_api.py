@@ -1,5 +1,5 @@
 
-m lib.system.fun_test import *
+from lib.system.fun_test import *
 from lib.system import utils
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
