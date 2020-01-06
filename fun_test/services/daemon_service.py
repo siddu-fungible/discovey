@@ -41,3 +41,25 @@ class Service:
     def beat(self):
         daemon = Daemon.get(name=self.service_name)
         daemon.beat()
+
+    def report_exception(self, exception_log):
+        daemon = Daemon.get(name=self.service_name)
+        daemon.add_exception_log(log=exception_log)
+
+    def service_assert(self, expression, log):
+        if not expression:
+            self.error(message=expression)
+            self.report_exception(exception_log=log)
+            raise Exception(log)
+
+    def error(self, message):
+        s = "ERROR: {}".format(message)
+        self.logger.exception(s)
+
+    def alert(self, message):
+        s = "ALERT: {}".format(message)
+        self.logger.error(s)
+
+    def info(self, message):
+        s = "{}".format(message)
+        self.logger.info(s)

@@ -721,6 +721,7 @@ class Daemon(FunModel):
     daemon_id = models.IntegerField()
     heart_beat_time = models.DateTimeField(default=datetime.now)
     logging_level = models.IntegerField(default=logging.DEBUG)
+    exception_logs = JSONField(default=[])
 
     def beat(self):
         self.heart_beat_time = get_current_time()
@@ -740,6 +741,12 @@ class Daemon(FunModel):
             result = d
         return result
 
+    def clear_exception_logs(self):
+        self.exception_logs = []
+        self.save()
+
+    def add_exception_log(self, log):
+        self.exception_logs.append({"time": get_current_time(), "log": log})
 
 class Asset(FunModel):
     name = models.TextField()

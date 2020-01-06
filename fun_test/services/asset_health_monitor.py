@@ -11,33 +11,52 @@ UNHEALTHY_VERDICT_TIME = 4 * 60  # 10 mins
 
 
 class TestBedWorker(Thread):
-    def __init__(self, test_bed_name, test_bed_spec, logger):
+    def __init__(self, test_bed_name, test_bed_spec, logger, service):
         super(TestBedWorker, self).__init__()
         self.test_bed_name = test_bed_name
         self.test_bed_spec = test_bed_spec
         self.logger = logger
         self.terminated = False
+        self.service = service
+
+    def _get_base_log(self):
+        s = "{}: ".format(self.test_bed_name)
+        return s
+
+    def info(self, log):
+        self.service.info(message="{}: {}".format(self._get_base_log(), log))
+
+    def alert(self, log):
+        self.service.alert(message="{}: {}".format(self._get_base_log(), log))
+
+    def report_exception(self, exception_log):
+        self.service.report_exception(exception_log="{}: {}".format(self._get_base_log(), exception_log))
 
     def run(self):
         while not self.terminated:
             health_status, health_check_error_message = AssetHealthStates.HEALTHY, ""
             time.sleep(5)
             test_bed_objects = TestBed.objects.filter(name=self.test_bed_name)
-            if test_bed_objects.exists():
-                # print "Test-bed worker: {}".format(self.test_bed_name)
-                test_bed_object = test_bed_objects[0]
-                if test_bed_object.disabled:
-                    health_status = AssetHealthStates.DISABLED
+            if not test_bed_objects.exists():
+                self.terminated = True
+            self.service.service_assert(test_bed_objects.exists(), "Test-bed entry for {} not found".format(self.test_bed_name))
+            test_bed_object = test_bed_objects.first()
+
+            if test_bed_object.disabled:
+                health_status = AssetHealthStates.DISABLED
+            else:
+                if test_bed_object.health_check_enabled:
+                    health_status, health_check_error_message = self.check_health()
                 else:
                     if test_bed_object.health_check_enabled:
-                        health_status, health_check_error_message = self.check_health()
-                    else:
-                        if test_bed_object.health_check_enabled:
-                            health_status = AssetHealthStates.HEALTHY
-                test_bed_object.set_health(status=health_status, message=health_check_error_message)
-            else:
-                self.logger.exception("Test-bed entry for {} not found".format(self.test_bed_name))
-                self.terminated = True
+                        health_status = AssetHealthStates.HEALTHY
+
+            if test_bed_object.health_status != health_status:
+                self.info("Status set to {}".format(health_status))
+            if health_status == AssetHealthStates.UNHEALTHY:
+                self.alert("Status set to unhealthy")
+
+            test_bed_object.set_health(status=health_status, message=health_check_error_message)
 
     def check_health(self):
         am = fun_test.get_asset_manager()
@@ -45,6 +64,7 @@ class TestBedWorker(Thread):
 
         issue_found = False
         health_result_for_test_bed, error_message_for_test_bed = AssetHealthStates.HEALTHY, ""
+        at_least_one_unhealthy = False
         for asset_type, asset_list in assets.iteritems():
 
             health_result, error_message = True, ""
@@ -54,30 +74,31 @@ class TestBedWorker(Thread):
 
             for asset_name in asset_list:
                 asset_objects = Asset.objects.filter(name=asset_name, type=asset_type)
-                asset_object = None
 
-                if asset_objects.exists():
-                    asset_object = asset_objects.first()
-                else:
-                    pass  #TODO
+                exception_message = "Asset object for {}: {} not found".format(asset_type, asset_name)
+                self.service.service_assert(asset_objects.exists(), exception_message)
+                asset_object = asset_objects.first()
+
                 instance = am.get_asset_instance(asset=asset_object)
-                if not instance:
-                    pass  # TODO
-                else:
-                    health_result, error_message = instance.health(only_reachability=only_reachability)
-                self.set_health_status(asset_object=asset_object,
-                                       health_result=health_result,
-                                       error_message=error_message)
-
+                self.service.service_assert(instance, "Unable to retrieve asset instance for {}: {}".format(asset_type,
+                                                                                                            asset_name))
+                health_result, error_message = instance.health(only_reachability=only_reachability)
+                final_health_status = self.set_health_status(asset_object=asset_object,
+                                                             health_result=health_result,
+                                                             error_message=error_message)
+                if final_health_status == AssetHealthStates.UNHEALTHY:
+                    at_least_one_unhealthy = True
                 if not health_result:
                     issue_found = True
                     error_message_for_test_bed = error_message
+
                     break
             if issue_found:
-                self.logger.exception("Issue found: {}, {}".format(health_result, error_message))
+                self.report_exception("Issue found: {}, {}".format(health_result, error_message))
                 break
-        if issue_found:
+        if issue_found and at_least_one_unhealthy:
             health_result_for_test_bed = AssetHealthStates.UNHEALTHY
+            self.alert("Setting Test-bed to unhealthy")
 
         return health_result_for_test_bed, error_message_for_test_bed
 
@@ -95,16 +116,19 @@ class TestBedWorker(Thread):
 
                     current_health_status = asset_object.health_status
                     if current_health_status == AssetHealthStates.DEGRADING:
+
                         time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
 
                         if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
                             health_status = AssetHealthStates.UNHEALTHY
-                            self.logger.exception("Setting {} to unhealthy".format(asset_object.name))
+                            self.alert("Setting {} to unhealthy".format(asset_object.name))
                     else:
-                        health_status = AssetHealthStates.DEGRADING
-                        self.logger.exception("Setting {} to degrading".format(asset_object.name))
+                        if not current_health_status == AssetHealthStates.UNHEALTHY:
+                            health_status = AssetHealthStates.DEGRADING
+                            self.alert("Setting {} to degrading".format(asset_object.name))
 
         asset_object.set_health(status=health_status, message=error_message)
+        return health_status
 
     def terminate(self):
         self.terminated = True
@@ -116,7 +140,6 @@ class AssetHealthMonitor(Service):
 
     def run(self, filter_test_bed_name=None):
         am = fun_test.get_asset_manager()
-
         while True:
             all_test_bed_specs = am.get_all_test_beds_specs()
             self.beat()
@@ -127,12 +150,13 @@ class AssetHealthMonitor(Service):
                     if test_bed_name not in self.workers:
                         worker_thread = TestBedWorker(test_bed_name=test_bed_name,
                                                       test_bed_spec=test_bed_spec,
-                                                      logger=self.get_logger())
+                                                      logger=self.get_logger(),
+                                                      service=self)
                         self.workers[test_bed_name] = worker_thread
                         worker_thread.start()
                         self.get_logger().info("Started worker for {}".format(test_bed_name))
             self.remove_stale_test_beds(all_test_bed_specs=all_test_bed_specs)
-            time.sleep(10)
+            time.sleep(30)
 
     def remove_stale_test_beds(self, all_test_bed_specs):
         test_beds_marked_for_deletion = []
