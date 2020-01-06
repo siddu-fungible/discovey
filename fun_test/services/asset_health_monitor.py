@@ -125,10 +125,11 @@ class TestBedWorker(Thread):
                 self.service.service_assert(instance, "Unable to retrieve asset instance for {}: {}".format(asset_type,
                                                                                                             asset_name))
                 health_result, error_message = instance.health(only_reachability=only_reachability)
-                try:
-                    instance.disconnect()
-                except:
-                    pass
+                if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+                    try:
+                        instance.disconnect()
+                    except:
+                        pass
                 final_health_status = self.set_health_status(asset_object=asset_object,
                                                              health_result=health_result,
                                                              error_message=error_message)
@@ -233,5 +234,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-63")
-    service.run()
+    service.run(filter_test_bed_name="fs-inspur")
+    #  service.run()

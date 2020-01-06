@@ -325,7 +325,7 @@ class AssetManager:
     @fun_test.safe
     def get_asset_instance(self, asset):
         instance = None
-        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
+        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
             instance = self.get_linux_host(name=asset.name)
         elif asset.type in AssetType.DUT:
             instance = self.get_fs(name=asset.name)
