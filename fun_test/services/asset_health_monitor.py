@@ -38,7 +38,7 @@ class ReportWorker(Thread):
                 env = Environment(loader=file_loader)
                 template = env.get_template('asset_health_monitor.html')
                 content = template.render(test_bed_reports=test_bed_reports, asset_reports=asset_reports)
-                data = send_mail(to_addresses=[TEAM_REGRESSION_EMAIL],
+                data = send_mail(to_addresses=["john.abraham@fungible.com"],
                                  subject="ALERT: Asset health monitor",
                                  content=content)
 
