@@ -70,6 +70,9 @@
                         [tooltipContentString]="'Enable health-check'" [checked]="testBed.health_check_enabled" (changed)="onToggleHealthCheckEnabled($event, testBed)"></app-toggle-button>
                 </div>
               </div>
+              <div *ngIf="testBed.health_status !== assetHealthStates.HEALTHY">
+                {{ testBed.health_check_message }}
+              </div>
 
 
             </td>
@@ -280,6 +283,10 @@
                         [tooltipContentString]="'Enable health-check'" [checked]="asset.health_check_enabled" (changed)="onToggleAssetHealthCheckEnabled($event, asset)"></app-toggle-button>
                 </div>
               </div>
+              <div *ngIf="asset.health_status !== assetHealthStates.HEALTHY">
+                {{ asset.health_check_message }}
+              </div>
+
 
             </td>
             <td>{{ asset.manual_lock_user }}
