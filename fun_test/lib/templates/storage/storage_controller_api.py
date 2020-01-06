@@ -145,6 +145,7 @@ class StorageControllerApi(object):
 
     def create_volume(self, pool_uuid, name, capacity, stripe_count, vol_type, encrypt=False, allow_expansion=False,
                       data_protection={}, compression_effort=0):
+        result = {"status": False, "data": {}}
         url = "storage/pools/{}/volumes".format(pool_uuid)
         data = {"name": name,  "capacity": capacity,  "vol_type": vol_type,
                 "encrypt": encrypt, "allow_expansion": allow_expansion, "stripe_count": stripe_count,
