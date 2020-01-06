@@ -156,7 +156,7 @@ class TestBedWorker(Thread):
                     if current_health_status == AssetHealthStates.DEGRADING:
 
                         time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
-
+                        health_status = AssetHealthStates.DEGRADING
                         if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
                             health_status = AssetHealthStates.UNHEALTHY
                             self.alert("Setting {} to unhealthy".format(asset_object.name))
@@ -216,5 +216,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-118")
-    service.run()
+    service.run(filter_test_bed_name="fs-118")
+    # service.run()
