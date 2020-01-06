@@ -92,6 +92,7 @@ class TestBedWorker(Thread):
                     self.alert("Status set to unhealthy")
 
                 test_bed_object.set_health(status=health_status, message=health_check_error_message)
+                time.sleep(60)
         except Exception as ex:
             self.report_exception(str(ex))
             time.sleep(60)
