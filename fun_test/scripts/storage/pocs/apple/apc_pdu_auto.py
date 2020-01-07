@@ -47,7 +47,7 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(self.testbed_type)
+        self.fs = AssetManager().get_fs_spec(self.testbed_type)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
         fun_test.log(json.dumps(self.fs, indent=4))
@@ -99,6 +99,7 @@ class ApcPduTestcase(FunTestCase):
                 self.reboot_machine_test = job_inputs["reboot_machine_test"]
             if "reset_f1s_bmc" in job_inputs:
                 self.reset_f1s_bmc = job_inputs["reset_f1s_bmc"]
+
 
     def run(self):
         '''

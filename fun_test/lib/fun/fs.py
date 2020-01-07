@@ -1222,9 +1222,13 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
-    def fs_reset(self):
+    def fs_reset(self, clone=False):
+        fun_test.add_checkpoint(checkpoint="Resetting FS")
+        handle = self
+        if clone:
+            handle = self.clone()
         try:
-            self.sudo_command(self.FS_RESET_COMMAND, timeout=120)
+            handle.sudo_command(self.FS_RESET_COMMAND, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1334,8 +1338,10 @@ class ComE(Linux):
         return result
 
     def diags(self):
-        self.command("dmesg")
-        self.command("cat /var/log/syslog")
+        fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
+        clone = self.clone()
+        clone.command("dmesg")
+        clone.command("cat /var/log/syslog")
 
     def stop_cclinux_service(self):
         self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
@@ -1366,6 +1372,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
             self.diags()
+            self.fs_reset(clone=True)
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
@@ -2053,7 +2060,7 @@ class Fs(object, ToDictMixin):
             test_bed_spec = am.get_test_bed_spec(name=test_bed_type)
             fun_test.simple_assert(test_bed_spec, "Test-bed spec for {}".format(test_bed_spec), context=context)
             dut_name = test_bed_spec["dut_info"]["0"]["dut"]
-            fs_spec = am.get_fs_by_name(dut_name)
+            fs_spec = am.get_fs_spec(dut_name)
             fun_test.simple_assert(fs_spec, "FS spec for {}".format(dut_name), context=context)
 
         if fs_parameters:
@@ -2370,11 +2377,43 @@ class Fs(object, ToDictMixin):
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
 
-    def health(self):
+    def health(self, only_reachability=False):
         result = None
-        bam_result = self.bam()
-        if bam_result["status"]:
-            result = True
+        if not only_reachability:
+            bam_result = self.bam()
+            if bam_result["status"]:
+                result = True
+        else:
+            try:
+                bmc = self.get_bmc()
+                health_result, health_error_message = bmc.is_host_up(max_wait_time=60, with_error_details=True)
+                if health_result:
+                    try:
+                        come = self.get_come()
+                        health_result, health_error_message = come.is_host_up(max_wait_time=60, with_error_details=True)
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    else:
+                        come.disconnect()
+                    if health_result:
+                        try:
+                            fpga = self.get_fpga()
+                            if fpga:
+                                health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        else:
+                            if fpga:
+                                fpga.disconnect()
+                result = health_result, health_error_message
+
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            else:
+                bmc.disconnect()
+
+
+
         return result
 
     def bam(self, command_duration=2):
@@ -2563,7 +2602,9 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_by_name(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-58"))
+    fpga = fs.get_fpga()
+    i = 0
     #terminal = fs.get_terminal()
     #terminal.command("pwd")
     #terminal.command("ifconfig")
@@ -2576,8 +2617,8 @@ if __name__ == "__main__":
     # come.setup_dpc()
     # come = fs.get_come()
     # come.command("ls -ltr")
-    fs.re_initialize()
-    i = fs.bam()
+    # fs.re_initialize()
+    # i = fs.bam()
 
 
 if __name__ == "__main2__":

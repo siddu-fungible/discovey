@@ -2158,12 +2158,13 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None, power_cycle=None):
+    def ensure_host_is_up(self, max_wait_time=180, ipmi_details=None, power_cycle=None, with_error_details=None):
         """
         Waits until the host is reachable. Typically needed after a reboot
         :param max_wait_time: total time to wait before giving
         :return: True, if the host is pingable and ssh'able, else False
         """
+        error_message = ""
         fun_test.log("Ensuring the host is up: ipmi_details={}, power_cycle={}".format(ipmi_details, power_cycle), context=self.context)
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         service_host = None
@@ -2175,16 +2176,15 @@ class Linux(object, ToDictMixin):
         max_reboot_timer = FunTimer(max_time=max_wait_time)
         result = False
         ping_result = False
+        ssh_result = False
         while not host_is_up and not max_reboot_timer.is_expired() and not fun_test.closed:
             if service_host and not ping_result:
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
-                # if ping_result:  # TODO: Experimenting this on fs-11
-                #    max_reboot_timer = FunTimer(max_time=30)
-                #    fun_test.log("Lowered max_reboot_timer as ping is working")
             if ping_result or not service_host:
                 try:
                     fun_test.log("Attempting SSH", context=self.context)
                     self.command("pwd")
+                    ssh_result = True
                     host_is_up = True
                     result = host_is_up
                     fun_test.log("Host: {} is up".format(str(self)), context=self.context)
@@ -2194,7 +2194,8 @@ class Linux(object, ToDictMixin):
             fun_test.log("Time remaining: {}".format(max_reboot_timer.remaining_time()))
         if not host_is_up:
             result = False
-            fun_test.critical("Host: {} is not reachable".format(self.host_ip))
+            error_message = "Host: {} is not up. Ping result: {} SSH result: {}".format(self.host_ip, ping_result, ssh_result)
+            fun_test.critical("Host: {} is not reachable. Ping result: {}".format(self.host_ip, ping_result))
 
 
         if not host_is_up and service_host:
@@ -2221,18 +2222,26 @@ class Linux(object, ToDictMixin):
                     self.was_power_cycled = True
                 finally:
                     return self.ensure_host_is_up(max_wait_time=max_wait_time, power_cycle=False)
+        try:
+            if service_host:
+                service_host.disconnect()
+        except:
+            pass
+        if with_error_details:
+            result = result, error_message
         return result
 
     @fun_test.safe
-    def is_host_up(self, timeout=5, retries=6, max_wait_time=180):
+    def is_host_up(self, timeout=5, retries=6, max_wait_time=180, with_error_details=None):
         """
         deprecated. use ensure_host_is_up
         :param timeout: deprecated
         :param retries: deprecated
         :param max_wait_time: time to wait before giving up
+        :param with_error_details: returns an error message along with the result
         :return:
         """
-        return self.ensure_host_is_up(max_wait_time=max_wait_time)
+        return self.ensure_host_is_up(max_wait_time=max_wait_time, with_error_details=with_error_details)
 
 
     @fun_test.safe
@@ -2623,6 +2632,10 @@ class Linux(object, ToDictMixin):
             return [i.split()[0] for i in output.strip().split('\n')]
         else:
             return []
+
+    @fun_test.safe
+    def health(self, only_reachability=False):
+        return self.is_host_up(max_wait_time=60, with_error_details=True)
 
     @fun_test.safe
     def hostname(self):
