@@ -12,7 +12,7 @@ class IpmiTool:
 
     def initialise_fs(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
     def intialize_qa_02(self):
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
@@ -136,7 +136,7 @@ class RedFishTool:
 
     def initialise_fs(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
     def check_if_redfish_is_active(self):
         response = self.chassis_power()
@@ -1077,7 +1077,7 @@ class StorageAPI:
 
     def initialise_fs(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
     def get_pool_id(self):
         response = self.sc_api.get_pools()

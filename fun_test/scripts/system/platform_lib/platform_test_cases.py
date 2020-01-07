@@ -89,7 +89,7 @@ class DiscoverDhcpIP(PlatformGeneralTestCase):
 
     def initialize_variables(self):
         fs_name = "fs-143"
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
 
 class AlternateCommunicationToBMC(PlatformGeneralTestCase):
