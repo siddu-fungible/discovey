@@ -227,14 +227,3 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
-
-    def get_volumes(self):
-        result = {"status": False, "data": {}}
-        url = "storage/volumes"
-        response = self.execute_api("GET", url)
-        try:
-            if response.ok:
-                result = response.json()
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        return result
