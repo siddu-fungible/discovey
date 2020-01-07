@@ -1092,7 +1092,6 @@ class StorageAPI:
         fun_test.test_assert(result, "Host: {} nvme: {} verified NVME connect".format(host_name, nvme_device))
         return nvme_device
 
-
     def verify_volume_creation(self, response):
         result = True
         if not response["status"]:

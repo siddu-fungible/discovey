@@ -300,7 +300,7 @@ class Linux(object, ToDictMixin):
                 current_loop_count = 0
                 while current_loop_count < loop_count_max:
                     try:
-                        i = self.handle.expect(expects.values(), timeout=30)
+                        i = self.handle.expect(expects.values(), timeout=20)
                         if i == 0:
                             self._debug_expect_buffer()
                             if not self.use_telnet:
@@ -2978,9 +2978,6 @@ class Linux(object, ToDictMixin):
                 value = match_pattern.group("value")
                 result[key] = value
         return result
-
-    def set_telnet(self):
-        self.use_telnet = True
 
     def ensure_host_is_down(self, max_wait_time=30):
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()

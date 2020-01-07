@@ -1189,7 +1189,7 @@ class ComEInitializationWorker(Thread):
 class ComE(Linux):
     EXPECTED_FUNQ_DEVICE_ID = ["04:00.1", "06:00.1"]
     DEFAULT_DPC_PORT = [42220, 42221]
-    DEFAULT_STATISTICS_DPC_PORT = [40220, 40221]
+    DEFAULT_STATISTICS_DPC_PORT = [45220, 45221]
     DEFAULT_CSI_PERF_DPC_PORT = [46220, 46221]
     DPC_LOG_PATH = "/tmp/f1_{}_dpc.txt"
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
@@ -2176,7 +2176,7 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
-                    # self.get_come().pre_reboot_cleanup()
+                    self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
