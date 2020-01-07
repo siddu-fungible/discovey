@@ -28,7 +28,7 @@
 
           <tr *ngFor="let testBed of testBeds">
             <td>
-              <div style="display: flex; flex-direction: row;">
+              <div>
                 <!--div style="width: 50%; align-self: center;"-->
                 <div>
                   <a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a>
@@ -72,7 +72,7 @@
                 </div>
               </div>
               <div *ngIf="testBed.health_status !== assetHealthStates.HEALTHY">
-                {{ testBed.health_check_message }}
+                <small>{{ testBed.health_check_message }}</small>
               </div>
 
 
