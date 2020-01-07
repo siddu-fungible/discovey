@@ -208,6 +208,7 @@ class FunTest:
             return
         else:
             self.fun_test_disabled = False
+        self.unknown_args = unknown
         self.fun_xml_obj = None
         self.logs_dir = args.logs_dir
         self.log_prefix = args.log_prefix
@@ -312,6 +313,21 @@ class FunTest:
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
+
+    def get_custom_arg(self, key):
+        value = None
+        if self.unknown_args and type(self.unknown_args) is list:
+            for unknown_arg_part in self.unknown_args:
+                parts = unknown_arg_part.split("=")
+                if len(parts) == 2:
+                    unknown_arg_key = parts[0].lstrip("--")
+                    if key == unknown_arg_key:
+                        value = parts[1]
+                        break
+                if len(parts) == 1:
+                    value = True
+                    break
+        return value
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable

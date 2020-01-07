@@ -1225,6 +1225,11 @@ class ComE(Linux):
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
         try:
+            self.sudo_command("./start_sc.sh -c restart")
+        except:
+            pass
+
+        try:
             self.stop_cclinux_service()
         except:
             pass
@@ -1352,6 +1357,11 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+        try:
+            self.sudo_command("./start_sc.sh -c restart")
+        except:
+            pass
+
         try:
             self.stop_cclinux_service()
         except Exception as ex:

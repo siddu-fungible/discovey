@@ -379,6 +379,20 @@ class AssetManager:
             instance = self.get_fs(name=asset.name)
         return instance
 
+
+    @fun_test.safe
+    def get_asset_db_entry(self, asset_type, asset_name):
+        from web.fun_test.models import Asset
+        from django.core.exceptions import ObjectDoesNotExist
+        result = None
+        try:
+            asset_object = Asset(name=asset_name, type=asset_type)
+            result = asset_object
+        except ObjectDoesNotExist:
+            pass
+        return result
+
+
     @fun_test.safe
     def get_regression_service_host_spec(self):
         host_spec = self.get_host_spec(name=REGRESSION_SERVICE_HOST)
