@@ -373,7 +373,7 @@ class RDSVolumePerformanceScript(FunTestScript):
         for host in fun_test.shared_variables["fio_clients"].split(","):
             fun_test.log("Rebooting host: {}".format(host))
             host_handle[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
-            #host_handle[host].reboot(non_blocking=True)
+            host_handle[host].reboot(non_blocking=True)
             host_handle[host].disconnect()
 
         TestbedSetup()
