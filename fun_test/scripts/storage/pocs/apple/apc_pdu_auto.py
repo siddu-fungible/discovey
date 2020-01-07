@@ -674,11 +674,11 @@ class ApcPduTestcase(FunTestCase):
         available_hosts_list = []
         try:
             self.topology_helper = TopologyHelper()
+            self.topology_helper.set_dut_parameters(dut_index="6")
             available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
             fun_test.log("Available hosts list: " + str(available_hosts_list))
             available_dut_indexes = self.topology_helper.get_available_duts().keys()
             fun_test.log("Available duts list: " + str(available_dut_indexes))
-
             if available_hosts_list:
                 pass
             else:
