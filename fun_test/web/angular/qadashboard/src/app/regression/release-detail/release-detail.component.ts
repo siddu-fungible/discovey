@@ -31,6 +31,7 @@ export class ReleaseDetailComponent implements OnInit {
   suitesHeaderLeftAlignedButtons: FunButtonWithIcon [] = [];
   suitesDeleteButton: FunButtonWithIcon = null;
   addSuitesLinkObject: FunActionLink = null;
+  headerSubText1: string = "";
 
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
@@ -69,6 +70,11 @@ export class ReleaseDetailComponent implements OnInit {
       this.status = "Fetching catalog execution";
       return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({id: this.executionId}));
     })).pipe(switchMap(response => {
+      this.headerSubText1 = `Release-train: ${this.releaseCatalogExecution.release_train}`;
+      if (this.releaseCatalogExecution.build_number) {
+        this.headerSubText1 += `${this.headerSubText1}` + `, Build: ${this.releaseCatalogExecution.build_number}`;
+      }
+
       this.fetchSuiteDetails();
       this.status = null;
       return this.regressionService.fetchTestbeds(true);
