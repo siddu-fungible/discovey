@@ -354,9 +354,9 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                                                                            ctrlr_uuid=self.ctrlr_uuid[-1],
                                                                            ctrlr_type="BLOCK",
                                                                            transport=self.attach_transport,
-                                                                           remote_ip=self.host_info[host_name]["ip"][0],
+                                                                           remote_ip=self.host_info[host_name]["ip"],
                                                                            subsys_nqn=self.nvme_subsystem,
-                                                                           host_nqn=self.host_info[host_name]["ip"][0],
+                                                                           host_nqn=self.host_info[host_name]["ip"],
                                                                            port=self.transport_port,
                                                                            command_duration=self.command_timeout)
                 fun_test.log(command_result)
@@ -424,12 +424,12 @@ class DataReconstructOnDiskFailTestcase(FunTestCase):
                         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
                             format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                    str(self.transport_port), self.nvme_subsystem,
-                                   self.host_info[host_name]["ip"][0])
+                                   self.host_info[host_name]["ip"])
                     else:
                         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
                             format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                    str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
-                                   self.host_info[host_name]["ip"][0])
+                                   self.host_info[host_name]["ip"])
                     try:
                         nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
                         nvme_connect_exit_status = host_handle.exit_status()
