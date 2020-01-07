@@ -107,6 +107,7 @@ class TestBedWorker(Thread):
         health_result_for_test_bed, error_message_for_test_bed = AssetHealthStates.HEALTHY, ""
         at_least_one_unhealthy = False
         at_least_one_degrading = False
+        at_least_one_disabled = False
         for asset_type, asset_list in assets.iteritems():
 
             health_result, error_message = True, ""
@@ -137,6 +138,9 @@ class TestBedWorker(Thread):
                     at_least_one_degrading = True
                 if final_health_status == AssetHealthStates.UNHEALTHY:
                     at_least_one_unhealthy = True
+                if final_health_status == AssetHealthStates.DISABLED:
+                    at_least_one_disabled = True
+
                 if not health_result:
                     issue_found = True
                     error_message_for_test_bed = error_message
@@ -154,6 +158,11 @@ class TestBedWorker(Thread):
             if at_least_one_unhealthy:
                 health_result_for_test_bed = AssetHealthStates.UNHEALTHY
                 self.alert("Setting Test-bed to unhealthy")
+
+            if at_least_one_disabled:
+                health_result_for_test_bed = AssetHealthStates.UNHEALTHY
+                self.alert("Setting Test-bed to unhealthy, one asset disabled")
+
 
         return health_result_for_test_bed, error_message_for_test_bed
 
@@ -234,5 +243,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-inspur")
+    # service.run(filter_test_bed_name="fs-118")
     service.run()
