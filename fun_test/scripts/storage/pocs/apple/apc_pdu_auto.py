@@ -673,9 +673,11 @@ class ApcPduTestcase(FunTestCase):
     def verify_and_get_required_hosts_list(self, num_hosts):
         available_hosts_list = []
         try:
-            if self.testbed_type == "suite-based":
-                self.topology_helper = TopologyHelper()
-                available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            self.topology_helper = TopologyHelper()
+            available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            fun_test.log("Available hosts list: " + str(available_hosts_list))
+            if available_hosts_list:
+                pass
             else:
                 self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
                 available_hosts_list = self.fs_hosts_map[self.testbed_type]["host_info"]
