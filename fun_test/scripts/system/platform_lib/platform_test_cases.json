@@ -3,100 +3,38 @@
     "username": "Administrator",
     "password": "superuser"
   },
-  "expected_ssds": 12,
-  "expected_ports_up": {
-    "NU": [
-      0,
-      8,
-      20
-    ],
-    "HNU": []
+  "basic_checks": {
+    "reboot_machine_test": false,
+    "apc_pdu_power_cycle_test": false,
+    "check_docker": true,
+    "expected_dockers": 3,
+    "check_portal": false,
+    "check_ssd": true,
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "check_ports": true
   },
   "BootSequenceFPGA": {
-    "fpga_up_time_within": 180,
-    "reboot_machine_test": false,
-    "apc_pdu_power_cycle_test": false,
-    "check_docker": true,
-    "expected_dockers": 3,
-    "check_portal": false,
-    "check_ssd": true,
-    "expected_ssds_f1_0": 2,
-    "expected_ssds_f1_1": 2,
-    "expected_nu_ports_f1_0": [],
-    "expected_nu_ports_f1_1": [],
-    "expected_hnu_ports_f1_0": [],
-    "expected_hnu_ports_f1_1": [],
-    "check_ports": true
+    "fpga_up_time_within": 180
   },
   "BootSequenceBMC": {
-    "bmc_up_time_within": 180,
-    "reboot_machine_test": false,
-    "apc_pdu_power_cycle_test": false,
-    "check_docker": true,
-    "expected_dockers": 4,
-    "check_portal": false,
-    "check_ssd": true,
-    "expected_ssds_f1_0": 2,
-    "expected_ssds_f1_1": 2,
-    "expected_nu_ports_f1_0": [],
-    "expected_nu_ports_f1_1": [],
-    "expected_hnu_ports_f1_0": [],
-    "expected_hnu_ports_f1_1": [],
-    "check_ports": true
+    "bmc_up_time_within": 180
   },
   "BootSequenceCOMe": {
-    "come_up_time_within": 300,
-    "reboot_machine_test": false,
-    "apc_pdu_power_cycle_test": false,
-    "check_docker": true,
-    "expected_dockers": 3,
-    "check_portal": false,
-    "check_ssd": true,
-    "expected_ssds_f1_0": 2,
-    "expected_ssds_f1_1": 2,
-    "expected_nu_ports_f1_0": [],
-    "expected_nu_ports_f1_1": [],
-    "expected_hnu_ports_f1_0": [],
-    "expected_hnu_ports_f1_1": [],
-    "check_ports": true
+    "come_up_time_within": 300
   },
   "BMCLinkToggle": {
     "bmc_up_time_within": 180
   },
   "BMCColdBoot": {
-    "iterations": 1,
-    "check_ssd": true,
-    "check_ports": true,
-    "expected_ssds_f1_0": 12,
-    "expected_ssds_f1_1": 12,
-    "expected_nu_ports_f1_0": [],
-    "expected_nu_ports_f1_1": [],
-    "expected_hnu_ports_f1_0": [],
-    "expected_hnu_ports_f1_1": [],
-    "check_docker": true,
-    "expected_dockers": 3,
-    "end_sleep": 30,
-    "apc_pdu_power_cycle_test": true,
-    "reboot_machine_test": false,
-    "reset_f1s_bmc": false
+    "iterations": 1
   },
   "BMCIPMIReset": {
-    "iterations": 1,
-    "check_ssd": true,
-    "check_ports": true,
-    "expected_ssds_f1_0": 12,
-    "expected_ssds_f1_1": 12,
-    "expected_nu_ports_f1_0": [],
-    "expected_nu_ports_f1_1": [],
-    "expected_hnu_ports_f1_0": [],
-    "expected_hnu_ports_f1_1": [],
-    "check_docker": true,
-    "expected_dockers": 3,
-    "end_sleep": 30,
-    "ipmi_reset": true,
-    "bmc_reboot": true,
-    "apc_pdu_power_cycle_test": false,
-    "reboot_machine_test": false
+    "iterations": 1
   },
   "PCIEDiscoverySSDviaRC": {
     "expected_ssds_f1_0": 2,

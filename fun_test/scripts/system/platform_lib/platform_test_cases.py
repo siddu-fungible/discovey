@@ -1,7 +1,6 @@
 from lib.system.fun_test import *
 from scripts.system.platform_lib.platform_class import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
-from scripts.storage.storage_api_helper import *
 
 
 def run_deco(func):
@@ -153,30 +152,30 @@ class BootSequenceFPGA(PlatformGeneralTestCase):
 
     @run_deco
     def run(self):
-        self.basic_checks()
+        # self.fs_basic_checks()
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
-        fpga_reboot = self.reboot_system(system="fpga")
-        fun_test.test_assert(fpga_reboot, "FPGA rebooted")
-        bmc_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
-                                                        time_in_seconds=5,
-                                                        system="bmc",
-                                                        time_out=30)
-        come_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
-                                                         time_in_seconds=5,
-                                                         system="come",
-                                                         time_out=30)
-        fpga_up = self.fpga_handle.ensure_host_is_up(max_wait_time=self.fpga_up_time_within)
-        fun_test.test_assert(fpga_up, "FPGA up within {} seconds".format(self.fpga_up_time_within))
-
-        fun_test.join_thread(bmc_down_thread)
-        fun_test.join_thread(come_down_thread)
-
-        self.basic_checks()
+        # fpga_reboot = self.reboot_system(system="fpga")
+        # fun_test.test_assert(fpga_reboot, "FPGA rebooted")
+        # bmc_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
+        #                                                 time_in_seconds=5,
+        #                                                 system="bmc",
+        #                                                 time_out=30)
+        # come_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
+        #                                                  time_in_seconds=5,
+        #                                                  system="come",
+        #                                                  time_out=30)
+        # fpga_up = self.fpga_handle.ensure_host_is_up(max_wait_time=self.fpga_up_time_within)
+        # fun_test.test_assert(fpga_up, "FPGA up within {} seconds".format(self.fpga_up_time_within))
+        #
+        # fun_test.join_thread(bmc_down_thread)
+        # fun_test.join_thread(come_down_thread)
+        #
+        # self.fs_basic_checks()
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
 
-    def basic_checks(self):
-        ApcPduTestcase.basic_checks(self)
+    def fs_basic_checks(self):
+        Platform.fs_basic_checks(self)
         self.validate_fans()
         self.validate_temperaure_sensors()
 
@@ -195,7 +194,7 @@ class BootSequenceBMC(PlatformGeneralTestCase):
 
     @run_deco
     def run(self):
-        self.basic_checks()
+        self.fs_basic_checks()
 
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
         bmc_reboot = self.reboot_system(system="bmc")
@@ -214,13 +213,13 @@ class BootSequenceBMC(PlatformGeneralTestCase):
         fun_test.join_thread(fpga_down_thread)
         fun_test.join_thread(come_down_thread)
 
-        self.basic_checks()
+        self.fs_basic_checks()
 
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
 
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
 
-    def basic_checks(self):
+    def fs_basic_checks(self):
         ApcPduTestcase.basic_checks(self)
         self.validate_fans()
         self.validate_temperaure_sensors()
@@ -240,7 +239,7 @@ class BootSequenceCOMe(PlatformGeneralTestCase):
 
     @run_deco
     def run(self):
-        self.basic_checks()
+        self.fs_basic_checks()
 
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
 
@@ -254,12 +253,12 @@ class BootSequenceCOMe(PlatformGeneralTestCase):
         come_up = self.come_handle.ensure_host_is_up(max_wait_time=self.come_up_time_within)
         fun_test.test_assert(come_up, "COMe up within {} seconds".format(self.come_up_time_within))
 
-        self.basic_checks()
+        self.fs_basic_checks()
 
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
         self.compare_two_dict(ip_data_before_reboot, ip_data_after_reboot)
 
-    def basic_checks(self):
+    def fs_basic_checks(self):
         ApcPduTestcase.basic_checks(self)
         self.validate_fans()
         self.validate_temperaure_sensors()
@@ -522,7 +521,7 @@ class PcieDeviceDetection(PlatformGeneralTestCase):
         fun_test.test_assert(result, "Collected lspci output")
 
 
-class HostConnectionViaPCIEBus(StorageApiHelper, PlatformGeneralTestCase):
+class HostConnectionViaPCIEBus(StorageAPI, PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=118,
                               summary="",
@@ -596,7 +595,7 @@ if __name__ == "__main__":
         # DiscoverDhcpIP,
         # AlternateCommunicationToBMC,
         # PlatformComponentVersioningDiscovery,
-        # BootSequenceFPGA,
+        BootSequenceFPGA,
         # BootSequenceBMC,
         # BootSequenceCOMe,
         # BMCLinkToggle,
@@ -613,7 +612,7 @@ if __name__ == "__main__":
         # PCIEDiscoverySSDviaRC,
         # PcieDeviceDetection,
         # HostConnectionViaPCIEBus,
-        COMeVolumeCreation
+        # COMeVolumeCreation
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

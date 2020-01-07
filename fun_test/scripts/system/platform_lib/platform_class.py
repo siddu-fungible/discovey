@@ -302,7 +302,7 @@ class Platform(RedFishTool, IpmiTool):
 
     def initialize_variables(self):
         fs_name = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
     def intialize_handles(self):
         self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
@@ -361,6 +361,16 @@ class Platform(RedFishTool, IpmiTool):
             result["data"] = data
             result["status"] = True
         return result
+
+    def verify_ifconfig(self, if_config_output):
+        pass
+
+        # if not match_ipv4:
+        #     fun_test.test_assert(False, "IPv4 address available for the interface: {}".format(interface))
+        # if not match_ipv6:
+        #     fun_test.test_assert(False, "IPv6 address available for the interface: {}".format(interface))
+        # if not(match_ehter or match_hwaddr):
+        #     fun_test.test_assert(False, "Mac address available  for the interface: {}".format(interface))
 
     def set_platform_link(self, system="bmc", action="up", max_time=40):
         # action can be : up or down
@@ -585,6 +595,29 @@ class Platform(RedFishTool, IpmiTool):
                 result = each_interface
                 break
         fun_test.simple_assert(result, "Get data for the interface :{} on system : {}".format(interface, system))
+        if result:
+            data_present = self.verify_ifconfig_interface(result)
+            fun_test.simple_assert(data_present, "ifconfig data verified")
+        fun_test.simple_assert(result, "Get data for the interface :{} on system : {}".format(interface, system))
+        return result
+
+    def verify_ifconfig_interface(self, ifconfig_dict):
+        result = True
+        msg = ""
+        if not ifconfig_dict["interface"]:
+            result = False
+            msg += "interface not present, "
+        if not (ifconfig_dict["HWaddr"] or ifconfig_dict["ether"]):
+            result = False
+            msg += "MAC address missing, "
+        if not ifconfig_dict["ipv4"]:
+            result = False
+            msg += "IPV4 missing, "
+        if not ifconfig_dict["ipv6"]:
+            result = False
+            msg += "IPV6 missing, "
+        if msg:
+            fun_test.critical(msg)
         return result
 
     def compare_two_dict(self, dict_1, dict_2):
@@ -700,15 +733,15 @@ class Platform(RedFishTool, IpmiTool):
             f.write(result)
 
     def initialize_basic_checks(self):
-        for k, v in self.basic_checks:
+        for k, v in self.basic_checks.iteritems():
             setattr(self, k, v)
 
-    def basic_checks(self):
+    def fs_basic_checks(self):
         # If we want to use this function you need to provide the basic checks dict in the json
         if getattr(self, "basic_checks", False):
             self.initialize_basic_checks()
         else:
-            fun_test.crtical("No basic_checks in the JSON provided")
+            fun_test.crtical("No fs_basic_checks in the JSON provided")
             return False
 
         fun_test.log("Checking if COMe is UP")
