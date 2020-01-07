@@ -202,12 +202,6 @@ class BLTVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["iostat_output"] = {}
 
     def cleanup(self):
-        # dpc_host = fun_test.shared_variables["dpc_host"]
-        # try:
-        #     dpc_host.command("docker stop F1-0")
-        #     dpc_host.sudo_command("modprobe -r funeth")
-        # except:
-        #     fun_test.log("Couldn't stop docker")
         try:
             for end_host in fun_test.shared_variables["end_host_list"]:
                 end_host.sudo_command("for i in `pgrep fio`;do kill -9 $i;done")
@@ -217,14 +211,6 @@ class BLTVolumePerformanceScript(FunTestScript):
                 end_host.disconnect()
         except:
             fun_test.log("Disconnect failed")
-        try:
-            dpc_host = fun_test.shared_variables["dpc_host"]
-            dpc_host.command("docker stop F1-0", timeout=180)
-            dpc_host.sudo_command("rmmod funeth", timeout=180)
-        except:
-            fun_test.log("COMe clean-up failed")
-        fun_test.log("FS cleanup")
-        fun_test.shared_variables["fs"].cleanup()
 
 
 class StripedVolumePerformanceTestcase(FunTestCase):

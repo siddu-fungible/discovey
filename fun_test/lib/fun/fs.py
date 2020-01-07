@@ -2380,6 +2380,15 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
+                    try:
+                        fpga = self.get_fpga()
+                        if fpga:
+                            health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    else:
+                        if fpga:
+                            fpga.disconnect()
                 result = health_result, health_error_message
 
             except Exception as ex:
@@ -2577,7 +2586,9 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-58"))
+    fpga = fs.get_fpga()
+    i = 0
     #terminal = fs.get_terminal()
     #terminal.command("pwd")
     #terminal.command("ifconfig")
@@ -2590,8 +2601,8 @@ if __name__ == "__main__":
     # come.setup_dpc()
     # come = fs.get_come()
     # come.command("ls -ltr")
-    fs.re_initialize()
-    i = fs.bam()
+    # fs.re_initialize()
+    # i = fs.bam()
 
 
 if __name__ == "__main2__":
