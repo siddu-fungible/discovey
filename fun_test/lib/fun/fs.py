@@ -2380,15 +2380,16 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
-                    try:
-                        fpga = self.get_fpga()
-                        if fpga:
-                            health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                    else:
-                        if fpga:
-                            fpga.disconnect()
+                    if health_result:
+                        try:
+                            fpga = self.get_fpga()
+                            if fpga:
+                                health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        else:
+                            if fpga:
+                                fpga.disconnect()
                 result = health_result, health_error_message
 
             except Exception as ex:
