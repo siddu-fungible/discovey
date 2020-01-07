@@ -63,6 +63,47 @@ export class TestComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.data =      [{
+      "name": "System",
+      "leaf": false,
+      "children": []
+    }];
+
+    this.data[0]["children"] = [
+      {
+        "name": "debug_vp_util",
+        "leaf": true,
+        "children": [
+          // {
+          //   "name": "utilization_distribution",
+          //   "leaf": true,
+          //   "children": []
+          // },
+          // {
+          //   "name": "utilization_by_cluster",
+          //   "leaf": true,
+          //   "children": []
+          // }
+        ]
+      },
+      {
+        "name": "BAM",
+        "leaf": true,
+        "children": [
+          // {
+          //   "name": "default_alloc_pool",
+          //   "leaf": false,
+          //   "children": [
+          //     {
+          //       "name": "usage_percent",
+          //       "leaf": true,
+          //       "children": []
+          //     }
+          //   ]
+          // }
+        ]
+      }];
+
     if (this.data) {
       for (let d of this.data) {
         let flatNode = new FlatNode();

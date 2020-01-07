@@ -312,7 +312,7 @@ class VlanPingTests(FunTestCase):
         for f1_docker in vlan_ips:
             fs = f1_docker.split('_')[0]
             container_name = f1_docker.split('_')[1]
-            fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs)
+            fs_spec = fun_test.get_asset_manager().get_fs_spec(fs)
             container_obj = FunCpDockerContainer(name=container_name, host_ip=fs_spec['come']['mgmt_ip'],
                                                  ssh_username=fs_spec['come']['mgmt_ssh_username'],
                                                  ssh_password=fs_spec['come']['mgmt_ssh_password'])

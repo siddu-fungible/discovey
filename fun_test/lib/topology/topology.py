@@ -10,6 +10,7 @@ class ExpandedTopology(ToDictMixin):
         self.active_orchestrators = []
         self.switches = {}
         self.hosts = {}
+        self.pcie_hosts = {}
         self.spec = spec
         self.cleaned_up = False
         self.perf_listener_hosts = {}
@@ -19,6 +20,9 @@ class ExpandedTopology(ToDictMixin):
 
     def add_active_orchestrator(self, orchestrator):
         self.active_orchestrators.append(orchestrator)
+
+    def add_pcie_host(self, host_name, host_obj):
+        self.pcie_hosts[host_name] = host_obj
 
     def get_dut(self, index):
         result = None
@@ -65,6 +69,9 @@ class ExpandedTopology(ToDictMixin):
 
     def get_hosts(self):
         return self.hosts
+
+    def get_pcie_hosts(self):
+        return self.pcie_hosts
 
     def get_host(self, name):
         host = self.hosts.get(name, None)

@@ -211,7 +211,6 @@ class Linux(object, ToDictMixin):
         command = "ip route add {} via {} dev {}".format(network, gateway, outbound_interface)
         return self.sudo_command(command, timeout=timeout)
 
-
     def _debug_expect_buffer(self):
         fun_test.debug("Expect Buffer Before:%s" % self.handle.before)
         fun_test.debug("Expect Buffer After:%s" % self.handle.after)

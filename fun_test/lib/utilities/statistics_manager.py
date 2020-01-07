@@ -109,7 +109,7 @@ if __name__ == "__main__":
     from asset.asset_manager import AssetManager
 
     asset_manager = AssetManager()
-    fs_spec = asset_manager.get_fs_by_name("fs-118")
+    fs_spec = asset_manager.get_fs_spec("fs-118")
 
     fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True, disable_f1_index=1)
     #come_obj = fs_obj.get_come()

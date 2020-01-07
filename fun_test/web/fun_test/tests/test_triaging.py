@@ -1,5 +1,6 @@
 from fun_global import RESULTS
 import web.fun_test.django_interactive
+from fun_settings import LOGS_DIR
 from web.fun_test.triaging_global import TriagingStates, TriageTrialStates, TriagingTypes
 from web.fun_test.metrics_models import TriagingResult
 from web.fun_test.metrics_models import Triage3, Triage3Trial
@@ -27,7 +28,7 @@ TEN_MB = 1e7
 DEBUG = False
 
 if not DEBUG:
-    handler = logging.handlers.RotatingFileHandler(LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
+    handler = logging.handlers.RotatingFileHandler(LOGS_DIR + "/" + LOG_FILE_NAME, maxBytes=TEN_MB, backupCount=5)
 else:
     handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))

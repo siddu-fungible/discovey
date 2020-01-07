@@ -320,6 +320,40 @@ def show_dev():
     return sudo('lspci -d1dad: -Dnnmm')
 
 @roles('come')
+@task
+def ssdon(index=0, slot=0):
+    """poweron fungible SSD device on pcie from COMe system"""
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        O = dpcshF(index=index, cmd='slot output {"slot": %s, "type": "hotswap", "action":"on" }' % slot)
+        if '"result": true' not in O.stdout: raise "SSD slot %s power on failed ..." % slot
+        O = dpcshF(index=index, cmd='slot input {"slot": %s, "type":"powergood"}' % slot)
+        if '"input": 0' not in O.stdout: raise "SSD slot %s power still off ..." % slot
+        print "[%s] dpu=%s ssdslot=%s powered-on with success ..." % (env.host_string, index, slot)
+
+@roles('come')
+@task
+def ssdoff(index=0, slot=0):
+    """poweroff fungible SSD device on pcie from COMe system"""
+    with settings( hide('stderr', 'running'), warn_only=True ):
+        O = dpcshF(index=index, cmd='slot output {"slot": %s, "type": "hotswap", "action":"off" }' % slot)
+        if '"result": true' not in O.stdout: raise "SSD slot %s power off failed ..." % slot
+        O = dpcshF(index=index, cmd='slot input {"slot": %s, "type":"powergood"}' % slot)
+        if '"input": 1' not in O.stdout: raise "SSD slot %s power still on ..." % slot
+        print "[%s] dpu=%s ssdslot=%s powered-off with success ..." % (env.host_string, index, slot)
+
+@roles('come')
+@task
+def show_ssd(index=0):
+    """Query fungible SSD device on pcie from COMe system"""
+    return dpcshF(index=index, cmd='peek nvme/ssds/info')
+
+@roles('come')
+@task
+def show_ports(index=0):
+    """Query fungible fpg device on pcie from COMe system"""
+    return dpcshF(index=index, cmd='port linkstatus')
+
+@roles('come')
 @task 
 def rescan_pcie():
     """perform pcie rescan from COMe system"""
@@ -327,7 +361,7 @@ def rescan_pcie():
 
 ### no stable yet !!!
 @roles('bmc')
-#@task
+@task
 def bmcresetF(index=0):
     """ reset the chip from BMC system"""
     with cd('/mnt/sdmmc0p1/scripts'), settings( hide('stderr'), warn_only=True ):
@@ -621,7 +655,7 @@ def dpcshF(index=0, cmd=None):
     #if index == 1 and '0000:06:00.2' not in O:
     #    sys.exit("Fungible DPU#1 control function is NOT discovered ...")
     check_dpcsh_install_dependencies()
-    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and '0000:06:00.2' in O) else '/dev/null'
+    dev = '/dev/nvme0' if (int(index) == 0 and '0000:04:00.2' in O) else '/dev/nvme1' if (int(index) == 1 and any(x in O for x in ['0000:05:00.2', '0000:06:00.2'])) else '/dev/null'
     with cd(dpcsh_directory):
         return sudo('./dpcsh --pcie_nvme_sock=%s --nvme_cmd_timeout=60000 --nocli %s' % (dev, cmd))
 

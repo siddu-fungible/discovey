@@ -182,7 +182,7 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
         testcase = self.__class__.__name__
         testconfig_file = fun_test.get_script_name_without_ext() + ".json"
         self.server_key = fun_test.parse_file_to_json(testconfig_file)
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.server_key["fs"][fs_name]["fs-name"])
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(self.server_key["fs"][fs_name]["fs-name"])
 
         testconfig_dict = utils.parse_file_to_json(testconfig_file)
         for k, v in testconfig_dict[testcase].iteritems():

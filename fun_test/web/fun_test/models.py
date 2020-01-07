@@ -16,12 +16,13 @@ from datetime import datetime, timedelta
 from scheduler.scheduler_global import SchedulerStates, SuiteType, SchedulerJobPriority, JobStatusType
 from django.contrib.postgres.fields import JSONField, ArrayField
 import json
-from asset.asset_global import AssetType
+from asset.asset_global import AssetType, AssetHealthStates
 from rest_framework.serializers import ModelSerializer
 from django.utils import timezone
 import logging
 from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_save
+
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
 
@@ -101,6 +102,11 @@ class TestBed(models.Model):
     manual_lock = models.BooleanField(default=False)
     manual_lock_expiry_time = models.DateTimeField(default=datetime.now)
     manual_lock_submitter = models.EmailField(null=True, blank=True)
+    disabled = models.BooleanField(default=False)
+    health_check_enabled = models.BooleanField(default=True)
+    state_change_time = models.DateTimeField(default=timezone.now)
+    health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
+    health_check_message = models.TextField(default="")
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.name,
@@ -108,6 +114,15 @@ class TestBed(models.Model):
                                        self.manual_lock,
                                        self.manual_lock_expiry_time,
                                        self.manual_lock_submitter)
+
+    def set_health(self, status, force_update=False, message=""):
+        if status != self.health_status or force_update:
+            self.health_status = status
+            self.state_change_time = get_current_time()
+            self.health_check_message = message
+            # if status == AssetHealthStates.UNHEALTHY:
+            #     self.disabled = True
+            self.save()
 
 
 class CatalogSuite(models.Model):
@@ -708,6 +723,7 @@ class Daemon(FunModel):
     daemon_id = models.IntegerField()
     heart_beat_time = models.DateTimeField(default=datetime.now)
     logging_level = models.IntegerField(default=logging.DEBUG)
+    exception_logs = JSONField(default=[])
 
     def beat(self):
         self.heart_beat_time = get_current_time()
@@ -727,6 +743,12 @@ class Daemon(FunModel):
             result = d
         return result
 
+    def clear_exception_logs(self):
+        self.exception_logs = []
+        self.save()
+
+    def add_exception_log(self, log):
+        self.exception_logs.append({"time": get_current_time(), "log": log})
 
 class Asset(FunModel):
     name = models.TextField()
@@ -735,6 +757,11 @@ class Asset(FunModel):
     manual_lock_user = models.TextField(default=None, null=True)
     test_beds = JSONField(default=[])
     manual_lock_expiry_time = models.DateTimeField(default=timezone.now)
+    disabled = models.BooleanField(default=False)
+    health_check_enabled = models.BooleanField(default=True)
+    state_change_time = models.DateTimeField(default=timezone.now)
+    health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
+    health_check_message = models.TextField(default="")
 
     @staticmethod
     def add_update(name, type, job_ids=None):
@@ -797,6 +824,16 @@ class Asset(FunModel):
     def add_time(self, minutes):
         self.manual_lock_expiry_time += timedelta(minutes=minutes)
         self.save()
+
+    def set_health(self, status, force_update=False, message=""):
+        if status != self.health_status or force_update:
+            self.health_status = status
+            self.state_change_time = get_current_time()
+            self.health_check_message = message
+            if status == AssetHealthStates.UNHEALTHY:
+                self.disabled = True
+            self.save()
+
 
 class SuiteItems(models.Model):
     script_path = models.TextField()
@@ -876,6 +913,9 @@ def create_user_profile(sender, instance, created, **kwargs):
     if instance and not created:
         if not Profile.objects.filter(user=instance).exists():
             Profile.objects.create(user=instance)
+
+        if not User.objects.filter(email=instance.email.lower()).exists():
+            User(email=instance.email.lower(), first_name=instance.first_name, last_name=instance.last_name).save()
 
 @receiver(post_save, sender=AuthUser)
 def save_user_profile(sender, instance, **kwargs):

@@ -35,6 +35,22 @@ export class TestBedService {
     }))
   }
 
+  enableAsset(name, type, disabled) {
+    let url = "/api/v1/regression/assets/" + name + "/" + type;
+    let payload = {disabled: disabled};
+    return this.apiService.put(url, payload).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
+  healthCheckEnabledAsset(name, type, enabled) {
+    let url = "/api/v1/regression/assets/" + name + "/" + type;
+    let payload = {health_check_enabled: enabled};
+    return this.apiService.put(url, payload).pipe(switchMap(response => {
+      return of(response.data);
+    }))
+  }
+
   testBeds() {
     let url = "/api/v1/regression/test_beds";
     return this.apiService.get(url).pipe(switchMap(response => {

@@ -46,7 +46,7 @@ class ECVolumeLevelScript(FunTestScript):
         # Pulling the testbed type and its config
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
         fun_test.log("Testbed-type: {}".format(self.testbed_type))
-        self.fs_spec = fun_test.get_asset_manager().get_fs_by_name(self.testbed_type)
+        self.fs_spec = fun_test.get_asset_manager().get_fs_spec(self.testbed_type)
         self.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(self.testbed_type)
         fun_test.log("{} FS Spec: {}".format(self.testbed_type, self.fs_spec))
         fun_test.log("{} Testbed Config: {}".format(self.testbed_type, self.testbed_config))

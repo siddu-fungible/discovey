@@ -10,11 +10,11 @@ table > tbody > tr > th, table > tbody > tr > td {
   border-left: black solid 1px;
 }
 
-.test-bed-table tbody tr td:nth-child(2) {
+.test-bed-table tbody tr td:nth-child(3) {
   border-right: black solid 1px;
 }
 
-.test-bed-table tbody tr td:nth-child(4) {
+.test-bed-table tbody tr td:nth-child(5) {
   border-right: black solid 1px;
 }
 
@@ -77,4 +77,14 @@ table > tbody > tr > th, table > tbody > tr > td {
 
 .fun-button-submit {
   margin: 5px;
+}
+
+
+.box {
+  display: flex;
+  flex-direction: row;
+}
+
+.health-icon {
+  font-size: large;
 }

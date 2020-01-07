@@ -2176,7 +2176,7 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
-                    self.get_come().pre_reboot_cleanup()
+                    # self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
@@ -2582,7 +2582,7 @@ if __name__ == "__main__":
 
 if __name__ == "__main2__":
     come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
-    # output = come.pre_reboot_cleanup()
+    output = come.pre_reboot_cleanup()
     i = 0
     #come.setup_hbm_tools()
     #print come.setup_tools()

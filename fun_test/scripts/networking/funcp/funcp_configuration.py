@@ -43,7 +43,7 @@ class BootFS(FunTestCase):
 
     def run(self):
         global fs
-        test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
+        test_bed_spec = fun_test.get_asset_manager().get_fs_spec(test_bed_name)
         img_path = "divya_funos-f1.stripped_june4.gz"
         f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
                          "--dis-stats retimer=0,1,2 --mgmt syslog=6 --disable-wu-watchdog"
@@ -110,7 +110,7 @@ class BringupFunCP(FunTestCase):
                               """)
 
     def setup(self):
-        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
+        self.test_bed_spec = fun_test.get_asset_manager().get_fs_spec(test_bed_name)
 
         linux_obj_come = None
 
@@ -176,7 +176,7 @@ class ConfigureFunCPMpgIP(FunTestCase):
                               """)
 
     def setup(self):
-        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
+        self.test_bed_spec = fun_test.get_asset_manager().get_fs_spec(test_bed_name)
         self.linux_obj_come = Linux(host_ip=self.test_bed_spec['come']['mgmt_ip'],
                                ssh_username=self.test_bed_spec['come']['mgmt_ssh_username'],
                                ssh_password=self.test_bed_spec['come']['mgmt_ssh_password'])
@@ -251,7 +251,7 @@ class AbstractConfig(FunTestCase):
                               """)
 
     def setup(self):
-        self.test_bed_spec = fun_test.get_asset_manager().get_fs_by_name(test_bed_name)
+        self.test_bed_spec = fun_test.get_asset_manager().get_fs_spec(test_bed_name)
         fun_test.test_assert(expression=mpg_ips, message="Make sure MPG interfaces have IPs")
         abstract_config_file = fun_test.get_script_parent_directory() + '/abstract_configs.json'
         self.abstract_configs = fun_test.parse_file_to_json(abstract_config_file)

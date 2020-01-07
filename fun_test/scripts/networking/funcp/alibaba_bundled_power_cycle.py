@@ -24,7 +24,7 @@ class PowerCycle(FunTestScript):
     def setup(self):
 
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(fs_name)
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(fs_name)
 
         self.reboot_fpga(fs_spec['fpga']['mgmt_ip'])
 
@@ -68,7 +68,7 @@ class CheckCOMe(FunTestCase):
     def setup(self):
 
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(fs_name))
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(str(fs_name))
         self.come_linux = Linux(host_ip=fs_spec['come']['mgmt_ip'], ssh_username='fun', ssh_password="123")
         self.come_linux.reboot(max_wait_time=300)
 
@@ -174,7 +174,7 @@ class F1reset(FunTestScript):
     def setup(self):
         boot_image = "demo.gz"
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        fs_spec = fun_test.get_asset_manager().get_fs_by_name(str(fs_name))
+        fs_spec = fun_test.get_asset_manager().get_fs_spec(str(fs_name))
         fs_0 = Fs.get(fs_spec=fs_spec, tftp_image_path=boot_image, boot_args="abc")
         fun_test.test_assert(fs_0.bmc_initialize(), "BMC initialize") # starts netcat
         fun_test.test_assert(fs_0.set_f1s(), "Set F1s")
