@@ -678,8 +678,6 @@ class ApcPduTestcase(FunTestCase):
             fun_test.log("Available hosts list: " + str(available_hosts_list))
             available_dut_indexes = self.topology_helper.get_available_duts().keys()
             fun_test.log("Available duts list: " + str(available_dut_indexes))
-            hosts = self.topology.get_hosts()
-            fun_test.log("hosts are: {}".format(hosts))
 
             if available_hosts_list:
                 pass
