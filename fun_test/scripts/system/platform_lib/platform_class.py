@@ -1,14 +1,16 @@
-from lib.system.fun_test import fun_test
+from lib.system.fun_test import *
 import os
 from lib.host.linux import Linux
 from lib.host.storage_controller import StorageController
-# from lib.system import utils
+from lib.system import utils
 from asset.asset_manager import AssetManager
 import re
 from lib.fun.fs import ComE, Bmc, Fpga
 from lib.host.dpcsh_client import DpcshClient
 from scripts.storage.pocs.apple.apc_pdu_auto import ApcPduTestcase
+from collections import OrderedDict
 from lib.fun.fs import *
+from lib.templates.storage.storage_controller_api import StorageControllerApi
 
 
 class MyScript(FunTestScript):
@@ -92,8 +94,8 @@ class IpmiTool:
             result[cols_strip[0]]["status"] = cols_strip[2]
         return result
 
-    def verify_ipmi_sdr_info(self, rpm_threshold=20000, exhaust_threshold=90, inlet_threshold=90,
-                             f1_temperature=90):
+    def verify_ipmi_sdr_info(self, rpm_threshold=20000, exhaust_threshold=60, inlet_threshold=55,
+                             f1_temperature=75):
         sdr = self.ipmitool_sdr()
         result = self.validate_sdr_data(sdr, rpm_threshold, exhaust_threshold, inlet_threshold, f1_temperature)
         fun_test.test_assert(result, "Validated sensor data with ipmitool sdr")
@@ -140,6 +142,8 @@ class RedFishTool:
     REDFISH_PASSWORD = "superuser"
 
     def switch_to_py3_env(self):
+        if not getattr(self, "qa_02", False):
+            self.intialize_qa_02()
         self.qa_02.command("cd /local/auto_admin/.local/bin")
         self.in_py3_env = True
 
@@ -265,22 +269,14 @@ class RedFishTool:
         return result
 
 
-class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
+class Platform(RedFishTool, IpmiTool):
     DROP_FILE_PATH = "fs_drop_version.json"
 
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="",
-                              steps="""""")
-
-    def setup(self):
+    def __init__(self):
         self.initialize_json_data()
         self.initialize_job_inputs()
         self.initialize_variables()
         self.intialize_handles()
-
-    def run(self):
-        pass
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -432,8 +428,6 @@ class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
             result = {"status": True, "data": data}
             fun_test.log("Port linkstatus: {}".format(data))
         return result
-
-
 
     def read_dpu_data(self):
         # todo: dont know how to read the dpu data
@@ -620,25 +614,24 @@ class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
         self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
 
     def check_ssd_via_fpga(self):
-        self.fpga_handle.command("cd apps")
-        output = self.fpga_handle.command("./regop -b 0xff200510 -s 0x100 -o 0x0 -c 5 -v 0x2f")
-        output = self.fpga_handle.command("./regop -b 0xff200510 -s 0x100 -o 0x0 -c 5 -v 0x2f")
+        output = self.fpga_handle.command("./dump_fpga_regs.sh | grep a8")
+        output = self.fpga_handle.command("./dump_fpga_regs.sh | grep a8")
         regop_output = self.parse_fpga_ssd_output(output)
-        self.verify_fpga_ssd_data(regop_output, self.expected_ssds_f1_0)
+        # self.verify_fpga_ssd_data(regop_output, self.expected_ssds_f1_0)
 
-        output = self.fpga_handle.command("./regop -b 0xff200910 -s 0x100 -o 0x0 -c 5 -v 0x2f")
+        output = self.fpga_handle.command("./dump_fpga_regs.sh | grep b0")
         regop_output = self.parse_fpga_ssd_output(output)
         self.verify_fpga_ssd_data(regop_output, self.expected_ssds_f1_1)
 
     def parse_fpga_ssd_output(self, output):
-        result = {}
+        result = False
         lines = output.split("\n")
-        ssd_count = 0
         for line in lines:
             match_ssd = re.search(r"OFFSET.*:(?P<hex_value>\w+)", line)
             if match_ssd:
-                result[ssd_count] = match_ssd.group("hex_value")
-                ssd_count += 1
+                hex_value = match_ssd.group("hex_value")
+                ssd_data = hex_value[5]
+                result = int(ssd_data, 16)
         return result
 
     def verify_fpga_ssd_data(self, regop_output, expected_ssds_up):
@@ -665,30 +658,36 @@ class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
         return output
 
     def collect_come_logs(self):
-        logs = {}
-        logs["Dmesg"] = self.come_handle.command("dmesg")
-        logs["Uname"] = self.come_handle.command("uname -a")
-        logs["DPU information"] = self.come_handle.command("lspci -vv -d 1dad:")
         try:
+            logs = {}
+            logs["Dmesg"] = self.come_handle.command("dmesg")
+            logs["Uname"] = self.come_handle.command("uname -a")
+            logs["DPU information"] = self.come_handle.command("lspci -vv -d 1dad:")
             logs["F1 0 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=0, get_raw_output=True)
             logs["F1 1 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=1, get_raw_output=True)
             logs["F1 0 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0, get_raw_output=True)
             logs["F1 1 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=1, get_raw_output=True)
+            self.add_these_logs(logs, "come")
         except:
-            fun_test.log("Unable to collect the DPCSH data")
-        self.add_these_logs(logs, "come")
+            fun_test.critical("Unable to collect the COMe logs")
 
     def collect_bmc_logs(self):
-        logs = {}
-        logs["Dmesg"] = self.bmc_handle.command("dmesg")
-        logs["Uname"] = self.bmc_handle.command("uname -a")
-        self.add_these_logs(logs, "bmc")
+        try:
+            logs = {}
+            logs["Dmesg"] = self.bmc_handle.command("dmesg")
+            logs["Uname"] = self.bmc_handle.command("uname -a")
+            self.add_these_logs(logs, "bmc")
+        except:
+            fun_test.critical("Unable to collect the BMC logs")
 
     def collect_fpga_logs(self):
-        logs = {}
-        logs["Dmesg"] = self.fpga_handle.command("dmesg")
-        logs["Uname"] = self.fpga_handle.command("uname -a")
-        self.add_these_logs(logs, "fpga")
+        try:
+            logs = {}
+            logs["Dmesg"] = self.fpga_handle.command("dmesg")
+            logs["Uname"] = self.fpga_handle.command("uname -a")
+            self.add_these_logs(logs, "fpga")
+        except:
+            fun_test.critical("Unable to collect the FPGA logs")
 
     def add_these_logs(self, log_dict, system):
         result = ""
@@ -699,6 +698,243 @@ class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
             result += "\n\n\n" + "-"*60 + str(k) + "-"*60 + "\n\n" + str(v)
         with open(filename, "w+") as f:
             f.write(result)
+
+    def initialize_basic_checks(self):
+        for k, v in self.basic_checks:
+            setattr(self, k, v)
+
+    def basic_checks(self):
+        # If we want to use this function you need to provide the basic checks dict in the json
+        if getattr(self, "basic_checks", False):
+            self.initialize_basic_checks()
+        else:
+            fun_test.crtical("No basic_checks in the JSON provided")
+            return False
+
+        fun_test.log("Checking if COMe is UP")
+        come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+        fun_test.test_assert(come_up, "COMe is UP")
+
+        fun_test.log("Checking if BMC is UP")
+        bmc_up = self.bmc_handle.ensure_host_is_up(max_wait_time=600)
+        fun_test.test_assert(bmc_up, "BMC is UP")
+
+        fun_test.log("Check if F1_0 is detected")
+        self.check_pci_dev(f1=0)
+
+        fun_test.log("Check if F1_1 is detected")
+        self.check_pci_dev(f1=1)
+
+        if getattr(self, "check_docker", False):
+            self.check_expected_dockers_up()
+
+        if getattr(self, "check_ssd", False):
+            fun_test.log("Checking if SSD's are Active on F1_0")
+            self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_0, f1=0)
+
+            fun_test.log("Checking if SSD's are Active on F1_1")
+            self.check_ssd_status(expected_ssds_up=self.expected_ssds_f1_1, f1=1)
+
+        if getattr(self, "check_ports", False):
+            fun_test.log("Checking if NU and HNU port's are active on F1_0")
+            expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
+                                      'HNU': self.expected_hnu_ports_f1_0}
+            self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
+
+            expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
+                                      'HNU': self.expected_hnu_ports_f1_1}
+            fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
+
+    def check_expected_dockers_up(self):
+        fun_test.log("Check if all the Dockers are up")
+        docker_count = 0
+        max_time = 100
+        timer = FunTimer(max_time)
+        while not timer.is_expired():
+            docker_count = self.get_docker_count()
+            if docker_count == self.expected_dockers:
+                break
+            else:
+                fun_test.sleep("{} docker to be up".format(self.expected_dockers), seconds=5)
+        fun_test.test_assert_expected(expected=self.expected_dockers, actual=docker_count, message="Docker's up")
+
+    def check_nu_ports(self,
+                       expected_ports_up=None,
+                       f1=0):
+        result = False
+        dpcsh_output = self.get_dpcsh_data_for_cmds("port linkstatus", f1)
+        if dpcsh_output:
+            ports_up = self.validate_link_status_out(dpcsh_output,
+                                                     f1=f1,
+                                                     expected_port_up=expected_ports_up)
+            if ports_up:
+                result = True
+        fun_test.test_assert(result, "F1_{}: NU ports are present, Expected: {}".format(f1, expected_ports_up))
+        return result
+
+    def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
+        result = True
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=getattr(self, "pc_no", 1))
+        if link_status:
+            for port_type, ports_list in expected_port_up.iteritems():
+                for each_port in ports_list:
+                    port_details = self.get_dict_for_port(port_type, each_port, link_status)
+                    if port_details["xcvr"] == "ABSENT":
+                        result = False
+                        break
+                if not result:
+                    break
+        else:
+            result = False
+        return result
+
+    def get_dict_for_port(self, port_type, port, link_status):
+        result = {}
+        for lport, value in link_status.iteritems():
+            if port_type == value.get("type", "") and port == value.get("port", ""):
+                result = value
+                break
+        return result
+
+    @staticmethod
+    def parse_link_status_out(link_status_output,
+                              f1=0,
+                              create_table=True,
+                              iteration=1):
+        result = OrderedDict()
+        if link_status_output:
+            port_list = [i for i in link_status_output]
+            port_list.sort()
+            table_data_rows = []
+            for each_port in port_list:
+                value = link_status_output[each_port]
+                each_port = each_port.replace(' ', '')
+                try:
+                    match_fields = re.search(r'\s?(?P<name>.*)\s+xcvr:(?P<xcvr>\w+)\s+speed:\s+(?P<speed>\w+)\s+'
+                                             r'admin:\s{0,10}(?P<admin>[\w ]+)\s+SW:\s+(?P<sw>\d+)\s+HW:\s+(?P<hw>\d+)\s+'
+                                             r'LPBK:\s+(?P<lpbk>\d+)\s+FEC:\s+(?P<fec>\d+)', value)
+                    if match_fields:
+                        one_data_set = {}
+                        one_data_set['name'] = match_fields.group('name').replace(' ', '')
+                        if "FPG" in one_data_set['name']:
+                            one_data_set['type'] = "HNU" if "HNU" in one_data_set['name'] else "NU"
+                        one_data_set['port'] = int(re.search(r'\d+', one_data_set['name']).group())
+                        one_data_set['xcvr'] = match_fields.group('xcvr')
+                        one_data_set['speed'] = match_fields.group('speed')
+                        one_data_set['admin'] = match_fields.group('admin')
+                        one_data_set['SW'] = int(match_fields.group('sw'))
+                        one_data_set['HW'] = int(match_fields.group('hw'))
+                        one_data_set['LPBK'] = match_fields.group('lpbk')
+                        one_data_set['FEC'] = match_fields.group('fec')
+                        table_data_rows.append([one_data_set['name'], one_data_set['xcvr'], one_data_set['speed'],
+                                                one_data_set['admin'], one_data_set['SW'], one_data_set['HW'],
+                                                one_data_set['LPBK'], one_data_set['FEC']])
+                        result[each_port] = one_data_set
+                except:
+                    fun_test.log("Unable to parse the port linkstatus output")
+            if create_table:
+                try:
+                    table_data_headers = ["Name", "xcvr", "speed", "admin", "sw", "hw", "lpbk", "fec"]
+                    table_data = {"headers": table_data_headers, "rows": table_data_rows}
+                    fun_test.add_table(panel_header="Link stats table iteration {}".format(iteration),
+                                       table_name="Fs = {}".format(f1), table_data=table_data)
+                except:
+                    fun_test.log("Unable to create the table")
+        return result
+
+    def get_docker_count(self):
+        output = self.come_handle.sudo_command("docker ps -a")
+        num_docker = self.docker_ps_a_wrapper(output)
+        return num_docker
+
+    def check_ssd_status(self, expected_ssds_up, f1=0):
+        result = False
+        if expected_ssds_up == 0:
+            return True
+        dpcsh_data = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1)
+        if dpcsh_data:
+            validate = self.validate_ssd_status(dpcsh_data, expected_ssds_up, f1)
+            if validate:
+                result = True
+        fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
+        return result
+
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+        result = False
+        try:
+            self.come_handle.enter_sudo()
+            output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
+            if "No such file" in output:
+                self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
+            run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
+            output = self.come_handle.command(run_cmd)
+            if get_raw_output:
+                return output
+            result = self.parse_dpcsh_output(output)
+            if "result" in result:
+                result = result["result"]
+            self.come_handle.exit_sudo()
+        except:
+            fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
+        return result
+
+    @staticmethod
+    def parse_dpcsh_output(data):
+        result = {}
+        data = data.replace('\r', '')
+        data = data.replace('\n', '')
+        # \s+=>\s+(?P<json_output>{.*})
+        match_output = re.search(r'output\s+=>\s+(?P<json_output>{.*})', data)
+        if match_output:
+            try:
+                result = json.loads(match_output.group('json_output'))
+                if "result" in result:
+                    result = result["result"]
+            except:
+                fun_test.log("Unable to parse the output obtained from dpcsh")
+        return result
+
+    @staticmethod
+    def validate_ssd_status(dpcsh_data, expected_ssd_count, f1):
+        result = True
+        if dpcsh_data:
+            ssds_count = len(dpcsh_data)
+            fun_test.test_assert_expected(expected=expected_ssd_count,
+                                          actual=ssds_count,
+                                          message="F1_{}: SSD count".format(f1))
+            for each_ssd, value in dpcsh_data.iteritems():
+                if "device state" in value:
+                    if not (value["device state"] == "DEV_ONLINE"):
+                        result = False
+        return result
+
+    @staticmethod
+    def docker_ps_a_wrapper(output):
+        # Just a basic function , will have to advance it using regex
+        lines = output.split("\n")
+        lines.pop(0)
+        number_of_dockers = len(lines)
+        print ("number_of_dockers: %s" % number_of_dockers)
+        return number_of_dockers
+
+    def check_pci_dev(self, f1=0):
+        result = True
+        bdf_list = ['04:00.']
+        if f1 == 1:
+            bdf_list = ['06:00.', '05:00.']
+        for bdf in bdf_list:
+            lspci_output = self.come_handle.command("lspci -d 1dad: | grep {}".format(bdf), timeout=120)
+            if lspci_output:
+                sections = ['Ethernet controller', 'Non-Volatile', 'Unassigned class', 'encryption device']
+                result = all([s in lspci_output for s in sections])
+                if result:
+                    break
+            else:
+                result = False
+
+        fun_test.test_assert(result, "F1_{} PCIe devices detected".format(f1))
+        return result
 
     def install_image(self, system="come"):
         #todo
@@ -724,10 +960,181 @@ class Platform(ApcPduTestcase, RedFishTool, IpmiTool):
         # todo
         pass
 
-    def cleanup(self):
+    def collect_logs(self):
         self.collect_come_logs()
         self.collect_bmc_logs()
         self.collect_fpga_logs()
+
+
+class StorageAPI:
+    def __init__(self):
+        if not getattr(self, "volume_creation_details", False):
+            fun_test.crtical("Volume creation details JSON missing")
+        if not getattr(self, "fs", False):
+            self.initialise_fs()
+        if not getattr(self, "come_handle", False):
+            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+        self.sc_api = StorageControllerApi(self.fs["come"]["mgmt_ip"])
+
+        HOSTS_ASSET = ASSET_DIR + "/hosts.json"
+        self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
+
+    def handle_volume_deco(func):
+        def function_wrapper(self):
+            try:
+                func(self)
+            except Exception as ex:
+                # fun_test.critical(ex)
+                self.detach_delete_volume()
+        return function_wrapper
+
+    @handle_volume_deco
+    def create_volume_and_run_fio(self):
+        self.pool_uuid = self.get_pool_id()
+        self.volume_creation_details["pool_uuid"] = self.pool_uuid
+        response = self.sc_api.create_stripe_volume(**self.volume_creation_details)
+        fun_test.log("volume creation response:{}".format(response))
+        self.verify_volume_creation(response)
+        self.uuid = response["data"]["uuid"]
+        response = self.sc_api.volume_attach_pcie(self.uuid, remote_ip=self.fs["come"]["mgmt_ip"])
+        fun_test.log("volume attach response:{}".format(response))
+        self.verify_volume_attach_detach(response, "attach")
+        self.attach_info = response["data"]
+        self.nvme_device = self.get_nvme(self.come_handle, self.come_handle.host_ip)
+        thread_details = self.start_fio_and_verify(self.fio_read)
+        self.join_fio_thread(thread_details)
+        self.detach_delete_volume()
+
+    def join_fio_thread(self, thread_details):
+        for k, v in thread_details.iteritems():
+            fun_test.join_thread(v)
+            fun_test.test_assert(True, "Completed {}".format(k))
+
+    def start_fio_and_verify(self, fio_params):
+        thread_details = {}
+        host_name = self.come_handle.host_ip
+        run_time = fio_params.get("runtime", 120)
+        namespace = re.findall(r'\d', self.nvme_device)
+        iostat_device = "nvme" + namespace[0] + "c2n" + namespace[1]
+        thread_details["check"] = fun_test.execute_thread_after(func=self.check_traffic,
+                                                                time_in_seconds=5,
+                                                                device="nvme0c2n1",
+                                                                fio_run_time=run_time)
+        thread_details["fio"] = fun_test.execute_thread_after(func=self.start_fio,
+                                                              time_in_seconds=7,
+                                                              fio_params=fio_params,
+                                                              run_time=run_time,
+                                                              device=self.nvme_device)
+        return thread_details
+
+    def start_fio(self, fio_params, run_time, device):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        come_handle.pcie_fio(timeout=run_time+20,
+                             filename=device,
+                             **fio_params)
+        come_handle.destroy()
+
+    def check_traffic(self, device, fio_run_time, interval=10):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        device_name = device.replace("/dev/", '')
+        count = fio_run_time / interval
+        output_iostat = come_handle.iostat(device=device, interval=interval, count=count, background=False)
+        self.ensure_io_running(device_name, output_iostat, "COMe")
+        come_handle.destroy()
+
+    def detach_delete_volume(self):
+        if getattr(self, "attach_info", False):
+            response = self.sc_api.detach_volume(self.attach_info["uuid"])
+            fun_test.log("volume detach response:{}".format(response))
+            self.verify_volume_attach_detach(response, "detach")
+
+        if getattr(self, "uuid", False):
+            response = self.sc_api.delete_volume(self.uuid)
+            fun_test.log("Volume delete response: " + str(response))
+            fun_test.test_assert(response["status"],
+                                 "{} Volume deleted successfully".format(self.volume_creation_details["name"]))
+
+    def initialise_fs(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_by_name(fs_name)
+
+    def get_pool_id(self):
+        response = self.sc_api.get_pools()
+        fun_test.log("pools log: {}".format(response))
+        pool_id = str(response['data'].keys()[0])
+        fun_test.log("pool_id: {}".format(pool_id))
+        return pool_id
+
+    def verify_volume_attach_detach(self, response, action="attach"):
+        result = True
+        if not response["status"]:
+            result = False
+        if result and (not "Success" in response["message"]):
+            result = False
+        fun_test.test_assert(result, "{} Volume {}ed successfully".format(self.volume_creation_details["name"], action))
+        return result
+
+    def get_nvme(self, handle, host_name):
+        result = False
+        output_lsblk = handle.sudo_command("nvme list")
+        lines = output_lsblk.split("\n")
+        for line in lines:
+            match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+n\w+)', line)
+            if match_nvme_list:
+                result = True
+                nvme_device = match_nvme_list.group("nvme_device")
+        fun_test.test_assert(result, "Host: {} nvme: {} verified NVME connect".format(host_name, nvme_device))
+        return nvme_device
+
+
+    def verify_volume_creation(self, response):
+        result = True
+        if not response["status"]:
+            result = False
+        if not "successful" in response["message"]:
+            result = False
+        fun_test.test_assert(result, "{} Volume created successfully".format(self.volume_creation_details["name"]))
+        return result
+
+    @staticmethod
+    def ensure_io_running(device, output_iostat, host_name):
+        fio_read = False
+        fio_write = False
+        result = False
+        lines = output_iostat.split("\n")
+
+        # Remove the initial iostat values
+        lines_clean = lines[8:]
+
+        iostat_sum = [0, 0, 0, 0, 0]
+        for line in lines_clean:
+            match_nvme = re.search(r'{}'.format(device), line)
+            if match_nvme:
+                match_numbers = re.findall(r'(?<= )[\d.]+', line)
+                if len(match_numbers) == 5:
+                    numbers = map(float, match_numbers)
+                    iostat_sum = [sum(x) for x in zip(numbers, iostat_sum)]
+
+        # read
+        fun_test.log("IOstat sum: {}".format(iostat_sum))
+        if iostat_sum[1] > 20:
+            fio_read = True
+        # fun_test.test_assert(fio_read, "{} reads are resumed".format(host_name))
+
+        # write
+        if iostat_sum[2] > 20:
+            fio_write = True
+        # fun_test.test_assert(fio_write, "{} writes are resumed".format(host_name))
+
+        if fio_read or fio_write:
+            result = True
+        fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
 
 if __name__ == "__main__":

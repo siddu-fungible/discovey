@@ -1,7 +1,18 @@
 from lib.system.fun_test import *
-from scripts.system.platform.platform import *
+from scripts.system.platform_lib.platform_class import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
 from scripts.storage.storage_api_helper import *
+
+
+def run_deco(func):
+    def function_wrapper(self):
+        self.run_passed = True
+        try:
+            func(self)
+        except Exception as ex:
+            fun_test.critical(ex)
+            self.run_passed = False
+    return function_wrapper
 
 
 class MyScript(FunTestScript):
@@ -15,7 +26,24 @@ class MyScript(FunTestScript):
         pass
 
 
-class DiscoverStaticIP(Platform):
+class PlatformGeneralTestCase(FunTestCase, Platform):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="General Test case",
+                              steps="""""")
+
+    def setup(self):
+        Platform.__init__(self)
+
+    def run(self):
+        pass
+
+    def cleanup(self):
+        if not getattr(self, "run_passed", False):
+            self.collect_logs()
+
+
+class DiscoverStaticIP(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
@@ -26,6 +54,7 @@ class DiscoverStaticIP(Platform):
         self.initialize_variables()
         self.intialize_handles()
 
+    @run_deco
     def run(self):
         fpga_up = self.fpga_handle.is_host_up()
         fun_test.test_assert(fpga_up, "FPGA reachable")
@@ -39,7 +68,7 @@ class DiscoverStaticIP(Platform):
         self.fs = AssetManager().get_fs_by_name(fs_name)
 
 
-class DiscoverDhcpIP(Platform):
+class DiscoverDhcpIP(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
@@ -50,6 +79,7 @@ class DiscoverDhcpIP(Platform):
         self.initialize_variables()
         self.intialize_handles()
 
+    @run_deco
     def run(self):
         fpga_up = self.fpga_handle.is_host_up()
         fun_test.test_assert(fpga_up, "FPGA reachable")
@@ -58,24 +88,19 @@ class DiscoverDhcpIP(Platform):
         come_up = self.come_handle.is_host_up()
         fun_test.test_assert(come_up, "COMe reachable")
 
-    def cleanup(self):
-        pass
-
     def initialize_variables(self):
         fs_name = "fs-143"
         self.fs = AssetManager().get_fs_by_name(fs_name)
 
 
-class AlternateCommunicationToBMC(Platform, RedFishTool, IpmiTool):
+class AlternateCommunicationToBMC(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
                               summary="alternate communication to platform via BMC",
                               steps="""""")
 
-    def setup(self):
-        super(AlternateCommunicationToBMC, self).setup()
-
+    @run_deco
     def run(self):
         # todo: web interface check;
         redfish_active = self.check_if_redfish_is_active()
@@ -85,11 +110,8 @@ class AlternateCommunicationToBMC(Platform, RedFishTool, IpmiTool):
         response = self.check_ipmi_tool_connect()
         fun_test.test_assert(response, "IPMI tool is active")
 
-    def cleanup(self):
-        pass
 
-
-class PlatformComponentVersioningDiscovery(Platform):
+class PlatformComponentVersioningDiscovery(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=11,
@@ -101,6 +123,7 @@ class PlatformComponentVersioningDiscovery(Platform):
         self.initialize_variables()
         self.intialize_handles()
 
+    @run_deco
     def run(self):
         # todo: add revision  rev1 or rev2
         fpga_verified = self.verify_drop_version(system="fpga")
@@ -111,7 +134,7 @@ class PlatformComponentVersioningDiscovery(Platform):
         fun_test.test_assert(come_verified, message="COMe DROP version verified")
 
 
-class BootSequenceFPGA(Platform):
+class BootSequenceFPGA(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=29,
@@ -128,9 +151,9 @@ class BootSequenceFPGA(Platform):
         super(BootSequenceFPGA, self).setup()
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         self.basic_checks()
-
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
         fpga_reboot = self.reboot_system(system="fpga")
         fun_test.test_assert(fpga_reboot, "FPGA rebooted")
@@ -157,11 +180,8 @@ class BootSequenceFPGA(Platform):
         self.validate_fans()
         self.validate_temperaure_sensors()
 
-    def cleanup(self):
-        pass
 
-
-class BootSequenceBMC(Platform):
+class BootSequenceBMC(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=30,
@@ -173,6 +193,7 @@ class BootSequenceBMC(Platform):
         super(BootSequenceBMC, self).setup()
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         self.basic_checks()
 
@@ -204,11 +225,8 @@ class BootSequenceBMC(Platform):
         self.validate_fans()
         self.validate_temperaure_sensors()
 
-    def cleanup(self):
-        pass
 
-
-class BootSequenceCOMe(Platform):
+class BootSequenceCOMe(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=31,
@@ -220,6 +238,7 @@ class BootSequenceCOMe(Platform):
         super(BootSequenceCOMe, self).setup()
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         self.basic_checks()
 
@@ -245,11 +264,8 @@ class BootSequenceCOMe(Platform):
         self.validate_fans()
         self.validate_temperaure_sensors()
 
-    def cleanup(self):
-        pass
 
-
-class BMCLinkToggle(Platform):
+class BMCLinkToggle(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=64,
@@ -268,6 +284,7 @@ class BMCLinkToggle(Platform):
         super(BMCLinkToggle, self).setup()
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         bmc_up = self.bmc_handle.ensure_host_is_up()
         fun_test.test_assert(bmc_up, "BMC is up")
@@ -302,11 +319,8 @@ class BMCLinkToggle(Platform):
         if not timer.is_expired:
             fun_test.sleep("Waiting for BMC console to close", timer.remaining_time)
 
-    def cleanup(self):
-        pass
 
-
-class BMCColdBoot(Platform):
+class BMCColdBoot(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=68,
@@ -318,17 +332,15 @@ class BMCColdBoot(Platform):
         ApcPduTestcase.setup(self)
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         ApcPduTestcase.run(self)
 
     def data_integrity_check(self):
         pass
 
-    def cleanup(self):
-        pass
 
-
-class BMCIPMIReset(Platform, IpmiTool):
+class BMCIPMIReset(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=69,
@@ -340,6 +352,7 @@ class BMCIPMIReset(Platform, IpmiTool):
         ApcPduTestcase.setup(self)
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         self.warm_reboot = True
         self.cold_reboot = False
@@ -355,152 +368,112 @@ class BMCIPMIReset(Platform, IpmiTool):
         elif self.cold_reboot:
             self.ipmitool_reset("soft")
 
-    def cleanup(self):
-        pass
 
-
-class BMCTransportForCommunication(Platform, IpmiTool):
+class BMCTransportForCommunication(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=70,
                               summary="bmc transport for communication",
                               steps="""""")
 
-    def setup(self):
-        Platform.setup(self)
-
+    @run_deco
     def run(self):
         bmc_up = self.bmc_handle.ensure_host_is_up()
         fun_test.test_assert(bmc_up, "BMC is reachable")
         response = self.check_ipmi_tool_connect()
         fun_test.test_assert(response, "IPMI tool is active")
 
-    def cleanup(self):
-        pass
 
-
-class TemperatureSensorBMCIpmi(Platform, IpmiTool):
+class TemperatureSensorBMCIpmi(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=71,
                               summary="temperature sensor repository database of bmc",
                               steps="""""")
 
-    def setup(self):
-        Platform.setup(self)
-
+    @run_deco
     def run(self):
         # todo:
         response = self.check_ipmi_tool_connect()
         fun_test.test_assert(response, "IPMI tool is active")
         result = self.verify_ipmi_sdr_info()
 
-    def cleanup(self):
-        pass
 
-
-class FanSensorBootupIpmi(Platform, IpmiTool):
+class FanSensorBootupIpmi(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=72,
                               summary="fan sensor repository database of bmc",
                               steps="""""")
 
-    def setup(self):
-        Platform.setup(self)
-
+    @run_deco
     def run(self):
         response = self.check_ipmi_tool_connect()
         fun_test.test_assert(response, "IPMI tool is active")
         result = self.verify_ipmi_sdr_info(rpm_threshold=9000)
 
-    def cleanup(self):
-        pass
 
-
-class TemperatureFanMeasurement(Platform, RedFishTool):
+class TemperatureFanMeasurement(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=73,
                               summary="temperature and fan measurements reported on BMC(redfish)",
                               steps="""""")
 
-    def setup(self):
-        super(TemperatureFanMeasurement, self).setup()
-
+    @run_deco
     def run(self):
         self.validate_fans()
         self.validate_temperaure_sensors()
 
-    def cleanup(self):
-        pass
 
-
-class InletExhasutThreshold(Platform, RedFishTool):
+class InletExhasutThreshold(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=74,
                               summary="max/min threshold of sensor on BMC (inlet, exhaust)",
                               steps="""""")
 
-    def setup(self):
-        super(InletExhasutThreshold, self).setup()
-
+    @run_deco
     def run(self):
         # todo: verify i this is what we need to do
         self.validate_temperaure_sensors()
 
-    def cleanup(self):
-        pass
 
-
-class FanRedfishtool(Platform, RedFishTool):
+class FanRedfishtool(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=78,
                               summary="failure logs via ipmitool/redfish",
                               steps="""""")
 
-    def setup(self):
-        super(FanRedfishtool, self).setup()
-
+    @run_deco
     def run(self):
         #todo: not sure
         result = self.read_fans_data()
         self.validate_fans()
 
-    def cleanup(self):
-        pass
 
-
-class F1AsicTemperature(Platform, RedFishTool, IpmiTool):
+class F1AsicTemperature(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=79,
                               summary="F1 asic temperature",
                               steps="""""")
 
-    def setup(self):
-        super(F1AsicTemperature, self).setup()
-
+    @run_deco
     def run(self):
         self.validate_temperaure_sensors()
         result = self.verify_ipmi_sdr_info()
 
-    def cleanup(self):
-        pass
 
-
-class BootComeUEFIorBIOS(Platform):
+class BootComeUEFIorBIOS(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=87,
                               summary="",
                               steps="""""")
 
-    def setup(self):
-        super(BootComeUEFIorBIOS, self).setup()
-
+    @run_deco
     def run(self):
         # todo:
         # self.boot_come_uefi()
@@ -509,11 +482,8 @@ class BootComeUEFIorBIOS(Platform):
         # self.boot_come_bios()
         self.check_if_f1s_detected()
 
-    def cleanup(self):
-        pass
 
-
-class PCIEDiscoverySSDviaRC(Platform):
+class PCIEDiscoverySSDviaRC(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=108,
@@ -525,6 +495,7 @@ class PCIEDiscoverySSDviaRC(Platform):
         super(PCIEDiscoverySSDviaRC, self).setup()
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         fun_test.add_checkpoint("SSD check via DPCSH")
         # todo: check the dpch problem, and bmc method
@@ -534,20 +505,15 @@ class PCIEDiscoverySSDviaRC(Platform):
         fun_test.add_checkpoint("SSD check via BMC")
         # self.chech_ssd_via_bmc()
 
-    def cleanup(self):
-        pass
 
-
-class PcieDeviceDetection(Platform):
+class PcieDeviceDetection(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=115,
                               summary="",
                               steps="""""")
 
-    def setup(self):
-        super(PcieDeviceDetection, self).setup()
-
+    @run_deco
     def run(self):
         self.check_if_f1s_detected()
         fun_test.log("Collecting 'lspci -vv -d1dad:' data")
@@ -555,11 +521,8 @@ class PcieDeviceDetection(Platform):
         result = True if output else False
         fun_test.test_assert(result, "Collected lspci output")
 
-    def cleanup(self):
-        pass
 
-
-class HostConnectionViaPCIEBus(StorageApiHelper, Platform):
+class HostConnectionViaPCIEBus(StorageApiHelper, PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=118,
                               summary="",
@@ -570,17 +533,49 @@ class HostConnectionViaPCIEBus(StorageApiHelper, Platform):
         testcase = self.__class__.__name__
         self.initialize_test_case_variables(testcase)
 
+    @run_deco
     def run(self):
         host_volume_map = {}
         host_volume_map[self.volume_creation_details["name"]] = "mktg-server-04"
         self.attach_volumes_to_host(host_volume_map)
         self.verify_nvme_connect()
 
+
+class COMeVolumeCreation(PlatformGeneralTestCase, StorageAPI):
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="",
+                              steps="""""")
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        PlatformGeneralTestCase.setup(self)
+        self.initialize_test_case_variables(testcase)
+        StorageAPI.__init__(self)
+
+    @run_deco
+    def run(self):
+        self.create_volume_and_run_fio()
+
+    # @run_deco
+    # def run(self):
+    #     storage_controller_0 = StorageController(target_ip=self.come_handle.host_ip,
+    #                                              target_port=self.come_handle.get_dpc_port(0))
+    #     ctrlr_uuid = utils.generate_uuid()
+    #     fun_test.test_assert(storage_controller_0.create_controller(ctrlr_uuid=ctrlr_uuid,
+    #                                                                 transport=transport,
+    #                                                                 huid=huid[index],
+    #                                                                 ctlid=ctlid[index],
+    #                                                                 fnid=fnid,
+    #                                                                 command_duration=120)['status'],
+    #                          message="Create Controller with UUID: {}".format(ctrlr_uuid))
+
     def cleanup(self):
+        # PlatformGeneralTestCase.cleanup(self)
         pass
 
 
-class General(Platform):
+class General(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="",
@@ -589,10 +584,8 @@ class General(Platform):
     def setup(self):
         pass
 
+    @run_deco
     def run(self):
-        pass
-
-    def cleanup(self):
         pass
 
 
@@ -603,7 +596,7 @@ if __name__ == "__main__":
         # DiscoverDhcpIP,
         # AlternateCommunicationToBMC,
         # PlatformComponentVersioningDiscovery,
-        BootSequenceFPGA,
+        # BootSequenceFPGA,
         # BootSequenceBMC,
         # BootSequenceCOMe,
         # BMCLinkToggle,
@@ -619,8 +612,8 @@ if __name__ == "__main__":
         # BootComeUEFIorBIOS,
         # PCIEDiscoverySSDviaRC,
         # PcieDeviceDetection,
-        # HostConnectionViaPCIEBus
-
+        # HostConnectionViaPCIEBus,
+        COMeVolumeCreation
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

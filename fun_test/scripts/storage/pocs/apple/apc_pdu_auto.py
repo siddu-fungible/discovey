@@ -100,7 +100,6 @@ class ApcPduTestcase(FunTestCase):
             if "reset_f1s_bmc" in job_inputs:
                 self.reset_f1s_bmc = job_inputs["reset_f1s_bmc"]
 
-
     def run(self):
         '''
         1. Reboot the FS.
@@ -156,18 +155,18 @@ class ApcPduTestcase(FunTestCase):
         if self.reboot_machine_test or self.apc_pdu_power_cycle_test:
             self.check_come_up_time(expected_minutes=5)
 
-        if self.check_docker:
-            self.check_expected_dockers_up()
-
-        if self.check_portal:
-            self.check_portal_up()
-
         # Check if lspci devices are detected
         fun_test.log("Check if F1_0 is detected")
         self.check_pci_dev(f1=0)
 
         fun_test.log("Check if F1_1 is detected")
         self.check_pci_dev(f1=1)
+
+        if self.check_docker:
+            self.check_expected_dockers_up()
+
+        if self.check_portal:
+            self.check_portal_up()
 
         if self.check_ssd:
             fun_test.log("Checking if SSD's are Active on F1_0")
@@ -677,9 +676,10 @@ class ApcPduTestcase(FunTestCase):
     def verify_and_get_required_hosts_list(self, num_hosts):
         available_hosts_list = []
         try:
-            if self.testbed_type == "suite-based":
-                self.topology_helper = TopologyHelper()
-                available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            self.topology_helper = TopologyHelper()
+            available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            if available_hosts_list:
+                pass
             else:
                 self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
                 available_hosts_list = self.fs_hosts_map[self.testbed_type]["host_info"]
