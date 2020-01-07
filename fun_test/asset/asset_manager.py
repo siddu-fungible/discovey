@@ -246,15 +246,18 @@ class AssetManager:
                     result["message"] = "TB: {} is disabled".format(test_bed_name)
                     # return result
 
+        test_bed_unhealthy = False
         if test_bed_name != "suite-based":
             test_bed_objects = TestBed.objects.filter(name=test_bed_name)
             if test_bed_objects.exists():
                 test_bed_object = test_bed_objects.first()
                 if test_bed_object.health_check_enabled and (test_bed_object.health_status != AssetHealthStates.HEALTHY):
+                    test_bed_unhealthy = True
                     result["status"] = False
                     result["message"] = "TB: {} is not healthy".format(test_bed_name)
                     if test_bed_object.health_status == AssetHealthStates.DISABLED:
                         result["message"] = "TB: {} is disabled".format(test_bed_name)
+
                     # return result
 
         if suite_base_test_bed_spec:
@@ -321,11 +324,14 @@ class AssetManager:
             result["internal_asset_in_use"] = True
             result["internal_asset_in_use_suite_id"] = used_by_suite_id
             result["internal_asset"] = asset_in_use
+        elif test_bed_unhealthy:
+            result["status"] = False
         elif one_asset_disabled:
             result["status"] = False
         else:
             result["status"] = True
             result["assets_required"] = assets_required_for_test_bed
+        result["message"] = result["message"].lstrip(":")
         return result
 
     @fun_test.safe
