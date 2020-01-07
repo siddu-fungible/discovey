@@ -32,9 +32,9 @@
                 <div style="width: 50%; align-self: center;">
                   <a href="/regression?test_bed_type={{ testBed.name }}">{{ testBed.name }}</a>
                 </div>
-                <div style="width: 50%">
+                <!--div style="width: 50%">
                   Enabled: <app-toggle-button [checked]="!testBed.disabled" (changed)="onToggleDisabled($event, testBed)"></app-toggle-button>
-                </div>
+                </div-->
               </div>
             </td>
             <td class="hover-cell"><span [innerHtml]="testBed.description  | safeHtml"></span>&nbsp;&nbsp;<i
@@ -55,7 +55,7 @@
                 <div style="width: 50%;align-self: center;">
                   <ng-container [ngSwitch]="testBed.health_status">
                     <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span class="health-icon" tooltip placement="left"
-                        [tooltipContentString]="'Disabled'">&#128683;</span></ng-container>
+                        [tooltipContentString]="'Disabled'">&#9855;</span></ng-container>
                     <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
                     <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span class="health-icon" tooltip placement="left"
@@ -269,7 +269,7 @@
                 <div style="width: 50%; align-self: center;">
                   <ng-container [ngSwitch]="asset.health_status">
                     <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span class="health-icon" tooltip placement="left"
-                        [tooltipContentString]="'Disabled'">&#128683;</span></ng-container>
+                        [tooltipContentString]="'Disabled'">&#9855;</span></ng-container>
                     <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
                     <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span class="health-icon" tooltip placement="left"
