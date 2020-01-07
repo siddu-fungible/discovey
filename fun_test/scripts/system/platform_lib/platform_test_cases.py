@@ -27,7 +27,7 @@ class MyScript(FunTestScript):
 
 class PlatformGeneralTestCase(FunTestCase, Platform):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=1000,
                               summary="General Test case",
                               steps="""""")
 
@@ -64,7 +64,7 @@ class DiscoverStaticIP(PlatformGeneralTestCase):
 
     def initialize_variables(self):
         fs_name = "fs-142"
-        self.fs = AssetManager().get_fs_by_name(fs_name)
+        self.fs = AssetManager().get_fs_spec(fs_name)
 
 
 class DiscoverDhcpIP(PlatformGeneralTestCase):
@@ -591,11 +591,11 @@ class General(PlatformGeneralTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     test_case_list = [
-        # DiscoverStaticIP,
-        # DiscoverDhcpIP,
+        DiscoverStaticIP,
+        DiscoverDhcpIP,
         # AlternateCommunicationToBMC,
         # PlatformComponentVersioningDiscovery,
-        BootSequenceFPGA,
+        # BootSequenceFPGA,
         # BootSequenceBMC,
         # BootSequenceCOMe,
         # BMCLinkToggle,

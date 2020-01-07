@@ -1,27 +1,9 @@
 from lib.system.fun_test import *
-import os
-from lib.host.linux import Linux
-from lib.host.storage_controller import StorageController
 from lib.system import utils
 from asset.asset_manager import AssetManager
-import re
-from lib.fun.fs import ComE, Bmc, Fpga
-from lib.host.dpcsh_client import DpcshClient
-from scripts.storage.pocs.apple.apc_pdu_auto import ApcPduTestcase
 from collections import OrderedDict
 from lib.fun.fs import *
 from lib.templates.storage.storage_controller_api import StorageControllerApi
-
-
-class MyScript(FunTestScript):
-    def describe(self):
-        self.set_test_details(steps="""""")
-
-    def setup(self):
-        pass
-
-    def cleanup(self):
-        pass
 
 
 class IpmiTool:
@@ -1168,8 +1150,3 @@ class StorageAPI:
             result = True
         fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
-
-if __name__ == "__main__":
-    myscript = MyScript()
-    myscript.add_test_case(Platform())
-    myscript.run()
