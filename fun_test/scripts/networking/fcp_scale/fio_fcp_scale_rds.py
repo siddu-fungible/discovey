@@ -295,12 +295,13 @@ def TestbedSetup():
 
                 f11_bootarg += " rdstype=fcp"
 
-            #f10_bootarg += " syslog=6"
-            #f11_bootarg += " syslog=6"
+            f10_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+            f11_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
             topology_helper.set_dut_parameters(dut_index=index,
                                                f1_parameters={0: {"boot_args": f10_bootarg},
                                                               1: {"boot_args": f11_bootarg}},
                                                fun_cp_callback=funcp_obj.bringup)
+
 
         topology = topology_helper.deploy()
 
@@ -372,7 +373,7 @@ class RDSVolumePerformanceScript(FunTestScript):
         for host in fun_test.shared_variables["fio_clients"].split(","):
             fun_test.log("Rebooting host: {}".format(host))
             host_handle[host] = Linux(host_ip=host, ssh_username="localadmin", ssh_password="Precious1*")
-            host_handle[host].reboot(non_blocking=True)
+            #host_handle[host].reboot(non_blocking=True)
             host_handle[host].disconnect()
 
         TestbedSetup()
@@ -691,7 +692,8 @@ class RDSVolumePerformanceScript(FunTestScript):
                         transport=fabric_transport.upper(),
                         remote_ip=hosts_dict[host]["hu_int_ip"],
                         port=ipcfg_port,
-                        nqn=nqn,
+                        host_nqn=hosts_dict[host]["hu_int_ip"],
+                        subsys_nqn=nqn,
                         command_duration=command_timeout)
                     fun_test.test_assert(command_result["status"], "Create of NVME/TCP fabric controller {} to remote {}".
                                          format(str(nqn), hosts_dict[host]["hu_int_ip"]))
@@ -708,23 +710,25 @@ class RDSVolumePerformanceScript(FunTestScript):
 
         time.sleep(30)
 
-        # Do a nvme connect from each host to the NVMe/TCP controller
-        for host in host_list:
-            # NMVe connect from x86 server to FS
-            hosts_dict[host]["handle"].modprobe("nvme_tcp")
-            check_nvmetcp = hosts_dict[host]["handle"].lsmod("nvme_tcp")
-            fun_test.sleep("Waiting for load to complete", 2)
-            if not check_nvmetcp:
-                fun_test.critical("nvme_tcp load failed on {}".format(host))
+        if 1:
 
-            hosts_dict[host]["handle"].sudo_command("nvme connect -t {} -n {} -a {} -q {} -i {} -s {}".
-                                                    format(fabric_transport.lower(),
-                                                           params[host]['nqn'],
-                                                           params[rds_fs_name][rds_f1_index + '_ip'],
-                                                           hosts_dict[host]["hu_int_ip"],
-                                                           nvme_io_queues,
-                                                           ipcfg_port),
-                                                    timeout=90)
+            # Do a nvme connect from each host to the NVMe/TCP controller
+            for host in host_list:
+                # NMVe connect from x86 server to FS
+                hosts_dict[host]["handle"].modprobe("nvme_tcp")
+                check_nvmetcp = hosts_dict[host]["handle"].lsmod("nvme_tcp")
+                fun_test.sleep("Waiting for load to complete", 2)
+                if not check_nvmetcp:
+                    fun_test.critical("nvme_tcp load failed on {}".format(host))
+
+                hosts_dict[host]["handle"].sudo_command("nvme connect -t {} -n {} -a {} -q {} -i {} -s {}".
+                                                        format(fabric_transport.lower(),
+                                                               params[host]['nqn'],
+                                                               params[rds_fs_name][rds_f1_index + '_ip'],
+                                                               hosts_dict[host]["hu_int_ip"],
+                                                               nvme_io_queues,
+                                                               ipcfg_port),
+                                                        timeout=90)
 
 
 
@@ -987,6 +991,7 @@ class BLTFioRandWrite(BLTVolumePerformanceTestcase):
                               steps=''' ''')
 
 
+
 class BLTFioRandRead(BLTVolumePerformanceTestcase):
 
     def describe(self):
@@ -994,12 +999,16 @@ class BLTFioRandRead(BLTVolumePerformanceTestcase):
                               summary="Random Read performance of BLT volume over NVMe FunTCP FCP",
                               steps='''''')
 
+
 class dummy():
 
     def describe(self):
         self.set_test_details(id=2,
                               summary="Random Read performance of BLT volume over NVMe FunTCP FCP",
                               steps='''''')
+
+    def run(self):
+        pass
 
 
 
