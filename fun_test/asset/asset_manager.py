@@ -379,6 +379,14 @@ class AssetManager:
             instance = self.get_fs(name=asset.name)
         return instance
 
+    @fun_test.safe
+    def get_asset_instance_by_name(self, asset_type, asset_name):
+        instance = None
+        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+            instance = self.get_linux_host(name=asset_name)
+        elif asset_type in AssetType.DUT:
+            instance = self.get_fs(name=asset_name)
+        return instance
 
     @fun_test.safe
     def get_asset_db_entry(self, asset_type, asset_name):

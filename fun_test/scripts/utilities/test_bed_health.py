@@ -13,9 +13,8 @@ asset_health_map = {}
 for asset_type, asset_names in assets_in_test_bed.iteritems():
     fun_test.log(asset_type)
     for asset_name in asset_names:
-        asset_object = am.get_asset_db_entry(asset_type=asset_type, asset_name=asset_name)
-        fun_test.test_assert(asset_object, "Get asset db entry for {}".format(asset_name))
-        instance = am.get_asset_instance(asset_object)
+        instance = am.get_asset_instance_by_name(asset_type=asset_type, asset_name=asset_name)
+        fun_test.test_assert(instance, "Get asset instance")
         health = instance.health(only_reachability=True)
         asset_health_map[asset_name] = health
 
