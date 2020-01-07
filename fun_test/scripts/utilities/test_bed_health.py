@@ -8,7 +8,7 @@ fun_test.test_assert(test_bed_name, "Unable to determine test-bed name")
 am = fun_test.get_asset_manager()
 assets_in_test_bed = am.get_assets_required(test_bed_name=test_bed_name)
 
-asset_health_map =
+asset_health_map = {}
 
 for asset_type, asset_names in assets_in_test_bed.iteritems():
     fun_test.log(asset_type)
@@ -17,3 +17,8 @@ for asset_type, asset_names in assets_in_test_bed.iteritems():
         fun_test.test_assert(asset_object, "Get asset db entry for {}".format(asset_name))
         instance = am.get_asset_instance(asset_object)
         health = instance.health(only_reachability=True)
+        asset_health_map[asset_name] = health
+
+fun_test.log_section("Health summary")
+for asset_name, asset_health in asset_health_map.iteritems():
+    fun_test.log("Asset: {}, Health: {}".format(asset_name, asset_health))
