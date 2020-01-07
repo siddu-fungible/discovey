@@ -1225,7 +1225,7 @@ class ComE(Linux):
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
         try:
-            self.sudo_command("./start_sc.sh -c restart")
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
             pass
 
@@ -1358,7 +1358,7 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         try:
-            self.sudo_command("./start_sc.sh -c restart")
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
             pass
 
