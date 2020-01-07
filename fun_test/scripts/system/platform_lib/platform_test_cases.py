@@ -1,5 +1,5 @@
 from lib.system.fun_test import *
-from scripts.system.platform_lib.platform_class import *
+from scripts.system.platform_lib.platform_helper import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
 
 
