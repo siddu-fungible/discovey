@@ -7,7 +7,7 @@
     "ctlid": 0,
     "syslog_level": 6,
     "command_timeout": 30,
-    "reboot_timeout": 400,
+    "reboot_timeout": 1500,
     "io_queues": 16,
     "csr_network": {
       "0": {
