@@ -545,7 +545,8 @@ class RDSVolumePerformanceScript(FunTestScript):
             setattr(self, k, v)
 
         ipcfg_port = self.controller_port
-        command_timeout = self.command_timeout
+        command_timeout = 30
+        #command_timeout = self.command_timeout
         blt_capacity = self.blt_details["capacity"]
         blt_blk_size = self.blt_details["block_size"]
         fabric_transport = unicode(self.transport_type)
