@@ -1244,6 +1244,8 @@ class ComE(Linux):
                                          name=container_name)
 
     def cleanup_redis(self):
+        return
+        
         for f1_index in range(2):
             try:
                 clone = self.clone()
