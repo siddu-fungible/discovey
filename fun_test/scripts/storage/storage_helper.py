@@ -209,6 +209,8 @@ def single_fs_setup(obj):
     obj.funcp_obj[0] = StorageFsTemplate(obj.come_obj[0])
     if obj.bundle_image_parameters:
         fun_test.log("Bundle image installation")
+        # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
+        '''
         if obj.install == "fresh":
             # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
             fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
@@ -239,6 +241,7 @@ def single_fs_setup(obj):
                         "after cleaning up the DB".format(obj.container_up_timeout))
                     fun_test.test_assert(
                         False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
+        '''
 
         obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
         obj.funcp_spec[0]["container_names"].sort()
@@ -338,6 +341,8 @@ def single_fs_setup(obj):
         # Asserting if expected containers are not UP status
         fun_test.simple_assert(not container_chk_timer.is_expired(),
                                "TFTP image boot: init-fs1600 enabled: Expected containers are running")
+        # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
+        '''
         # Cleaning up DB by restarting run_sc.py script with -c option
         if obj.install == "fresh":
             fun_test.log("TFTP image boot: init-fs1600 enabled: It's a fresh install. Cleaning up the database")
@@ -371,86 +376,90 @@ def single_fs_setup(obj):
                             obj.container_up_timeout))
                     fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
                                                 "Cleaning DB and restarting run_sc container")
+        '''
+        obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
+        obj.funcp_spec[0]["container_names"].sort()
+        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+        # chances are that it may die within few seconds after restart
+        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+        run_sc_name = obj.come_obj[0].command(run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
+        fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
+                                            "Container is up and running")
 
-                obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
-                obj.funcp_spec[0]["container_names"].sort()
-                # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-                # chances are that it may die within few seconds after restart
-                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                run_sc_name = obj.come_obj[0].command(run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-                fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
-                                                    "Container is up and running")
+        # Declaring SC API controller
+        obj.sc_api = StorageControllerApi(api_server_ip=obj.come_obj[0].host_ip,
+                                          api_server_port=obj.api_server_port,
+                                          username=obj.api_server_username,
+                                          password=obj.api_server_password)
 
-                # Declaring SC API controller
-                obj.sc_api = StorageControllerApi(api_server_ip=obj.come_obj[0].host_ip,
-                                                  api_server_port=obj.api_server_port,
-                                                  username=obj.api_server_username,
-                                                  password=obj.api_server_password)
+        # Polling for API Server status
+        api_server_up_timer = FunTimer(max_time=obj.api_server_up_timeout)
+        while not api_server_up_timer.is_expired():
+            api_server_response = obj.sc_api.get_api_server_health()
+            if api_server_response["status"]:
+                fun_test.log(
+                    "TFTP Image boot: init-fs1600 enabled: API server is up and running")
+                break
+            else:
+                fun_test.sleep(" waiting for API server to be up", 10)
+                fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
+        fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
+                               message="TFTP Image boot: init-fs1600 enabled: API server is up")
+        fun_test.sleep(
+            "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
+        # Check if bond interface status is Up and Running
+        for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
+            if container_name == "run_sc":
+                continue
+            bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
+                container_name=container_name,
+                name="bond0")
+            # If bond interface is still not in UP and RUNNING state, flip it
+            if not bond_interfaces_status:
+                fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
+                             "speculated time, flipping it..")
+                bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
+                    container_name=container_name, name="bond0", flip_interface=True)
+            fun_test.test_assert_expected(
+                expected=True, actual=bond_interfaces_status,
+                message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
+        if obj.install == "fresh":
+            # Configure dataplane ip as database is cleaned up
+            # Getting all the DUTs of the setup
+            nodes = obj.sc_api.get_dpu_ids()
+            fun_test.test_assert(nodes,
+                                 "TFTP Image boot: init-fs1600 enabled: Getting UUIDs of all DUTs "
+                                 "in the setup")
+            for node_index, node in enumerate(nodes):
+                # Extracting the DUT's bond interface details
+                ip = \
+                    obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                        str(0)]["ip"]
+                ip = ip.split('/')[0]
+                subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
+                    str(node_index % 2)][str(0)]["subnet_mask"]
+                route = \
+                    obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                        str(0)]["route"][0]
+                next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+                obj.f1_ips.append(ip)
 
-                # Polling for API Server status
-                api_server_up_timer = FunTimer(max_time=obj.api_server_up_timeout)
-                while not api_server_up_timer.is_expired():
-                    api_server_response = obj.sc_api.get_api_server_health()
-                    if api_server_response["status"]:
-                        fun_test.log(
-                            "TFTP Image boot: init-fs1600 enabled: API server is up and running")
-                        break
-                    else:
-                        fun_test.sleep(" waiting for API server to be up", 10)
-                        fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
-                fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
-                                       message="TFTP Image boot: init-fs1600 enabled: API server is up")
-                fun_test.sleep(
-                    "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-                # Check if bond interface status is Up and Running
-                for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
-                    if container_name == "run_sc":
-                        continue
-                    bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
-                        container_name=container_name,
-                        name="bond0")
-                    # If bond interface is still not in UP and RUNNING state, flip it
-                    if not bond_interfaces_status:
-                        fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
-                                     "speculated time, flipping it..")
-                        bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
-                            container_name=container_name, name="bond0", flip_interface=True)
-                    fun_test.test_assert_expected(
-                        expected=True, actual=bond_interfaces_status,
-                        message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
-                # Configure dataplane ip as database is cleaned up
-                # Getting all the DUTs of the setup
-                nodes = obj.sc_api.get_dpu_ids()
-                fun_test.test_assert(nodes,
-                                     "TFTP Image boot: init-fs1600 enabled: Getting UUIDs of all DUTs "
-                                     "in the setup")
-                for node_index, node in enumerate(nodes):
-                    # Extracting the DUT's bond interface details
-                    ip = \
-                        obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                            str(0)]["ip"]
-                    ip = ip.split('/')[0]
-                    subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
-                        str(node_index % 2)][str(0)]["subnet_mask"]
-                    route = \
-                        obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                            str(0)]["route"][0]
-                    next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                    obj.f1_ips.append(ip)
-
-                    fun_test.log(
-                        "TFTP Image boot: init-fs1600 enabled: Current {} node's bond0 is going to be configured with "
-                        "{} IP address with {} subnet mask with next hop set to {}".format(
-                            node, ip, subnet_mask, next_hop))
-                    result = obj.sc_api.configure_dataplane_ip(
-                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
-                        next_hop=next_hop,
-                        use_dhcp=False)
-                    fun_test.log("TFTP Image boot: init-fs1600 enabled: Dataplane IP configuration "
-                                 "result of {}: {}".format(node, result))
-                    fun_test.test_assert(result["status"],
-                                         "TFTP Image boot: init-fs1600 enabled: Configuring {} DUT "
-                                         "with Dataplane IP {}".format(node, ip))
+                fun_test.log(
+                    "TFTP Image boot: init-fs1600 enabled: Current {} node's bond0 is going to be configured with "
+                    "{} IP address with {} subnet mask with next hop set to {}".format(
+                        node, ip, subnet_mask, next_hop))
+                result = obj.sc_api.configure_dataplane_ip(
+                    dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
+                    next_hop=next_hop,
+                    use_dhcp=False)
+                fun_test.log("TFTP Image boot: init-fs1600 enabled: Dataplane IP configuration "
+                             "result of {}: {}".format(node, result))
+                fun_test.test_assert(result["status"],
+                                     "TFTP Image boot: init-fs1600 enabled: Configuring {} DUT "
+                                     "with Dataplane IP {}".format(node, ip))
+        else:
+            # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
+            pass
         # Commenting manual container bringup code as all FS moved to bundle image bringup
         '''
         if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
