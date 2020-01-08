@@ -1215,12 +1215,10 @@ class ComE(Linux):
                 sudo_entered = self.enter_sudo()
                 output = self.command("docker exec -it {} bash".format(self.name))
                 if "No such container" not in output:
-                    self.clean()
+                    # self.clean()
                     self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
                     self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
                                  wait_until=self.CUSTOM_PROMPT_TERMINATOR)
-                    if sudo_entered:
-                        self.exit_sudo()
                     result = True
             fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
             return result
@@ -1244,18 +1242,12 @@ class ComE(Linux):
                                          name=container_name)
 
     def cleanup_redis(self):
-        return
-        
         for f1_index in range(2):
             try:
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
-                saved_prompt_terminator = container.prompt_terminator
-                container.set_prompt_terminator("> ")
-                container.command("redis-cli")
-                container.command("hdel config node_id")
-                container.set_prompt_terminator(saved_prompt_terminator)
+                container.command("redis-cli hdel config node_id")
             except:
                 pass
             else:
@@ -2683,7 +2675,7 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-116"))
     come = fs.get_come()
     come.cleanup_redis()
 
