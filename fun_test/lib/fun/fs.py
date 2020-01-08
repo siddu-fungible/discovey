@@ -1198,6 +1198,33 @@ class ComE(Linux):
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
 
+    class FunCpDockerContainer(Linux):
+        CUSTOM_PROMPT_TERMINATOR = r'# '
+
+        def __init__(self, name, **kwargs):
+            super(ComE.FunCpDockerContainer, self).__init__(**kwargs)
+            self.name = name
+
+        def _connect(self):
+            result = False
+            if (super(ComE.FunCpDockerContainer, self)._connect()):
+
+                # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+                # Recently while logging into the docker container it gets logged in as root user
+                self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                sudo_entered = self.enter_sudo()
+                output = self.command("docker exec -it {} bash".format(self.name))
+                if "No such container" not in output:
+                    self.clean()
+                    self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                    self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                                 wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+                    if sudo_entered:
+                        self.exit_sudo()
+                    result = True
+            fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+            return result
+
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
         self.original_context_description = None
@@ -1207,6 +1234,32 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
+
+    def get_funcp_container(self, f1_index):
+        container_name = "F1-{}".format(f1_index)
+        return ComE.FunCpDockerContainer(host_ip=self.host_ip,
+                                         ssh_username=self.ssh_username,
+                                         ssh_password=self.ssh_password,
+                                         ssh_port=self.ssh_port,
+                                         name=container_name)
+
+    def cleanup_redis(self):
+        for f1_index in range(2):
+            try:
+                clone = self.clone()
+                container = clone.get_funcp_container(f1_index=f1_index)
+                container.command("pwd")
+                saved_prompt_terminator = container.prompt_terminator
+                container.set_prompt_terminator("> ")
+                container.command("redis-cli")
+                container.command("hdel config node_id")
+                container.set_prompt_terminator(saved_prompt_terminator)
+            except:
+                pass
+            else:
+                if container:
+                    container.disconnect()
+
 
     def fs_reset(self, clone=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
@@ -1218,7 +1271,6 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
 
@@ -1227,6 +1279,10 @@ class ComE(Linux):
             self.kill_process(process_id=health_monitor_process)
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+        try:
+            self.cleanup_redis()
         except:
             pass
 
@@ -1361,6 +1417,11 @@ class ComE(Linux):
         """
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+
+        try:
+            self.cleanup_redis()
         except:
             pass
 
@@ -2620,8 +2681,11 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-58"))
-    fpga = fs.get_fpga()
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    come = fs.get_come()
+    come.cleanup_redis()
+
+
     i = 0
     #terminal = fs.get_terminal()
     #terminal.command("pwd")
