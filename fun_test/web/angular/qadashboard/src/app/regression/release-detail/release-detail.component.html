@@ -10,9 +10,10 @@
       [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
       [titleResultLabel]="releaseCatalogExecution.result"
     >
-
     </app-section-header>
-
+    <div *ngIf="releaseCatalogExecution.master_execution_id">
+      <a [routerLink]="['/regression/release_detail/' + releaseCatalogExecution.master_execution_id]">Go to master instance</a>
+    </div>
     <app-section-header [title]="'Suites'"
                         [subSection]="true"
                         [titleActionLinks]="suitesHeaderActionLinks"
