@@ -1194,6 +1194,7 @@ class ComE(Linux):
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
     SC_LOG_PATH = "/var/log/sc"
+    REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
 
@@ -1290,6 +1291,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
 
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
@@ -1665,6 +1667,27 @@ class ComE(Linux):
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
             self.command("rm {}".format(sc_logs_path))
+
+        # Fetch redis logs if they exist
+        try:
+            redis_target_path = "/tmp/redis_logs.tgz"
+            self.sudo_command("tar -cvzf {} {}".format(redis_target_path, self.REDIS_LOG_PATH))
+            redis_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="redis_logs.tgz",
+                                                           linux_obj=self,
+                                                           source_file_path=redis_target_path,
+                                                           display_name="redis_logs",
+                                                           asset_type=asset_type,
+                                                           asset_id=asset_id,
+                                                           artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                           artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                           is_large_file=False,
+                                                           timeout=60)
+        except:
+            pass
+        else:
+            self.sudo_command("rm {}".format(redis_target_path))
+
+
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
