@@ -1489,8 +1489,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         fun_test.log("Test Result: {}".format(test_result))
 
     def cleanup(self):
-        self.stats_obj.stop(self.stats_collect_details)
-        self.storage_controller.verbose = True
+        pass
 
 
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
@@ -1676,7 +1675,7 @@ class OLAPModelReadWriteIOPS(ECVolumeLevelTestcase):
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(RandReadWrite8kBlocks())
-    # ecscript.add_test_case(RandRead8kBlocks())
+    ecscript.add_test_case(RandRead8kBlocks())
     # ecscript.add_test_case(MixedRandReadWriteIOPS())
     # ecscript.add_test_case(SequentialReadWrite1024kBlocks())
     # ecscript.add_test_case(RandWrite8kBlocks())
