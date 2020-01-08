@@ -987,8 +987,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                             self.ec_info["data_protection"], self.ec_info["compression_effort"])
                 fun_test.log("Create EC volume API response: {}".format(response))
 
-                fun_test.test_assert(response["status"], "Create EC Volume {} with uuid {} on DUT".
-                                     format(count + 1, response["data"]["uuid"]))
+                fun_test.test_assert(response["status"], "Create EC Volume {}".
+                                     format(count + 1))
                 volume_uuid_list.append(response["data"]["uuid"])
                 attach_volume = sc.volume_attach_remote(vol_uuid=response["data"]["uuid"],
                                                         transport=self.attach_transport.upper(),
@@ -1244,7 +1244,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             for index, stat_detail in enumerate(self.stats_collect_details):
                 func = stat_detail.keys()[0]
                 self.stats_collect_details[index][func]["count"] = int(
-                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                    self.fio_runtime / self.stats_collect_details[index][func]["interval"])
                 if func == "vol_stats":
                     self.stats_collect_details[index][func]["vol_details"] = vol_details
             fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
@@ -1295,7 +1295,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
                     fun_test.log("Running FIO...")
                     # fio_job_name = "fio_tcp_" + mode + "_" + "blt" + "_" + fio_numjobs + "_" + fio_iodepth + "_vol_" + str(self.blt_count)
-                    fio_job_name = "fio_tcp_{}_blt_{}_{}_vol_{}".format(mode, fio_numjobs, fio_iodepth, self.blt_count)
+                    fio_job_name = "fio_tcp_{}_blt_{}_{}_vol".format(mode, fio_numjobs, fio_iodepth)
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                     fio_output[combo][mode] = {}
                     final_fio_output[combo][mode] = {}
