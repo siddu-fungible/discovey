@@ -1225,6 +1225,11 @@ class ComE(Linux):
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
         try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+
+        try:
             self.stop_cclinux_service()
         except:
             pass
@@ -1352,6 +1357,11 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+
         try:
             self.stop_cclinux_service()
         except Exception as ex:
@@ -2380,15 +2390,16 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
-                    try:
-                        fpga = self.get_fpga()
-                        if fpga:
-                            health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                    else:
-                        if fpga:
-                            fpga.disconnect()
+                    if health_result:
+                        try:
+                            fpga = self.get_fpga()
+                            if fpga:
+                                health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        else:
+                            if fpga:
+                                fpga.disconnect()
                 result = health_result, health_error_message
 
             except Exception as ex:

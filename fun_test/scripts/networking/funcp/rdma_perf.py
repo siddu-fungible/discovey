@@ -407,7 +407,7 @@ class BwTest(FunTestCase):
     mtu = 0
     fcp = True
     rt = None
-    io_size = [1, 128, 256, 512, 1024, 4096]
+    io_size = [1, 128, 256, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         pass
@@ -616,7 +616,7 @@ class LatencyTest(FunTestCase):
     mtu = 0
     fcp = True
     rt = None
-    io_size = [1, 128, 256, 512, 1024, 4096]
+    io_size = [1, 128, 256, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         pass
