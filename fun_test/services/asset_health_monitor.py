@@ -28,7 +28,7 @@ class ReportWorker(Thread):
 
             assets = Asset.objects.all()
             for asset in assets:
-                if not asset.disabled and asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
+                if asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
                     asset_reports.append({"asset_name": asset.name,
                                           "health_status": asset.health_status,
                                           "health_check_message": asset.health_check_message})
