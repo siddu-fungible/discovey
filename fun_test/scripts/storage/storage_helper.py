@@ -209,9 +209,9 @@ def single_fs_setup(obj):
     obj.funcp_obj[0] = StorageFsTemplate(obj.come_obj[0])
     if obj.bundle_image_parameters:
         fun_test.log("Bundle image installation")
-        # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
-        '''
         if obj.install == "fresh":
+            # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
+            '''
             # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
             fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
             path = "{}/{}".format(obj.sc_script_dir, obj.run_sc_script)
@@ -223,26 +223,25 @@ def single_fs_setup(obj):
                 fun_test.test_assert_expected(
                     expected=0, actual=obj.come_obj[0].exit_status(),
                     message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
-                # Check if run_sc container is running
-                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                timer = FunTimer(max_time=obj.container_up_timeout)
-                while not timer.is_expired():
-                    run_sc_name = obj.come_obj[0].command(
-                        run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-                    if run_sc_name:
-                        fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
-                        break
-                    else:
-                        fun_test.sleep("for the run_sc docker container to start", 1)
-                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
+            '''
+            # Check if run_sc container is running
+            run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+            timer = FunTimer(max_time=obj.container_up_timeout)
+            while not timer.is_expired():
+                run_sc_name = obj.come_obj[0].command(
+                    run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
+                if run_sc_name:
+                    fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
+                    break
                 else:
-                    fun_test.critical(
-                        "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
-                        "after cleaning up the DB".format(obj.container_up_timeout))
-                    fun_test.test_assert(
-                        False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
-        '''
-
+                    fun_test.sleep("for the run_sc docker container to start", 1)
+                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
+            else:
+                fun_test.critical(
+                    "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
+                    "after cleaning up the DB".format(obj.container_up_timeout))
+                fun_test.test_assert(
+                    False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
         obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
         obj.funcp_spec[0]["container_names"].sort()
         # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
@@ -341,10 +340,10 @@ def single_fs_setup(obj):
         # Asserting if expected containers are not UP status
         fun_test.simple_assert(not container_chk_timer.is_expired(),
                                "TFTP image boot: init-fs1600 enabled: Expected containers are running")
-        # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
-        '''
         # Cleaning up DB by restarting run_sc.py script with -c option
         if obj.install == "fresh":
+            # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
+            '''
             fun_test.log("TFTP image boot: init-fs1600 enabled: It's a fresh install. Cleaning up the database")
             path = "{}/{}".format(obj.sc_script_dir, obj.run_sc_script)
             if obj.come_obj[0].check_file_directory_exists(path=path):
@@ -356,27 +355,27 @@ def single_fs_setup(obj):
                     expected=0, actual=obj.come_obj[0].exit_status(),
                     message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
                             "restarted with cleanup")
-                # Check if run_sc container is up and running
-                run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-                timer = FunTimer(max_time=obj.container_up_timeout)
-                while not timer.is_expired():
-                    run_sc_name = obj.come_obj[0].command(
-                        run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-                    if run_sc_name:
-                        fun_test.log("TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
-                                     "Container is up and running")
-                        break
-                    else:
-                        fun_test.sleep("for the run_sc docker container to start", 1)
-                        fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
+            '''
+            # Check if run_sc container is up and running
+            run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+            timer = FunTimer(max_time=obj.container_up_timeout)
+            while not timer.is_expired():
+                run_sc_name = obj.come_obj[0].command(
+                    run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
+                if run_sc_name:
+                    fun_test.log("TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
+                                 "Container is up and running")
+                    break
                 else:
-                    fun_test.critical(
-                        "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
-                        "restarted within {} seconds after cleaning up the DB".format(
-                            obj.container_up_timeout))
-                    fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
-                                                "Cleaning DB and restarting run_sc container")
-        '''
+                    fun_test.sleep("for the run_sc docker container to start", 1)
+                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
+            else:
+                fun_test.critical(
+                    "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
+                    "restarted within {} seconds after cleaning up the DB".format(
+                        obj.container_up_timeout))
+                fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
+                                            "Cleaning DB and restarting run_sc container")
         obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
         obj.funcp_spec[0]["container_names"].sort()
         # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
