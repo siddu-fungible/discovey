@@ -1,5 +1,6 @@
 export class ButtonType {
-  static DELETE: 1;
+  static DELETE: number = 1;
+  static LINK: number = 2;
 }
 
 export class GenericButton {
@@ -20,6 +21,9 @@ export class GenericButton {
     if (props.hasOwnProperty('show')) {
       this.show = props.show;
     }
+    if (props.hasOwnProperty('type')) {
+      this.type = props.type;
+    }
   }
 }
 
@@ -31,6 +35,10 @@ export class FunButtonWithIcon extends GenericButton {
       if (this.type === ButtonType.DELETE) {
         this.classes += `${this.classes} fa-trash`;
         this.textClasses += `${this.textClasses} text-color-red`;
+      }
+      if (this.type === ButtonType.LINK) {
+        this.classes += `${this.classes}`;
+        this.textClasses += `${this.textClasses} fun-action-link`;
       }
     }
   }
