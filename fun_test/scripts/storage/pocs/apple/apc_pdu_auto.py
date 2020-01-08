@@ -552,7 +552,7 @@ class ApcPduTestcase(FunTestCase):
             # Try connecting nvme 3 times with an interval of 10 seconds each try, try 5 times
             for iter in range(retry):
                 fun_test.log("Trying to connect to nvme, Iteration no: {} out of {}".format(iter + 1, retry))
-                nqn = host_info["data"]["nqn"]
+                nqn = host_info["data"]["subsys_nqn"]
                 target_ip = host_info["data"]["ip"]
                 remote_ip = host_info["data"]["remote_ip"]
                 result = host_info["handle"].nvme_connect(target_ip=target_ip,

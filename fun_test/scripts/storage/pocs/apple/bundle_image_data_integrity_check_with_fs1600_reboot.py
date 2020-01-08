@@ -76,12 +76,89 @@ class DataIntegrityTestcase(ApcPduTestcase):
     def cleanup(self):
         self.num_hosts = self.write_hosts
         super(DataIntegrityTestcase, self).cleanup()
-
-
         # if required add any addtional cleanup
+
+
+class EcVolReboot(ApcPduTestcase):
+    VOL_NAME = "EC"
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="EC vol power",
+                              steps="""""")
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        super(EcVolReboot, self).setup()
+        self.initialize_test_case_variables(testcase)
+
+    def run(self):
+
+        self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                ssh_password=self.fs['come']['mgmt_ssh_password'])
+        self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                              ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                              ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+        self.bmc_handle.set_prompt_terminator(r'# $')
+
+        self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                           api_server_port=self.api_server_port,
+                                           username=self.username,
+                                           password=self.password)
+
+        required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
+        self.required_write_hosts_list = required_hosts_list[:self.write_hosts]
+        required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        self.pool_uuid = self.get_pool_id()
+        self.volume_uuid_details = self.create_vol(self.write_hosts)
+
+        for pc_no in range(self.iterations):
+            self.pc_no = pc_no
+            fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
+            self.attach_and_io()
+
+            self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                                    ssh_username=self.fs['come']['mgmt_ssh_username'],
+                                    ssh_password=self.fs['come']['mgmt_ssh_password'])
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+            self.bmc_handle.set_prompt_terminator(r'# $')
+
+            self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                               api_server_port=self.api_server_port,
+                                               username=self.username,
+                                               password=self.password)
+
+    def attach_and_io(self):
+        self.attach_volumes_to_host(self.required_write_hosts_list)
+        self.get_host_handles()
+        self.intialize_the_hosts()
+        self.connect_the_host_to_volumes()
+        self.verify_nvme_connect()
+        self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=self.required_write_hosts_list)
+        self.disconnect_the_hosts()
+        self.destoy_host_handles()
+        self.reboot_test()
+        self.basic_checks()
+        fun_test.sleep("Wait for GUI to come up", seconds=80)
+
+    def cleanup(self):
+        self.num_hosts = self.write_hosts
+        super(ApcPduTestcase, self).cleanup()
+
+    def initialize_test_case_variables(self, test_case_name):
+        test_case_dict = getattr(self, test_case_name, {})
+        if not test_case_dict:
+            fun_test.critical("Unable to find the test case: {} in the json file".format(test_case_name))
+        for k, v in test_case_dict.iteritems():
+            setattr(self, k, v)
+        fun_test.log("Initialized the test case variables: {}".format(test_case_dict))
 
 
 if __name__ == "__main__":
     obj = ApcPduScript()
-    obj.add_test_case(DataIntegrityTestcase())
+    # obj.add_test_case(DataIntegrityTestcase())
+    obj.add_test_case(EcVolReboot())
     obj.run()
