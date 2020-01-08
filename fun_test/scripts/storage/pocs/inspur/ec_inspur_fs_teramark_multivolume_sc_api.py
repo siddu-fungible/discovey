@@ -981,7 +981,7 @@ class ECVolumeLevelTestcase(FunTestCase):
 
             for num in xrange(self.ec_info["num_volumes"]):
 
-                response = sc.create_volume(self.pool_uuid, "ec_vol_%s" % count, self.ec_info["capacity"],
+                response = sc.create_volume(self.pool_uuid, self.ec_info["volume_name"], self.ec_info["capacity"],
                                             self.ec_info["stripe_count"], self.ec_info["volume_types"]["ec"],
                                             self.ec_info["encrypt"], self.ec_info["allow_expansion"],
                                             self.ec_info["data_protection"], self.ec_info["compression_effort"])

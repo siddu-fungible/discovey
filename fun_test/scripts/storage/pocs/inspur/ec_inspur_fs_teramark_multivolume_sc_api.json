@@ -71,6 +71,7 @@
         "jvol": 512
       },
       "ndata": 4,
+      "volume_name": "ec_vol_rw",
       "nparity": 2,
       "stripe_count" : 0,
       "encrypt" : false,
@@ -132,6 +133,7 @@
         "lsv": 4096,
         "jvol": 512
       },
+      "volume_name": "ec_vol_r",
       "ndata": 4,
       "nparity": 2,
       "capacity": 790273982464,
