@@ -216,3 +216,26 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_version(self):
+        version = ""
+        try:
+            topo_dict = self.execute_api("GET", "topology")
+            topo_dict = topo_dict.json()
+            version = topo_dict['data']["FS1"]['version']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        return version
+
+    def get_volumes(self):
+        try:
+            res = self.execute_api("GET", "storage/volumes")
+            if res.ok:
+                res = res.json()
+            else:
+                fun_test.test_assert(
+                    "Unable to get the volume information from {}".format(fun_test.shared_variables["testbed"]))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return res

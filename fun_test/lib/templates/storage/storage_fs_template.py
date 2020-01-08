@@ -793,6 +793,10 @@ class StorageFsTemplate(object):
         else:
             fun_test.simple_assert(match, "Bond {} interface is UP & RUNNING".format(bond_dict["name"]))
 
+        # Display route and arp inside the container
+        container_obj.command("ip route")
+        container_obj.command("arp")
+
         # As a workaround for the bug SWOS-6456, checking L2 MTU of the fgp interface and setting them to 1518, if it
         # is less than that
         f1_index = int(container_name.split("-")[1])
