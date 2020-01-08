@@ -25,7 +25,7 @@ for suite_directory_path in suite_directory_paths:
         fp = open(uart_log_file, "r")
         if fp:
             contents = fp.read()
-            m2 = re.search(r'i2c write: final NACK check failure|i2c write error', contents)
+            m2 = re.search(r'i2c write: final NACK check failure|i2c write error|fpc_i2c_read err', contents)
             if m2:
                 new_entry = Entry(uart_log_file_path=uart_log_file, found_string=m2.group(0))
                 entries.append(new_entry)
