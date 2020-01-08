@@ -3000,6 +3000,7 @@ class Linux(object, ToDictMixin):
                 ping_result = service_host.ping(dst=self.host_ip, count=5)
         if not ping_result:
             result = True
+        service_host.disconnect()
         return result
 
 
