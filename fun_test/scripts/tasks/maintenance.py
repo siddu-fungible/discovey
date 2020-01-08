@@ -248,7 +248,7 @@ class CleanupLargeStoreDirectory(FunTestCase):
             if suite_execution_id:
                 suite_execution = models_helper.get_suite_execution(suite_execution_id=suite_execution_id)
                 time_in_the_past = get_current_time() - timedelta(days=self.MAX_DAYS_IN_PAST)
-                if suite_execution.completed_time < time_in_the_past and suite_execution.state <= JobStatusType.COMPLETED:
+                if suite_execution.completed_time < time_in_the_past and suite_execution.state <= JobStatusType.COMPLETED and not suite_execution.preserve_logs:
                     if "large" in directory:
                         os.system("rm -rf {}".format(directory))
 
