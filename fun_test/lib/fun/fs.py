@@ -112,19 +112,8 @@ class Fpga(Linux):
         return True
 
     def switch_to_bmc_console(self, time_out=60):
-        self.command("pwd")
-        self.sendline("./BMC_console.sh {}".format(time_out))
-        self.sendline(chr(0))
-        try:
-            self.handle.expect("login", timeout=10)
-            self.sendline("sysadmin")
-            self.sendline(chr(0))
-            self.handle.expect("Password", timeout=10)
-            self.sendline("superuser")
-            self.sendline(chr(0))
-        except:
-            pass
-        self.command("pwd")
+        self.command("./BMC_console.sh {}".format(time_out),
+                     custom_prompts={"console": chr(0), "login": "sysadmin", "Password": "superuser"})
 
 
 class Bmc(Linux):
