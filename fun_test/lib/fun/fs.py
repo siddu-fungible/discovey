@@ -1473,6 +1473,7 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+        self.stop_health_monitors()
 
         try:
             self.cleanup_redis()
@@ -1517,6 +1518,11 @@ class ComE(Linux):
         self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
+
+        ### Workaround for bond
+
+        self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
+        self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         return True
 
 
