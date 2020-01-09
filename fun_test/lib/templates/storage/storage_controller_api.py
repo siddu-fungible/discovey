@@ -1,6 +1,6 @@
 from lib.system.fun_test import FunTestLibException, fun_test
 import requests
-
+import json
 
 class StorageControllerApi(object):
     def __init__(self, api_server_ip, api_server_port=50220, username="admin", password="password"):
@@ -209,9 +209,11 @@ class StorageControllerApi(object):
         result = {"status": False, "data":{}}
         url = "api_server/health"
         response = self.execute_api("GET", url)
+        fun_test.log("GET {}".format(url))
         try:
             if response.ok:
                 result = response.json()
+                fun_test.log(json.dumps(result, indent=4))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
