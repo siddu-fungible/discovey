@@ -1250,13 +1250,16 @@ class ComE(Linux):
     def cleanup_redis(self):
         for f1_index in range(2):
             try:
-                self.command("sudo docker exec -it F1-{} /bin/bash -c 'redis-cli hdel config node_id'".format(f1_index))
-
+                """
+                # self.command("sudo docker exec -it F1-{} /bin/bash -c 'redis-cli hdel config node_id'".format(f1_index))
+                """
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
                 container.command("redis-cli hdel config node_id")
+                container.command("date")
                 container.disconnect()
+
             except:
                 pass
 
