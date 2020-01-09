@@ -1766,10 +1766,10 @@ class ComE(Linux):
             self.sudo_command("rm {}".format(redis_target_path))
 
 
-        try:
-            self.pre_reboot_cleanup(skip_cc_cleanup=True)
-        except:
-            pass
+        # try:
+        #    self.pre_reboot_cleanup(skip_cc_cleanup=True)
+        # except:
+        #    pass
 
 
 
