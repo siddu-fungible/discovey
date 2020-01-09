@@ -731,55 +731,6 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
           },
-          "4": {
-            "host_info": {
-              "name": "mpoc-server43"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "5": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-        "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "9": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
-          },
-          "8": {
-            "host_info": {
-              "name": "mpoc-server42"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "mpoc-server41"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
            "21": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 20
@@ -807,25 +758,7 @@
       "7": {
         "type": "DUT_TYPE_FSU",
             "pcie_interface_info": {
-          "0": {
-            "host_info": {
-              "name": "mpoc-server48"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "2": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "3": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
+
           "4": {
             "host_info": {
               "name": "mpoc-server47"
@@ -1060,25 +993,7 @@
       "0": {
         "type": "DUT_TYPE_FSU",
         "pcie_interface_info": {
-          "0": {
-            "host_info": {
-              "name": "mpoc-server48"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "1": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "2": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
-          "3": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 0
-          },
+
           "4": {
             "host_info": {
               "name": "mpoc-server47"
@@ -1247,55 +1162,6 @@
           "3": {
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 0
-          },
-          "4": {
-            "host_info": {
-              "name": "mpoc-server43"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "5": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-        "7": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "6": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 4
-          },
-          "9": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
-          },
-          "8": {
-            "host_info": {
-              "name": "mpoc-server42"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "15": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "14": {
-            "host_info": {
-              "name": "mpoc-server41"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "17": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
-          },
-          "16": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 14
           },
            "21": {
             "type": "INTERFACE_TYPE_PCIE",
@@ -1709,17 +1575,7 @@
             "type": "INTERFACE_TYPE_PCIE",
             "dual": 4
           },
-          "8": {
-            "host_info": {
-              "name": "mpoc-server32"
-            },
-            "type": "INTERFACE_TYPE_PCIE",
-            "hosts": 1
-          },
-          "9": {
-            "type": "INTERFACE_TYPE_PCIE",
-            "dual": 8
-          },
+
            "14": {
             "host_info": {
               "name": "mpoc-server31"
@@ -3660,7 +3516,7 @@
         "pcie_interface_info": {
           "0": {
             "host_info": {
-              "name": "mpoc-server42"
+              "name": "mpoc-server48"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
@@ -3680,7 +3536,7 @@
 
           "14": {
             "host_info": {
-              "name": "mpoc-server32"
+              "name": "mpoc-server42"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
@@ -3701,6 +3557,33 @@
         "disabled": false,
         "pool_member_type": 2,
         "dut": "fs-20"
+      },
+         "5": {
+        "type": "DUT_TYPE_FSU",
+        "pcie_interface_info": {
+          "0": {
+            "host_info": {
+              "name": "mpoc-server32"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          }
+        },
+        "disabled": false,
+        "pool_member_type": 2,
+        "dut": "fs-32"
       }
 
     }
