@@ -1457,8 +1457,16 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
-            if self.pause_on_failure:
+            if self.pause_on_failure and not self.suite_execution_id:
                 pdb.set_trace()
+
+            if self.suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if suite_execution.pause_on_failure:
+                    fun_test.log("Pause on failure set for {}".format(assert_message))
+                    suite_execution.state = JobStatusType.PAUSED
+                    suite_execution.save()
+                    self.pause_loop()
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message, context=context)
@@ -1469,6 +1477,20 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED, context=context)
 
+    def pause_loop(self):
+        max_pause_loop_timer = FunTimer(max_time=24 * 60 * 60)
+        if self.suite_execution_id:
+            while not max_pause_loop_timer.is_expired():
+                self.sleep("Pause loop", seconds=60)
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if not suite_execution.pause_on_failure:
+                    fun_test.log("Exiting pause loop")
+                    suite_execution.state = JobStatusType.IN_PROGRESS
+                    suite_execution.save()
+                    break
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+        suite_execution.state = JobStatusType.IN_PROGRESS
+        suite_execution.save()
 
     def add_checkpoint(self,
                        checkpoint=None,

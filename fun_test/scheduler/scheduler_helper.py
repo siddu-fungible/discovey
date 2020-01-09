@@ -289,7 +289,8 @@ def queue_job3(suite_id=None,
                submitter_email=None,
                description=None,
                rich_inputs=None,
-               max_run_time=7 * 24 * 3600):
+               max_run_time=7 * 24 * 3600,
+               pause_on_failure=False):
     # time.sleep(0.1)
     result = -1
     if not tags:
@@ -364,6 +365,7 @@ def queue_job3(suite_id=None,
         suite_execution.description = description
         suite_execution.rich_inputs = rich_inputs
         suite_execution.max_run_time = max_run_time
+        suite_execution.pause_on_failure = pause_on_failure
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
