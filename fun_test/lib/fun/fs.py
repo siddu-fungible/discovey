@@ -952,6 +952,8 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"]:
                 self.fs.reset()
+                fs.come = None
+                fs.bmc = None
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
@@ -1000,6 +1002,7 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
+                bmc = fs.get_bmc()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
                 if fs.tftp_image_path:
                     bmc.position_support_scripts(auto_boot=fs.is_auto_boot())
@@ -1220,7 +1223,7 @@ class ComE(Linux):
                 if "No such container" not in output:
                     # self.clean()
                     self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-                    self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                    self.command("export TERM=xterm-mono; export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
                                  wait_until=self.CUSTOM_PROMPT_TERMINATOR)
                     result = True
             fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
@@ -1247,13 +1250,20 @@ class ComE(Linux):
     def cleanup_redis(self):
         for f1_index in range(2):
             try:
-                self.sudo_command("docker exec -it F1-{} redis-cli hdel config node_id".format(f1_index))
+                """
+                # self.command("sudo docker exec -it F1-{} /bin/bash -c 'redis-cli hdel config node_id'".format(f1_index))
                 """
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
-                container.command("redis-cli hdel config node_id")
-                """
+                container.handle.sendline("redis-cli\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("hdel config node_id\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("exit\r\n")
+                container.handle.expect("# ")
+                container.disconnect()
+
             except:
                 pass
 
@@ -2650,7 +2660,7 @@ class Fs(object, ToDictMixin):
         if validate_uptime:
             fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        come = self.get_come()
+        come = self.get_come().clone()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
@@ -2693,7 +2703,7 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-144"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
     come = fs.get_come()
     come.cleanup_redis()
 
