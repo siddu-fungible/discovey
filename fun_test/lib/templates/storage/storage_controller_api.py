@@ -238,3 +238,7 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return res
+
+if __name__ == "__main__":
+    s = StorageControllerApi(api_server_ip="fs144-come")
+    s.get_dpu_ids()

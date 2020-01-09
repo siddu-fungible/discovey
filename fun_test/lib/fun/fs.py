@@ -1244,16 +1244,15 @@ class ComE(Linux):
     def cleanup_redis(self):
         for f1_index in range(2):
             try:
+                self.sudo_command("docker exec -it F1-{} redis-cli hdel config node_id".format(f1_index))
+                """
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
                 container.command("redis-cli hdel config node_id")
+                """
             except:
                 pass
-            else:
-                if container:
-                    container.disconnect()
-
 
     def fs_reset(self, clone=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
@@ -2675,7 +2674,7 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-116"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-144"))
     come = fs.get_come()
     come.cleanup_redis()
 
