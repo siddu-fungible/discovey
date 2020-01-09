@@ -1327,19 +1327,18 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
-        if for_bundle_installation:
-            try:
-                self.cleanup_redis()
-            except:
-                pass
-            try:
-                self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
-            except:
-                pass
-            try:
-                self.cleanup_redis()
-            except:
-                pass
+        try:
+            self.cleanup_redis()
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+        try:
+            self.cleanup_redis()
+        except:
+            pass
 
         try:
             if skip_cc_cleanup:
