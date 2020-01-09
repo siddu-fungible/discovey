@@ -189,6 +189,7 @@
     "workarounds": {
       "skip_funeth_come_power_cycle": true
     },
+    "bundle_compatible": true,
     "name": "fs-121",
     "revision": "2",
     "fpga": {
@@ -216,6 +217,7 @@
       "mgmt_ip": "10.1.105.157"
     },
     "name": "fs-122",
+    "bundle_compatible": true,
     "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
@@ -242,6 +244,7 @@
       "mgmt_ip": "10.1.105.160"
     },
     "name": "fs-123",
+    "bundle_compatible": true,
     "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
@@ -938,6 +941,7 @@
       "mgmt_ip": "10.1.105.153"
     },
     "name": "fs-116",
+    "bundle_compatible": true,
     "revision": "2",
     "fpga": {
       "mgmt_ssh_password": "root",
@@ -964,6 +968,7 @@
     },
     "name": "fs-117",
     "revision": "2",
+    "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
