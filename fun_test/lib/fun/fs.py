@@ -950,6 +950,9 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
+            if self.fs.get_revision() in ["2"]:
+                self.fs.reset()
+
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
@@ -1417,7 +1420,7 @@ class ComE(Linux):
             self.cleanup_redis()
         except:
             pass
-        
+
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
@@ -2645,7 +2648,7 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
-            fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+            fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
         return True
