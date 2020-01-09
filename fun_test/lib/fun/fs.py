@@ -1223,7 +1223,7 @@ class ComE(Linux):
                 if "No such container" not in output:
                     # self.clean()
                     self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
-                    self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                    self.command("export TERM=xterm-mono; export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
                                  wait_until=self.CUSTOM_PROMPT_TERMINATOR)
                     result = True
             fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
@@ -1257,7 +1257,7 @@ class ComE(Linux):
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
                 container.command("redis-cli hdel config node_id")
-                container.command("date")
+                output = container.command("date")
                 container.disconnect()
 
             except:
