@@ -164,7 +164,7 @@ class ScriptSetup(FunTestScript):
 
     def cleanup(self):
         fun_test.log("Cleanup")
-        fun_test.shared_variables["topology"].cleanup()
+#         fun_test.shared_variables["topology"].cleanup()
 
 
 class TestHostPCIeLanes(FunTestCase):
