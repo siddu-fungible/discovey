@@ -1002,6 +1002,7 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
+                bmc = fs.get_bmc()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
                 if fs.tftp_image_path:
                     bmc.position_support_scripts(auto_boot=fs.is_auto_boot())
