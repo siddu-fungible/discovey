@@ -952,6 +952,8 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"]:
                 self.fs.reset()
+                fs.come = None
+                fs.bmc = None
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
