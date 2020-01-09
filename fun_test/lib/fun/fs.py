@@ -327,7 +327,7 @@ class Bmc(Linux):
             for f1_index in range(2):
                 if f1_index == self.disable_f1_index:
                     continue
-                self.kill_serial_proxies(f1_index=f1_index)
+                # self.kill_serial_proxies(f1_index=f1_index)
             self.command("{} stop".format(self.FUNOS_LOGS_SCRIPT))
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -365,7 +365,8 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
-
+        self.stop_bundle_f1_logs()
+        self._reset_microcom()
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
