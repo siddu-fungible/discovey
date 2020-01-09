@@ -285,7 +285,10 @@ def single_fs_setup(obj):
         # If fresh install, configure dataplane ip as database is cleaned up
         if obj.install == "fresh":
             # Getting all the DUTs of the setup
+            dpu_id_ready_timer = FunTimer(max_time=120)
             nodes = obj.sc_api.get_dpu_ids()
+            while not nodes and not dpu_id_ready_timer.is_expired():
+                nodes = obj.sc_api.get_dpu_ids()
             fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
             for node_index, node in enumerate(nodes):
                 # Extracting the DUT's bond interface details
