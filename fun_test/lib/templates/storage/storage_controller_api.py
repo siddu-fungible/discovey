@@ -54,6 +54,7 @@ class StorageControllerApi(object):
                             for dpu in fs_props["dpus"]:
                                 if "uuid" in dpu:
                                     result.append(dpu["uuid"])
+                                    fun_test.log("DPU ID is {}".format(dpu["uuid"]))
                                 else:
                                     fun_test.critical("No DPU found in the current FS")
                         else:
