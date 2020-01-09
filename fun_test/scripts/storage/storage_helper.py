@@ -329,7 +329,7 @@ def single_fs_setup(obj):
         # init-fs1600 service is enabled, checking if all the required containers are running
         # init_fs1600_service_status = True
         expected_containers = ['F1-0', 'F1-1', 'run_sc']
-        container_chk_timer = FunTimer(max_time=(obj.container_up_timeout * 2))
+        container_chk_timer = FunTimer(max_time=(obj.container_up_timeout * 3))
         while not container_chk_timer.is_expired():
             container_names = obj.funcp_obj[0].get_container_names(
                 stop_run_sc=False, include_storage=True)['container_name_list']
