@@ -125,6 +125,18 @@ class StorageController(NetworkController, DpcshClient):
                                   "pvol_id": pvol_id}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
+    def create_snap_volume(self, uuid, name, cow_uuid, base_uuid, block_size, capacity, command_duration=TIMEOUT):
+        create_dict = {"class": "volume",
+                       "opcode": "VOL_ADMIN_OPCODE_CREATE",
+                       "params": {"type": "VOL_TYPE_BLK_SNAP",
+                                  "uuid": uuid,
+                                  "name": name,
+                                  "cow_uuid": cow_uuid,
+                                  "base_uuid": base_uuid,
+                                  "block_size": block_size,
+                                  "capacity": capacity}}
+        return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
+
     def create_volume(self, command_duration=TIMEOUT, **kwargs):
         volume_dict = {}
         volume_dict["class"] = "volume"

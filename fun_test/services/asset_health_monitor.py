@@ -11,7 +11,7 @@ from web.web_global import JINJA_TEMPLATE_DIR
 
 
 UNHEALTHY_VERDICT_TIME = 10 * 60  # 10 mins
-
+# start service by: nohup python asset_health_monitor.py >/dev/null 2>&1 &
 
 class ReportWorker(Thread):
     def run(self):
@@ -28,7 +28,7 @@ class ReportWorker(Thread):
 
             assets = Asset.objects.all()
             for asset in assets:
-                if not asset.disabled and asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
+                if asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
                     asset_reports.append({"asset_name": asset.name,
                                           "health_status": asset.health_status,
                                           "health_check_message": asset.health_check_message})
@@ -87,11 +87,14 @@ class TestBedWorker(Thread):
                             health_status = AssetHealthStates.HEALTHY
 
                 if test_bed_object.health_status != health_status:
-                    self.info("Status set to {}".format(health_status))
+                    self.info("Test-bed status set to {}".format(health_status))
                 if health_status == AssetHealthStates.UNHEALTHY:
                     self.alert("Status set to unhealthy")
+                if health_status == AssetHealthStates.DEGRADING:
+                    self.alert("Test-bed status set to degrading")
 
                 test_bed_object.set_health(status=health_status, message=health_check_error_message)
+                time.sleep(60)
         except Exception as ex:
             self.report_exception(str(ex))
             time.sleep(60)
@@ -103,6 +106,8 @@ class TestBedWorker(Thread):
         issue_found = False
         health_result_for_test_bed, error_message_for_test_bed = AssetHealthStates.HEALTHY, ""
         at_least_one_unhealthy = False
+        at_least_one_degrading = False
+        at_least_one_disabled = False
         for asset_type, asset_list in assets.iteritems():
 
             health_result, error_message = True, ""
@@ -121,11 +126,21 @@ class TestBedWorker(Thread):
                 self.service.service_assert(instance, "Unable to retrieve asset instance for {}: {}".format(asset_type,
                                                                                                             asset_name))
                 health_result, error_message = instance.health(only_reachability=only_reachability)
+                if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+                    try:
+                        instance.disconnect()
+                    except:
+                        pass
                 final_health_status = self.set_health_status(asset_object=asset_object,
                                                              health_result=health_result,
                                                              error_message=error_message)
+                if final_health_status == AssetHealthStates.DEGRADING:
+                    at_least_one_degrading = True
                 if final_health_status == AssetHealthStates.UNHEALTHY:
                     at_least_one_unhealthy = True
+                if final_health_status == AssetHealthStates.DISABLED:
+                    at_least_one_disabled = True
+
                 if not health_result:
                     issue_found = True
                     error_message_for_test_bed = error_message
@@ -134,37 +149,45 @@ class TestBedWorker(Thread):
             if issue_found:
                 self.report_exception("Issue found: {}, {}".format(health_result, error_message))
                 break
-        if issue_found and at_least_one_unhealthy:
-            health_result_for_test_bed = AssetHealthStates.UNHEALTHY
-            self.alert("Setting Test-bed to unhealthy")
+
+        if issue_found:
+            if at_least_one_degrading:
+                health_result_for_test_bed = AssetHealthStates.DEGRADING
+                self.alert("Setting Test-bed to degrading")
+
+            if at_least_one_unhealthy:
+                health_result_for_test_bed = AssetHealthStates.UNHEALTHY
+                self.alert("Setting Test-bed to unhealthy")
+
+            if at_least_one_disabled:
+                health_result_for_test_bed = AssetHealthStates.UNHEALTHY
+                self.alert("Setting Test-bed to unhealthy, one asset disabled")
+
 
         return health_result_for_test_bed, error_message_for_test_bed
 
     def set_health_status(self, asset_object, health_result, error_message):
         health_status = AssetHealthStates.HEALTHY
-        if asset_object.disabled:
-            health_status = AssetHealthStates.DISABLED
-        else:
-            if not asset_object.health_check_enabled:
+        if not asset_object.health_check_enabled:
+            health_status = AssetHealthStates.HEALTHY
+        elif asset_object.health_check_enabled:
+            if health_result:
                 health_status = AssetHealthStates.HEALTHY
-            elif asset_object.health_check_enabled:
-                if health_result:
-                    health_status = AssetHealthStates.HEALTHY
-                elif not health_result:
+            elif not health_result:
 
-                    current_health_status = asset_object.health_status
-                    health_status = current_health_status
-                    if current_health_status == AssetHealthStates.DEGRADING:
+                current_health_status = asset_object.health_status
+                health_status = current_health_status
+                if current_health_status == AssetHealthStates.DEGRADING:
 
-                        time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
+                    time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
+                    health_status = AssetHealthStates.DEGRADING
+                    if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
+                        health_status = AssetHealthStates.UNHEALTHY
+                        self.alert("Setting {} to unhealthy".format(asset_object.name))
+                else:
+                    if not current_health_status == AssetHealthStates.UNHEALTHY:
                         health_status = AssetHealthStates.DEGRADING
-                        if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
-                            health_status = AssetHealthStates.UNHEALTHY
-                            self.alert("Setting {} to unhealthy".format(asset_object.name))
-                    else:
-                        if not current_health_status == AssetHealthStates.UNHEALTHY:
-                            health_status = AssetHealthStates.DEGRADING
-                            self.alert("Setting {} to degrading".format(asset_object.name))
+                        self.alert("Setting {} to degrading".format(asset_object.name))
 
         asset_object.set_health(status=health_status, message=error_message)
         return health_status
@@ -217,5 +240,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-63")
+    # service.run(filter_test_bed_name="fs-118")
     service.run()

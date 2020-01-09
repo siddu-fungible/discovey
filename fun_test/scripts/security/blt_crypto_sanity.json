@@ -1,8 +1,79 @@
 {
+  "GlobalSetup": {
+    "bootargs": [
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": ["ep", "storage"],
+    "num_f1_per_fs": 1,
+    "num_f1s": 1,
+    "num_hosts": 1,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": "default",
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
+    "csr_network": {
+      "0": {
+        "test_interface_ip": "20.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:30",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "20.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      },
+      "4": {
+        "test_interface_ip": "21.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:31",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "21.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      }
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300
+  },
   "BLTKey256": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -10,16 +81,14 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -53,12 +122,22 @@
     },
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTKey256RW": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -66,17 +145,15 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"CEFAEDFE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "rw"
@@ -105,14 +182,21 @@
       "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTKey256RandRW": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -120,17 +204,15 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"CAFEBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "randrw"
@@ -159,31 +241,36 @@
       "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "BLTKey512": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+  "BLTKey384": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"FBADBEEF\\\"",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -217,30 +304,38 @@
     },
     "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
     "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+      "vol_decrypt_filter_added", "vol_encrypt_filter_added"],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "BLTKey512RW": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+  "BLTKey384RW": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"BAADA555\\\"",
+      "verify_pattern": "\\\"CEFAEDFE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "rw"
@@ -269,32 +364,37 @@
       "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "BLTKey512RandRW": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+  "BLTKey384RandRW": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": false,
     "fio_loop": 1,
-    "detach_vol": false,
     "fio_rwmixread": 30,
+    "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"0000000FF1CE\\\"",
+      "verify_pattern": "\\\"CAFEBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "randrw"
@@ -323,16 +423,202 @@
       "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "BLTKey512": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FBADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "BLTKey512RW": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BAADA555\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "BLTKey512RandRW": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_rwmixread": 30,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"0000000FF1CE\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "WrongKey": {
     // Volume count from here should have been 25 till CreateDelete512 test case. Reduced due to SWOS-3925.
     // Change once fix is pushed for the bug.
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -340,16 +626,14 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write"
@@ -366,14 +650,21 @@
     "expected_encryption_stats": {
       "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "WrongTweak": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -381,16 +672,14 @@
     "xtweak_size": 6,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write"
@@ -407,14 +696,21 @@
     "expected_encryption_stats": {
       "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "CreateDelete256": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 25,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -426,12 +722,11 @@
     "detach_vol": false,
     "traffic_parallel": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write"
@@ -448,14 +743,68 @@
     "expected_encryption_stats": {
       "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "CreateDelete384": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 25,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 48,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "traffic_parallel": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "write"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 0, "num_writes": 1024}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "CreateDelete512": {
-    "volume_count": 1,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 25,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -467,12 +816,11 @@
     "detach_vol": false,
     "traffic_parallel": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write"
@@ -489,16 +837,23 @@
     "expected_encryption_stats": {
       "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "MultipleBLT256": {
     // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
     // Change once fix is pushed for the bug.
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -506,16 +861,14 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"1CEB00DA\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -547,14 +900,21 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "MultipleBLT256RW": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -562,17 +922,15 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"E011CFD0\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "rw"
@@ -601,14 +959,21 @@
       "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "MultipleBLT256RandRW": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -616,17 +981,15 @@
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"ABADBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "randrw"
@@ -655,31 +1018,38 @@
       "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "MultipleBLT512": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+  "MultipleBLT384": {
+    // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
+    // Change once fix is pushed for the bug.
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"BBADBEEF\\\"",
+      "verify_pattern": "\\\"1CEB00DA\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -711,32 +1081,37 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "MultipleBLT512RW": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+  "MultipleBLT384RW": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"FEEEFEEE\\\"",
+      "verify_pattern": "\\\"E011CFD0\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "rw"
@@ -765,32 +1140,37 @@
       "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
-  "MultipleBLT512RandRW": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+  "MultipleBLT384RandRW": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
-    "key_size": 64,
+    "key_size": 48,
     "xtweak_size": 8,
     "command_timeout": 5,
     "iter_interval": 2,
-    "fio_rwmixread": 30,
-    "traffic_parallel": true,
     "fio_loop": 1,
+    "fio_rwmixread": 30,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
-      "verify_pattern": "\\\"FACEFEED\\\"",
+      "verify_pattern": "\\\"ABADBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "randrw"
@@ -819,14 +1199,200 @@
       "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
       "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "MultipleBLT512": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"BBADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "write",
+      "read",
+      "randwrite",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "write": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "read": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0},
+      "randwrite": {"fault_injection": 0, "num_reads": 1024, "num_writes": 1024},
+      "randread": {"fault_injection": 0, "num_reads": 1024, "num_writes": 0}
+    },
+    "expected_decryption_stats": {
+      "write": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "read": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randwrite": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024},
+      "randread": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}
+    },
+    "expected_encryption_stats": {
+      "write": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "read": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0},
+      "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
+      "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "MultipleBLT512RW": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "fio_rwmixread": 30,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FEEEFEEE\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "rw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"rw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"rw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"rw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"rw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"rw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"rw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "MultipleBLT512RandRW": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 64,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_rwmixread": 30,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"FACEFEED\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "randrw"
+    ],
+    "fio_bs_iodepth": [
+      "(4, 1)",
+      "(8, 1)",
+      "(16, 1)",
+      "(32, 1)"
+    ],
+    "expected_volume_stats": {
+      "(4, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 734}},
+      "(8, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 726}},
+      "(16, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 692}},
+      "(32, 1)": {"randrw": {"fault_injection": 0, "num_reads": 1024, "num_writes": 672}}
+    },
+    "expected_decryption_stats": {
+      "(4, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(8, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(16, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}},
+      "(32, 1)": {"randrw": {"decrypt_done": 1024, "decrypt_fails": 0, "decrypt_reqs": 1024}}
+    },
+    "expected_encryption_stats": {
+      "(4, 1)": {"randrw": {"encrypt_done": 734, "encrypt_fails": 0, "encrypt_reqs": 734}},
+      "(8, 1)": {"randrw": {"encrypt_done": 726, "encrypt_fails": 0, "encrypt_reqs": 726}},
+      "(16, 1)": {"randrw": {"encrypt_done": 692, "encrypt_fails": 0, "encrypt_reqs": 692}},
+      "(32, 1)": {"randrw": {"encrypt_done": 672, "encrypt_fails": 0, "encrypt_reqs": 672}}
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "EncryptDisable": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "disable"
     },
@@ -834,16 +1400,14 @@
     "xtweak_size": 7,
     "command_timeout": 5,
     "iter_interval": 2,
-    "traffic_parallel": true,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADC0DE\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write"
@@ -859,12 +1423,22 @@
     },
     "expected_encryption_stats": {
       "write": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
-    }
+    },
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTRandomKey": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 20971520,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 2,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -874,14 +1448,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -913,15 +1485,22 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "MultiVolRandKeyRandCap": {
-    "volume_count": 2,
-    "volume_details": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
       "capacity": "Auto",
-      "capacity_range": [20971520, 67108864, 83886080, 134217728],
+      "capacity_range": [10737418240, 26843545600, 536870912, 35433480192],
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -931,14 +1510,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -970,13 +1547,20 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTFioDetach": {
-    "volume_count": 2,
-    "volume_details": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 12,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
@@ -988,14 +1572,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": true,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -1027,15 +1609,22 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTFioEncZeroPattern": {
     // Volume count from here should have been 8 till end of test case. Reduced due to SWOS-3925.
     // Change once fix is pushed for the bug.
-    "volume_count": 2,
-    "volume_details": {
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 24,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
       "capacity": "Auto",
       "capacity_range": [20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
@@ -1047,14 +1636,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0x000000000",
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -1086,14 +1673,21 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTFioEncDeadBeefPattern": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 134217728,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 24,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 10737418240,
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -1103,14 +1697,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -1142,14 +1734,21 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   },
   "BLTAlternateEncrypt": {
-    "volume_count": 2,
-    "volume_details": {
-      "capacity": 134217728,
+    "drive_margin": 0,
+    "num_ssd": 2,
+    "blt_count": 24,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 10737418240,
       "block_size": 4096,
       "encrypt": "alternate"
     },
@@ -1159,14 +1758,12 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "traffic_parallel": true,
     "fio_cmd_args": {
-      "io_queues": 2,
-      "size": "4m",
+      "size": "100%",
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 240
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -1198,8 +1795,7 @@
       "randwrite": {"encrypt_done": 1024, "encrypt_fails": 0, "encrypt_reqs": 1024},
       "randread": {"encrypt_done": 0, "encrypt_fails": 0, "encrypt_reqs": 0}
     },
-    "crypto_ops_params": ["cryptofilter_done", "hw_crypto_aes_hw_done", "cryptofilter_aes_xts"],
-    "filter_params": ["cryptofilter_create", "cryptofilter_xform_flow_alloc_done", "hw_crypto_aes_keyx_hw_done",
-      "vol_decrypt_filter_added", "vol_encrypt_filter_added"]
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   }
 }

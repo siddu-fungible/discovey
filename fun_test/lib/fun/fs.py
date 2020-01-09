@@ -950,6 +950,9 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
+            if self.fs.get_revision() in ["2"]:
+                self.fs.reset()
+
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
@@ -1194,8 +1197,34 @@ class ComE(Linux):
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
     SC_LOG_PATH = "/var/log/sc"
+    REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
+
+    class FunCpDockerContainer(Linux):
+        CUSTOM_PROMPT_TERMINATOR = r'# '
+
+        def __init__(self, name, **kwargs):
+            super(ComE.FunCpDockerContainer, self).__init__(**kwargs)
+            self.name = name
+
+        def _connect(self):
+            result = False
+            if (super(ComE.FunCpDockerContainer, self)._connect()):
+
+                # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+                # Recently while logging into the docker container it gets logged in as root user
+                self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                sudo_entered = self.enter_sudo()
+                output = self.command("docker exec -it {} bash".format(self.name))
+                if "No such container" not in output:
+                    # self.clean()
+                    self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                    self.command("export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                                 wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+                    result = True
+            fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+            return result
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1207,6 +1236,27 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
+    def get_funcp_container(self, f1_index):
+        container_name = "F1-{}".format(f1_index)
+        return ComE.FunCpDockerContainer(host_ip=self.host_ip,
+                                         ssh_username=self.ssh_username,
+                                         ssh_password=self.ssh_password,
+                                         ssh_port=self.ssh_port,
+                                         name=container_name)
+
+    def cleanup_redis(self):
+        for f1_index in range(2):
+            try:
+                self.sudo_command("docker exec -it F1-{} redis-cli hdel config node_id".format(f1_index))
+                """
+                clone = self.clone()
+                container = clone.get_funcp_container(f1_index=f1_index)
+                container.command("pwd")
+                container.command("redis-cli hdel config node_id")
+                """
+            except:
+                pass
+
     def fs_reset(self, clone=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
@@ -1217,13 +1267,25 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-
     def pre_reboot_cleanup(self):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
 
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
+        try:
+            self.cleanup_redis()
+        except:
+            pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+        try:
+            self.cleanup_redis()
+        except:
+            pass
+
         try:
             self.stop_cclinux_service()
         except:
@@ -1285,6 +1347,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
 
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
@@ -1352,6 +1415,22 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+
+        try:
+            self.cleanup_redis()
+        except:
+            pass
+
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+
+        try:
+            self.cleanup_redis()
+        except:
+            pass
+
         try:
             self.stop_cclinux_service()
         except Exception as ex:
@@ -1655,6 +1734,33 @@ class ComE(Linux):
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
             self.command("rm {}".format(sc_logs_path))
+
+        # Fetch redis logs if they exist
+        try:
+            redis_target_path = "/tmp/redis_logs.tgz"
+            self.sudo_command("tar -cvzf {} {}".format(redis_target_path, self.REDIS_LOG_PATH))
+            redis_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="redis_logs.tgz",
+                                                           linux_obj=self,
+                                                           source_file_path=redis_target_path,
+                                                           display_name="redis_logs",
+                                                           asset_type=asset_type,
+                                                           asset_id=asset_id,
+                                                           artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                           artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                           is_large_file=False,
+                                                           timeout=60)
+        except:
+            pass
+        else:
+            self.sudo_command("rm {}".format(redis_target_path))
+
+
+        try:
+            self.pre_reboot_cleanup()
+        except:
+            pass
+
+
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -2380,6 +2486,16 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
+                    if health_result:
+                        try:
+                            fpga = self.get_fpga()
+                            if fpga:
+                                health_result, health_error_message = fpga.is_host_up(max_wait_time=60, with_error_details=True)
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        else:
+                            if fpga:
+                                fpga.disconnect()
                 result = health_result, health_error_message
 
             except Exception as ex:
@@ -2538,7 +2654,7 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
-            fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+            fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
         return True
@@ -2577,7 +2693,12 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-144"))
+    come = fs.get_come()
+    come.cleanup_redis()
+
+
+    i = 0
     #terminal = fs.get_terminal()
     #terminal.command("pwd")
     #terminal.command("ifconfig")
@@ -2590,8 +2711,8 @@ if __name__ == "__main__":
     # come.setup_dpc()
     # come = fs.get_come()
     # come.command("ls -ltr")
-    fs.re_initialize()
-    i = fs.bam()
+    # fs.re_initialize()
+    # i = fs.bam()
 
 
 if __name__ == "__main2__":

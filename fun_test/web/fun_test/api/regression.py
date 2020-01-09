@@ -242,6 +242,8 @@ def suite_executions(request, id):
                     scheduled_suite.delete()
             if "preserve_logs" in request_json:
                 suite_execution.preserve_logs = request_json["preserve_logs"]
+            if "pause_on_failure" in request_json:
+                suite_execution.pause_on_failure = request_json["pause_on_failure"]
             suite_execution.save()
         except ObjectDoesNotExist:
             # TODO

@@ -1,3 +1,4 @@
+
 from lib.system.fun_test import *
 from lib.system import utils
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
@@ -502,6 +503,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 host_ip = self.host_info[host_name]["ip"]
                 subsys_nqn = self.subsys_nqn_list[index]
                 host_nqn = self.host_nqn_list[index]
+
+                host_nqn_workaround = True
+                if host_nqn_workaround:
+                    host_nqn = subsys_nqn.split(":")[0] + ":" + host_nqn
+
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
                 irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
@@ -1032,3 +1038,4 @@ if __name__ == "__main__":
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
     bltscript.run()
+

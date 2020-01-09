@@ -10,7 +10,7 @@ from lib.orchestration.orchestrator import OrchestratorType
 from lib.topology.dut import Dut
 from fun_global import *
 from scheduler.scheduler_global import JobStatusType
-from asset.asset_global import AssetType
+from asset.asset_global import AssetType, AssetHealthStates
 import json
 
 
@@ -135,6 +135,31 @@ class AssetManager:
         assets_required = self.get_assets_required(test_bed_name=test_bed_name, all_test_bed_specs=all_test_bed_specs)
         return self.check_assets_are_manual_locked(assets_required=assets_required)
 
+
+    @fun_test.safe
+    def check_if_any_asset_is_disabled(self, assets_required):
+        one_asset_disabled = False
+        disabled_asset = ""
+        from django.core.exceptions import ObjectDoesNotExist
+        from web.fun_test.models import Asset
+        for asset_type, assets_for_type in assets_required.iteritems():
+            if one_asset_disabled:
+                break
+            for asset_for_type in assets_for_type:
+                try:
+                    this_asset = Asset.objects.get(name=asset_for_type, type=asset_type)
+                    if this_asset.disabled:
+                        one_asset_disabled = True
+                        disabled_asset = asset_for_type
+                        break
+                except ObjectDoesNotExist:
+                    pass
+                    #print "ObjectDoesnotExist, {}".format(asset_for_type)
+                except Exception as ex:
+                    print("Some other exception: {}".format(ex))
+
+        return one_asset_disabled, disabled_asset
+
     @fun_test.safe
     def check_assets_are_manual_locked(self, assets_required):
         from django.core.exceptions import ObjectDoesNotExist
@@ -199,25 +224,51 @@ class AssetManager:
     def get_test_bed_availability(self, test_bed_type, suite_base_test_bed_spec=None, all_test_bed_specs=None):
         from web.fun_test.models_helper import get_suite_executions_by_filter, is_test_bed_with_manual_lock
         from scheduler.scheduler_global import JobStatusType
+        from web.fun_test.models import TestBed
         result = {}
         result["test_bed"] = test_bed_type
         result["status"] = False
-        result["message"] = None
+        result["message"] = ""
         result["resources"] = None
         result["internal_resource_in_use"] = False  # set this if any DUT or Host within the test-bed is locked (shared asset)
+
+        test_bed_name = test_bed_type
+        if test_bed_type == "suite-based":
+            if suite_base_test_bed_spec:
+                test_bed_name = suite_base_test_bed_spec.get("base_test_bed", None)
+
+        if test_bed_name != "suite-based":
+            test_bed_objects = TestBed.objects.filter(name=test_bed_name)
+            if test_bed_objects.exists():
+                test_bed_object = test_bed_objects.first()
+                if test_bed_object and test_bed_object.disabled:
+                    result["status"] = False
+                    result["message"] = "TB: {} is disabled".format(test_bed_name)
+                    # return result
+
+        test_bed_unhealthy = False
+        if test_bed_name != "suite-based":
+            test_bed_objects = TestBed.objects.filter(name=test_bed_name)
+            if test_bed_objects.exists():
+                test_bed_object = test_bed_objects.first()
+                if test_bed_object.health_check_enabled and (test_bed_object.health_status != AssetHealthStates.HEALTHY):
+                    test_bed_unhealthy = True
+                    result["status"] = False
+                    result["message"] = "TB: {} is not healthy".format(test_bed_name)
+                    if test_bed_object.health_status == AssetHealthStates.DISABLED:
+                        result["message"] = "TB: {} is disabled".format(test_bed_name)
+
+                    # return result
 
         if suite_base_test_bed_spec:
             return self.check_custom_test_bed_availability(custom_spec=suite_base_test_bed_spec)
 
         in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
 
-
         in_use, error_message, used_by_suite_id, asset_in_use = False, "", -1, None
         assets_required_for_test_bed = None
         if test_bed_type not in self.PSEUDO_TEST_BEDS:
             assets_required_for_test_bed = self.get_assets_required(test_bed_name=test_bed_type, all_test_bed_specs=all_test_bed_specs)
-            if "fs-41" in test_bed_type:
-                print ("TB: {}".format(test_bed_type))
             in_use, error_message, used_by_suite_id, asset_in_use = self.check_assets_in_use(test_bed_type=test_bed_type, assets_required=assets_required_for_test_bed)
 
         credits = 0
@@ -235,6 +286,14 @@ class AssetManager:
 
         manual_lock_info = is_test_bed_with_manual_lock(test_bed_name=test_bed_type)
         asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = False, "", None, None
+
+        # check if any asset is disabled
+        one_asset_disabled, disabled_asset_name = False, ""
+        if assets_required_for_test_bed:
+            one_asset_disabled, disabled_asset_name = self.check_if_any_asset_is_disabled(assets_required=assets_required_for_test_bed)
+            if one_asset_disabled:
+                result["status"] = False
+                result["message"] = result["message"] + ":" + "Asset: {} is disabled".format(disabled_asset_name)
         if assets_required_for_test_bed:
             asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
@@ -243,31 +302,36 @@ class AssetManager:
             result["suite_info"] = {"suite_execution_id": in_progress_suites[0].execution_id}
         if manual_lock_info:
             result["status"] = False
-            result["message"] = "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
+            result["message"] = result["message"] + ":" + "Test-bed: {} manual locked by: {}".format(test_bed_type, manual_lock_info["manual_lock_submitter"])
             if in_use:  # Check if the required internal resources are used by another run
                 result["internal_asset_in_use"] = True
                 result["internal_asset_in_use_suite_id"] = used_by_suite_id
                 result["internal_asset"] = asset_in_use
         elif asset_level_manual_locked:
             result["status"] = False
-            result["message"] = asset_level_error_message
+            result["message"] = result["message"] + ":" + asset_level_error_message
             if in_use:  # Check if the required internal resources are used by another run
                 result["internal_asset_in_use"] = True
                 result["internal_asset_in_use_suite_id"] = used_by_suite_id
                 result["internal_asset"] = asset_in_use
         elif in_progress_count >= credits:
             result["status"] = False
-            result["message"] = "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
+            result["message"] = result["message"] + ":" + "Test-bed: {0} locked by Suite: <a href='/regression/suite_detail/{1}'>{1}</a>".format(test_bed_type, in_progress_suites[0].execution_id)
             result["used_by_suite_id"] = in_progress_suites[0].execution_id
         elif in_use:  # Check if the required internal resources are used by another run
             result["status"] = False
-            result["message"] = error_message
+            result["message"] = result["message"] + ":" + error_message
             result["internal_asset_in_use"] = True
             result["internal_asset_in_use_suite_id"] = used_by_suite_id
             result["internal_asset"] = asset_in_use
+        elif test_bed_unhealthy:
+            result["status"] = False
+        elif one_asset_disabled:
+            result["status"] = False
         else:
             result["status"] = True
             result["assets_required"] = assets_required_for_test_bed
+        result["message"] = result["message"].lstrip(":")
         return result
 
     @fun_test.safe
@@ -309,11 +373,33 @@ class AssetManager:
     @fun_test.safe
     def get_asset_instance(self, asset):
         instance = None
-        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST]:
+        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
             instance = self.get_linux_host(name=asset.name)
         elif asset.type in AssetType.DUT:
             instance = self.get_fs(name=asset.name)
         return instance
+
+    @fun_test.safe
+    def get_asset_instance_by_name(self, asset_type, asset_name):
+        instance = None
+        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+            instance = self.get_linux_host(name=asset_name)
+        elif asset_type in AssetType.DUT:
+            instance = self.get_fs(name=asset_name)
+        return instance
+
+    @fun_test.safe
+    def get_asset_db_entry(self, asset_type, asset_name):
+        from web.fun_test.models import Asset
+        from django.core.exceptions import ObjectDoesNotExist
+        result = None
+        try:
+            asset_object = Asset(name=asset_name, type=asset_type)
+            result = asset_object
+        except ObjectDoesNotExist:
+            pass
+        return result
+
 
     @fun_test.safe
     def get_regression_service_host_spec(self):
@@ -550,17 +636,20 @@ class AssetManager:
                         asset = Asset.objects.get(name=asset_name, type=asset_type)
                     except ObjectDoesNotExist:
                         pass
+
                     in_progress = False
                     is_manual_locked = False
+                    is_disabled = False
                     if asset:
                         is_manual_locked = asset.manual_lock_user
+                        is_disabled = asset.disabled
                         job_ids = asset.job_ids
                         if job_ids:
                             for job_id in job_ids:
                                 in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
                                 if in_progress:
                                     unavailable_assets.append(asset_name)
-                        elif is_manual_locked:
+                        elif (is_manual_locked or is_disabled):
                             unavailable_assets.append(asset_name)
 
                     pool_member_type_options = assets_required_config[asset_type].get("pool_member_type_options", None)
@@ -570,18 +659,18 @@ class AssetManager:
                         current_match_count = matches_for_pool_member_type.count(this_asset_pool_member_type)
                         if current_match_count >= pool_member_required_count:
                             continue
-                        if not is_manual_locked and not in_progress:
+                        if not is_manual_locked and not in_progress and not is_disabled:
                             matches_for_pool_member_type.append(this_asset_pool_member_type)
-                    if not is_manual_locked and not in_progress:
+                    if not is_manual_locked and not in_progress and not is_disabled:
                         num_assets_available += 1
                         available_assets.append(asset_name)
                     if num_assets_required == num_assets_available:
                         break
 
                 if num_assets_required > num_assets_available:
-                    error_message = "Asset: {} required: {}, available: {}".format(asset_type,
-                                                                                   num_assets_required,
-                                                                                   num_assets_available)
+                    error_message = "Assets: {} required: {}, available: {}".format(asset_type,
+                                                                                    num_assets_required,
+                                                                                    num_assets_available)
                     asset_category_unavailable = True
                     break
                 elif num_assets_required <= num_assets_available:
@@ -600,7 +689,6 @@ class AssetManager:
 
     @fun_test.safe
     def get_valid_test_beds(self):
-        from web.fun_test.models import TestBed
         all_test_beds = self.get_all_test_beds_specs()
         all_test_bed_names = all_test_beds.keys()
         all_test_bed_names.extend(self.PSEUDO_TEST_BEDS)

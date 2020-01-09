@@ -199,6 +199,9 @@ class CatalogExecutionStateMachine:
         new_catalog_execution.ready_for_execution = True
         new_catalog_execution.master_execution_id = catalog_execution.id
         new_catalog_execution.recurring = False
+        for suite_execution in new_catalog_execution.suite_executions:
+            suite_execution["job_id"] = None
+            suite_execution["build_number"] = None
         new_catalog_execution.state = JobStatusType.SUBMITTED
         new_catalog_execution.save()
 

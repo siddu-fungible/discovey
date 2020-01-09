@@ -456,7 +456,6 @@ export class TestBedComponent implements OnInit {
   }
 
   onToggleAssetDisabled(enabled, asset) {
-    alert("This feature is not yet implemented");
     this.service.enableAsset(asset.name, asset.type, !enabled).subscribe(response => {
 
     }, error => {
@@ -466,7 +465,6 @@ export class TestBedComponent implements OnInit {
   }
 
   onToggleAssetHealthCheckEnabled(enabled, asset) {
-    alert("This feature is not yet implemented");
     asset.health_check_enabled = enabled;
     this.service.healthCheckEnabledAsset(asset.name, asset.type, asset.health_check_enabled).subscribe(response => {
 
@@ -476,7 +474,6 @@ export class TestBedComponent implements OnInit {
   }
 
   onToggleDisabled(enabled, testBed) {
-    alert("This feature is not yet implemented");
     testBed.disabled = !enabled;
     let url = "/api/v1/regression/test_beds/" + testBed.id;
     let payload = {disabled: testBed.disabled};
@@ -487,7 +484,6 @@ export class TestBedComponent implements OnInit {
   }
 
   onToggleHealthCheckEnabled(enabled, testBed) {
-    alert("This feature is not yet implemented");
     testBed.health_check_enabled = enabled;
     let url = "/api/v1/regression/test_beds/" + testBed.id;
     let payload = {health_check_enabled: testBed.health_check_enabled};

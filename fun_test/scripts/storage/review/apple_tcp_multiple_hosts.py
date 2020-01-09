@@ -3,7 +3,7 @@ from web.fun_test.analytics_models_helper import get_data_collection_time
 from lib.fun.fs import Fs
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
-from storage_helper import *
+from scripts.storage.storage_helper import *
 from collections import OrderedDict
 
 '''
@@ -340,16 +340,6 @@ class StripeVolumeLevelScript(FunTestScript):
                                                     format(fun_test.shared_variables["nvme_block_device"]))
         except:
             fun_test.log("Clean-up from host failed")
-        try:
-            self.come_obj = fun_test.shared_variables["come_obj"]
-            self.come_obj[0].\
-                sudo_command("for i in `docker ps -a | awk '{print $NF}'|sed 1d|sort`;do docker stop $i;done")
-            self.come_obj[0].sudo_command("rmmod funeth")
-            fun_test.shared_variables["storage_controller"].disconnect()
-        except:
-            fun_test.log("Storage controller disconnect failed")
-        fun_test.sleep("Allowing buffer time before clean-up", 30)
-        self.topology.cleanup()
 
 
 class StripeVolumeTestCase(FunTestCase):
