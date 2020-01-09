@@ -1755,6 +1755,12 @@ class ComE(Linux):
             self.sudo_command("rm {}".format(redis_target_path))
 
 
+        try:
+            self.pre_reboot_cleanup()
+        except:
+            pass
+
+
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
