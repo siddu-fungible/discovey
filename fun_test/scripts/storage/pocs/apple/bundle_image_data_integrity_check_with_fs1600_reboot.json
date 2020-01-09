@@ -99,7 +99,9 @@
       "bs": "4k",
       "ioengine": "libaio",
       "numjobs": 8,
-      "size": "100%"
+      "size": "100%",
+      "time_based": 1,
+      "runtime": 60
     }
   }
 }

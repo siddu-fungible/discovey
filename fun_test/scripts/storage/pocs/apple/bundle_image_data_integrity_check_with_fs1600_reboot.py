@@ -112,6 +112,7 @@ class EcVolReboot(ApcPduTestcase):
         required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
         self.pool_uuid = self.get_pool_id()
         self.volume_uuid_details = self.create_vol(self.write_hosts)
+        self.attach_volumes_to_host(self.required_write_hosts_list)
 
         for pc_no in range(self.iterations):
             self.pc_no = pc_no
@@ -132,7 +133,6 @@ class EcVolReboot(ApcPduTestcase):
                                                password=self.password)
 
     def attach_and_io(self):
-        self.attach_volumes_to_host(self.required_write_hosts_list)
         self.get_host_handles()
         self.intialize_the_hosts()
         self.connect_the_host_to_volumes()
@@ -142,11 +142,15 @@ class EcVolReboot(ApcPduTestcase):
         self.destoy_host_handles()
         self.reboot_test()
         self.basic_checks()
-        fun_test.sleep("Wait for GUI to come up", seconds=80)
+        fun_test.sleep("Wait for GUI to come up", seconds=150)
 
     def cleanup(self):
+        try:
+            self.disconnect_the_hosts()
+        except:
+            fun_test.log("unable to diconnect from the host")
         self.num_hosts = self.write_hosts
-        super(ApcPduTestcase, self).cleanup()
+        super(EcVolReboot, self).cleanup()
 
     def initialize_test_case_variables(self, test_case_name):
         test_case_dict = getattr(self, test_case_name, {})
@@ -159,6 +163,6 @@ class EcVolReboot(ApcPduTestcase):
 
 if __name__ == "__main__":
     obj = ApcPduScript()
-    # obj.add_test_case(DataIntegrityTestcase())
+    obj.add_test_case(DataIntegrityTestcase())
     obj.add_test_case(EcVolReboot())
     obj.run()
