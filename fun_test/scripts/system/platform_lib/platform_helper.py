@@ -370,9 +370,6 @@ class Platform(RedFishTool, IpmiTool):
                 result["message"] = "Unable to set interface : {}".format(interface)
         return result
 
-    def switch_to_bmc_console(self, max_time=100):
-        self.fpga_console_handle.switch_to_bmc_console(max_time)
-        self.bmc_console = self.fpga_console_handle
 
     def get_platform_link(self, system="bmc", interface="bond0"):
         result = {"status": False, "link_detected": False}
@@ -495,7 +492,9 @@ class Platform(RedFishTool, IpmiTool):
         bmc_console_time = 40
         timer = FunTimer(max_time=bmc_console_time)
         self.fpga_console_handle.command("pwd")
-        self.fpga_console_handle.switch_to_bmc_console(bmc_console_time)
+        self.fpga_console_handle.switch_to_bmc_console(self.bmc_handle.ssh_username,
+                                                       self.bmc_handle.ssh_password,
+                                                       time_out=bmc_console_time)
         self.fpga_console_handle.ifconfig()
         ifconfig = self.fpga_console_handle.ifconfig()
         bond0 = {}

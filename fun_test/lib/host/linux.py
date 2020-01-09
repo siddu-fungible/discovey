@@ -2929,8 +2929,11 @@ class Linux(object, ToDictMixin):
 
         result = []
         cmd = "ifconfig"
-        if interface and action:
-            cmd += " " + interface + " " + action
+        if interface:
+            cmd += " " + interface
+            if action:
+                cmd += " " + action
+
         ifconfig_output = self.command(cmd)
         if ifconfig_output:
             interfaces = ifconfig_output.split("\n\r")
@@ -2939,16 +2942,18 @@ class Linux(object, ToDictMixin):
                 match_interface = re.search(r'(?P<interface>\w+)', interface)
                 match_ipv4 = re.search(r'[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
                 match_ipv6 = re.search(r'[\s\S]*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)', interface)
-                match_ehter = re.search(r'[\s\S]*ether\s+(?P<ether>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
+                match_ether = re.search(r'[\s\S]*ether\s+(?P<ether>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
                 match_hwaddr = re.search(r'[\s\S]*HWaddr\s+(?P<HWaddr>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
 
-                if match_interface and (match_ipv4 or match_ipv6) and (match_ehter or match_hwaddr):
+                if match_interface and (match_ipv4 or match_ipv6) and (match_ether or match_hwaddr):
                     one_data_set["interface"] = match_interface.group("interface")
                     one_data_set["ipv4"] = match_ipv4.group("ipv4") if match_ipv4 else ""
                     one_data_set["ipv6"] = match_ipv6.group("ipv6") if match_ipv6 else ""
-                    one_data_set["ether"] = match_ehter.group("ether") if match_ehter else ""
+                    one_data_set["ether"] = match_ether.group("ether") if match_ether else ""
                     one_data_set["HWaddr"] = match_hwaddr.group("HWaddr") if match_hwaddr else ""
                     result.append(one_data_set)
+        else:
+            result = None
         return result
 
     @fun_test.safe
