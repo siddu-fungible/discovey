@@ -1249,7 +1249,7 @@ class ComE(Linux):
     def cleanup_redis(self):
         for f1_index in range(2):
             try:
-                self.sudo_command("docker exec -it F1-{} redis-cli hdel config node_id".format(f1_index))
+                self.sudo_command("sudo docker exec -it -e COLUMNS=$COLUMNS   -e LINES=$LINES -e TERM=$TERM  -it F1-{} redis-cli hdel config node_id".format(f1_index))
                 """
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
@@ -2697,7 +2697,7 @@ class Fs(object, ToDictMixin):
 if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
     come = fs.get_come()
-    come.command("pwd")
+    come.cleanup_redis()
 
 
     i = 0
