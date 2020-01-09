@@ -1256,8 +1256,12 @@ class ComE(Linux):
                 clone = self.clone()
                 container = clone.get_funcp_container(f1_index=f1_index)
                 container.command("pwd")
-                container.command("redis-cli hdel config node_id")
-                output = container.command("date")
+                container.handle.sendline("redis-cli\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("hdel config node_id\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("exit\r\n")
+                container.handle.expect("# ")
                 container.disconnect()
 
             except:
