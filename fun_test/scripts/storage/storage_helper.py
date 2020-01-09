@@ -289,6 +289,7 @@ def single_fs_setup(obj):
             nodes = obj.sc_api.get_dpu_ids()
             while not nodes and not dpu_id_ready_timer.is_expired():
                 nodes = obj.sc_api.get_dpu_ids()
+                fun_test.sleep("Checking DPU IDs", seconds=20)
             fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
             for node_index, node in enumerate(nodes):
                 # Extracting the DUT's bond interface details
