@@ -1277,7 +1277,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-    def pre_reboot_cleanup(self):
+    def pre_reboot_cleanup(self, skip_cc_cleanup=False):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
 
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
@@ -1297,7 +1297,8 @@ class ComE(Linux):
             pass
 
         try:
-            self.stop_cclinux_service()
+            if skip_cc_cleanup:
+                self.stop_cclinux_service()
         except:
             pass
         # try:
@@ -1766,7 +1767,7 @@ class ComE(Linux):
 
 
         try:
-            self.pre_reboot_cleanup()
+            self.pre_reboot_cleanup(skip_cc_cleanup=True)
         except:
             pass
 
