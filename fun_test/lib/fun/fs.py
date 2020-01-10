@@ -1324,7 +1324,7 @@ class ComE(Linux):
     def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
-            self.kill_process(process_id=health_monitor_process)
+            self.kill_process(process_id=health_monitor_process, signal=9)
 
     def pre_reboot_cleanup(self, skip_cc_cleanup=False, for_bundle_installation=True):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
