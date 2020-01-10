@@ -24,9 +24,16 @@ class DataIntegrityTestcase(ApcPduTestcase):
         self.data_integrity_check()
 
     def data_integrity_check(self):
-        hosts_list = self.host_info.keys()
-        required_write_hosts_list = hosts_list[:self.write_hosts]
-        required_read_hosts_list = hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        if self.testbed_type == "suite-based":
+            hosts_list = self.host_info.keys()
+            required_write_hosts_list = hosts_list[:self.write_hosts]
+            required_read_hosts_list = hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        else:
+            required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
+            fun_test.log("Test beds: {}".format(required_hosts_list))
+            required_write_hosts_list = required_hosts_list[:self.write_hosts]
+            required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        fun_test.log("Test beds: {}".format(getattr(self, "host_info", "")))
         self.pool_uuid = self.get_pool_id()
         self.volume_uuid_details = self.create_vol(self.write_hosts)
         self.attach_volumes_to_host(required_write_hosts_list)
