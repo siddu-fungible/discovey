@@ -15,7 +15,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
 
     def setup(self):
         super(DataIntegrityTestcase, self).setup()
-        self = single_fs_setup(self)
+        # self = single_fs_setup(self)
         # Any additional setup can be added here
 
     def run(self):
