@@ -2540,9 +2540,11 @@ class PeekCommands(object):
                         if prev_result:
                             diff_result = self._get_difference(result=result, prev_result=prev_result)
                             for key in sorted(result):
+                                add_finally = False
                                 table_obj = PrettyTable(['Field Name', 'Counter', 'Counter Diff'])
                                 table_obj.align = 'l'
                                 for _key in sorted(result[key]):
+                                    add_finally = False
                                     if isinstance(result[key][_key], dict):
                                         table_obj = PrettyTable()
                                         table_obj.align = 'l'
@@ -2559,13 +2561,19 @@ class PeekCommands(object):
                                         if re.search(grep_regex, _key, re.IGNORECASE):
                                             table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
                                     else:
+                                        add_finally = True
                                         table_obj.add_row([_key, result[key][_key], diff_result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                    if not add_finally:
+                                        master_table_obj.add_row([key, table_obj])
+                                if add_finally:
+                                    master_table_obj.add_row([key, table_obj])
                         else:
                             for key in sorted(result):
+                                add_finally = False
                                 table_obj = PrettyTable(['Field Name', 'Counter'])
                                 table_obj.align = 'l'
                                 for _key in sorted(result[key]):
+                                    add_finally = False
                                     if isinstance(result[key][_key], dict):
                                         table_obj = PrettyTable()
                                         table_obj.align = 'l'
@@ -2582,8 +2590,12 @@ class PeekCommands(object):
                                         if re.search(grep_regex, _key, re.IGNORECASE):
                                             table_obj.add_row([_key, result[key][_key]])
                                     else:
+                                        add_finally = True
                                         table_obj.add_row([_key, result[key][_key]])
-                                master_table_obj.add_row([key, table_obj])
+                                    if not add_finally:
+                                        master_table_obj.add_row([key, table_obj])
+                                if add_finally:
+                                    master_table_obj.add_row([key, table_obj])
                     else:
                         if get_result_only:
                             return cmd, "Empty Result"
@@ -2794,7 +2806,7 @@ class PeekCommands(object):
 
     def peek_hu_resource_stats(self, hu_id, wqsi=None, wqse=None, resource_id=None, grep_regex=None):
         try:
-            cmd = "stats/resource/hu%s" % hu_id
+            cmd = "stats/resource/hux[%s]" % hu_id
             if wqsi:
                 cmd = cmd + "/wqsi"
             elif wqse:
@@ -2812,7 +2824,7 @@ class PeekCommands(object):
 
     def peek_dam_resource_stats(self, grep_regex=None):
         cmd = "stats/resource/dam"
-        self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex)
+        self._display_list_of_dict_stats(cmd=cmd, grep_regex=grep_regex)
 
     # def peek_bam_resource_stats(self, grep_regex=None, get_result_only=False):
     #     cmd = "stats/resource/bam"
@@ -3292,6 +3304,15 @@ class PeekCommands(object):
 
     def peek_fae_stats(self, grep_regex=None, get_result_only=False):
         cmd = "stats/fae"
+        if get_result_only:
+            return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+        else:
+            self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
+
+    def peek_hbm_stats(self, muh=None, grep_regex=None, get_result_only=False):
+        cmd = "stats/hbm/hbm_cnts"
+        if muh:
+            cmd += "/muh_%s" % muh
         if get_result_only:
             return self._get_nested_dict_stats(cmd=cmd, grep_regex=grep_regex, get_result_only=get_result_only)
         else:

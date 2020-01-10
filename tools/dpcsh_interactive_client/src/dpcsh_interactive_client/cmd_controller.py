@@ -757,6 +757,11 @@ class CmdController(Cmd):
         grep_regex = args.grep
         self._peek_cmd_obj.peek_fae_stats(grep_regex=grep_regex)
 
+    def peek_hbm_stats(self, args):
+        grep_regex = args.grep
+        muh = args.muh
+        self._peek_cmd_obj.peek_hbm_stats(muh=muh, grep_regex=grep_regex)
+
     def peek_mpg_stats(self, args):
         self._peek_cmd_obj.peek_mpg_stats()
 
@@ -1223,6 +1228,7 @@ class CmdController(Cmd):
     peek_nwqm_stats_parser.set_defaults(func=peek_nwqm_stats)
     peek_nwqm_hnu_stats_parser.set_defaults(func=peek_nwqm_hnu_stats)
     peek_fae_stats_parser.set_defaults(func=peek_fae_stats)
+    peek_hbm_stats_parser.set_defaults(func=peek_hbm_stats)
     peek_mpg_stats_parser.set_defaults(func=peek_mpg_stats)
     peek_pervppkts_stats_parser.set_defaults(func=peek_pervppkts_stats)
     peek_nhp_stats_parser.set_defaults(func=peek_stats_nhp)
@@ -1348,9 +1354,5 @@ class CmdController(Cmd):
 
 
 if __name__ == '__main__':
-    cmd_obj = CmdController(target_ip="10.1.20.17", target_port=40220, verbose=False)
+    cmd_obj = CmdController(target_ip="fs45-come", target_port=42221, verbose=False)
     cmd_obj.cmdloop(intro="hello")
-
-
-
-
