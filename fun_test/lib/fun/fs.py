@@ -1335,8 +1335,8 @@ class ComE(Linux):
         except:
             pass
 
-            fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
-            fun_test.sleep("After expected containers running")
+        fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
+        fun_test.sleep("After expected containers running")
 
         try:
             # self.cleanup_redis()
