@@ -995,7 +995,7 @@ class BootupWorker(Thread):
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
-                    come.pre_reboot_cleanup()
+                    # come.pre_reboot_cleanup()
                     come.fs_reset()
                 except Exception as ex:
                     pass
