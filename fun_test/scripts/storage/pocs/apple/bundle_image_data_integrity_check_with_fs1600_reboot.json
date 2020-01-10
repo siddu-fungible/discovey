@@ -41,6 +41,7 @@
       "compression_effort": 0
     }
   ],
+  "num_duts": 1,
   "write_fio": {
     "iodepth": 32,
     "group_reporting": 1,
