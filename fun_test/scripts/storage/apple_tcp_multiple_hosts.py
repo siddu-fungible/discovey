@@ -154,6 +154,7 @@ class StripeVolumeLevelScript(FunTestScript):
         # fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
         fun_test.shared_variables["num_f1s"] = self.num_f1s
         fun_test.shared_variables["num_duts"] = self.num_duts
+        fun_test.shared_variables["num_hosts"] = self.num_hosts
         fun_test.shared_variables["syslog_level"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
