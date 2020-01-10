@@ -1331,10 +1331,6 @@ class ComE(Linux):
         self.stop_health_monitors()
 
         try:
-            self.cleanup_redis()
-        except:
-            pass
-        try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
             pass
@@ -1474,11 +1470,6 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.stop_health_monitors()
-
-        try:
-            self.cleanup_redis()
-        except:
-            pass
 
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
