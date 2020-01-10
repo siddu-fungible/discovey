@@ -1211,7 +1211,7 @@ class ComE(Linux):
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
-    CONTAINERS_BRING_UP_TIME_MAX = 120
+    CONTAINERS_BRING_UP_TIME_MAX = 60 * 10
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
