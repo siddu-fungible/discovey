@@ -1334,6 +1334,10 @@ class ComE(Linux):
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
             pass
+
+            fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
+            fun_test.sleep("After expected containers running")
+
         try:
             # self.cleanup_redis()
             pass
@@ -1472,10 +1476,11 @@ class ComE(Linux):
         """
         self.stop_health_monitors()
 
-        try:
-            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
-        except:
-            pass
+        # try:
+        #    self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        # except:
+        #    pass
+
 
         try:
             # self.cleanup_redis()
