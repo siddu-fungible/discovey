@@ -1248,10 +1248,10 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
-    def ensure_expected_containers_running(self):
+    def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
         expected_containers_running = self.is_expected_containers_running()
-        expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
+        expected_containers_running_timer = FunTimer(max_time=max_time)
 
         while not expected_containers_running and not expected_containers_running_timer.is_expired():
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
@@ -1336,7 +1336,7 @@ class ComE(Linux):
             pass
 
         if self.fs.bundle_compatible:
-            fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
+            fun_test.test_assert(self.ensure_expected_containers_running(max_time=60 * 10), "Expected containers running")
             fun_test.sleep("After expected containers running")
 
         try:
