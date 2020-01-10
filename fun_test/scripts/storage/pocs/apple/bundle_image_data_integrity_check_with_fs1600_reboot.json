@@ -78,7 +78,11 @@
   "EcVolReboot": {
     "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g",
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
-    "num_duts": 1,
+    "dut_start_index": 1,
+    "num_duts": 0,
+    "num_hosts": 1,
+    "host_start_index": 1,
+    "disable_wu_watchdog": false,
     "iterations": 5,
     "volume_creation_details": [
       {
