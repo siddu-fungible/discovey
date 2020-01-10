@@ -75,6 +75,7 @@
     "verify": "md5"
   },
   "EcVolReboot": {
+    "num_duts": 1,
     "iterations": 5,
     "volume_creation_details": [
       {
