@@ -75,7 +75,7 @@ export class ReleaseDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this.headerSubText1 = `Release-train: ${this.releaseCatalogExecution.release_train}`;
       if (this.releaseCatalogExecution.build_number) {
-        this.headerSubText1 += `${this.headerSubText1}` + `, Build: ${this.releaseCatalogExecution.build_number}`;
+        this.headerSubText1 += `, Build: ${this.releaseCatalogExecution.build_number}`;
       }
 
       if (this.releaseCatalogExecution.master_execution_id) {

@@ -241,10 +241,12 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
+            """
             try:
                 come.pre_reboot_cleanup()
             except Exception as ex:
                 fun_test.critical(str(ex))
+            """
             # reboot_initiated_wait_time = 60 * 3
             reboot_result = come.reboot(max_wait_time=max_wait_time,
                                         non_blocking=non_blocking,
@@ -325,7 +327,7 @@ class Bmc(Linux):
             for f1_index in range(2):
                 if f1_index == self.disable_f1_index:
                     continue
-                self.kill_serial_proxies(f1_index=f1_index)
+                # self.kill_serial_proxies(f1_index=f1_index)
             self.command("{} stop".format(self.FUNOS_LOGS_SCRIPT))
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -363,7 +365,8 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
-
+        self.stop_bundle_f1_logs()
+        self._reset_microcom()
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
@@ -551,7 +554,7 @@ class Bmc(Linux):
 
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_TFTP_DOWNLOAD)
         output = self.u_boot_command(
-            command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=40,
+            command="tftpboot {} {}:{}".format(tftp_load_address, tftp_server, tftp_image_path), timeout=60,
             f1_index=index, expected=self.U_BOOT_F1_PROMPT)
         m = re.search(r'Bytes transferred = (\d+)', output)
         bytes_transferred = 0
@@ -950,6 +953,14 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
+            if self.fs.get_revision() in ["2"]:
+                self.fs.reset()
+                fs.come = None
+                fs.bmc = None
+                come = fs.get_come()
+                if fs.bundle_compatible:
+                    fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
@@ -984,6 +995,7 @@ class BootupWorker(Thread):
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
+                    come.pre_reboot_cleanup()
                     come.fs_reset()
                 except Exception as ex:
                     pass
@@ -997,9 +1009,11 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
+                bmc = fs.get_bmc()
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT)
                 if fs.tftp_image_path:
                     bmc.position_support_scripts(auto_boot=fs.is_auto_boot())
+                    self.fs.get_come().pre_reboot_cleanup(for_bundle_installation=False)
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
@@ -1016,7 +1030,6 @@ class BootupWorker(Thread):
                                 boot_args = fs.f1_parameters[f1_index]["boot_args"]
 
                     if fs.tftp_image_path:
-                        self.fs.get_come().pre_reboot_cleanup()
                         if fs.get_bmc()._use_i2c_reset():
                             fs.get_bmc().reset_f1(f1_index=f1_index)
                         elif fpga and not fs.bundle_compatible:
@@ -1129,7 +1142,7 @@ class ComEInitializationWorker(Thread):
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
-                if (self.fs.bundle_compatible and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
+                if (self.fs.bundle_compatible):  # and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -1194,8 +1207,36 @@ class ComE(Linux):
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
     SC_LOG_PATH = "/var/log/sc"
+    REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
+    EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
+    CONTAINERS_BRING_UP_TIME_MAX = 120
+
+    class FunCpDockerContainer(Linux):
+        CUSTOM_PROMPT_TERMINATOR = r'# '
+
+        def __init__(self, name, **kwargs):
+            super(ComE.FunCpDockerContainer, self).__init__(**kwargs)
+            self.name = name
+
+        def _connect(self):
+            result = False
+            if (super(ComE.FunCpDockerContainer, self)._connect()):
+
+                # the below set_prompt_terminator is the temporary workaround of the recent FunCP docker container change
+                # Recently while logging into the docker container it gets logged in as root user
+                self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                sudo_entered = self.enter_sudo()
+                output = self.command("docker exec -it {} bash".format(self.name))
+                if "No such container" not in output:
+                    # self.clean()
+                    self.set_prompt_terminator(self.CUSTOM_PROMPT_TERMINATOR)
+                    self.command("export TERM=xterm-mono; export PS1='{}'".format(self.CUSTOM_PROMPT_TERMINATOR), wait_until_timeout=3,
+                                 wait_until=self.CUSTOM_PROMPT_TERMINATOR)
+                    result = True
+            fun_test.simple_assert(result, "SSH connection to docker host: {}".format(self))
+            return result
 
     def __init__(self, **kwargs):
         super(ComE, self).__init__(**kwargs)
@@ -1207,6 +1248,69 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
+    def ensure_expected_containers_running(self):
+        fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
+        expected_containers_running = self.is_expected_containers_running()
+        expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
+
+        while not expected_containers_running and not expected_containers_running_timer.is_expired():
+            fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
+            expected_containers_running = self.is_expected_containers_running()
+        return expected_containers_running
+
+    def is_expected_containers_running(self):
+
+        result = True
+        containers = self.docker(sudo=True)
+        for expected_container in self.EXPECTED_CONTAINERS:
+            found = False
+            if containers:
+                for container in containers:
+                    container_name = container["Names"]
+                    if container_name == expected_container:
+                        found = True
+                        container_is_up = "Up" in container["Status"]
+                        if not container_is_up:
+                            result = False
+                            fun_test.critical("Container {} is not up".format(container_name), context=self.fs.context)
+                            break
+                if not found:
+                    fun_test.critical("Container {} was not found".format(expected_container), context=self.fs.context)
+                    result = False
+                break
+            else:
+                fun_test.critical("No containers are running")
+                result = False
+        return result
+
+    def get_funcp_container(self, f1_index):
+        container_name = "F1-{}".format(f1_index)
+        return ComE.FunCpDockerContainer(host_ip=self.host_ip,
+                                         ssh_username=self.ssh_username,
+                                         ssh_password=self.ssh_password,
+                                         ssh_port=self.ssh_port,
+                                         name=container_name)
+
+    def cleanup_redis(self):
+        for f1_index in range(2):
+            try:
+                """
+                # self.command("sudo docker exec -it F1-{} /bin/bash -c 'redis-cli hdel config node_id'".format(f1_index))
+                """
+                clone = self.clone()
+                container = clone.get_funcp_container(f1_index=f1_index)
+                container.command("pwd")
+                container.handle.sendline("redis-cli\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("hdel config node_id\r\n")
+                container.handle.expect(r'> $')
+                container.handle.sendline("exit\r\n")
+                container.handle.expect("# ")
+                container.disconnect()
+
+            except:
+                pass
+
     def fs_reset(self, clone=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
@@ -1217,20 +1321,27 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
 
-
-    def pre_reboot_cleanup(self):
-        fun_test.log("Cleaning up storage controller containers", context=self.context)
-
+    def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
             self.kill_process(process_id=health_monitor_process)
+
+    def pre_reboot_cleanup(self, skip_cc_cleanup=False, for_bundle_installation=True):
+        fun_test.log("Cleaning up storage controller containers", context=self.context)
+        self.stop_health_monitors()
+
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
         except:
             pass
+        try:
+            self.cleanup_redis()
+        except:
+            pass
 
         try:
-            self.stop_cclinux_service()
+            if skip_cc_cleanup:
+                self.stop_cclinux_service()
         except:
             pass
         # try:
@@ -1290,6 +1401,7 @@ class ComE(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
 
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
@@ -1357,8 +1469,15 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+        self.stop_health_monitors()
+
         try:
             self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
+
+        try:
+            self.cleanup_redis()
         except:
             pass
 
@@ -1390,6 +1509,11 @@ class ComE(Linux):
         self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
+
+        ### Workaround for bond
+
+        self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
+        self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         return True
 
 
@@ -1665,6 +1789,28 @@ class ComE(Linux):
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
             self.command("rm {}".format(sc_logs_path))
+
+        # Fetch redis logs if they exist
+        try:
+            redis_target_path = "/tmp/redis_logs.tgz"
+            self.sudo_command("tar -cvzf {} {}".format(redis_target_path, self.REDIS_LOG_PATH))
+            redis_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="redis_logs.tgz",
+                                                           linux_obj=self,
+                                                           source_file_path=redis_target_path,
+                                                           display_name="redis_logs",
+                                                           asset_type=asset_type,
+                                                           asset_id=asset_id,
+                                                           artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                           artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                           is_large_file=False,
+                                                           timeout=60)
+        except:
+            pass
+        else:
+            self.sudo_command("rm {}".format(redis_target_path))
+
+
+
 
 class F1InFs:
     def __init__(self, index, fs, serial_device_path, serial_sbp_device_path):
@@ -2178,7 +2324,6 @@ class Fs(object, ToDictMixin):
                     fun_test.test_assert(self.bmc.validate_u_boot_version(output=preamble, minimum_date=self.MIN_U_BOOT_DATE), "Validate preamble")
 
                 if self.tftp_image_path:
-                    # self.get_come().pre_reboot_cleanup()
                     fun_test.test_assert(expression=self.bmc.u_boot_load_image(index=f1_index,
                                                                                tftp_image_path=self.tftp_image_path,
                                                                                boot_args=boot_args,
@@ -2554,11 +2699,11 @@ class Fs(object, ToDictMixin):
         if validate_uptime:
             fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
-        come = self.get_come()
+        come = self.get_come().clone()
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
-            fun_test.simple_assert(come.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+            fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
         return True
@@ -2597,8 +2742,11 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-58"))
-    fpga = fs.get_fpga()
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
+    come = fs.get_come()
+    come.cleanup_redis()
+
+
     i = 0
     #terminal = fs.get_terminal()
     #terminal.command("pwd")

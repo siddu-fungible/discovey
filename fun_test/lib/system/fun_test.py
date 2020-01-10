@@ -1457,8 +1457,19 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
-            if self.pause_on_failure:
+            if self.pause_on_failure and not self.suite_execution_id:
                 pdb.set_trace()
+
+            """
+            if self.suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if suite_execution.pause_on_failure:
+                    fun_test.log("Pause on failure set for {}".format(assert_message))
+                    suite_execution.state = JobStatusType.PAUSED
+                    suite_execution.save()
+                    self.pause_loop()
+            """
+            self.check_pause_on_failure(assert_message)
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message, context=context)
@@ -1469,6 +1480,20 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED, context=context)
 
+    def pause_loop(self):
+        max_pause_loop_timer = FunTimer(max_time=24 * 60 * 60)
+        if self.suite_execution_id:
+            while not max_pause_loop_timer.is_expired():
+                self.sleep("Pause loop", seconds=60)
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if not suite_execution.pause_on_failure:
+                    fun_test.log("Exiting pause loop")
+                    suite_execution.state = JobStatusType.IN_PROGRESS
+                    suite_execution.save()
+                    break
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+        suite_execution.state = JobStatusType.IN_PROGRESS
+        suite_execution.save()
 
     def add_checkpoint(self,
                        checkpoint=None,
@@ -1744,6 +1769,15 @@ class FunTest:
             tags = json.loads(suite_execution.tags)
         return tags
 
+    def check_pause_on_failure(self, message):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution.pause_on_failure:
+                self.log("Pause on failure set for {}".format(message))
+                suite_execution.state = JobStatusType.PAUSED
+                suite_execution.save()
+                self.pause_loop()
+
 fun_test = FunTest()
 
 
@@ -1900,6 +1934,9 @@ class FunTestScript(object):
 
         return script_result == FunTest.PASSED
 
+
+
+
     def _cleanup_fss(self):
         cleanup_error_found = False
 
@@ -2052,7 +2089,8 @@ class FunTestScript(object):
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
-                    except TestException:
+                    except TestException as ex:
+                        fun_test.check_pause_on_failure(str(ex))
                         try:
                             test_case.cleanup()
                         except Exception as ex:
@@ -2064,6 +2102,8 @@ class FunTestScript(object):
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
+                        fun_test.check_pause_on_failure(str(ex))
+
                         try:
                             test_case.cleanup()
                         except Exception as ex:
@@ -2087,6 +2127,8 @@ class FunTestScript(object):
 
         except Exception as ex:
             fun_test.critical(str(ex))
+            fun_test.check_pause_on_failure(str(ex))
+
             try:
                 FunTestScript.cleanup(self)
             except Exception as ex:

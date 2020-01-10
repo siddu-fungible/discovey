@@ -117,6 +117,7 @@ export class SubmitJobComponent implements OnInit {
   csiCacheMiss: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
+  pauseOnFailure: boolean = false;
   moreJenkinsOptions: boolean = false;
   mode: Mode = Mode.REGULAR;
   Mode = Mode;
@@ -324,6 +325,10 @@ export class SubmitJobComponent implements OnInit {
         this.hbmDump = payloadEnvironment.hbm_dump;
       }
 
+      if (payload.hasOwnProperty('pauseOnFailure')) {
+        this.pauseOnFailure = payload.pauseOnFailure;
+      }
+
       if (payload.hasOwnProperty('description')) {
         this.description = payload.description;
       }
@@ -527,6 +532,7 @@ export class SubmitJobComponent implements OnInit {
     payload["email_on_fail_only"] = this.emailOnFailOnly;
     payload["test_bed_type"] = this.selectedTestBedType;
     payload["submitter_email"] = this.userProfile.user.email;
+    payload["pause_on_failure"] = this.pauseOnFailure;
 
     if (this.emails) {
       this.emails = this.emails.split(",");

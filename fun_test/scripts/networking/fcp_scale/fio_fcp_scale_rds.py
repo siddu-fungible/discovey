@@ -558,7 +558,7 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.log(" ### Configuring FS {} F1 {} ####".format(fs_name,f1_index))
             # Create storage listener
             if ipconfig:
-                command_result = params[fs_name][f1_index + '_handle'].ip_cfg(ip=params[storage_fs][f1_index + '_ip'], port=ipcfg_port)
+                command_result = params[fs_name][f1_index + '_handle'].ip_cfg(ip=params[storage_fs][f1_index + '_ip'], port=ipcfg_port, command_duration=command_timeout)
                 fun_test.simple_assert(command_result["status"], "IPCFG on " + fs_name + ' ' + f1_index)
 
             # Get number of drives in the F1
