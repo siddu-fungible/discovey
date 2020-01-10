@@ -953,7 +953,7 @@ class BootupWorker(Thread):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FUNETH_UNLOAD_COME_POWER_CYCLE)
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
-            if self.fs.get_revision() in ["2"]:
+            if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 self.fs.reset()
                 fs.come = None
                 fs.bmc = None
@@ -1335,7 +1335,8 @@ class ComE(Linux):
         except:
             pass
         try:
-            self.cleanup_redis()
+            # self.cleanup_redis()
+            pass
         except:
             pass
 
@@ -1477,7 +1478,8 @@ class ComE(Linux):
             pass
 
         try:
-            self.cleanup_redis()
+            # self.cleanup_redis()
+            pass
         except:
             pass
 
