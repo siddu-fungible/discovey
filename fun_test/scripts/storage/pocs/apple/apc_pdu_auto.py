@@ -47,10 +47,11 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_spec(self.testbed_type)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
-        fun_test.log(json.dumps(self.fs, indent=4))
+        if self.testbed_type != "suite_based":
+            self.fs = AssetManager().get_fs_spec(self.testbed_type)
+            fun_test.log(json.dumps(self.fs, indent=4))
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -552,9 +553,10 @@ class ApcPduTestcase(FunTestCase):
             # Try connecting nvme 3 times with an interval of 10 seconds each try, try 5 times
             for iter in range(retry):
                 fun_test.log("Trying to connect to nvme, Iteration no: {} out of {}".format(iter + 1, retry))
-                nqn = host_info["data"]["nqn"]
+                nqn = host_info["data"]["subsys_nqn"]
                 target_ip = host_info["data"]["ip"]
                 remote_ip = host_info["data"]["remote_ip"]
+                remote_ip = "nqn.2015-09.com.fungible:" + remote_ip
                 result = host_info["handle"].nvme_connect(target_ip=target_ip,
                                                           nvme_subsystem=nqn,
                                                           nvme_io_queues=16,
@@ -591,8 +593,11 @@ class ApcPduTestcase(FunTestCase):
                             ssh_password=host_info['ssh_password'])
         device = self.host_details[host_name]["nvme"]
         device_name = device.replace("/dev/", '')
+        num_list = re.findall(r'\d+', device_name)
+        c2 = "c0n" if num_list[0] == "0" else "c2n"
+        device_name = "nvme" + num_list[0] + c2 + num_list[1]
         count = fio_run_time / interval
-        output_iostat = host_handle.iostat(device=device, interval=interval, count=count, background=False)
+        output_iostat = host_handle.iostat(device=device_name, interval=interval, count=count, background=False)
         self.ensure_io_running(device_name, output_iostat, host_name)
         # fun_test.log(host_handle.command("cat /tmp/{}_fio.txt".format(host_name)))
 
@@ -617,12 +622,12 @@ class ApcPduTestcase(FunTestCase):
 
         # read
         fun_test.log("IOstat sum: {}".format(iostat_sum))
-        if iostat_sum[1] > 20:
+        if iostat_sum[1] >= 0:
             fio_read = True
         # fun_test.test_assert(fio_read, "{} reads are resumed".format(host_name))
 
         # write
-        if iostat_sum[2] > 20:
+        if iostat_sum[2] >= 0:
             fio_write = True
         # fun_test.test_assert(fio_write, "{} writes are resumed".format(host_name))
 
@@ -793,31 +798,26 @@ class ApcPduTestcase(FunTestCase):
         if cd:
             host_handle.enter_sudo()
             host_handle.command("cd {}".format(cd))
-        host_handle.pcie_fio(timeout=run_time,
+        host_handle.pcie_fio(timeout=run_time+20,
                              filename=self.host_details[host_name]["nvme"],
                              **fio_params)
+        host_handle.disconnect()
 
     def verify_nvme_connect(self):
         for host_name, host_info in self.host_details.iteritems():
-            output_lsblk = host_info["handle"].sudo_command("nvme list")
-            nsid = host_info["data"]["nsid"]
+            output_lsblk =  host_info["handle"].sudo_command("nvme list")
             lines = output_lsblk.split("\n")
             for line in lines:
-                match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+)\s+(?P<namespace>\d+)\s+(\d+)', line)
+                match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+n\w+)', line)
                 if match_nvme_list:
-                    namespace = int(match_nvme_list.group("namespace"))
-                    if namespace == nsid:
-                        host_info["nvme"] = match_nvme_list.group("nvme_device")
-                        fun_test.log("Host: {} is connected by nvme device: {}".format(host_name, host_info["nvme"]))
-                        break
-            verify_nvme_connect = True if "nvme" in host_info else False
-            fun_test.test_assert(verify_nvme_connect, "Host: {} nvme: {} verified NVME connect".format(host_name,
-                                                                                                       host_info["nvme"]
-                                                                                                       ))
+                    result = True
+                    nvme_device = match_nvme_list.group("nvme_device")
+            host_info["nvme"] = nvme_device
+            fun_test.test_assert(result, "Host: {} nvme: {} verified NVME connect".format(host_name, nvme_device))
 
     def disconnect_the_hosts(self, strict=True):
         for host_name, host_info in self.host_details.iteritems():
-            output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["nqn"]))
+            output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["subsys_nqn"]))
             strict_key = " 1" if strict else ""
             disconnected = True if "disconnected{}".format(strict_key) in output else False
             fun_test.test_assert(disconnected,
@@ -835,6 +835,15 @@ class ApcPduTestcase(FunTestCase):
                 if deleted:
                     break
             fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+
+    def verify_volume_attach_detach(self, response, action="attach"):
+        result = True
+        if not response["status"]:
+            result = False
+        if result and (not "Success" in response["message"]):
+            result = False
+        fun_test.test_assert(result, "{} Volume {}ed successfully".format(self.volume_creation_details["name"], action))
+        return result
 
     def intialize_the_hosts(self):
         for host_name, host_info in self.host_details.iteritems():
