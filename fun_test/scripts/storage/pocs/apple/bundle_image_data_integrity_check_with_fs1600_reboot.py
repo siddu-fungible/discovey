@@ -1,5 +1,6 @@
 from lib.system.fun_test import *
 from apc_pdu_auto import *
+from scripts.storage.storage_helper import single_fs_setup
 
 
 # --environment={\"test_bed_type\":\"fs-53\"}
@@ -14,6 +15,7 @@ class DataIntegrityTestcase(ApcPduTestcase):
 
     def setup(self):
         super(DataIntegrityTestcase, self).setup()
+        self = single_fs_setup(self)
         # Any additional setup can be added here
 
     def run(self):
@@ -22,39 +24,33 @@ class DataIntegrityTestcase(ApcPduTestcase):
         self.data_integrity_check()
 
     def data_integrity_check(self):
-        if self.write_hosts:
-            self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
-                                               api_server_port=self.api_server_port,
-                                               username=self.username,
-                                               password=self.password)
-
-            required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
-            required_write_hosts_list = required_hosts_list[:self.write_hosts]
-            required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
-            self.pool_uuid = self.get_pool_id()
-            self.volume_uuid_details = self.create_vol(self.write_hosts)
-            self.attach_volumes_to_host(required_write_hosts_list)
-            self.get_host_handles()
-            self.intialize_the_hosts()
-            self.connect_the_host_to_volumes()
-            self.verify_nvme_connect()
-            self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
-            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
-            self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
-            self.disconnect_the_hosts()
-            self.destoy_host_handles()
-            self.reboot_test()
-            self.basic_checks()
-            fun_test.sleep("Wait for GUI to come up", seconds=80)
-            self.attach_volumes_to_host(required_read_hosts_list)
-            self.get_host_handles()
-            self.intialize_the_hosts()
-            self.connect_the_host_to_volumes()
-            self.verify_nvme_connect()
-            self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_read_hosts_list,
-                                      cd=self.read_fio["aux-path"])
-            self.disconnect_the_hosts()
-            self.destoy_host_handles()
+        hosts_list = self.host_info.keys()
+        required_write_hosts_list = hosts_list[:self.write_hosts]
+        required_read_hosts_list = hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        self.pool_uuid = self.get_pool_id()
+        self.volume_uuid_details = self.create_vol(self.write_hosts)
+        self.attach_volumes_to_host(required_write_hosts_list)
+        self.get_host_handles()
+        self.intialize_the_hosts()
+        self.connect_the_host_to_volumes()
+        self.verify_nvme_connect()
+        self.start_fio_and_verify(fio_params=self.write_fio, host_names_list=required_write_hosts_list)
+        self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_write_hosts_list, cd=self.read_fio["aux-path"])
+        self.scp_aux_file(from_host=required_write_hosts_list[0], to_hosts=required_read_hosts_list)
+        self.disconnect_the_hosts()
+        self.destoy_host_handles()
+        self.reboot_test()
+        self.basic_checks()
+        fun_test.sleep("Wait for GUI to come up", seconds=80)
+        self.attach_volumes_to_host(required_read_hosts_list)
+        self.get_host_handles()
+        self.intialize_the_hosts()
+        self.connect_the_host_to_volumes()
+        self.verify_nvme_connect()
+        self.start_fio_and_verify(fio_params=self.read_fio, host_names_list=required_read_hosts_list,
+                                  cd=self.read_fio["aux-path"])
+        self.disconnect_the_hosts()
+        self.destoy_host_handles()
 
     def remove_write_host_from_read_hosts_list(self, write_hosts, read_hosts):
         for write_host in write_hosts:
@@ -83,7 +79,7 @@ class EcVolReboot(ApcPduTestcase):
     VOL_NAME = "EC"
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=3,
                               summary="EC vol power",
                               steps="""""")
 
@@ -91,6 +87,8 @@ class EcVolReboot(ApcPduTestcase):
         testcase = self.__class__.__name__
         super(EcVolReboot, self).setup()
         self.initialize_test_case_variables(testcase)
+        self = single_fs_setup(self)
+        self.hosts_list = self.host_info.keys()
 
     def run(self):
 
@@ -102,14 +100,8 @@ class EcVolReboot(ApcPduTestcase):
                               ssh_password=self.fs['bmc']['mgmt_ssh_password'])
         self.bmc_handle.set_prompt_terminator(r'# $')
 
-        self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
-                                           api_server_port=self.api_server_port,
-                                           username=self.username,
-                                           password=self.password)
-
-        required_hosts_list = self.verify_and_get_required_hosts_list(self.write_hosts + self.read_hosts)
-        self.required_write_hosts_list = required_hosts_list[:self.write_hosts]
-        required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
+        self.required_write_hosts_list = self.hosts_list[:self.write_hosts]
+        # required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
         self.pool_uuid = self.get_pool_id()
         self.volume_uuid_details = self.create_vol(self.write_hosts)
         self.attach_volumes_to_host(self.required_write_hosts_list)
