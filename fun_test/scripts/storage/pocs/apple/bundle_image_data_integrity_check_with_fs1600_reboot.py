@@ -33,7 +33,12 @@ class DataIntegrityTestcase(ApcPduTestcase):
             fun_test.log("Test beds: {}".format(required_hosts_list))
             required_write_hosts_list = required_hosts_list[:self.write_hosts]
             required_read_hosts_list = required_hosts_list[self.write_hosts:(self.read_hosts + 1):]
+            self.sc_api = StorageControllerApi(api_server_ip=self.fs['come']['mgmt_ip'],
+                                               api_server_port=self.api_server_port,
+                                               username=self.username,
+                                               password=self.password)
         fun_test.log("Test beds: {}".format(getattr(self, "host_info", "")))
+
         self.pool_uuid = self.get_pool_id()
         self.volume_uuid_details = self.create_vol(self.write_hosts)
         self.attach_volumes_to_host(required_write_hosts_list)
