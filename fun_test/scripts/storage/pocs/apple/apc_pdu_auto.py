@@ -47,10 +47,11 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_spec(self.testbed_type)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
-        fun_test.log(json.dumps(self.fs, indent=4))
+        if self.testbed_type != "suite_based":
+            self.fs = AssetManager().get_fs_spec(self.testbed_type)
+            fun_test.log(json.dumps(self.fs, indent=4))
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
