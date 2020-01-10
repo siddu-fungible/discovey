@@ -1348,7 +1348,7 @@ class ComE(Linux):
             pass
 
         try:
-            if skip_cc_cleanup:
+            if not skip_cc_cleanup:
                 self.stop_cclinux_service()
         except:
             pass
