@@ -222,3 +222,7 @@ th {
 .messages-div {
   background-color: lightgrey;
 }
+
+a {
+    display: block;
+}
