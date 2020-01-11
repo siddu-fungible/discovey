@@ -996,7 +996,7 @@ class BootupWorker(Thread):
                 fs.bundle_upgraded = True
                 bmc.bundle_upgraded = True
 
-                come.clean_databases()
+                come.cleanup_databases()
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
