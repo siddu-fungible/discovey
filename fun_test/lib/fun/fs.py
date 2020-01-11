@@ -953,12 +953,12 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
-                come.fs_reset(fast=True)
-                fs.come = None
-                fs.bmc = None
+                if not self.fs.health():
+                    come.fs_reset(fast=True)
+                    fs.come = None
+                    fs.bmc = None
                 come = fs.get_come()
-                if fs.bundle_compatible:
-                    fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+                fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
@@ -972,7 +972,7 @@ class BootupWorker(Thread):
                 try:
                     come.initialize()
                     come.detect_pfs()
-                    fun_test.test_assert(self.fs.health(), "FS is healthy")
+                    # fun_test.test_assert(self.fs.health(), "FS is healthy")
                 except Exception as ex:
                     fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
                     fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
