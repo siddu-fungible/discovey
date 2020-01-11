@@ -953,12 +953,15 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
-                if not self.fs.health() or not come.ensure_expected_containers_running():
+                come.initialize()
+                fs_health = self.fs.health()
+                expected_containers_running = come.ensure_expected_containers_running()
+                if not fs_health or not expected_containers_running:
                     come.fs_reset()
                     fs.come = None
                     fs.bmc = None
-                come = fs.get_come()
-                fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+                    come = fs.get_come()
+                    fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
