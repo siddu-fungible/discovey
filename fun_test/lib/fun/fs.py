@@ -1150,7 +1150,7 @@ class ComEInitializationWorker(Thread):
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
-                    while not expected_containers_running and not expected_containers_running_timer.is_expired():
+                    while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
                         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
@@ -1214,7 +1214,7 @@ class ComE(Linux):
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
-    CONTAINERS_BRING_UP_TIME_MAX = 60 * 10
+    CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
@@ -1256,7 +1256,7 @@ class ComE(Linux):
         expected_containers_running = self.is_expected_containers_running()
         expected_containers_running_timer = FunTimer(max_time=max_time)
 
-        while not expected_containers_running and not expected_containers_running_timer.is_expired():
+        while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
         return expected_containers_running
