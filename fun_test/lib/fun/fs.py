@@ -995,9 +995,10 @@ class BootupWorker(Thread):
                 fs.bundle_upgraded = True
                 bmc.bundle_upgraded = True
 
+                come.clean_databases()
+
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
-                    # come.pre_reboot_cleanup()
                     come.fs_reset()
                 except Exception as ex:
                     pass
@@ -1335,6 +1336,12 @@ class ComE(Linux):
 
 
     def restart_storage_controller(self):
+        try:
+            self.stop_cclinux_service()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            self.diags()
+            self.fs_reset(clone=True)
         self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
 
 
@@ -1464,7 +1471,12 @@ class ComE(Linux):
         clone.command("cat /var/log/syslog")
 
     def stop_cclinux_service(self):
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
+        try:
+            self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            self.diags()
+            self.fs_reset(clone=True)
 
     def _setup_build_script_directory(self):
         """
@@ -1487,32 +1499,9 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+
+        self.stop_cclinux_service()
         self.stop_health_monitors()
-        try:
-            self.stop_cclinux_service()
-        except:
-            pass
-
-        try:
-            self.restart_storage_controller()
-        except:
-            pass
-
-        fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
-
-
-        try:
-            # self.cleanup_redis()
-            pass
-        except:
-            pass
-
-        try:
-            self.stop_cclinux_service()
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            self.diags()
-            self.fs_reset(clone=True)
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
@@ -1536,11 +1525,22 @@ class ComE(Linux):
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
 
+
         ### Workaround for bond
 
         self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
         self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         return True
+
+    def cleanup_databases(self):
+        self.stop_cclinux_service()
+        self.stop_health_monitors()
+
+        try:
+            self.restart_storage_controller()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
 
 
     def _get_bus_number(self, pcie_device_id):
