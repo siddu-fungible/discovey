@@ -1486,7 +1486,7 @@ class ComE(Linux):
         except:
             pass
 
-        fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+        fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
 
 
         try:
