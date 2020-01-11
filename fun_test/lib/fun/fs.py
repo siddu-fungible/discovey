@@ -1338,7 +1338,7 @@ class ComE(Linux):
 
     def restart_storage_controller(self):
         try:
-            self.stop_cclinux_service()
+            self.stop_cc_health_check()
         except Exception as ex:
             fun_test.critical(str(ex))
             self.diags()
@@ -1471,6 +1471,14 @@ class ComE(Linux):
         clone.command("dmesg")
         clone.command("cat /var/log/syslog")
 
+    def stop_cc_health_check(self):
+        system_health_check_script = "system_health_check.py"
+        health_check_processes = self.get_process_id_by_pattern(system_health_check_script, multiple=True)
+        for health_check_process in health_check_processes:
+            self.kill_process(process_id=health_check_process, signal=9)
+        self.get_process_id_by_pattern(system_health_check_script, multiple=True)
+
+
     def stop_cclinux_service(self):
         try:
             self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
@@ -1501,7 +1509,8 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
 
-        self.stop_cclinux_service()
+        # self.stop_cclinux_service()
+        self.stop_cc_health_check()
         self.stop_health_monitors()
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
@@ -1534,7 +1543,7 @@ class ComE(Linux):
         return True
 
     def cleanup_databases(self):
-        self.stop_cclinux_service()
+        self.stop_cc_health_check()
         self.stop_health_monitors()
 
         try:
