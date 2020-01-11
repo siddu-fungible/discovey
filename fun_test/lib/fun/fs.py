@@ -952,7 +952,8 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
-                self.fs.reset()
+                come = fs.get_come()
+                come.fs_reset(fast=True)
                 fs.come = None
                 fs.bmc = None
                 come = fs.get_come()
@@ -1330,12 +1331,16 @@ class ComE(Linux):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
 
 
+    def restart_storage_controller(self):
+        self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+
+
     def pre_reboot_cleanup(self, skip_cc_cleanup=False, for_bundle_installation=True):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
         self.stop_health_monitors()
 
         try:
-            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+            self.restart_storage_controller()
         except:
             pass
 
