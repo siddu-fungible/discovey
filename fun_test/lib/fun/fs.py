@@ -241,20 +241,18 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
-            """
-            try:
-                come.pre_reboot_cleanup()
-            except Exception as ex:
-                fun_test.critical(str(ex))
-            """
-            # reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time,
-                                        non_blocking=non_blocking,
-                                        ipmi_details=ipmi_details)
-            reboot_info_string = "initiated" if non_blocking else "complete"
-            fun_test.test_assert(expression=reboot_result,
-                                 message="ComE reboot {} (Graceful)".format(reboot_info_string),
-                                 context=self.context)
+
+            if self.fs.get_revision() in ["2"] or self.fs.bundle_compatible:
+                come.fs_reset(fast=True)
+            else:
+                reboot_result = come.reboot(max_wait_time=max_wait_time,
+                                            non_blocking=non_blocking,
+                                            ipmi_details=ipmi_details)
+
+                reboot_info_string = "initiated" if non_blocking else "complete"
+                fun_test.test_assert(expression=reboot_result,
+                                     message="ComE reboot {} (Graceful)".format(reboot_info_string),
+                                     context=self.context)
         else:
             fun_test.log("Skipping reboot as ComE was power-cycled")
         return True
@@ -1311,13 +1309,17 @@ class ComE(Linux):
             except:
                 pass
 
-    def fs_reset(self, clone=False):
+    def fs_reset(self, clone=False, fast=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
         if clone:
             handle = self.clone()
         try:
-            handle.sudo_command(self.FS_RESET_COMMAND, timeout=120)
+            reset_command = "{}".format(self.FS_RESET_COMMAND)
+            if fast:
+                reset_command += " -f"
+
+            handle.sudo_command(reset_command, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1479,10 +1481,10 @@ class ComE(Linux):
         """
         self.stop_health_monitors()
 
-        # try:
-        #    self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
-        # except:
-        #    pass
+        try:
+            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+        except:
+            pass
 
 
         try:
