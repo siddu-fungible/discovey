@@ -986,9 +986,12 @@ class BootupWorker(Thread):
                     come.detect_pfs()
                     bmc = fs.get_bmc()
 
+                bmc = fs.get_bmc()
+                come = fs.get_come()
                 for f1_index in range(2):
                     if f1_index == self.fs.disable_f1_index:
                         continue
+
                     bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
