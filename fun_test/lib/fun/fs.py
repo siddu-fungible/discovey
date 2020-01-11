@@ -960,6 +960,7 @@ class BootupWorker(Thread):
                     come.fs_reset()
                     fs.come = None
                     fs.bmc = None
+                    fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
