@@ -1488,9 +1488,13 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
         self.stop_health_monitors()
+        try:
+            self.stop_cclinux_service()
+        except:
+            pass
 
         try:
-            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+            self.restart_storage_controller()
         except:
             pass
 
