@@ -1486,6 +1486,8 @@ class ComE(Linux):
         except:
             pass
 
+        fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+
 
         try:
             # self.cleanup_redis()
