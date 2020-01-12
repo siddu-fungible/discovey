@@ -100,6 +100,10 @@ class BuildHelper():
     def fetch_stable_master(self, debug=False, stripped=True, generate_signed_image=True):
         result = False
         tftp_filename = "{}/s_{}_{}.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
+        if generate_signed_image:
+            tftp_filename = "{}/s_{}_{}.signed.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(),
+                                                   self.FUN_OS_STRIPPED_IMAGE_NAME)
+
         base_temp_directory = "/tmp/stable_master/s_{}".format(fun_test.get_suite_execution_id())
         tftp_server = self.get_tftp_server()
         try:
