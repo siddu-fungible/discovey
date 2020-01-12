@@ -311,11 +311,6 @@ class Platform(RedFishTool, IpmiTool):
         self.qa_02 = Linux(**service_host_spec)
         self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
 
-    # def get_dpcsh_data_for_cmds(self, cmd, f1=0, peek=True):
-    #     result = getattr(self, "f1_{}_dpc".format(f1)).command(cmd, legacy=True)
-    #     fun_test.simple_assert(result["status"], "Get DPCSH Data")
-    #     return result["data"]
-
     def get_platform_drop_information(self, system="come"):
         result = {"status": False, "data": {}}
         handle = self.handles_list[system]
@@ -370,7 +365,6 @@ class Platform(RedFishTool, IpmiTool):
                 result["message"] = "Unable to set interface : {}".format(interface)
         return result
 
-
     def get_platform_link(self, system="bmc", interface="bond0"):
         result = {"status": False, "link_detected": False}
         if system == "bmc":
@@ -393,13 +387,6 @@ class Platform(RedFishTool, IpmiTool):
                     k, v = line.split("=")
                     result["data"][k] = v.strip().replace("\"", "")
         return result
-
-    # def get_platform_ip_information(self):
-    #     #  Loop through all array (fpga, come, bcc)
-    #     # todo : check with parag what is the bcc thing
-    #     result = self.get_platform_ip_information()
-    #     fun_test.log("Platform ip info: {}".format(result["data"]))
-    #     return result
 
     def get_ssd_info(self, f1=0):
         cmd = "peek storage/devices/nvme/ssds"
@@ -676,11 +663,13 @@ class Platform(RedFishTool, IpmiTool):
             logs = {}
             logs["Dmesg"] = self.come_handle.command("dmesg")
             logs["Uname"] = self.come_handle.command("uname -a")
-            logs["DPU information"] = self.come_handle.command("lspci -vv -d 1dad:")
-            logs["F1 0 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=0, get_raw_output=True)
-            logs["F1 1 ssd info"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=1, get_raw_output=True)
-            logs["F1 0 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0, get_raw_output=True)
-            logs["F1 1 port info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=1, get_raw_output=True)
+            logs["DPU_information"] = self.come_handle.command("lspci -vv -d 1dad:")
+            logs["F1_0_ssd_status"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=0, get_raw_output=True)
+            logs["F1_1_ssd_status"] = self.get_dpcsh_data_for_cmds("peek storage/devices/nvme/ssds", f1=1, get_raw_output=True)
+            logs["F1_0_ssd_info"] = self.get_dpcsh_data_for_cmds("peek nvme/ssds/info", f1=0, get_raw_output=True)
+            logs["F1_1_ssd_info"] = self.get_dpcsh_data_for_cmds("peek nvme/ssds/info", f1=1, get_raw_output=True)
+            logs["F1_0_port_info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0, get_raw_output=True)
+            logs["F1_1_port_info"] = self.get_dpcsh_data_for_cmds("port linkstatus", f1=1, get_raw_output=True)
             self.add_these_logs(logs, "come")
         except:
             fun_test.critical("Unable to collect the COMe logs")
@@ -979,8 +968,25 @@ class Platform(RedFishTool, IpmiTool):
         self.collect_bmc_logs()
         self.collect_fpga_logs()
 
+    def enter_docker(self, f1=0):
+        result = True
+        self.come_handle.enter_sudo()
+        self.come_handle.command("docker exec -it F1-{} bash".format(f1))
+        return result
 
-class StorageAPI:
+    def exit_docker(self):
+        self.come_handle.command("exit")
+
+    def linkstatus_via_docker(self, f1=0):
+        result = False
+        self.enter_docker(f1)
+        self.come_handle.ifconfig()
+        result = self.come_handle.ifconfig()
+        self.exit_docker()
+        return result
+
+
+class StorageApi:
     def __init__(self):
         if not getattr(self, "volume_creation_details", False):
             fun_test.crtical("Volume creation details JSON missing")

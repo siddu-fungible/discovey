@@ -42,7 +42,7 @@ class PlatformGeneralTestCase(FunTestCase, Platform):
             self.collect_logs()
 
 
-class DiscoverStaticIP(PlatformGeneralTestCase):
+class DiscoverStaticIp(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=7,
@@ -67,7 +67,7 @@ class DiscoverStaticIP(PlatformGeneralTestCase):
         self.fs = AssetManager().get_fs_spec(fs_name)
 
 
-class DiscoverDhcpIP(PlatformGeneralTestCase):
+class DiscoverDhcpIp(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=8,
@@ -92,7 +92,7 @@ class DiscoverDhcpIP(PlatformGeneralTestCase):
         self.fs = AssetManager().get_fs_spec(fs_name)
 
 
-class AlternateCommunicationToBMC(PlatformGeneralTestCase):
+class AlternateCommunicationToBmc(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=10,
@@ -133,7 +133,7 @@ class PlatformComponentVersioningDiscovery(PlatformGeneralTestCase):
         fun_test.test_assert(come_verified, message="COMe DROP version verified")
 
 
-class BootSequenceFPGA(PlatformGeneralTestCase):
+class BootSequenceFpga(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=29,
@@ -147,28 +147,28 @@ class BootSequenceFPGA(PlatformGeneralTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        super(BootSequenceFPGA, self).setup()
+        super(BootSequenceFpga, self).setup()
         self.initialize_test_case_variables(testcase)
 
     @run_deco
     def run(self):
-        # self.fs_basic_checks()
+        self.fs_basic_checks()
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
-        # fpga_reboot = self.reboot_system(system="fpga")
-        # fun_test.test_assert(fpga_reboot, "FPGA rebooted")
-        # bmc_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
-        #                                                 time_in_seconds=5,
-        #                                                 system="bmc",
-        #                                                 time_out=30)
-        # come_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
-        #                                                  time_in_seconds=5,
-        #                                                  system="come",
-        #                                                  time_out=30)
-        # fpga_up = self.fpga_handle.ensure_host_is_up(max_wait_time=self.fpga_up_time_within)
-        # fun_test.test_assert(fpga_up, "FPGA up within {} seconds".format(self.fpga_up_time_within))
-        #
-        # fun_test.join_thread(bmc_down_thread)
-        # fun_test.join_thread(come_down_thread)
+        fpga_reboot = self.reboot_system(system="fpga")
+        fun_test.test_assert(fpga_reboot, "FPGA rebooted")
+        bmc_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
+                                                        time_in_seconds=5,
+                                                        system="bmc",
+                                                        time_out=30)
+        come_down_thread = fun_test.execute_thread_after(func=self.check_if_system_is_down,
+                                                         time_in_seconds=5,
+                                                         system="come",
+                                                         time_out=30)
+        fpga_up = self.fpga_handle.ensure_host_is_up(max_wait_time=self.fpga_up_time_within)
+        fun_test.test_assert(fpga_up, "FPGA up within {} seconds".format(self.fpga_up_time_within))
+
+        fun_test.join_thread(bmc_down_thread)
+        fun_test.join_thread(come_down_thread)
         #
         # self.fs_basic_checks()
         ip_data_after_reboot = self.get_mac_n_ip_addr_info_of_systems()
@@ -180,7 +180,7 @@ class BootSequenceFPGA(PlatformGeneralTestCase):
         self.validate_temperaure_sensors()
 
 
-class BootSequenceBMC(PlatformGeneralTestCase):
+class BootSequenceBmc(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=30,
@@ -189,7 +189,7 @@ class BootSequenceBMC(PlatformGeneralTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        super(BootSequenceBMC, self).setup()
+        super(BootSequenceBmc, self).setup()
         self.initialize_test_case_variables(testcase)
 
     @run_deco
@@ -225,7 +225,7 @@ class BootSequenceBMC(PlatformGeneralTestCase):
         self.validate_temperaure_sensors()
 
 
-class BootSequenceCOMe(PlatformGeneralTestCase):
+class BootSequenceCome(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=31,
@@ -234,7 +234,7 @@ class BootSequenceCOMe(PlatformGeneralTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        super(BootSequenceCOMe, self).setup()
+        super(BootSequenceCome, self).setup()
         self.initialize_test_case_variables(testcase)
 
     @run_deco
@@ -264,7 +264,7 @@ class BootSequenceCOMe(PlatformGeneralTestCase):
         self.validate_temperaure_sensors()
 
 
-class BMCLinkToggle(PlatformGeneralTestCase):
+class BmcLinkToggle(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=64,
@@ -280,7 +280,7 @@ class BMCLinkToggle(PlatformGeneralTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        super(BMCLinkToggle, self).setup()
+        super(BmcLinkToggle, self).setup()
         self.initialize_test_case_variables(testcase)
 
     @run_deco
@@ -319,7 +319,7 @@ class BMCLinkToggle(PlatformGeneralTestCase):
             fun_test.sleep("Waiting for BMC console to close", timer.remaining_time)
 
 
-class BMCColdBoot(PlatformGeneralTestCase):
+class BmcColdBoot(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=68,
@@ -339,7 +339,7 @@ class BMCColdBoot(PlatformGeneralTestCase):
         pass
 
 
-class BMCIPMIReset(PlatformGeneralTestCase):
+class BmcIpmiReset(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=69,
@@ -368,7 +368,7 @@ class BMCIPMIReset(PlatformGeneralTestCase):
             self.ipmitool_reset("soft")
 
 
-class BMCTransportForCommunication(PlatformGeneralTestCase):
+class BmcTransportForCommunication(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=70,
@@ -383,7 +383,7 @@ class BMCTransportForCommunication(PlatformGeneralTestCase):
         fun_test.test_assert(response, "IPMI tool is active")
 
 
-class TemperatureSensorBMCIpmi(PlatformGeneralTestCase):
+class TemperatureSensorBmcIpmi(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=71,
@@ -465,7 +465,7 @@ class F1AsicTemperature(PlatformGeneralTestCase):
         result = self.verify_ipmi_sdr_info()
 
 
-class BootComeUEFIorBIOS(PlatformGeneralTestCase):
+class BootComeUefiOrBios(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=87,
@@ -482,7 +482,7 @@ class BootComeUEFIorBIOS(PlatformGeneralTestCase):
         self.check_if_f1s_detected()
 
 
-class PCIEDiscoverySSDviaRC(PlatformGeneralTestCase):
+class PcieDiscoverySsdViaRc(PlatformGeneralTestCase):
 
     def describe(self):
         self.set_test_details(id=108,
@@ -491,7 +491,7 @@ class PCIEDiscoverySSDviaRC(PlatformGeneralTestCase):
 
     def setup(self):
         testcase = self.__class__.__name__
-        super(PCIEDiscoverySSDviaRC, self).setup()
+        super(PcieDiscoverySsdViaRc, self).setup()
         self.initialize_test_case_variables(testcase)
 
     @run_deco
@@ -521,7 +521,7 @@ class PcieDeviceDetection(PlatformGeneralTestCase):
         fun_test.test_assert(result, "Collected lspci output")
 
 
-class HostConnectionViaPCIEBus(StorageAPI, PlatformGeneralTestCase):
+class HostConnectionViaPcieBus(StorageApi, PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=118,
                               summary="",
@@ -540,7 +540,7 @@ class HostConnectionViaPCIEBus(StorageAPI, PlatformGeneralTestCase):
         self.verify_nvme_connect()
 
 
-class COMeVolumeCreation(PlatformGeneralTestCase, StorageAPI):
+class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
     def describe(self):
         self.set_test_details(id=3,
                               summary="",
@@ -550,24 +550,11 @@ class COMeVolumeCreation(PlatformGeneralTestCase, StorageAPI):
         testcase = self.__class__.__name__
         PlatformGeneralTestCase.setup(self)
         self.initialize_test_case_variables(testcase)
-        StorageAPI.__init__(self)
+        StorageApi.__init__(self)
 
     @run_deco
     def run(self):
         self.create_volume_and_run_fio()
-
-    # @run_deco
-    # def run(self):
-    #     storage_controller_0 = StorageController(target_ip=self.come_handle.host_ip,
-    #                                              target_port=self.come_handle.get_dpc_port(0))
-    #     ctrlr_uuid = utils.generate_uuid()
-    #     fun_test.test_assert(storage_controller_0.create_controller(ctrlr_uuid=ctrlr_uuid,
-    #                                                                 transport=transport,
-    #                                                                 huid=huid[index],
-    #                                                                 ctlid=ctlid[index],
-    #                                                                 fnid=fnid,
-    #                                                                 command_duration=120)['status'],
-    #                          message="Create Controller with UUID: {}".format(ctrlr_uuid))
 
     def cleanup(self):
         # PlatformGeneralTestCase.cleanup(self)
@@ -591,28 +578,28 @@ class General(PlatformGeneralTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     test_case_list = [
-        DiscoverStaticIP,
-        DiscoverDhcpIP,
-        AlternateCommunicationToBMC,
+        DiscoverStaticIp,
+        DiscoverDhcpIp,
+        AlternateCommunicationToBmc,
         PlatformComponentVersioningDiscovery,
-        BootSequenceFPGA,
-        BootSequenceBMC,
-        BootSequenceCOMe,
-        BMCLinkToggle,
-        BMCColdBoot,
-        BMCIPMIReset,
-        BMCTransportForCommunication,
-        TemperatureSensorBMCIpmi,
+        BootSequenceFpga,
+        BootSequenceBmc,
+        BootSequenceCome,
+        BmcLinkToggle,
+        BmcColdBoot,
+        BmcIpmiReset,
+        BmcTransportForCommunication,
+        TemperatureSensorBmcIpmi,
         FanSensorBootupIpmi,
         TemperatureFanMeasurement,
         InletExhasutThreshold,
         FanRedfishtool,
         F1AsicTemperature,
-        BootComeUEFIorBIOS,
-        PCIEDiscoverySSDviaRC,
+        BootComeUefiOrBios,
+        PcieDiscoverySsdViaRc,
         PcieDeviceDetection,
-        HostConnectionViaPCIEBus,
-        COMeVolumeCreation
+        HostConnectionViaPcieBus,
+        ComeVolumeCreation
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
