@@ -324,15 +324,29 @@ def single_fs_setup(obj):
                     if not dataplane_configuration_success:
                         fun_test.sleep("Wait for retry", seconds=10)
                         try:
-                            obj.funcp_obj[0].container_info["F1-0"].ping(ip[:- 1] + "1")
-                            fun_test.log("Just for debugging")
+                            fun_test.log("Just for debugging Start")
+                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp -n")
+                            container_handle.command("route -n")
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                    else:
+                        fun_test.log("Just for debugging Start")
+                        container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                        container_handle.ping(ip[:- 1] + "1")
+                        container_handle.command("arp")
+                        container_handle.command("route -n")
+                        container_handle.command("ifconfig")
+                        fun_test.log("Just for debugging End")
 
                     # fun_test.test_assert(
                     #    result["status"],
                     #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".format(node, ip))
+
         else:
             # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
             pass

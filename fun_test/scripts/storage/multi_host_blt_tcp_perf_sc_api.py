@@ -200,6 +200,12 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 if self.funcp_spec[0]["container_names"][index] == "run_sc":
                     continue
                 ping_status = self.host_handles[key].ping(dst=ip)
+                host_handle = self.host_handles[key]
+                if not ping_status:
+                    host_handle.command("arp -n")
+                    host_handle.command("route -n")
+                    host_handle.command("ifconfig")
+
                 fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                      format(key, self.funcp_spec[0]["container_names"][index], ip))
 
