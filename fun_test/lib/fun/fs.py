@@ -954,19 +954,31 @@ class BootupWorker(Thread):
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
                 come_initialized = False
-                try:
-                    come_initialized = come.initialize()
-                except:
-                    pass
-                fs_health = self.fs.health()
-                expected_containers_running = come.ensure_expected_containers_running()
-                if not come_initialized or not fs_health or not expected_containers_running:
+                fs_health = False
+                expected_containers_running = False
+                # try:
+                #    come_initialized = come.initialize()
+                #    try:
+                #        fs_health = self.fs.health()
+                #        expected_containers_running = come.ensure_expected_containers_running()
+                #    except Exception as ex:
+                #        fun_test.critical(str(ex))
+                # except Exception as ex:
+                #    fun_test.critical(str(ex))
+
+                # if not come_initialized or not fs_health or not expected_containers_running:
+                if True:
                     come.fs_reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
-                    come.initialize()
+                    # come.initialize()
+                    try:
+                        fs_health = self.fs.health()
+                    except:
+                        pass
+
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
             if fs.bundle_image_parameters:
@@ -978,18 +990,18 @@ class BootupWorker(Thread):
                                                                   "build_number": build_number})
                 fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
-                try:
-                    come.detect_pfs()
-                    # fun_test.test_assert(self.fs.health(), "FS is healthy")
-                except Exception as ex:
-                    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
-                    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
-                    fs.come = None
-                    fs.bmc = None
-                    come = fs.get_come()
-                    come.initialize()
-                    come.detect_pfs()
-                    bmc = fs.get_bmc()
+                # try:
+                #    come.detect_pfs()
+                #    # fun_test.test_assert(self.fs.health(), "FS is healthy")
+                # except Exception as ex:
+                #    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
+                #    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
+                #    fs.come = None
+                #    fs.bmc = None
+                #    come = fs.get_come()
+                #    come.initialize()
+                #    come.detect_pfs()
+                #    bmc = fs.get_bmc()
 
                 bmc = fs.get_bmc()
                 come = fs.get_come()
@@ -1517,8 +1529,8 @@ class ComE(Linux):
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
 
-        # self.stop_cclinux_service()
-        self.stop_cc_health_check()
+        self.stop_cclinux_service()
+        # self.stop_cc_health_check()
         self.stop_health_monitors()
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
