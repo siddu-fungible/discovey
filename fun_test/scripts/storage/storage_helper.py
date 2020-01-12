@@ -323,6 +323,12 @@ def single_fs_setup(obj):
                     dataplane_configuration_success = result["status"]
                     if not dataplane_configuration_success:
                         fun_test.sleep("Wait for retry", seconds=10)
+                        try:
+                            obj.funcp_obj[0].container_info["F1-0"].ping(ip[:- 1] + "1")
+                            fun_test.log("Just for debugging")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
                     # fun_test.test_assert(
                     #    result["status"],
                     #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
