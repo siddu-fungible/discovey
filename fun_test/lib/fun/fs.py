@@ -953,10 +953,14 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
-                come.initialize()
+                come_initialized = False
+                try:
+                    come_initialized = come.initialize()
+                except:
+                    pass
                 fs_health = self.fs.health()
                 expected_containers_running = come.ensure_expected_containers_running()
-                if not fs_health or not expected_containers_running:
+                if not come_initialized or not fs_health or not expected_containers_running:
                     come.fs_reset()
                     fs.come = None
                     fs.bmc = None
