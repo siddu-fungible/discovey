@@ -148,9 +148,11 @@ class BuildHelper():
                         flash_tools_dir,
                         flash_tools_dir))
 
+                signed_file = "{}/funos.signed.bin".format(flash_tools_dir)
+                fun_test.simple_assert(tftp_server.list_files(signed_file), "signed image created")
                 gz_filename = "{}/{}".format(flash_tools_dir, randint(0, 1024)) + ".gz"
                 tftp_server.command("rm {}".format(gz_filename))
-                tftp_server.command("gzip {}/funos.signed.bin > {}".format(flash_tools_dir, gz_filename))
+                tftp_server.command("gzip {}> {}".format(signed_file, gz_filename))
 
             fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
             tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
