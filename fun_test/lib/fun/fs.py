@@ -962,6 +962,7 @@ class BootupWorker(Thread):
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
+                    come.initialize()
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
             if fs.bundle_image_parameters:
@@ -974,7 +975,6 @@ class BootupWorker(Thread):
                 fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
                 try:
-                    come.initialize()
                     come.detect_pfs()
                     # fun_test.test_assert(self.fs.health(), "FS is healthy")
                 except Exception as ex:
@@ -983,6 +983,7 @@ class BootupWorker(Thread):
                     fs.come = None
                     fs.bmc = None
                     come = fs.get_come()
+                    come.initialize()
                     come.detect_pfs()
                     bmc = fs.get_bmc()
 
@@ -1403,7 +1404,7 @@ class ComE(Linux):
         fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
         fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
         for f1_index in range(self.NUM_F1S):
-            self.command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+            self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
         fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
         fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
