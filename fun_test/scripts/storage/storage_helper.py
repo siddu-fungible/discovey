@@ -307,14 +307,26 @@ def single_fs_setup(obj):
                     "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
                     "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
                 # Configuring Dataplane IP
-                result = obj.sc_api.configure_dataplane_ip(
-                    dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                    use_dhcp=False)
-                fun_test.log(
-                    "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
-                fun_test.test_assert(
-                    result["status"],
-                    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
+
+                dataplane_configuration_success = False
+                num_tries = 3
+
+                while not dataplane_configuration_success and num_tries:
+                    fun_test.log("Trials remaining {}".format(num_tries))
+                    num_tries -= 1
+                    result = obj.sc_api.configure_dataplane_ip(
+                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
+                        use_dhcp=False)
+                    fun_test.log(
+                        "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
+
+                    dataplane_configuration_success = result["status"]
+                    if not dataplane_configuration_success:
+                        fun_test.sleep("Wait for retry", seconds=10)
+                    # fun_test.test_assert(
+                    #    result["status"],
+                    #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
+                fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".format(node, ip))
         else:
             # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
             pass
