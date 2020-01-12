@@ -973,7 +973,7 @@ class BootupWorker(Thread):
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
-                    # come.initialize()
+                    come.initialize()
                     try:
                         fs_health = self.fs.health()
                     except:
@@ -1570,7 +1570,7 @@ class ComE(Linux):
             self.restart_storage_controller()
         except Exception as ex:
             fun_test.critical(str(ex))
-        fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
+        # fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
 
 
     def _get_bus_number(self, pcie_device_id):
