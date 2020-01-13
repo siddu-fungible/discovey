@@ -47,13 +47,13 @@ hu3:
   username: localadmin
   password: Precious1*
   mgmt_interface: eno1
-  pcie_width: 8
+  pcie_width: 16 
   pf_interface: hu2-f0
   vf_interface: hu2-f8
   namespaces:
     default:
       interfaces:
-        - hu0-f0:
+        - hu2-f0:
             ipv4_addr: 20.2.7.2
             ipv4_netmask: 255.255.255.0
       routes:
@@ -108,19 +108,19 @@ hu6:
   password: Precious1*
   mgmt_interface: eno1
   pcie_width: 16
-  pf_interface: hu2-f0
-  vf_interface: hu2-f8
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
   namespaces:
     default:
       interfaces:
-        - hu2-f0:
-            ipv4_addr: 20.2.17.2
+        - hu1-f0:
+            ipv4_addr: 20.2.18.2
             ipv4_netmask: 255.255.255.0
       routes:
         - prefix: 20.2.0.0/16
-          nexthop: 20.2.17.1
+          nexthop: 20.2.18.1
         - prefix: 30.0.0.0/8
-          nexthop: 20.2.17.1
+          nexthop: 20.2.18.1
 
 hu7:
   hostname: mpoc-server47
@@ -215,46 +215,6 @@ hu11:
     default:
       interfaces:
         - hu1-f0:
-            ipv4_addr: 20.2.19.3
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 20.2.0.0/16
-          nexthop: 20.2.19.1
-        - prefix: 30.0.0.0/8
-          nexthop: 20.2.19.1
-
-hu12:
-  hostname: mpoc-server42
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  pcie_width: 8
-  pf_interface: hu1-f0
-  vf_interface: hu1-f8
-  namespaces:
-    default:
-      interfaces:
-        - hu0-f0:
-            ipv4_addr: 20.2.18.4
-            ipv4_netmask: 255.255.255.0
-      routes:
-        - prefix: 20.2.0.0/16
-          nexthop: 20.2.18.1
-        - prefix: 30.0.0.0/8
-          nexthop: 20.2.18.1
-
-hu13:
-  hostname: mpoc-server41
-  username: localadmin
-  password: Precious1*
-  mgmt_interface: eno1
-  pcie_width: 16
-  pf_interface: hu1-f0
-  vf_interface: hu1-f8
-  namespaces:
-    default:
-      interfaces:
-        - hu1-f0:
             ipv4_addr: 20.2.20.2
             ipv4_netmask: 255.255.255.0
       routes:
@@ -262,6 +222,46 @@ hu13:
           nexthop: 20.2.20.1
         - prefix: 30.0.0.0/8
           nexthop: 20.2.20.1
+
+hu12:
+  hostname: mpoc-server42
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16 
+  pf_interface: hu2-f0
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            ipv4_addr: 20.2.17.1
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.2.0.0/16
+          nexthop: 20.2.17.1
+        - prefix: 30.0.0.0/8
+          nexthop: 20.2.17.1
+
+hu13:
+  hostname: mpoc-server41
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu2-f0
+  vf_interface: hu2-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu2-f0:
+            ipv4_addr: 20.2.19.2
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.2.0.0/16
+          nexthop: 20.2.19.1
+        - prefix: 30.0.0.0/8
+          nexthop: 20.2.19.1
 
 hu14:
   hostname: mpoc-server40
