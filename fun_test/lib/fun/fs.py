@@ -241,20 +241,18 @@ class Bmc(Linux):
 
         fun_test.log("Rebooting ComE (Graceful)", context=self.context)
         if not come.was_power_cycled:
-            """
-            try:
-                come.pre_reboot_cleanup()
-            except Exception as ex:
-                fun_test.critical(str(ex))
-            """
-            # reboot_initiated_wait_time = 60 * 3
-            reboot_result = come.reboot(max_wait_time=max_wait_time,
-                                        non_blocking=non_blocking,
-                                        ipmi_details=ipmi_details)
-            reboot_info_string = "initiated" if non_blocking else "complete"
-            fun_test.test_assert(expression=reboot_result,
-                                 message="ComE reboot {} (Graceful)".format(reboot_info_string),
-                                 context=self.context)
+
+            if self.fs.get_revision() in ["2"] or self.fs.bundle_compatible:
+                come.fs_reset(fast=True)
+            else:
+                reboot_result = come.reboot(max_wait_time=max_wait_time,
+                                            non_blocking=non_blocking,
+                                            ipmi_details=ipmi_details)
+
+                reboot_info_string = "initiated" if non_blocking else "complete"
+                fun_test.test_assert(expression=reboot_result,
+                                     message="ComE reboot {} (Graceful)".format(reboot_info_string),
+                                     context=self.context)
         else:
             fun_test.log("Skipping reboot as ComE was power-cycled")
         return True
@@ -337,6 +335,7 @@ class Bmc(Linux):
         self.command("cat /tmp/f1_1_logpid")
 
     def start_uart_log_listener(self, f1_index, serial_device):
+        self.stop_bundle_f1_logs()
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         self.kill_serial_proxies(f1_index=f1_index)
         output_file = self.get_f1_uart_log_file_name(f1_index=f1_index)
@@ -954,11 +953,33 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
-                self.fs.reset()
-                fs.come = None
-                fs.bmc = None
                 come = fs.get_come()
-                if fs.bundle_compatible:
+                come_initialized = False
+                fs_health = False
+                expected_containers_running = False
+                # try:
+                #    come_initialized = come.initialize()
+                #    try:
+                #        fs_health = self.fs.health()
+                #        expected_containers_running = come.ensure_expected_containers_running()
+                #    except Exception as ex:
+                #        fun_test.critical(str(ex))
+                # except Exception as ex:
+                #    fun_test.critical(str(ex))
+
+                # if not come_initialized or not fs_health or not expected_containers_running:
+                if True:
+                    come.fs_reset()
+                    fs.come = None
+                    fs.bmc = None
+                    fs.ensure_is_up(validate_uptime=True)
+                    come = fs.get_come()
+                    come.initialize()
+                    try:
+                        fs_health = self.fs.health()
+                    except:
+                        pass
+
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
 
             if fs.bundle_image_parameters:
@@ -970,22 +991,25 @@ class BootupWorker(Thread):
                                                                   "build_number": build_number})
                 fun_test.set_version(version="{}/{}".format(release_train, build_number))
                 come = fs.get_come()
-                try:
-                    come.initialize()
-                    come.detect_pfs()
-                    fun_test.test_assert(self.fs.health(), "FS is healthy")
-                except Exception as ex:
-                    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
-                    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
-                    fs.come = None
-                    fs.bmc = None
-                    come = fs.get_come()
-                    come.detect_pfs()
-                    bmc = fs.get_bmc()
+                # try:
+                #    come.detect_pfs()
+                #    # fun_test.test_assert(self.fs.health(), "FS is healthy")
+                # except Exception as ex:
+                #    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
+                #    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
+                #    fs.come = None
+                #    fs.bmc = None
+                #    come = fs.get_come()
+                #    come.initialize()
+                #    come.detect_pfs()
+                #    bmc = fs.get_bmc()
 
+                bmc = fs.get_bmc()
+                come = fs.get_come()
                 for f1_index in range(2):
                     if f1_index == self.fs.disable_f1_index:
                         continue
+
                     bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
@@ -993,9 +1017,10 @@ class BootupWorker(Thread):
                 fs.bundle_upgraded = True
                 bmc.bundle_upgraded = True
 
+                come.cleanup_databases()
+
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
                 try:
-                    come.pre_reboot_cleanup()
                     come.fs_reset()
                 except Exception as ex:
                     pass
@@ -1147,7 +1172,7 @@ class ComEInitializationWorker(Thread):
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
-                    while not expected_containers_running and not expected_containers_running_timer.is_expired():
+                    while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
                         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
@@ -1211,7 +1236,7 @@ class ComE(Linux):
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
-    CONTAINERS_BRING_UP_TIME_MAX = 120
+    CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
@@ -1248,12 +1273,12 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
-    def ensure_expected_containers_running(self):
+    def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
         expected_containers_running = self.is_expected_containers_running()
-        expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
+        expected_containers_running_timer = FunTimer(max_time=max_time)
 
-        while not expected_containers_running and not expected_containers_running_timer.is_expired():
+        while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
         return expected_containers_running
@@ -1311,29 +1336,50 @@ class ComE(Linux):
             except:
                 pass
 
-    def fs_reset(self, clone=False):
+    def fs_reset(self, clone=False, fast=False):
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
         if clone:
             handle = self.clone()
         try:
-            handle.sudo_command(self.FS_RESET_COMMAND, timeout=120)
+            reset_command = "{}".format(self.FS_RESET_COMMAND)
+            if fast:
+                reset_command += " -f"
+
+            handle.sudo_command(reset_command, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
 
     def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
         for health_monitor_process in health_monitor_processes:
-            self.kill_process(process_id=health_monitor_process)
+            self.kill_process(process_id=health_monitor_process, signal=9)
+        health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
+
+
+    def restart_storage_controller(self):
+        try:
+            self.stop_cc_health_check()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            self.diags()
+            self.fs_reset(clone=True)
+        self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+
 
     def pre_reboot_cleanup(self, skip_cc_cleanup=False, for_bundle_installation=True):
         fun_test.log("Cleaning up storage controller containers", context=self.context)
         self.stop_health_monitors()
 
         try:
-            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
+            self.restart_storage_controller()
         except:
             pass
+
+        if self.fs.bundle_compatible:
+            fun_test.test_assert(self.ensure_expected_containers_running(max_time=60 * 10), "Expected containers running")
+            fun_test.sleep("After expected containers running")
+
         try:
             # self.cleanup_redis()
             pass
@@ -1341,7 +1387,7 @@ class ComE(Linux):
             pass
 
         try:
-            if skip_cc_cleanup:
+            if not skip_cc_cleanup:
                 self.stop_cclinux_service()
         except:
             pass
@@ -1375,7 +1421,7 @@ class ComE(Linux):
         fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
         fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
         for f1_index in range(self.NUM_F1S):
-            self.command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+            self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
         fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
         fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
@@ -1446,8 +1492,21 @@ class ComE(Linux):
         clone.command("dmesg")
         clone.command("cat /var/log/syslog")
 
+    def stop_cc_health_check(self):
+        system_health_check_script = "system_health_check.py"
+        health_check_processes = self.get_process_id_by_pattern(system_health_check_script, multiple=True)
+        for health_check_process in health_check_processes:
+            self.kill_process(process_id=health_check_process, signal=9)
+        self.get_process_id_by_pattern(system_health_check_script, multiple=True)
+
+
     def stop_cclinux_service(self):
-        self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
+        try:
+            self.sudo_command("/opt/fungible/cclinux/cclinux_service.sh --stop", timeout=120)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            self.diags()
+            self.fs_reset(clone=True)
 
     def _setup_build_script_directory(self):
         """
@@ -1470,25 +1529,10 @@ class ComE(Linux):
         :param release_train: example apple_fs1600
         :return: True if the installation succeeded with exit status == 0, else raise an assert
         """
+
+        self.stop_cclinux_service()
+        # self.stop_cc_health_check()
         self.stop_health_monitors()
-
-        try:
-            self.sudo_command("{}/StorageController/etc/start_sc.sh -c restart".format(self.FUN_ROOT))
-        except:
-            pass
-
-        try:
-            # self.cleanup_redis()
-            pass
-        except:
-            pass
-
-        try:
-            self.stop_cclinux_service()
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            self.diags()
-            self.fs_reset(clone=True)
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
             build_number = self._get_build_number_for_latest(release_train=release_train)
@@ -1512,11 +1556,22 @@ class ComE(Linux):
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
 
+
         ### Workaround for bond
 
         self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
         self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         return True
+
+    def cleanup_databases(self):
+        self.stop_cc_health_check()
+        self.stop_health_monitors()
+
+        try:
+            self.restart_storage_controller()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        # fun_test.test_assert(self.ensure_expected_containers_running(), "Expected containers running")
 
 
     def _get_bus_number(self, pcie_device_id):

@@ -51,8 +51,11 @@ class FunTimer:
     def start(self):
         self.start_time = time.time()
 
-    def is_expired(self):
-        return (self.elapsed_time()) > self.max_time
+    def is_expired(self, print_remaining_time=False):
+        result = (self.elapsed_time()) > self.max_time
+        if print_remaining_time:
+            fun_test.log("Remaining time: {}".format(self.remaining_time()))
+        return result
 
     def elapsed_time(self):
         current_time = time.time()
