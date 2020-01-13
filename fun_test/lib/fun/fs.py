@@ -335,6 +335,7 @@ class Bmc(Linux):
         self.command("cat /tmp/f1_1_logpid")
 
     def start_uart_log_listener(self, f1_index, serial_device):
+        self.stop_bundle_f1_logs()
         process_ids = self.get_process_id_by_pattern("microcom", multiple=True)
         self.kill_serial_proxies(f1_index=f1_index)
         output_file = self.get_f1_uart_log_file_name(f1_index=f1_index)
