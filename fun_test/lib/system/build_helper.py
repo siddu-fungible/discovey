@@ -137,7 +137,7 @@ class BuildHelper():
 
             gz_filename = fun_os_binary_full_path + ".gz"
             tftp_server.command("rm {}".format(gz_filename))
-            tftp_server.command("gzip {}".format(fun_os_binary_full_path))
+            # tftp_server.command("gzip {}".format(fun_os_binary_full_path))
 
 
             if generate_signed_image:
