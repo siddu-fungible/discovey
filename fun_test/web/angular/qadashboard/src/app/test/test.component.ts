@@ -40,6 +40,9 @@ class FlatNode {
   hide: boolean = true;
   indent: number = 0;
   children: FlatNode[] = [];
+  addChild(childNode) {
+    this.children.push(childNode);
+  }
 }
 
 @Component({
@@ -81,7 +84,7 @@ export class TestComponent implements OnInit {
               private service: TestBedService,
               private userService: UserService
   ) {
-    this.tree = new TreeNode({name: "root"});
+    this.tree = new TreeNode({name: "Stats"});
     let systemNode = this.tree.addChild(new TreeNode({name: "system"}));
     let storageNode = this.tree.addChild(new TreeNode({name: "storage"}));
     systemNode.addChild(new TreeNode({name: "BAM"}));
@@ -101,42 +104,31 @@ export class TestComponent implements OnInit {
       flatNode.hide = false;
       if (this.tree.children) {
         this.tree.children.forEach(thisChildNode => {
-          this.addChild(this.tree, thisChildNode, flatNode.indent);
+          let flatNodeChild = this.addChild(this.tree, thisChildNode, flatNode, flatNode.indent);
+          flatNodeChild.hide = false;
+          flatNode.addChild(flatNodeChild);
+          //this.flatNodes.push(flatNodeChild);
+
         })
       }
-      let u = 0;
     }
   }
 
 
-  addChild(parentNode, childNode, parentsIndent) {
+  addChild(parentNode, childNode, parentFlatNode, parentsIndent) {
     let flatNode = new FlatNode();
     this.flatNodes.push(flatNode);
     flatNode.name = childNode.name;
     flatNode.indent = parentsIndent + 1;
-    flatNode.hide = false;
+    flatNode.hide = true;
     if (childNode.children) {
       childNode.children.forEach(thisChildNode => {
-        this.addChild(childNode, thisChildNode, flatNode.indent);
+        flatNode.addChild(this.addChild(childNode, thisChildNode, flatNode, flatNode.indent));
       })
     }
+    return flatNode;
   }
 
-  /*setFlatNodes(d, node, indent): FlatNode {
-    if (!d["leaf"]) {
-      for (let child of d["children"]) {
-        let flatNode = new FlatNode();
-        flatNode.name = child["name"];
-        flatNode.leaf = child["leaf"];
-        flatNode.children = [];
-        flatNode.indent = indent + 1;
-        this.flatNodes.push(flatNode);
-        let childFlatNode = this.setFlatNodes(child, flatNode, indent + 1);
-        node.children.push(childFlatNode);
-      }
-    }
-    return node;
-  }*/
 
   clickNode(flatNode) {
     if (!flatNode.leaf) {
