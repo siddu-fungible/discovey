@@ -1195,15 +1195,25 @@ class DataReconstructionSingleDiskFailure(DataReconstructOnDiskFailTestcase):
                               summary="Inspur TC 8.7.5: Data reconstruction on single disk fail on EC volume",
                               steps="""
         1. Bring up F1 in FS1600
-        2. Bring up and configure Remote Host
-        3. Create 6 BLT volumes on dut instance.
-        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
-        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
-        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
-        7. Run warm-up traffic using FIO
-        8. Run the Performance for 8k transfer size Random read/write IOPS
-        9. Trigger Disk Failure/ Plex Failure
-        10. Note down the Performance numbers during Disk/Plex Failure and check performance degradation
+        2. Reboot network connected host and ensure connectivity with F1
+        3. Configure a LSV (on 4:2 EC volume1 on top of the 6 BLT volumes) for performance test
+        4. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for plex failure and rebuild test
+        5. Configure one more BLT volume to use it as spare volume during rebuild
+        6. Export (Attach) the above volume to the Remote Host
+        7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        8. Create EXT3 filesystem in the volume2 and mount the same under /mnt/ssd<volume_num>.
+        9. Start performance test (Inspur 8.11.1) on volume1 using FIO
+        10. Create test_file_size bytes file and copy it in volume (mount point) and record base file copy time, 
+        record and verify md5sum of file before and after copy
+        11. Create another test_file_size1 bytes file, record md5sum and copy it in volume (mount point)
+        12. While the copy is in progress, simulate plex/drive failure in one of the drives hosting the above 6 BLT 
+        volumes, verify file copy succeeds, record the file copy time. Verify md5sum after copy
+        13. Create another test_file_size2 bytes file, record md5sum and copy it in volume (mount point)
+        14. Instruct EC to use spare volume to rebuild the content of failed drive
+        15. Ensure that the file is copied successfully and the md5sum after copy matches.
+        16. Re-verify test_file_size1 md5sum
+        17. Record reconstruction time
+        18. Note down the Performance numbers during Disk/Plex Failure and check for any performance degradation
         """)
 
     def setup(self):
