@@ -329,6 +329,7 @@ def single_fs_setup(obj):
                             container_handle.ping(ip[:- 1] + "1")
                             container_handle.command("arp -n")
                             container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
                             container_handle.command("ifconfig")
                             fun_test.log("Just for debugging End")
                         except Exception as ex:
@@ -339,6 +340,7 @@ def single_fs_setup(obj):
                         container_handle.ping(ip[:- 1] + "1")
                         container_handle.command("arp")
                         container_handle.command("route -n")
+                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
                         container_handle.command("ifconfig")
                         fun_test.log("Just for debugging End")
 

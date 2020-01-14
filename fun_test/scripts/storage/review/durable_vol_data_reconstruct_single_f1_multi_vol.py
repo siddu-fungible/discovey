@@ -31,7 +31,7 @@ def add_to_data_base(value_dict):
         fun_test.critical(str(ex))
 
 
-class ECVolumeLevelScript(FunTestScript):
+class DurableVolScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Start 1 POSIXs and allocate a Linux instance 
@@ -109,6 +109,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
+        fun_test.shared_variables["sc_api"] = self.sc_api
 
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
@@ -134,22 +135,19 @@ class ECVolumeLevelScript(FunTestScript):
                                      format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
-        come_reboot = False
         if fun_test.shared_variables["ec"]["setup_created"]:
-            self.fs = self.fs_objs[0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+                # self.ec_info = fun_test.shared_variables["ec_info"]
+                # self.attach_transport = fun_test.shared_variables["attach_transport"]
+                # self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.volume_uuid_list = fun_test.shared_variables["volume_uuid_list"]
+                self.subsys_nqn_list = fun_test.shared_variables["subsys_nqn_list"]
 
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
                     pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
-
                     fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
                                  source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
                                  source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
@@ -157,14 +155,27 @@ class ECVolumeLevelScript(FunTestScript):
                                                 filename=pcap_artifact_file)
 
                 # Executing NVMe disconnect from all the hosts
-                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-                for host_name in self.host_info:
+                for index, host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
-                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.subsys_nqn_list[index])
+                    host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                     nvme_disconnect_exit_status = host_handle.exit_status()
                     fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                                   message="{} - NVME Disconnect Status".format(host_name))
 
+                # Detaching and deleting the volume
+                for index, vol_uuid in enumerate(self.volume_uuid_list):
+                    # Detaching volume
+                    detach_volume = self.sc_api.detach_volume(port_uuid=vol_uuid)
+                    fun_test.log("Detach volume API response: {}".format(detach_volume))
+                    fun_test.test_assert(detach_volume["status"], "Detach Volume {}".format(vol_uuid))
+
+                    # Deleting volume
+                    delete_volume = self.sc_api.delete_volume(vol_uuid=vol_uuid)
+                    fun_test.test_assert(delete_volume["status"],
+                                         "Deleting BLT Vol with uuid {} on DUT".format(vol_uuid))
+
+                '''
                 # Detaching all the EC/LS volumes to the external server
                 for num in xrange(self.ec_info["num_volumes"]):
                     command_result = self.storage_controller.detach_volume_from_controller(
@@ -183,12 +194,12 @@ class ECVolumeLevelScript(FunTestScript):
                     fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
                                          format(self.ctrlr_uuid[index]))
                 self.storage_controller.disconnect()
+                '''
             except Exception as ex:
                 fun_test.critical(str(ex))
-                come_reboot = True
 
 
-class ECVolumeLevelTestcase(FunTestCase):
+class DurableVolumeTestcase(FunTestCase):
 
     def describe(self):
         pass
@@ -220,7 +231,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         # End of benchmarking json file parsing
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
-        fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
+        # fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
         # Checking whether the job's inputs argument is having the number of volumes and/or capacity of each volume
         # to be used in this test. If so, override the script default with the user provided config
@@ -254,6 +265,8 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.db_log_time = fun_test.shared_variables["db_log_time"]
         self.num_hosts = len(self.host_info)
 
+        self.sc_api = fun_test.shared_variables["sc_api"]
+
         if "ec" not in fun_test.shared_variables or not fun_test.shared_variables["ec"]["setup_created"]:
             fun_test.shared_variables["ec"] = {}
             fun_test.shared_variables["ec"]["setup_created"] = False
@@ -262,15 +275,68 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
+            '''
+            # Covered as dataplane IP config
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
             fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+            '''
 
             # Checking if test case is with back-pressure; if so creating additional volume for back-pressure
             if self.back_pressure:
                 fun_test.log("Creating Additional EC volume for back-pressure")
                 self.ec_info["num_volumes"] += 1
+            # Creating pool
+            if self.create_pool:
+                pass
+            # Fetching pool uuid as per pool name provided
+            pool_name = self.default_pool if not self.create_pool else self.pool_name
+            self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
 
+            self.volume_uuid_list = []
+            self.subsys_nqn_list = []
+            self.host_nqn_list = []
+            host_ips = []
+            for index, host_name in enumerate(self.host_info):
+                host_ips.append(self.host_info[host_name]["ip"][index])
+
+            for num in xrange(self.ec_info["num_volumes"]):
+                # Create volumes
+                response = self.sc_api.create_volume(self.pool_uuid, self.ec_info["volume_name"] + str(num + 1),
+                                                     self.ec_info["capacity"],
+                                                     self.ec_info["stripe_count"], self.ec_info["volume_types"]["ec"],
+                                                     self.ec_info["encrypt"], self.ec_info["allow_expansion"],
+                                                     self.ec_info["data_protection"],
+                                                     self.ec_info["compression_effort"])
+                fun_test.log("Create EC volume API response: {}".format(response))
+                fun_test.test_assert(response["status"], "Create EC Volume {}".format(num + 1))
+
+                # ATTACH volume
+                attach_volume = self.sc_api.volume_attach_remote(vol_uuid=response["data"]["uuid"],
+                                                                 transport=self.attach_transport.upper(),
+                                                                 remote_ip=host_ips[num])
+                fun_test.log("Attach volume API response: {}".format(attach_volume))
+                fun_test.test_assert(attach_volume["status"], "Attaching EC volume {} to the host {}".
+                                     format(response["data"]["uuid"], host_ips[num]))
+
+                # Extracting the NVMe subsys nqn from the volume ATTACH response, later used in NVMe connect
+                host_nqn = attach_volume["data"]["host_nqn"]
+                subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
+                    attach_volume["data"].get("nqn")
+                fun_test.simple_assert(subsys_nqn, "Extracted the Subsys NQN to which volume {} got attached".
+                                       format(response["data"]["uuid"]))
+                fun_test.simple_assert("host_nqn" in attach_volume["data"],
+                                       "Extracted the Controller's Host NQN to which volume {} got attached".
+                                       format(response["data"]["uuid"]))
+                self.volume_uuid_list.append(response["data"]["uuid"])
+                self.subsys_nqn_list.append(subsys_nqn)
+                self.host_nqn_list.append(host_nqn)
+            fun_test.shared_variables["volume_uuid_list"] = self.volume_uuid_list
+            fun_test.shared_variables["subsys_nqn_list"] = self.subsys_nqn_list
+            fun_test.shared_variables["host_nqn_list"] = self.host_nqn_list
+            fun_test.shared_variables["ec"]["setup_created"] = True
+
+            '''
             (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                            self.command_timeout)
             fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
@@ -326,8 +392,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
                 self.host_info[curr_host_name]["num_volumes"] += 1
-
-            fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
 
             # disabling the error_injection for the EC volume
@@ -345,6 +409,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.test_assert(command_result["status"], "Retrieving error_injection status on DUT")
             fun_test.test_assert_expected(actual=int(command_result["data"]["error_inject"]), expected=0,
                                           message="Ensuring error_injection got disabled")
+            '''
 
             # Starting packet capture in all the hosts
             pcap_started = {}
@@ -365,22 +430,34 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     fun_test.critical("Unable to start packet capture in {}".format(host_name))
 
-            for host_name in self.host_info:
+            for index, host_name in enumerate(self.host_info):
                 fun_test.shared_variables["ec"][host_name] = {}
                 host_handle = self.host_info[host_name]["handle"]
-                if not fun_test.shared_variables["ec"]["nvme_connect"]:
-                    # Checking nvme-connect status
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem,
-                                   self.host_info[host_name]["ip"])
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
-                                   self.host_info[host_name]["ip"], str(self.queue_size))
 
+                host_nqn_workaround = True
+                if host_nqn_workaround:
+                    host_nqn_val = self.subsys_nqn_list[index].split(":")[0] + ":" + self.host_nqn_list[index]
+                else:
+                    host_nqn_val = self.host_nqn_list[index]
+
+                if not fun_test.shared_variables["ec"]["nvme_connect"]:
+                    if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
+                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {} -Q {}".format(
+                            self.attach_transport.lower(),
+                            self.test_network["f1_loopback_ip"],
+                            self.transport_port,
+                            self.subsys_nqn_list[index],
+                            self.nvme_io_queues, host_nqn_val,
+                            self.queue_size)
+                        fun_test.log(nvme_connect_cmd)
+                    else:
+                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}".format(
+                            self.attach_transport.lower(),
+                            self.test_network["f1_loopback_ip"],
+                            self.transport_port,
+                            self.subsys_nqn_list[index],
+                            host_nqn_val)
+                        fun_test.log(nvme_connect_cmd)
                     try:
                         nvme_connect_output = host_handle.sudo_command(command=nvme_connect_cmd, timeout=60)
                         nvme_connect_exit_status = host_handle.exit_status()
@@ -414,23 +491,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                             self.host_info[host_name]["volume_name_list"].append(
                                 self.nvme_block_device.replace("/dev/", ""))
 
-                            '''
-                            fun_test.test_assert_expected(expected=self.host_info[host_name]["volume_name_list"][-1],
-                                                          actual=lsblk_output[volume_name]["name"],
-                                                          message="{} device available".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            fun_test.test_assert_expected(expected="disk", actual=lsblk_output[volume_name]["type"],
-                                                          message="{} device type check".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            fun_test.test_assert_expected(expected=self.ec_info["attach_size"][int(ns_id) - 1],
-                                                          actual=lsblk_output[volume_name]["size"],
-                                                          message="{} volume size check".format(
-                                                              self.host_info[host_name]["volume_name_list"][-1]))
-                            '''
-
-                    # Total number of volumes available should be equal to the ec_info["num_volumes"]
                     self.host_info[host_name]["nvme_block_device_list"].sort()
                     self.host_info[host_name]["volume_name_list"].sort()
+                    # Total number of volumes available should be equal to the ec_info["num_volumes"]
                     fun_test.test_assert_expected(expected=self.ec_info["num_volumes"],
                                                   actual=len(self.host_info[host_name]["volume_name_list"]),
                                                   message="Number of volumes available")
@@ -465,9 +528,6 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
     def run(self):
-
-        testcase = self.__class__.__name__
-        test_method = testcase[4:]
 
         table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
                               "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
@@ -1106,7 +1166,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if self.post_results:
                     fun_test.log("Posting results on dashboard")
                     add_to_data_base(value_dict)
-                    post_results("Inspur Performance Test", test_method, *row_data_list)
+                    # post_results("Inspur Performance Test", test_method, *row_data_list)
             except Exception as ex:
                 fun_test.critical(str(ex))
 
@@ -1127,43 +1187,41 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
 
-class SingleVolumeWithBP(ECVolumeLevelTestcase):
+class DurVolDataReconWithBP(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Inspur: 8.7.1.0: Single Drive Failure Testing with back pressure",
+                              summary="Durable Volume: EC: Data Reconstruction Cases",
                               steps="""
-        1. Bring up F1 in FS1600
-        2. Reboot network connected host and ensure connectivity with F1
-        3. Configure a LSV (on 4:2 EC volume1 on top of the 6 BLT volumes) for back-pressure
-        4. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test
-        5. Configure one more BLT volume to use it as spare volume during rebuild
-        6. Export (Attach) the above volume to the Remote Host
-        7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Create EXT3 filesystem in the volume2 and mount the same under /mnt/ssd<volume_num>.
-        9. Start back-pressure on volume1 using FIO
-        10. Create test_file_size bytes file and copy it in volume (mount point) and record base file copy time, 
-        record and verify md5sum of file before and after copy
-        11. Create another test_file_size1 bytes file, record md5sum and copy it in volume (mount point)
-        12. While the copy is in progress, simulate plex/drive failure in one of the drives hosting the above 6 BLT 
-        volumes, verify file copy succeeds, record the file copy time. Verify md5sum after copy
-        13. Create another test_file_size2 bytes file, record md5sum and copy it in volume (mount point)
-        14. Instruct EC to use spare volume to rebuild the content of failed drive
-        15. Ensure that the file is copied successfully and the md5sum after copy matches.
-        16. Re-verify test_file_size1 md5sum
-        17. Record reconstruction time
+        1. Bring up F1 in FS1600.
+        2. Reboot network connected hosted and configure its test interface to establish connectivity with F1.
+        3. Configure 6 BLT volumes in F1.
+        4. Configure a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Configure a LS volume on top of the EC volume based on use_lsv config along with its associative journal 
+        volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Execute NVME connect from the network host and ensure that the above volume is accessible from the host.
+        8. Create ext3 filesystem in the above volume and mount the same under /mnt/ssd<volume_num>.
+        9. Create test_file_size bytes file and copy the same into the above mount point.
+        10. While the copy is in progress, simulate drive failure in one of the drives hosting the above 6 BLT volumes.
+        11. Now configure one more BLT volume and instruct EC to use this volume to rebuild the content of the above
+        failed drive.
+        12. Ensure that the file is copied successfully and the md5sum between the source and destination is matching.
+        13. Create another test_file_size bytes file and copy the same into the above mount point.
+        14. Ensure that the file is copied successfully and the md5sum between the source and destination is matching.
         """)
 
     def setup(self):
-        super(SingleVolumeWithBP, self).setup()
+        super(DurVolDataReconWithBP, self).setup()
 
     def run(self):
-        super(SingleVolumeWithBP, self).run()
+        pass
+        # super(DurVolDataReconWithBP, self).run()
 
     def cleanup(self):
-        super(SingleVolumeWithBP, self).cleanup()
+        super(DurVolDataReconWithBP, self).cleanup()
 
 
 if __name__ == "__main__":
-    ecscript = ECVolumeLevelScript()
-    ecscript.add_test_case(SingleVolumeWithBP())
+    ecscript = DurableVolScript()
+    ecscript.add_test_case(DurVolDataReconWithBP())
     ecscript.run()

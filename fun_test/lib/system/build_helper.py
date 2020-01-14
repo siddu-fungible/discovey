@@ -123,6 +123,11 @@ class BuildHelper():
                 funos_binary_name += ".stripped"
 
             fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
+            if not debug:
+                modified_release_path = fun_os_binary_full_path.replace("-release", "")
+                tftp_server.command("mv {} {}".format(fun_os_binary_full_path, modified_release_path))
+                fun_os_binary_full_path = modified_release_path
+
             f1_stripped_directory = "{}/bin/".format(tmp_untar_directory)
             fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
 

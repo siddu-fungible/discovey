@@ -172,7 +172,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "10.1.105.164"
     },
-    "bundle_compatible": true,
+    "bundle_compatible": false,
     "gateway_ip": "10.1.105.1",
     "come": {
       "mgmt_ssh_password": "123",
@@ -444,7 +444,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs66-fpga"
     },
-    "bundle_compatible": true,
+    "bundle_compatible": false,
     "workarounds": {
       "retimer_workaround": true,
       "disable_u_boot_version_validation": true
@@ -850,44 +850,44 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.108.236"
+      "mgmt_ip": "10.1.105.166"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.108.237"
+      "mgmt_ip": "10.1.105.167"
     },
     "name": "fs-144",
     "revision": "2",
     "mpg_ips": ["10.1.108.88", "10.1.108.89"],
-    "gateway_ip": "10.1.108.1",
+    "gateway_ip": "10.1.105.1",
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.108.238"
+      "mgmt_ip": "10.1.105.168"
     },
     "apc_info": {
       "username": "localadmin",
-      "outlet_number": 9,
+      "outlet_number": 3,
       "password": "Precious1*",
-      "host_ip": "cab04-pdu1"
+      "host_ip": "cab02-pdu1"
     }
   },
   {
     "name": "fs-104",
     "revision": "2",
-    "gateway_ip": "10.1.108.1",
+    "gateway_ip": "10.1.105.1",
     "bundle_compatible": true,
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.108.46"
+      "mgmt_ip": "10.1.105.121"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.108.47"
+      "mgmt_ip": "10.1.105.122"
     },
     "mpg_ips": [
       "10.1.108.99",
@@ -896,13 +896,13 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.108.48"
+      "mgmt_ip": "10.1.105.123"
     },
     "apc_info": {
       "username": "localadmin",
-      "outlet_number": 17,
+      "outlet_number": 1,
       "password": "Precious1*",
-      "host_ip": "cab04-pdu1"
+      "host_ip": "cab02-pdu1"
     }
   },
   {
@@ -1071,6 +1071,40 @@
       "outlet_list": [1, 4],
       "password": "Precious1*",
       "host_ip": "192.168.8.125"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs143-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs143-come"
+    },
+    "name": "fs-143",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs143-fpga",
+      "telnet_ip": "fs-terminal",
+      "telnet_port": 2005,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "pdu_type": "dli",
+    "dli_info": {
+      "username": "admin",
+      "outlet_number": 3,
+      "password": "Precious1*",
+      "host_ip": "r10-pdu3"
     }
   }
 

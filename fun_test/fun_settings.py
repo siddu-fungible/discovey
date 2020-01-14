@@ -74,5 +74,5 @@ JENKINS_USERNAME = "regression"
 JENKINS_PASSWORD = "11b1bcc7ac9f43aee95ed4af0917bf5852"
 
 TESTRAIL_BACKUP_DIRECTORY = "{}/testrail_backup".format(DATA_STORE_DIR)
-
+TESTRAIL_URL = "http://qa-ubuntu-02/testrail/index.php"
 LARGE_FILE_STORE = "/project-fe/users/qa-admin/regression/large_files"

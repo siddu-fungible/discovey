@@ -19,7 +19,8 @@ class FunTestCase1(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Sanity Test 1",
-                              steps="""
+                              test_rail_case_ids=["C19878"],
+                              steps=""",
         1. Steps 1
         2. Steps 2
         3. Steps 3

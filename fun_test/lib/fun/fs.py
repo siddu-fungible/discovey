@@ -1238,6 +1238,8 @@ class ComE(Linux):
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
     CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
+    CORES_DIRECTORY = "/opt/fungible/cores"
+
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
 
@@ -1433,6 +1435,8 @@ class ComE(Linux):
         if self.hbm_dump_enabled:
             fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
 
+        if not self.fs.already_deployed:
+            self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
         return True
 
     def upload_sc_logs(self):
@@ -1865,8 +1869,7 @@ class ComE(Linux):
             pass
         else:
             self.sudo_command("rm {}".format(redis_target_path))
-
-
+        fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
 class F1InFs:

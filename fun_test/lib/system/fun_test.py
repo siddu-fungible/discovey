@@ -2153,7 +2153,7 @@ class FunTestCase:
         s = "{}: {}".format(self.id, self.summary)
         return s
 
-    def set_test_details(self, id, summary, steps):
+    def set_test_details(self, id, summary, steps, test_rail_case_ids=None):
         self.id = id
         self.summary = summary
         self.steps = steps

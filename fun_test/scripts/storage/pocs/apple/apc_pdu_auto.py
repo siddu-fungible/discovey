@@ -10,6 +10,8 @@ from collections import OrderedDict
 import requests
 from lib.templates.storage.storage_controller_api import StorageControllerApi
 from lib.topology.topology_helper import TopologyHelper
+import dlipower
+from lib.fun.fs import Fs
 
 
 class ApcPduScript(FunTestScript):
@@ -52,6 +54,12 @@ class ApcPduTestcase(FunTestCase):
         if self.testbed_type != "suite_based":
             self.fs = AssetManager().get_fs_spec(self.testbed_type)
             fun_test.log(json.dumps(self.fs, indent=4))
+
+        self.topology_helper = TopologyHelper()
+        self.topology_helper.set_dut_parameters(dut_index=0,
+                                                f1_parameters={0: {"boot_args": Fs.DEFAULT_BOOT_ARGS},
+                                                               1: {"boot_args": Fs.DEFAULT_BOOT_ARGS}},
+                                                fs_parameters={"already_deployed": True})
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -126,6 +134,9 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.set_prompt_terminator(r'# $')
 
             self.reboot_test()
+            self.come_handle.destroy()
+            self.bmc_handle.destroy()
+
             self.basic_checks()
             self.data_integrity_check()
 
@@ -157,6 +168,10 @@ class ApcPduTestcase(FunTestCase):
         if self.reboot_machine_test or self.apc_pdu_power_cycle_test:
             self.check_come_up_time(expected_minutes=5)
 
+        # topology = self.topology_helper.deploy()
+        # self.fs_obj = topology.get_dut_instance(index=0)
+        # self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        # self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
         if self.check_docker:
             self.check_expected_dockers_up()
 
@@ -181,11 +196,15 @@ class ApcPduTestcase(FunTestCase):
             fun_test.log("Checking if NU and HNU port's are active on F1_0")
             expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
                                       'HNU': self.expected_hnu_ports_f1_0}
+            self.get_dpcsh_data_for_cmds("port enableall", f1=0)
+            fun_test.sleep("Before checking port status", seconds=40)
             self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
 
             expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
                                       'HNU': self.expected_hnu_ports_f1_1}
             fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            self.get_dpcsh_data_for_cmds("port enableall", f1=1)
+            fun_test.sleep("Before checking port status", seconds=40)
             self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
     def data_integrity_check(self):
@@ -211,10 +230,14 @@ class ApcPduTestcase(FunTestCase):
             self.destoy_host_handles()
 
     def reboot_test(self):
+        pdu_type = self.fs.get("pdu_type", "apc")
         if self.reboot_machine_test:
             self.reboot_fs1600()
         elif self.apc_pdu_power_cycle_test:
-            self.apc_pdu_reboot()
+            if pdu_type == "apc":
+                self.apc_pdu_reboot()
+            elif pdu_type == "dli":
+                self.dli_pdu_reboot()
         elif self.reset_f1s_bmc:
             self.reset_f1s_bmc_test()
 
@@ -230,38 +253,74 @@ class ApcPduTestcase(FunTestCase):
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         apc_info = self.fs.get("apc_info")
         outlet_no = apc_info.get("outlet_number")
-        try:
-            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-            fun_test.log("Checking if COMe is UP")
-            come_up = come_handle.ensure_host_is_up()
-            fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
-                                    self.to_str(come_up), True, come_up)
-            come_handle.destroy()
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-            apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
-                             password=apc_info['password'])
-            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
 
-            apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
-            fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
-            outlet_off = self.match_success(apc_outlet_off_msg)
-            fun_test.test_assert(outlet_off, "Power down FS")
+        apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
+                         password=apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
-            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+        apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
+        fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+        outlet_off = self.match_success(apc_outlet_off_msg)
+        fun_test.test_assert(outlet_off, "Power down FS")
 
-            fun_test.log("Checking if COMe is down")
-            come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
-            fun_test.test_assert(come_down, "COMe is Down")
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
-            apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
-            fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
-            outlet_on = self.match_success(apc_outlet_on_msg)
-            fun_test.test_assert(outlet_on, "Power on FS")
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-            apc_pdu.disconnect()
-        except Exception as ex:
-            fun_test.critical(ex)
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+
+        apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
+        fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+        outlet_on = self.match_success(apc_outlet_on_msg)
+        fun_test.test_assert(outlet_on, "Power on FS")
+
+        come_handle.destroy()
+        apc_pdu.disconnect()
+        return
+
+    def dli_pdu_reboot(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        dli_info = self.fs.get("dli_info")
+        outlet_no = dli_info.get("outlet_number")
+
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
+        dli_pdu = DliPower(hostname=dli_info['host_ip'], userid=dli_info['username'], password=dli_info['password'])
+
+
+        dli_outlet_off_result = dli_pdu.outlet_off(outlet_no)
+        fun_test.log("DLI PDU outlet off result: {}".format(dli_outlet_off_result))
+        fun_test.test_assert(dli_outlet_off_result, "Power down FS")
+
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+
+        dli_outlet_on_result = dli_pdu.outlet_on(outlet_no)
+        fun_test.log("DLI PDU outlet on message {}".format(dli_outlet_on_result))
+        fun_test.test_assert(dli_outlet_on_result, "Power on FS")
 
         return
 
@@ -384,6 +443,17 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
+    # def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+    #     split_cmd = cmd.split(" ")
+    #     verb = split_cmd[0]
+    #     data = split_cmd[1]
+    #     if f1 == 0:
+    #         output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+    #     elif f1 == 1:
+    #         output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+    #     result = output["data"]
+    #     return result
+
     def get_dpcsh_data_for_cmds(self, cmd, f1=0):
         result = False
         try:
@@ -445,12 +515,13 @@ class ApcPduTestcase(FunTestCase):
 
     def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
         result = True
-        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no)
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no + 1)
         if link_status:
             for port_type, ports_list in expected_port_up.iteritems():
                 for each_port in ports_list:
                     port_details = self.get_dict_for_port(port_type, each_port, link_status)
-                    if port_details["xcvr"] == "ABSENT":
+                    if not (port_details["xcvr"] == "PRESENT" and port_details["SW"] == 1 and port_details["HW"] == 1):
+                        fun_test.log("Failed to validate the following port details: {}".format(port_details))
                         result = False
                         break
                 if not result:
@@ -870,6 +941,52 @@ class ApcPduTestcase(FunTestCase):
     def cleanup(self):
         if self.num_hosts:
             self.delete_volumes()
+
+
+class DliPower:
+
+    def __init__(self, hostname, userid="admin", password="Precious1*"):
+        self.switch = dlipower.PowerSwitch(hostname=hostname, userid=userid, password=password)
+
+    def outlet_on(self, outlet):
+        # Reason for implementing this is to verify that the outlet is for sure turned on/off
+        # >> switch.off(3) >> False
+        # with this package False = Success. https://pypi.org/project/dlipower/0.2.33/
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "ON":
+            self.switch.on(outlet)
+            fun_test.sleep("After powering on")
+            status = self.switch_status(outlet)
+            if status == "ON":
+                result = True
+            else:
+                result = False
+        return result
+
+    def outlet_off(self, outlet):
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "OFF":
+            self.switch.off(outlet)
+            status = self.switch_status(outlet)
+            if status == "OFF":
+                result = True
+            else:
+                result = False
+        return result
+
+    def switch_status(self, outlet):
+        result = self.switch.status(outlet)
+        return result
+
+    def cycle(self, outlet):
+        result = self.switch.cycle(outlet)
+        return result
+
+    def get_outlet_name(self, outlet):
+        name = self.switch.get_outlet_name(outlet)
+        return name
 
 
 if __name__ == "__main__":
