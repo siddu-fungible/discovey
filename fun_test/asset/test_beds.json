@@ -262,9 +262,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -281,9 +279,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -488,9 +484,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -507,9 +501,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2057,9 +2049,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -2076,9 +2066,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2269,9 +2257,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -2288,9 +2274,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2375,9 +2359,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -2394,9 +2376,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2473,9 +2453,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ],
               "ip": "15.117.1.2/24",
               "subnet_mask": "255.255.255.0",
@@ -2492,9 +2470,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ],
               "ip": "15.117.2.2/24",
               "subnet_mask": "255.255.255.0",
@@ -2576,39 +2552,35 @@
         "bond_interface_info": {
           "0": {
             "0": {
-              "ip": "15.102.1.2/24",
+              "ip": "15.144.1.2/24",
               "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.102.1.1"
+                  "gateway": "15.144.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
           "1": {
             "0": {
-              "ip": "15.102.2.2/24",
+              "ip": "15.144.2.2/24",
               "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.102.2.1"
+                  "gateway": "15.144.2.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2693,9 +2665,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -2712,9 +2682,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -2889,38 +2857,34 @@
         "bond_interface_info": {
           "0": {
             "0": {
-              "ip": "15.102.1.2/24",
+              "ip": "15.144.1.2/24",
               "subnet_mask": "255.255.255.0",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.102.1.1"
+                  "gateway": "15.144.1.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
           "1": {
             "0": {
-              "ip": "15.102.2.2/24",
+              "ip": "15.144.2.2/24",
               "route": [
                 {
                   "network": "15.0.0.0/8",
-                  "gateway": "15.102.2.1"
+                  "gateway": "15.144.2.1"
                 }
               ],
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -3012,9 +2976,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -3031,9 +2993,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -3173,9 +3133,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           },
@@ -3192,9 +3150,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ]
             }
           }
@@ -3281,9 +3237,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ],
               "ip": "15.117.1.2/24",
               "subnet_mask": "255.255.255.0",
@@ -3300,9 +3254,7 @@
               "type": "INTERFACE_TYPE_ETHERNET_BOND",
               "fpg_slaves": [
                 0,
-                4,
-                8,
-                12
+                4
               ],
               "ip": "15.117.2.2/24",
               "subnet_mask": "255.255.255.0",
