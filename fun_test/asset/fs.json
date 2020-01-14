@@ -172,7 +172,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "10.1.105.164"
     },
-    "bundle_compatible": true,
+    "bundle_compatible": false,
     "gateway_ip": "10.1.105.1",
     "come": {
       "mgmt_ssh_password": "123",
@@ -444,7 +444,7 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs66-fpga"
     },
-    "bundle_compatible": true,
+    "bundle_compatible": false,
     "workarounds": {
       "retimer_workaround": true,
       "disable_u_boot_version_validation": true
