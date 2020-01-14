@@ -134,6 +134,8 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.set_prompt_terminator(r'# $')
 
             self.reboot_test()
+            self.come_handle.destroy()
+            self.bmc_handle.destroy()
 
             self.basic_checks()
             self.data_integrity_check()
@@ -271,6 +273,10 @@ class ApcPduTestcase(FunTestCase):
 
         fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+
         fun_test.log("Checking if COMe is down")
         come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
         fun_test.test_assert(come_down, "COMe is Down")
@@ -280,6 +286,7 @@ class ApcPduTestcase(FunTestCase):
         outlet_on = self.match_success(apc_outlet_on_msg)
         fun_test.test_assert(outlet_on, "Power on FS")
 
+        come_handle.destroy()
         apc_pdu.disconnect()
         return
 
