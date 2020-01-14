@@ -609,19 +609,20 @@ class SnapVolumeTestCase(FunTestCase):
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
                                self.iter_interval)
 
-            # Create SNAP vol
-            if not snap_vol_created:
-                x = 1
-                command_result = self.storage_controller.create_snap_volume(capacity=self.blt_details["capacity"],
-                                                                            block_size=self.blt_details["block_size"],
-                                                                            name="snap_vol_" + str(x),
-                                                                            uuid=self.snap_uuid[x],
-                                                                            cow_uuid=self.cow_uuid[x],
-                                                                            base_uuid=self.thin_uuid[x],
-                                                                            command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Snap volume with uuid {} using BV : {} & COW : {}".
-                                     format(self.cow_uuid[x], self.thin_uuid[x], self.cow_uuid[x]))
-                snap_vol_created = True
+                # Create SNAP vol
+                if not snap_vol_created:
+                    x = 1
+                    command_result = self.storage_controller.create_snap_volume(capacity=self.blt_details["capacity"],
+                                                                                block_size=self.blt_details["block_size"],
+                                                                                name="snap_vol_" + str(x),
+                                                                                uuid=self.snap_uuid[x],
+                                                                                cow_uuid=self.cow_uuid[x],
+                                                                                base_uuid=self.thin_uuid[x],
+                                                                                command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Snap volume with uuid {} using BV : {} & COW : {}".
+                                         format(self.cow_uuid[x], self.thin_uuid[x], self.cow_uuid[x]))
+                    snap_vol_created = True
+                    fun_test.sleep("Snap vol created")
 
     def cleanup(self):
         bs_auto = None
@@ -629,78 +630,71 @@ class SnapVolumeTestCase(FunTestCase):
 
         self.linux_host = fun_test.shared_variables["host_handle"]
 
-        if not self.blt_creation_fail:
-            # Not using attach count as for TC 17 attach is not done but still BLT is created.
-            for x in range(1, self.blt_create_count + 1, 1):
-                temp = self.device_details.split("/")[-1]
-                temp1 = re.search('nvme(.[0-9]*)', temp)
-                nvme_disconnect_device = temp1.group()
-                if nvme_disconnect_device:
-                    self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
-                    nvme_dev_output = get_nvme_device(self.linux_host)
-                    if nvme_dev_output:
-                        fun_test.critical(False, "NVMe disconnect failed")
-                        self.linux_host.disconnect()
-                command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                                       ns_id=x,
-                                                                                       command_duration=self.command_timeout)
-                fun_test.log(command_result)
-                if command_result["status"]:
-                    self.blt_detach_count += 1
-                else:
-                    fun_test.test_assert(command_result["status"], "Detach BLT {} with nsid {} from ctrlr".
-                                         format(self.thin_uuid[x], x))
-
-                # Delete SNAP volume
-                command_result = self.storage_controller.delete_volume(uuid=self.snap_uuid,
-                                                                       type="VOL_TYPE_BLK_SNAP",
+        for x in range(1, self.blt_count + 1, 1):
+            temp = self.device_details.split("/")[-1]
+            temp1 = re.search('nvme(.[0-9]*)', temp)
+            nvme_disconnect_device = temp1.group()
+            if nvme_disconnect_device:
+                self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
+                nvme_dev_output = get_nvme_device(self.linux_host)
+                if nvme_dev_output:
+                    fun_test.critical(False, "NVMe disconnect failed")
+                    self.linux_host.disconnect()
+            command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                   ns_id=x,
+                                                                                   command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            if command_result["status"]:
+                self.blt_detach_count += 1
+            else:
+                fun_test.test_assert(command_result["status"], "Detach BLT {} with nsid {} from ctrlr".
+                                     format(self.thin_uuid[x], x))
+            # Delete SNAP volume
+            command_result = self.storage_controller.delete_volume(uuid=self.snap_uuid[x],
+                                                                   type="VOL_TYPE_BLK_SNAP",
+                                                                   command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"], "Delete snap volume {}".format(x))
+            command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                        command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Delete snap volume")
+            fun_test.test_assert(command_result["status"], "Delete of controller")
+            # Delete COW volume
+            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   name="cow_vol" + str(x),
+                                                                   uuid=self.cow_uuid[x],
+                                                                   type="VOL_TYPE_BLK_LOCAL_THIN")
+            fun_test.log(command_result)
+            if command_result["status"]:
+                self.blt_delete_count += 1
+            else:
+                fun_test.test_assert(not command_result["status"], "Delete COW vol {} with uuid {}".
+                                     format(x, self.cow_uuid[x]))
+            # Delete Base volume
+            command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   name="thin_block" + str(x),
+                                                                   uuid=self.thin_uuid[x],
+                                                                   type="VOL_TYPE_BLK_LOCAL_THIN")
+            fun_test.log(command_result)
+            if command_result["status"]:
+                self.blt_delete_count += 1
+            else:
+                fun_test.test_assert(not command_result["status"], "Delete BV {} with uuid {}".
+                                     format(x, self.thin_uuid[x]))
 
-                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                           command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Delete of controller")
-
-                # Delete COW volume
-                command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="cow_vol" + str(x),
-                                                                       uuid=self.cow_uuid[x],
-                                                                       type="VOL_TYPE_BLK_LOCAL_THIN")
-                fun_test.log(command_result)
-                if command_result["status"]:
-                    self.blt_delete_count += 1
-                else:
-                    fun_test.test_assert(not command_result["status"], "Delete COW vol {} with uuid {}".
-                                         format(x, self.cow_uuid[x]))
-
-                # Delete Base volume
-                command_result = self.storage_controller.delete_volume(capacity=self.blt_details["capacity"],
-                                                                       block_size=self.blt_details["block_size"],
-                                                                       name="thin_block" + str(x),
-                                                                       uuid=self.thin_uuid[x],
-                                                                       type="VOL_TYPE_BLK_LOCAL_THIN")
-                fun_test.log(command_result)
-                if command_result["status"]:
-                    self.blt_delete_count += 1
-                else:
-                    fun_test.test_assert(not command_result["status"], "Delete BV {} with uuid {}".
-                                         format(x, self.thin_uuid[x]))
-
-            for x in range(1, self.blt_count + 1, 1):
-                storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
-                                                          "VOL_TYPE_BLK_LOCAL_THIN", self.thin_uuid[x])
-                command_result = self.storage_controller.peek(storage_props_tree)
-                # changed the expression from command_result["data"] is None
-                fun_test.simple_assert(expression=not (bool(command_result["data"])),
-                                       message="BV {} with uuid {} removal".format(x, self.thin_uuid[x]))
-
-                storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
-                                                          "VOL_TYPE_BLK_LOCAL_THIN", self.cow_uuid[x])
-                command_result = self.storage_controller.peek(storage_props_tree)
-                # changed the expression from command_result["data"] is None
-                fun_test.simple_assert(expression=not (bool(command_result["data"])),
-                                       message="COW vol {} with uuid {} removal".format(x, self.thin_uuid[x]))
+        for x in range(1, self.blt_count + 1, 1):
+            storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
+                                                      "VOL_TYPE_BLK_LOCAL_THIN", self.thin_uuid[x])
+            command_result = self.storage_controller.peek(storage_props_tree)
+            # changed the expression from command_result["data"] is None
+            fun_test.simple_assert(expression=not (bool(command_result["data"])),
+                                   message="BV {} with uuid {} removal".format(x, self.thin_uuid[x]))
+            storage_props_tree = "{}/{}/{}/{}".format("storage", "volumes",
+                                                      "VOL_TYPE_BLK_LOCAL_THIN", self.cow_uuid[x])
+            command_result = self.storage_controller.peek(storage_props_tree)
+            # changed the expression from command_result["data"] is None
+            fun_test.simple_assert(expression=not (bool(command_result["data"])),
+                                   message="COW vol {} with uuid {} removal".format(x, self.thin_uuid[x]))
 
 
 class SnapVolCreation(SnapVolumeTestCase):
