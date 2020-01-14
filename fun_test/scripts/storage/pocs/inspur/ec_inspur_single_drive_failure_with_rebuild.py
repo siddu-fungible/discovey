@@ -1103,7 +1103,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 if self.post_results:
                     fun_test.log("Posting results on dashboard")
                     add_to_data_base(value_dict)
-                    # post_results("Inspur Performance Test", test_method, *row_data_list)
+                    post_results("Inspur Performance Test", test_method, *row_data_list)
             except Exception as ex:
                 fun_test.critical(str(ex))
 
