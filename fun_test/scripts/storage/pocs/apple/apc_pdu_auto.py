@@ -168,10 +168,10 @@ class ApcPduTestcase(FunTestCase):
         if self.reboot_machine_test or self.apc_pdu_power_cycle_test:
             self.check_come_up_time(expected_minutes=5)
 
-        topology = self.topology_helper.deploy()
-        self.fs_obj = topology.get_dut_instance(index=0)
-        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
-        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        # topology = self.topology_helper.deploy()
+        # self.fs_obj = topology.get_dut_instance(index=0)
+        # self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        # self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
         if self.check_docker:
             self.check_expected_dockers_up()
 
@@ -443,32 +443,31 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
-        split_cmd = cmd.split(" ")
-        verb = split_cmd[0]
-        data = split_cmd[1]
-        if f1 == 0:
-            output = self.dpc_f1_0.json_execute(verb=verb, data=data)
-        elif f1 == 1:
-            output = self.dpc_f1_1.json_execute(verb=verb, data=data)
-        result = output["data"]
-        return result
-
-
     # def get_dpcsh_data_for_cmds(self, cmd, f1=0):
-    #     result = False
-    #     try:
-    #         self.come_handle.enter_sudo()
-    #         output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
-    #         if "No such file" in output:
-    #             self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
-    #         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
-    #         output = self.come_handle.command(run_cmd)
-    #         result = self.parse_dpcsh_output(output)
-    #         self.come_handle.exit_sudo()
-    #     except:
-    #         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
+    #     split_cmd = cmd.split(" ")
+    #     verb = split_cmd[0]
+    #     data = split_cmd[1]
+    #     if f1 == 0:
+    #         output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+    #     elif f1 == 1:
+    #         output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+    #     result = output["data"]
     #     return result
+
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+        result = False
+        try:
+            self.come_handle.enter_sudo()
+            output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
+            if "No such file" in output:
+                self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
+            run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
+            output = self.come_handle.command(run_cmd)
+            result = self.parse_dpcsh_output(output)
+            self.come_handle.exit_sudo()
+        except:
+            fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
+        return result
 
     @staticmethod
     def parse_dpcsh_output(data):
