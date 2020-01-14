@@ -466,6 +466,9 @@ class ECVolumeLevelTestcase(FunTestCase):
 
     def run(self):
 
+        testcase = self.__class__.__name__
+        test_method = testcase[4:]
+
         table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
                               "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
                               "Plex Rebuild Time (sec)", "Job Name"]
