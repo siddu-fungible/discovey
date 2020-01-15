@@ -245,9 +245,11 @@ class BringupPCIeHosts(FunTestCase):
     def setup(self):
         pass
 
-    def tuneHost(self,funeth_obj,hu):
+    def tune_host(self, funeth_obj, hu):
         funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
         funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
+        funeth_obj.enable_namespace_interfaces_tx_offload(hu)
+        funeth_obj.enable_namespace_interfaces_multi_queues(hu, num_queues_tx=20, num_queues_rx=20)
         lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
 
     def run(self):
@@ -265,13 +267,11 @@ class BringupPCIeHosts(FunTestCase):
             #funeth_obj.configure_irq_affinity(hu, tx_or_rx='tx', cpu_list=range(0, 20))
             #funeth_obj.configure_irq_affinity(hu, tx_or_rx='rx', cpu_list=range(0, 20))
             #lock_cpu_freq(funeth_obj=funeth_obj, hu=hu)
-            hutune_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=self.tuneHost, funeth_obj=funeth_obj, hu=hu)
+            hutune_thread_id = fun_test.execute_thread_after(time_in_seconds=1, func=self.tune_host, funeth_obj=funeth_obj, hu=hu)
             hutune_threads_list.append(hutune_thread_id)
 
         for thread_id in hutune_threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-
-
 
     def cleanup(self):
         pass
