@@ -1360,6 +1360,7 @@ class ComE(Linux):
 
 
     def restart_storage_controller(self):
+        fun_test.add_checkpoint("Restart storage controller", context=self.context)
         try:
             self.stop_cc_health_check()
         except Exception as ex:
