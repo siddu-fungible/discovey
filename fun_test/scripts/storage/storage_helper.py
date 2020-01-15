@@ -771,6 +771,81 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
                                   message="Adding static ARP to F1 route")
 
 
+def ensure_all_hosts_up(host_handles, reboot_timeout, load_modules=None):
+    result = False
+    try:
+        for key in host_handles:
+            fun_test.test_assert(host_handles[key].ensure_host_is_up(max_wait_time=reboot_timeout),
+                                 message="Ensure Host {} is reachable after reboot".format(key))
+
+            # TODO: enable after mpstat check is added
+            """
+            # Check and install systat package
+            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+            """
+            # Ensure required modules are loaded on host server, if not load it
+            if load_modules:
+                for module in load_modules:
+                    module_check = host_handles[key].lsmod(module)
+                    if not module_check:
+                        host_handles[key].modprobe(module)
+                        module_check = host_handles[key].lsmod(module)
+                        fun_test.sleep("Loading {} module".format(module))
+                    fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def ensure_host_f1_connectivity(funcp_spec, host_handles, f1_ips, interface="enp216s0"):
+    result = False
+    interface_bringup_timeout = 120
+    try:
+        # Ensuring connectivity from Host to F1's
+        for key in host_handles:
+            interface_up = False
+            ip_assigned = False
+            match = ""
+            ip_match = ""
+            interface_status_timer = FunTimer(max_time=interface_bringup_timeout)
+            while not interface_status_timer.is_expired():
+                cmd_output = host_handles[key].command("ifconfig {}".format(interface))
+                match = re.search(r'UP.*RUNNING', cmd_output)
+                if not match:
+                    fun_test.sleep("{} interface is still not in "
+                                   "running state on {}".format(interface, host_handles[key].host_ip), 10)
+                    fun_test.log("Remaining Time: {}\n".format(interface_status_timer.remaining_time()))
+
+                else:
+                    interface_up = True
+                    ip_match = re.search(r'inet\s[^\s]+', cmd_output)
+                    if ip_match:
+                        ip_assigned = True
+                    break
+            fun_test.test_assert(interface_up, "Interface {} is up and running on host {}".format(interface, host_handles[key].host_ip))
+            fun_test.test_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".format(interface,
+                                                                              host_handles[key].host_ip))
+
+            for index, ip in enumerate(f1_ips):
+                if funcp_spec[0]["container_names"][index] == "run_sc":
+                    continue
+                ping_status = host_handles[key].ping(dst=ip)
+                host_handle = host_handles[key]
+                if not ping_status:
+                    host_handle.command("arp -n")
+                    host_handle.command("route -n")
+                    host_handle.command("ifconfig")
+
+                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                        format(key, funcp_spec[0]["container_names"][index], ip))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 def build_simple_table(data, column_headers=[], split_values_to_columns=False):
     simple_table = PrettyTable(column_headers)
     simple_table.align = 'l'
