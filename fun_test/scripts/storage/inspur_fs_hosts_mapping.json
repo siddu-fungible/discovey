@@ -458,7 +458,8 @@
       }
     },
     "host_info": [
-      "mktg-server-01"
+      "mktg-server-02",
+      "mktg-server-03"
     ]
   },
   "fs-125": {
@@ -695,7 +696,7 @@
               "type": "INTERFACE_TYPE_ETHERNET",
               "switch_info": {
                 "name": "qfx-1",
-                "port": "et-0/0/48
+                "port": "et-0/0/48"
               }
             },
             "4": {
