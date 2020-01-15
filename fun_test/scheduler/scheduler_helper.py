@@ -333,7 +333,8 @@ def queue_job3(suite_id=None,
                                                             suite_container_execution_id=suite_container_execution_id,
                                                             test_bed_type=test_bed_type,
                                                             submitter_email=submitter_email,
-                                                            state=job_state)
+                                                            state=job_state,
+                                                            pause_on_failure=pause_on_failure)
         if suite_type == SuiteType.DYNAMIC:
             if original_suite_execution_id:  # Must be a re-run
                 models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,

@@ -256,7 +256,8 @@ def add_suite_execution(submitted_time,
                         suite_container_execution_id=-1,
                         test_bed_type=None,
                         suite_type=SuiteType.STATIC,
-                        submitter_email=None):
+                        submitter_email=None,
+                        pause_on_failure=False):
     if tags:
         tags = json.dumps(tags)
     else:
@@ -276,7 +277,8 @@ def add_suite_execution(submitted_time,
                        state=state,
                        suite_type=suite_type,
                        submitter_email=submitter_email,
-                       suite_id=suite_id)
+                       suite_id=suite_id,
+                       pause_on_failure=pause_on_failure)
     s.started_time = submitted_time
     s.save()
     return s
