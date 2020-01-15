@@ -831,8 +831,8 @@ class Asset(FunModel):
             self.health_status = status
             self.state_change_time = get_current_time()
             self.health_check_message = message
-            if status == AssetHealthStates.UNHEALTHY:
-                self.disabled = True
+            # if status == AssetHealthStates.UNHEALTHY:
+            #    self.disabled = True
             self.save()
 
 
