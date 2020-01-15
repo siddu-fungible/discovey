@@ -569,6 +569,10 @@ def single_fs_setup(obj):
                         actual=obj.funcp_obj[index].container_info[container_name].exit_status(),
                         message="TFTP Image boot: init-fs1600 disabled: Configure Static route")
         '''
+    ensure_all_hosts_up(host_handles=obj.host_handles, reboot_timeout=obj.reboot_timeout,
+                        load_modules=obj.load_modules)
+    ensure_host_f1_connectivity(funcp_spec=obj.funcp_spec, host_handles=obj.host_handles,
+                                f1_ips=obj.f1_ips)
     return obj
 
 
