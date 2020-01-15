@@ -139,6 +139,8 @@ class AssetManager:
     @fun_test.safe
     def check_if_any_asset_is_disabled(self, assets_required):
         one_asset_disabled = False
+        one_asset_unhealthy = False
+        unhealthy_asset = ""
         disabled_asset = ""
         from django.core.exceptions import ObjectDoesNotExist
         from web.fun_test.models import Asset
@@ -152,13 +154,16 @@ class AssetManager:
                         one_asset_disabled = True
                         disabled_asset = asset_for_type
                         break
+                    if this_asset.health_status != AssetHealthStates.HEALTHY:
+                        one_asset_unhealthy = True
+                        unhealthy_asset = this_asset.name
                 except ObjectDoesNotExist:
                     pass
                     #print "ObjectDoesnotExist, {}".format(asset_for_type)
                 except Exception as ex:
                     print("Some other exception: {}".format(ex))
 
-        return one_asset_disabled, disabled_asset
+        return one_asset_disabled, disabled_asset, one_asset_unhealthy, unhealthy_asset
 
     @fun_test.safe
     def check_assets_are_manual_locked(self, assets_required):
@@ -289,11 +294,16 @@ class AssetManager:
 
         # check if any asset is disabled
         one_asset_disabled, disabled_asset_name = False, ""
+        one_asset_unhealthy, unhealthy_asset_name = False, ""
         if assets_required_for_test_bed:
-            one_asset_disabled, disabled_asset_name = self.check_if_any_asset_is_disabled(assets_required=assets_required_for_test_bed)
+            one_asset_disabled, disabled_asset_name, one_asset_unhealthy, unhealthy_asset_name = self.check_if_any_asset_is_disabled(assets_required=assets_required_for_test_bed)
             if one_asset_disabled:
                 result["status"] = False
                 result["message"] = result["message"] + ":" + "Asset: {} is disabled".format(disabled_asset_name)
+            if one_asset_unhealthy:
+                result["status"] = False
+                result["message"] = result["message"] + ":" + "Asset: {} is unhealthy".format(unhealthy_asset_name)
+
         if assets_required_for_test_bed:
             asset_level_manual_locked, asset_level_error_message, manual_lock_user, assets_required = self.check_assets_are_manual_locked(assets_required=assets_required_for_test_bed)
 
@@ -327,6 +337,8 @@ class AssetManager:
         elif test_bed_unhealthy:
             result["status"] = False
         elif one_asset_disabled:
+            result["status"] = False
+        elif one_asset_unhealthy:
             result["status"] = False
         else:
             result["status"] = True
@@ -644,12 +656,13 @@ class AssetManager:
                         is_manual_locked = asset.manual_lock_user
                         is_disabled = asset.disabled
                         job_ids = asset.job_ids
+                        is_unhealthy = asset.health_status != AssetHealthStates.HEALTHY
                         if job_ids:
                             for job_id in job_ids:
                                 in_progress = is_suite_in_progress(job_id=job_id, test_bed_type="")
                                 if in_progress:
                                     unavailable_assets.append(asset_name)
-                        elif (is_manual_locked or is_disabled):
+                        elif (is_manual_locked or is_disabled or is_unhealthy):
                             unavailable_assets.append(asset_name)
 
                     pool_member_type_options = assets_required_config[asset_type].get("pool_member_type_options", None)
@@ -659,9 +672,9 @@ class AssetManager:
                         current_match_count = matches_for_pool_member_type.count(this_asset_pool_member_type)
                         if current_match_count >= pool_member_required_count:
                             continue
-                        if not is_manual_locked and not in_progress and not is_disabled:
+                        if not is_manual_locked and not in_progress and not is_disabled and not is_unhealthy:
                             matches_for_pool_member_type.append(this_asset_pool_member_type)
-                    if not is_manual_locked and not in_progress and not is_disabled:
+                    if not is_manual_locked and not in_progress and not is_disabled and not is_unhealthy:
                         num_assets_available += 1
                         available_assets.append(asset_name)
                     if num_assets_required == num_assets_available:
