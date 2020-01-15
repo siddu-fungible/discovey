@@ -330,9 +330,10 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
+
 
     def start_uart_log_listener(self, f1_index, serial_device):
         self.stop_bundle_f1_logs()
