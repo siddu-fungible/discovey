@@ -154,7 +154,7 @@ class AssetManager:
                         one_asset_disabled = True
                         disabled_asset = asset_for_type
                         break
-                    if this_asset.health_status != AssetHealthStates.HEALTHY:
+                    if this_asset.health_check_enabled and this_asset.health_status != AssetHealthStates.HEALTHY:
                         one_asset_unhealthy = True
                         unhealthy_asset = this_asset.name
                 except ObjectDoesNotExist:
