@@ -364,26 +364,13 @@ class Bmc(Linux):
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
-        self.stop_bundle_f1_logs()
-        self._reset_microcom()
+        # self.stop_bundle_f1_logs()
+        # self._reset_microcom()
         uart_log_file_name = self.get_f1_uart_log_file_name(f1_index)
         if not self.bundle_compatible:
             self.command("rm -f {}".format(uart_log_file_name))
         fun_test.log("Netcat: open {}:{}".format(self.host_ip, self.SERIAL_PROXY_PORTS[f1_index]))
         self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
-        """
-        nc = self.nc[f1_index]
-        write_on_trigger = None
-        if not auto_boot:
-            write_on_trigger = {"Autoboot in": "noboot"}
-    
-        fun_test.execute_thread_after(0,
-                                      nc.read_until,
-                                      expected_data=self.U_BOOT_F1_PROMPT,
-                                      timeout=60,
-                                      write_on_trigger=write_on_trigger,
-                                      read_buffer=20)
-        """
         return True
 
     def get_preamble(self, f1_index, auto_boot=False):
@@ -1039,6 +1026,10 @@ class BootupWorker(Thread):
                 if fs.tftp_image_path:
                     bmc.position_support_scripts(auto_boot=fs.is_auto_boot())
                     self.fs.get_come().pre_reboot_cleanup(for_bundle_installation=False)
+                if not fs.bundle_compatible and fs.tftp_image_path:
+                    bmc.stop_bundle_f1_logs()
+                    bmc._reset_microcom()
+
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
