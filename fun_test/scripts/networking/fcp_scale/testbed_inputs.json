@@ -19,9 +19,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.169",
                   "mpg1":"10.80.4.170",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server34": "x16"},{"mpoc-server32": "x8"},{"mpoc-server31": "x16"},
+                  "hu_host_list":[{"mpoc-server34": "x16"}, {"mpoc-server31": "x16"},
                       {"mpoc-server30": "x16"}]
               },
               "fs-32": {
@@ -92,10 +92,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
                   "mpg1":"10.80.4.155",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server44": "x16"},{"mpoc-server43": "x16"},{"mpoc-server42": "x8"},
-                      {"mpoc-server41": "x16"}, {"mpoc-server40": "x16"}]
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=1",
+                  "hu_host_list":[{"mpoc-server44": "x16"}, {"mpoc-server40": "x16"}]
               },
               "fs-21": {
                   "index": 7,
@@ -105,9 +104,9 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.159",
                   "mpg1":"10.80.4.160",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server48": "x16"}, {"mpoc-server45": "x16"}]
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=1",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=1",
+                  "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server45": "x16"}]
               },
                "fs-20": {
                   "index": 8,
@@ -117,8 +116,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.179",
                   "mpg1":"10.80.4.180",
-                  "bootargs_f1_0": "app=mdt_test,load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=mdt_test,load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=mdt_test,load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=mdt_test,load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0",
                   "hu_host_list":[]
               },
               "fs-40": {
@@ -141,8 +140,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.174",
                   "mpg1":"10.80.4.175",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "hu_host_list":[{"mpoc-server43": "x16"}, {"mpoc-server41": "x16"}]
               }
           },
@@ -165,7 +164,7 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.169",
                   "mpg1":"10.80.4.170",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1,2",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
                   "hu_host_list":[{"mpoc-server34": "x16"},{"mpoc-server31": "x16"}, {"mpoc-server30": "x16"}]
               },
@@ -177,8 +176,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.179",
                   "mpg1":"10.80.4.180",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0",
                   "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server42": "x16"}]
               },
               "fs-8": {
@@ -189,8 +188,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.154",
                   "mpg1":"10.80.4.155",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=1",
                   "hu_host_list":[{"mpoc-server44": "x16"}, {"mpoc-server40": "x16"}]
               },
               "fs-21": {
@@ -201,8 +200,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.159",
                   "mpg1":"10.80.4.160",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=1",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=1",
                   "hu_host_list":[{"mpoc-server47": "x16"}, {"mpoc-server45": "x16"}]
               },
               "fs-32": {
@@ -213,8 +212,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.204",
                   "mpg1":"10.80.4.205",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart",
                   "hu_host_list":[{"mpoc-server32": "x16"}]
               },
               "fs-15": {
@@ -225,8 +224,8 @@
                   "gatewayip": "10.80.4.1",
                   "mpg0":"10.80.4.174",
                   "mpg1":"10.80.4.175",
-                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
-                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0,1",
+                  "bootargs_f1_0": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
+                  "bootargs_f1_1": "app=load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "hu_host_list":[{"mpoc-server43": "x16"}, {"mpoc-server41": "x16"}]
               }
 
