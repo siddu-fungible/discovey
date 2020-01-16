@@ -884,7 +884,7 @@ class DurableVolumeTestcase(FunTestCase):
         '''
         try:
             bmc_handle = self.fs_obj[0].get_bmc()
-            uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_filename(f1_index=self.f1_in_use)
+            uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
             fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
             search_pattern = "'under rebuild total failed'"
             output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
