@@ -330,7 +330,7 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
-        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -1558,6 +1558,8 @@ class ComE(Linux):
 
         self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
         self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
+        fun_test.set_version(version="{}/{}".format(release_train, build_number))
+
         return True
 
     def cleanup_databases(self):
