@@ -34,7 +34,7 @@
                   "mpg1":"10.80.4.205",
                   "bootargs_f1_0": "app=mdt_test,load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "bootargs_f1_1": "app=mdt_test,load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart",
-                  "hu_host_list":[]
+                  "hu_host_list":[{"mpoc-server32": "x16"}]
               },
               "fs-37": {
                   "index": 2,
@@ -118,7 +118,7 @@
                   "mpg1":"10.80.4.180",
                   "bootargs_f1_0": "app=mdt_test,load_mods --serial cc_huid=3 --all_50g --dpc-server --dpc-uart retimer=0",
                   "bootargs_f1_1": "app=mdt_test,load_mods --serial cc_huid=2 --all_50g --dpc-server --dpc-uart retimer=0",
-                  "hu_host_list":[]
+                  "hu_host_list":[{"mpoc-server48": "x16"},{"mpoc-server42": "x16"}]
               },
               "fs-40": {
                   "index": 9,
