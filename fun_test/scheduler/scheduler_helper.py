@@ -786,6 +786,7 @@ def send_summary_mail(job_id, extra_message=""):
         <a href="%s">Details Link</a>
     </p>
     """ % (get_suite_detail_url(suite_execution_id=job_id))
+    suite_detail_url = ""
 
     css_file = WEB_STATIC_DIR + "/css/common/mail.css"
     with open(css_file, "r") as f:
