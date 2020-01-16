@@ -212,6 +212,10 @@ class TestHostPCIeLanes(FunTestCase):
             fun_test.get_script_parent_directory() + '/testbed_inputs.json')
         if test_bed_type == 'fs-fcp-scale' or test_bed_type == 'fs-fcp-scale-networking':
             fs_list = testbed_info['fs'][test_bed_type]["fs_list"]
+        elif test_bed_type == 'fs-8' or test_bed_type == 'fs-21' or test_bed_type == 'fs-38' or test_bed_type == 'fs-15'\
+                or test_bed_type == 'fs-20' or test_bed_type == 'fs-32':
+            fs_list = [test_bed_type]
+            test_bed_type = 'fs-fcp-scale'
         else:
             fs_list = [test_bed_type]
             test_bed_type = 'fs-fcp-scale'
