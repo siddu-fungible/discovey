@@ -64,6 +64,7 @@
     "nvme_device": "/dev/nvme",
     "mount_path": "/mnt/ssd",
     "trigger_failure": true,
+    "plex_failure_count": 1,
     // If 'fail_drive' is true, initiate drive failure else initiate plex failure
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
@@ -73,7 +74,7 @@
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
-    "test_volume_start_index": 1,
+    "test_volume_start_index": 0,
     "test_file_size": 107374182400,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
     "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},
@@ -82,6 +83,19 @@
     "huid": 7,
     "ctlid": 0,
     //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "iostat_args": {"interval": 1, "output_file":  "/tmp/iostat.out"}
+    "iostat_args": {"interval": 1, "output_file":  "/tmp/iostat.out"},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
+    //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_modes": ["randrw"],
+    "fio_iodepth": [32, 64],
+    "full_run_iodepth": [4],
+    "fio_job_name": "inspur_8k_random_read_write",
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [64],
+    "cal_amplification": true
   }
 }
