@@ -808,10 +808,10 @@ def send_summary_mail(job_id, extra_message=""):
 
         # print html
         attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
-        subject = "Regression: {}: {} P:{} F:{}".format(attributes_dict["Result"],
-                                                        suite_execution.suite_path,
-                                                        attributes_dict["Passed"],
-                                                        attributes_dict["Failed"])
+        subject = "Regression: Result: {}: {} P:{} F:{}".format(attributes_dict["Result"],
+                                                                suite_execution.suite_path,
+                                                                attributes_dict["Passed"],
+                                                                attributes_dict["Failed"])
 
         try:
             to_addresses = [suite_execution.submitter_email, TEAM_REGRESSION_EMAIL]
