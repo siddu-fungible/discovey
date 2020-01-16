@@ -130,7 +130,7 @@
                   </div>
                 </ng-template>
               </td>
-              <td class="attribute-table-td" *ngIf="suiteExecution?.fields.state >= stateMap.IN_PROGRESS">
+              <td class="attribute-table-td" *ngIf="suiteExecution?.fields.state >= stateMap.COMPLETED">
                 <span>
                   <span class="attribute-table-main-text">Pause on failure</span>
                   <app-toggle-button [checked]="suiteExecution?.fields?.pause_on_failure" (changed)="onTogglePauseOnFailure($event)"></app-toggle-button>
