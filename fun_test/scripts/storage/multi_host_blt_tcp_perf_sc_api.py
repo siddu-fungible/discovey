@@ -1037,11 +1037,44 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
         super(PreCommitSanity, self).cleanup()
 
 
+class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Bundle sanity. Run fio random read after COMe reboot on the same BLT attached",
+                              steps='''
+        1. Reboot COMe.
+        2. Check docker containers F1-0, F1-1 and run_sc.
+        3. Run fio from the host.
+        4. Fio should succeed.
+        ''')
+
+    def setup(self):
+        fun_test.log("Rebooting COMe")
+        self.post_results = False
+        self.fs = fun_test.shared_variables["fs_objs"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+
+        reset = self.fs[0].reset(hard=False)
+        fun_test.test_assert(reset, "COMe reset successfully done")
+
+        ensure_up = self.fs[0].ensure_is_up()
+        fun_test.test_assert(ensure_up, "Ensure COMe is up")
+
+        containers_status = self.come_obj[0].ensure_expected_containers_running()
+        fun_test.test_assert(containers_status, "All containers up")
+
+    def run(self):
+        super(MultiHostFioRandReadAfterReboot, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandReadAfterReboot, self).cleanup()
+
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
+    bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
 
