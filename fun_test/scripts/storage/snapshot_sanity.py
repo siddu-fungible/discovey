@@ -150,26 +150,26 @@ class Singledpu(FunTestScript):
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
-        for key in self.host_handles:
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(key))
-
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = self.host_handles[key].lsmod(module)
-                if not module_check:
-                    self.host_handles[key].modprobe(module)
-                    module_check = self.host_handles[key].lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        # Ensuring connectivity from Host to F1's
-        for key in self.host_handles:
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = self.host_handles[key].ping(dst=ip)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
+        # for key in self.host_handles:
+        #     # Ensure all hosts are up after reboot
+        #     fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+        #                          message="Ensure Host {} is reachable after reboot".format(key))
+        #
+        #     # Ensure required modules are loaded on host server, if not load it
+        #     for module in self.load_modules:
+        #         module_check = self.host_handles[key].lsmod(module)
+        #         if not module_check:
+        #             self.host_handles[key].modprobe(module)
+        #             module_check = self.host_handles[key].lsmod(module)
+        #             fun_test.sleep("Loading {} module".format(module))
+        #         fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        #
+        # # Ensuring connectivity from Host to F1's
+        # for key in self.host_handles:
+        #     for index, ip in enumerate(self.f1_ips):
+        #         ping_status = self.host_handles[key].ping(dst=ip)
+        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+        #                              format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         # Ensuring perf_host is able to ping F1 IP
         if self.csi_perf_enabled or self.csi_cache_miss_enabled:
