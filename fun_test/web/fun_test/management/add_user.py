@@ -206,3 +206,27 @@ for user_info in users_info:
         auth_user.save()
         auth_user.set_password('fun123fun123')
         auth_user.save()
+
+
+"""
+path = "/Users/johnabraham/Documents/Cloudistics_Fungible_Email_List.csv"
+import json
+f = open(path, "r")
+contents = f.read()
+f.close()
+
+my_tuples = []
+for line in contents.split("\n"):
+    if "Frist" in line:
+        continue
+    line = line.strip()
+    print line.split(",")
+    first_name, last_name, cloudistics_email, fungible_email, _ = line.split(",")
+    my_tuples.append((fungible_email.lower(), first_name, last_name))
+
+
+
+
+print json.dumps(my_tuples, indent=4)
+
+"""

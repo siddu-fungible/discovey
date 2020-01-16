@@ -30,3 +30,4 @@ pymongo==3.9.0
 iso8601==0.1.12
 pika== 1.1.0
 dlipower==1.0.176
+html2text==2019.8.11
