@@ -459,4 +459,14 @@ export class SuiteDetailComponent implements OnInit, OnDestroy {
     })
 
   }
+
+  onTogglePauseOnFailure(pauseOnFailure) {
+    this.suiteExecution.fields.pause_on_failure = pauseOnFailure;
+    this.regressionService.pauseOnFailure(this.suiteExecution.fields.execution_id, this.suiteExecution.fields.pause_on_failure).subscribe(response => {
+
+    }, error => {
+      this.logger.error("Unable to modify pause on failure");
+    })
+
+  }
 }

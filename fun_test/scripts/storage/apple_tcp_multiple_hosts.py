@@ -129,6 +129,10 @@ class StripeVolumeLevelScript(FunTestScript):
             self.skip_cleanup = job_inputs["skip_cleanup"]
         else:
             self.skip_cleanup = False
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = True
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -150,29 +154,30 @@ class StripeVolumeLevelScript(FunTestScript):
         # fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
         fun_test.shared_variables["num_f1s"] = self.num_f1s
         fun_test.shared_variables["num_duts"] = self.num_duts
+        fun_test.shared_variables["num_hosts"] = self.num_hosts
         fun_test.shared_variables["syslog_level"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
 
-        for key in self.host_handles:
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(key))
-
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = self.host_handles[key].lsmod(module)
-                if not module_check:
-                    self.host_handles[key].modprobe(module)
-                    module_check = self.host_handles[key].lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        # Ensuring connectivity from Host to F1's
-        for key in self.host_handles:
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = self.host_handles[key].ping(dst=ip)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
+        # for key in self.host_handles:
+        #     # Ensure all hosts are up after reboot
+        #     fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+        #                          message="Ensure Host {} is reachable after reboot".format(key))
+        #
+        #     # Ensure required modules are loaded on host server, if not load it
+        #     for module in self.load_modules:
+        #         module_check = self.host_handles[key].lsmod(module)
+        #         if not module_check:
+        #             self.host_handles[key].modprobe(module)
+        #             module_check = self.host_handles[key].lsmod(module)
+        #             fun_test.sleep("Loading {} module".format(module))
+        #         fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        #
+        # # Ensuring connectivity from Host to F1's
+        # for key in self.host_handles:
+        #     for index, ip in enumerate(self.f1_ips):
+        #         ping_status = self.host_handles[key].ping(dst=ip)
+        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+        #                              format(key, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
         if self.skip_cleanup:

@@ -30,7 +30,9 @@ export class ReleaseDetailComponent implements OnInit {
   suitesHeaderActionLinks: FunActionLink [] = [];
   suitesHeaderLeftAlignedButtons: FunButtonWithIcon [] = [];
   suitesDeleteButton: FunButtonWithIcon = null;
+  gotoMasterButton: FunButtonWithIcon = null;
   addSuitesLinkObject: FunActionLink = null;
+  headerSubText1: string = "";
 
   suiteMap: {[suite_id: number]: Suite} = {};
   atLeastOneSelected: boolean = false;
@@ -41,8 +43,9 @@ export class ReleaseDetailComponent implements OnInit {
               private suiteEditorService: SuiteEditorService,
               private router: Router) {
 
+    //console.log(ButtonType.DELETE);
     this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.DELETE,
-      text: "delete", callback: this.deleteRelease.bind(this)}));
+      text: "delete this instance", callback: this.deleteRelease.bind(this)}));
 
     this.addSuitesLinkObject = new FunActionLink({text: "+ Add suites",
       callback: this.addSuites.bind(this)});
@@ -67,8 +70,19 @@ export class ReleaseDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this.jobStatusTypes = response;
       this.status = "Fetching catalog execution";
+      this.releaseCatalogExecution = new ReleaseCatalogExecution();
       return this.releaseCatalogExecution.get(this.releaseCatalogExecution.getUrl({id: this.executionId}));
     })).pipe(switchMap(response => {
+      this.headerSubText1 = `Release-train: ${this.releaseCatalogExecution.release_train}`;
+      if (this.releaseCatalogExecution.build_number) {
+        this.headerSubText1 += `, Build: ${this.releaseCatalogExecution.build_number}`;
+      }
+
+      if (this.releaseCatalogExecution.master_execution_id) {
+        this.headerLeftAlignedButtons.push(new FunButtonWithIcon({type: ButtonType.LINK,
+      text: "go to master instance",
+      callback: this.gotoMaster.bind(this)}));
+      }
       this.fetchSuiteDetails();
       this.status = null;
       return this.regressionService.fetchTestbeds(true);
@@ -220,6 +234,10 @@ export class ReleaseDetailComponent implements OnInit {
         this.logger.error(`Unable to delete suite(s)`, error);
       })
     }
+  }
+
+  gotoMaster() {
+    window.location.href = '/regression/release_detail/' + this.releaseCatalogExecution.master_execution_id;
   }
 
   execute() {

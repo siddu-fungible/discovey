@@ -171,6 +171,7 @@ def submit_job(request):
 
         rich_inputs = request_json.get("rich_inputs", None)
         max_run_time = request_json.get("max_run_time", 7 * 24 * 3600)
+        pause_on_failure = request_json.get("pause_on_failure", False)
 
         # if suite_path:
         if suite_id:
@@ -192,7 +193,8 @@ def submit_job(request):
                                 description=description,
                                 suite_type=suite_type,
                                 rich_inputs=rich_inputs,
-                                max_run_time=max_run_time)
+                                max_run_time=max_run_time,
+                                pause_on_failure=pause_on_failure)
         elif script_pk:
             script_path = RegresssionScripts.objects.get(pk=script_pk).script_path
             job_id = queue_job3(script_path=script_path,
@@ -213,7 +215,8 @@ def submit_job(request):
                                 description=description,
                                 suite_type=suite_type,
                                 rich_inputs=rich_inputs,
-                                max_run_time=max_run_time)
+                                max_run_time=max_run_time,
+                                pause_on_failure=pause_on_failure)
         elif dynamic_suite_spec:
             job_id = queue_dynamic_suite(dynamic_suite_spec=dynamic_suite_spec,
                                          emails=emails,

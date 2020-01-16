@@ -1,0 +1,78 @@
+{
+  "JuniperNFA_Basic_Runtime": {
+    "jsons":["JUNIPER_FFA_BASIC_RUNTIME.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/juniper_compile_full/ffa_results/JUNIPER_FFA_BASIC_RUNTIME.list",
+    "description":"testing basic lsu actions for Juniper NFA",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+
+   "JuniperNFA_MatchAcrossPacket": {
+    "jsons":["JUNIPER_FFA_MATCH_ACROSS_PACKETS.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/F1/juniper_compile_full/ffa_results/JUNIPER_FFA_MATCH_ACROSS_PACKETS.list",
+    "description":"testing match across packets",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+
+   "JuniperNFA_Sequential1": {
+    "jsons":["JUNIPER_NFA_COMLX_SERIAL1.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/juniper_compile_full/nfa_runtime/JUNIPER_NFA_COMLX_SERIAL1.list",
+    "description":"LSU:loading all graphs on different clusters",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+
+  "JuniperNFA_Sequential2": {
+    "jsons":["JUNIPER_NFA_COMLX_SERIAL2.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/juniper_compile_full/nfa_runtime/JUNIPER_NFA_COMLX_SERIAL2.list",
+    "description":"LSU:loading all graphs on single cluster",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+  "JuniperNFA_parallel1": {
+    "jsons":["JUNIPER_NFA_PARALLEL1_LSU.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/juniper_compile_full/nfa_runtime/JUNIPER_NFA_PARALLEL1_LSU.list",
+    "description":"LSU:loading all graphs on different clusters parallelly",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  },
+ "JuniperNFA_parallel2": {
+    "jsons":["JUNIPER_NFA_PARALLEL2_LSU.json"],
+    "XDATA_LISTS": "/project/users/QA/regression/data_store/regex/juniper_compile_full/nfa_runtime/JUNIPER_NFA_PARALLEL2_LSU.list",
+    "description":"LSU:loading all graphs on single cluster parallelly",
+    "rbm_size": "1m",
+    "syslog_level": "3",
+    "funos_branch": "master",
+    "run_target": "F1",
+    "hw_model":"F1",
+    "hw_version": "Ignored",
+    "max_duration": 45
+  }
+}
+

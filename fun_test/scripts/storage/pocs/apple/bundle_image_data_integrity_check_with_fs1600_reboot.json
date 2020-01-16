@@ -27,7 +27,10 @@
       "stripe_count": 0,
       "pvol_type": "VOL_TYPE_BLK_EC",
       "allow_expansion": true,
-      "data_protection": {"num_failed_disks": 2, "num_redundant_dpus": 0},
+      "data_protection": {
+        "num_failed_disks": 2,
+        "num_redundant_dpus": 0
+      },
       "compression_effort": 8
     },
     {
@@ -38,6 +41,7 @@
       "compression_effort": 0
     }
   ],
+  "num_duts": 1,
   "write_fio": {
     "iodepth": 32,
     "group_reporting": 1,
@@ -70,5 +74,42 @@
     "verify_state_load": 1,
     "do_verify": 1,
     "verify": "md5"
+  },
+  "EcVolReboot": {
+    "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
+    "dut_start_index": 1,
+    "num_duts": 0,
+    "num_hosts": 1,
+    "host_start_index": 1,
+    "disable_wu_watchdog": false,
+    "iterations": 5,
+    "volume_creation_details": [
+      {
+        "capacity": 32212254720,
+        "encrypt": false,
+        "stripe_count": 0,
+        "pvol_type": "VOL_TYPE_BLK_EC",
+        "allow_expansion": false,
+        "data_protection": {
+          "num_failed_disks": 2,
+          "num_redundant_dpus": 0
+        },
+        "compression_effort": 2
+      }
+    ],
+    "write_fio": {
+      "iodepth": 32,
+      "group_reporting": 1,
+      "rw": "randwrite",
+      "name": "fio_write",
+      "direct": 1,
+      "bs": "4k",
+      "ioengine": "libaio",
+      "numjobs": 8,
+      "size": "100%",
+      "time_based": 1,
+      "runtime": 60
+    }
   }
 }

@@ -30,6 +30,7 @@ from pytz import timezone
 from datetime import timedelta
 import random
 import collections
+import html2text
 
 
 activate(TIME_ZONE)
@@ -289,7 +290,8 @@ def queue_job3(suite_id=None,
                submitter_email=None,
                description=None,
                rich_inputs=None,
-               max_run_time=7 * 24 * 3600):
+               max_run_time=7 * 24 * 3600,
+               pause_on_failure=False):
     # time.sleep(0.1)
     result = -1
     if not tags:
@@ -332,7 +334,8 @@ def queue_job3(suite_id=None,
                                                             suite_container_execution_id=suite_container_execution_id,
                                                             test_bed_type=test_bed_type,
                                                             submitter_email=submitter_email,
-                                                            state=job_state)
+                                                            state=job_state,
+                                                            pause_on_failure=pause_on_failure)
         if suite_type == SuiteType.DYNAMIC:
             if original_suite_execution_id:  # Must be a re-run
                 models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
@@ -364,6 +367,7 @@ def queue_job3(suite_id=None,
         suite_execution.description = description
         suite_execution.rich_inputs = rich_inputs
         suite_execution.max_run_time = max_run_time
+        suite_execution.pause_on_failure = pause_on_failure
         job_spec_valid, error_message = validate_spec(spec=suite_execution)
         if not job_spec_valid:
             raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
@@ -780,7 +784,7 @@ def send_summary_mail(job_id, extra_message=""):
         extra_message = "<p><b>{}</b></p><br>".format(extra_message)
     suite_detail_url = """
     <p>
-        <a href="%s">Details Link</a>
+        Details Link: %s
     </p>
     """ % (get_suite_detail_url(suite_execution_id=job_id))
 
@@ -788,6 +792,7 @@ def send_summary_mail(job_id, extra_message=""):
     with open(css_file, "r") as f:
         css = f.read()
         html = """
+        <html>
         <head>
         <style>
         %s
@@ -800,21 +805,25 @@ def send_summary_mail(job_id, extra_message=""):
         %s
         <br>
         <br>
+        </html>
         %s
         """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)
 
         # print html
         attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
-        subject = "Regression: {}: {} P:{} F:{}".format(attributes_dict["Result"],
-                                                        suite_execution.suite_path,
-                                                        attributes_dict["Passed"],
-                                                        attributes_dict["Failed"])
+        subject = "Regression: Result: {}: {} P:{} F:{}".format(attributes_dict["Result"],
+                                                                suite_execution.suite_path,
+                                                                attributes_dict["Passed"],
+                                                                attributes_dict["Failed"])
 
         try:
             to_addresses = [suite_execution.submitter_email, TEAM_REGRESSION_EMAIL]
             to_addresses.extend(json.loads(suite_execution.emails))
 
-            result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
+            h = html2text.HTML2Text()
+            h.ignore_links = True
+            content = h.handle(html)
+            result = send_mail(subject=subject, content=content, to_addresses=to_addresses)
             # print html
             scheduler_logger.info("Sent mail")
             if not result["status"]:

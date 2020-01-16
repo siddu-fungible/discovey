@@ -423,8 +423,8 @@ traffic_profile['incast_scenario6'] = {
         }
 
 traffic_profile['incast_scenario1_plus_nonfcp'] = {
-           "total_flows" : "flow1 flow2 flow3 flow4",
-           "total_duration" : "180",
+           "total_flows" : "flow5 flow6",
+           "total_duration" : "60",
            "netesto_controller" : "mpoc-server01",
            "flow1" : {
                "test" : "TCP_RR",
@@ -468,6 +468,24 @@ traffic_profile['incast_scenario1_plus_nonfcp'] = {
             "duration": "90",
             "delay": "30",
             "instances": "2",
+            "rr_size": "200B,500K",
+        },
+        "flow5": {
+            "test": "TCP_STREAM",
+            "clients": "mpoc-server20,mpoc-server22,mpoc-server23",
+            "servers": "mpoc-server21",
+            "servers_t": "mpoc-server21t",
+            "duration": "60",
+            "port" : "9555",
+            "rr_size": "200B,500K",
+        },
+        "flow6": {
+            "test": "TCP_STREAM",
+            "clients": "mpoc-server19",
+            "servers": "mpoc-server21",
+            "servers_t": "mpoc-server21t",
+            "duration": "60",
+            "port" : "9556",
             "rr_size": "200B,500K",
         },
 

@@ -2,7 +2,7 @@
   <fun-spinner [status]="status"></fun-spinner>
   <ng-container *ngIf="!status && jobStatusTypes">
     <app-section-header
-      [subText1]="'Release-train: ' + releaseCatalogExecution.release_train + ', Build: ' + releaseCatalogExecution.build_number"
+      [subText1]="headerSubText1"
       [subText2]="'Owner: ' + releaseCatalogExecution.owner"
                         [staticTitle]="'Release: '"
       [title]="releaseCatalogExecution.description" [editable]="true" (editingCallback)="descriptionChangedCallback($event)"
@@ -10,9 +10,10 @@
       [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
       [titleResultLabel]="releaseCatalogExecution.result"
     >
-
     </app-section-header>
-
+    <div *ngIf="releaseCatalogExecution.master_execution_id">
+      <a [routerLink]="['/regression/release_detail/' + releaseCatalogExecution.master_execution_id]">Go to master instance</a>
+    </div>
     <app-section-header [title]="'Suites'"
                         [subSection]="true"
                         [titleActionLinks]="suitesHeaderActionLinks"

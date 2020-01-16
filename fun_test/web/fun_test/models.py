@@ -216,6 +216,7 @@ class SuiteExecution(models.Model):
     re_run_info = JSONField(default={}, null=True)
     rich_inputs = JSONField(default=None, null=True)
     max_run_time = models.IntegerField(default=7 * 24 * 3600, null=True)
+    pause_on_failure = models.BooleanField(default=False)
 
     def __str__(self):
         s = "Suite: {} {} state: {}".format(self.execution_id, self.suite_path, self.state)
@@ -830,8 +831,8 @@ class Asset(FunModel):
             self.health_status = status
             self.state_change_time = get_current_time()
             self.health_check_message = message
-            if status == AssetHealthStates.UNHEALTHY:
-                self.disabled = True
+            # if status == AssetHealthStates.UNHEALTHY:
+            #    self.disabled = True
             self.save()
 
 

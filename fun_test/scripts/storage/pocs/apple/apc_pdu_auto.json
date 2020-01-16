@@ -1,7 +1,7 @@
 {
   "iterations": 100,
   "check_storage_controller": false,
-  "check_ssd": false,
+  "check_ssd": true,
   "check_ports": false,
   "expected_ssds_f1_0": 12,
   "expected_ssds_f1_1": 12,
@@ -15,7 +15,7 @@
   "reset_f1s_bmc": false,
   "check_docker": true,
   "expected_dockers": 3,
-  "end_sleep": 300,
+  "end_sleep": 60,
   "after_runsc_up_host_connect_interval": 60,
   "check_portal": false,
   "transport_type": "tcp",

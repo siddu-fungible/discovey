@@ -7,7 +7,7 @@
     "ctlid": 0,
     "syslog_level": 2,
     "command_timeout": 5,
-    "reboot_timeout": 330,
+    "reboot_timeout": 1500,
     "ethernet_adapter": "Mellanox",
     "csr_network": {
       "0": {

@@ -371,9 +371,11 @@ if __name__ == "__main__":
     myscript.add_test_case(ChannelParallPerformanceS1Tc())
     myscript.add_test_case(SoakFlowsBusyLoopPerformanceS1Tc())
     myscript.add_test_case(SoakDmaMemcpyCohPerformanceS1Tc())
+
     myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceS1Tc())
+
     myscript.add_test_case(SoakDmaMemsetPerformanceS1Tc())
     myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceS1Tc())
     myscript.add_test_case(BootTimingPerformanceS1Tc())
-
+    
     myscript.run()

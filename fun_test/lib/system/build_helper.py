@@ -4,11 +4,13 @@ from fun_settings import TFTP_SERVER_IP, TFTP_SERVER_SSH_USERNAME, TFTP_SERVER_S
 from lib.host.linux import Linux
 from lib.utilities.http import fetch_binary_file
 import os
+from random import randint
 
 class BuildHelper():
     FUN_OS_STRIPPED_IMAGE_NAME = "funos-f1.stripped"
     DOCHUB_LATEST_PATH = "http://dochub.fungible.local/doc/jenkins/funsdk/latest"
     STABLE_MASTER_DOCHUB_PATH = "{}/Linux/funos.mips64-extra.tgz".format(DOCHUB_LATEST_PATH)
+    STABLE_MASTER_DOCHUB_FLASH_TOOLS_PATH = "{}/Linux/flash_tools.tgz".format(DOCHUB_LATEST_PATH)
 
     def __init__(self,
                  parameters,
@@ -95,9 +97,13 @@ class BuildHelper():
         fun_test.simple_assert(tftp_server.list_files(TFTP_DIRECTORY + "/" + gz_filename), "Gz Image ready on TFTP server".format(filename))
         return gz_filename
 
-    def fetch_stable_master(self, debug=False, stripped=True):
+    def fetch_stable_master(self, debug=False, stripped=True, generate_signed_image=True):
         result = False
         tftp_filename = "{}/s_{}_{}.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(), self.FUN_OS_STRIPPED_IMAGE_NAME)
+        if generate_signed_image:
+            tftp_filename = "{}/s_{}_{}.signed.gz".format(TFTP_DIRECTORY, fun_test.get_suite_execution_id(),
+                                                   self.FUN_OS_STRIPPED_IMAGE_NAME)
+
         base_temp_directory = "/tmp/stable_master/s_{}".format(fun_test.get_suite_execution_id())
         tftp_server = self.get_tftp_server()
         try:
@@ -110,15 +116,53 @@ class BuildHelper():
             tftp_server.untar(file_name=tmp_tgz_file_name, dest=tmp_untar_directory, sudo=False)
 
             funos_binary_name = "funos-f1"
+
             if not debug:
                 funos_binary_name += "-release"
             if stripped:
                 funos_binary_name += ".stripped"
+
             fun_os_binary_full_path = "{}/bin/{}".format(tmp_untar_directory, funos_binary_name)
+            if not debug:
+                modified_release_path = fun_os_binary_full_path.replace("-release", "")
+                tftp_server.command("mv {} {}".format(fun_os_binary_full_path, modified_release_path))
+                fun_os_binary_full_path = modified_release_path
+
+            f1_stripped_directory = "{}/bin/".format(tmp_untar_directory)
             fun_test.simple_assert(tftp_server.list_files("{}".format(fun_os_binary_full_path)), "FunOS binary path found")
+
+
+            tmp_flash_tools_tgz_file_name = "{}/flash_tools_remove_me.tgz".format(base_temp_directory)
+            tftp_server.curl(url=self.STABLE_MASTER_DOCHUB_FLASH_TOOLS_PATH, output_file=tmp_flash_tools_tgz_file_name)
+            flash_tools_dir = "{}/flash_tools".format(tmp_untar_directory)
+            tftp_server.command("mkdir -p {}".format(flash_tools_dir))
+            tftp_server.untar(file_name=tmp_flash_tools_tgz_file_name, dest=flash_tools_dir, sudo=False)
+            tftp_server.list_files(tmp_untar_directory + "/*")
+
+
             gz_filename = fun_os_binary_full_path + ".gz"
             tftp_server.command("rm {}".format(gz_filename))
-            tftp_server.command("gzip {}".format(fun_os_binary_full_path))
+            # tftp_server.command("gzip {}".format(fun_os_binary_full_path))
+
+
+            if generate_signed_image:
+                flash_tools_dir = "{}/bin/flash_tools".format(flash_tools_dir)
+                tftp_server.command("cd {}".format(flash_tools_dir))
+
+                # tftp_server.command("ls -l {}".format(f1_stripped_path))
+                tftp_server.command(
+                    "python3 {}/generate_flash.py --action sign --source-dir {} {}/mmc_config_fungible.json {}/key_bag_config.json".format(
+                        flash_tools_dir,
+                        f1_stripped_directory,
+                        flash_tools_dir,
+                        flash_tools_dir))
+
+                signed_file = "{}/funos.signed.bin".format(flash_tools_dir)
+                fun_test.simple_assert(tftp_server.list_files(signed_file), "signed image created")
+                gz_filename = "{}".format(signed_file) + ".gz"
+                tftp_server.command("rm {}".format(gz_filename))
+                tftp_server.command("gzip {}".format(signed_file))
+
             fun_test.simple_assert(tftp_server.list_files(gz_filename), "GZ file created")
             tftp_server.command("mv {} {}".format(gz_filename, tftp_filename))
             fun_test.simple_assert(tftp_server.list_files(tftp_filename), "File moved to tftpboot directory")
@@ -128,6 +172,7 @@ class BuildHelper():
             fun_test.critical(str(ex))
         finally:
             tftp_server.command("rm -rf {}".format(base_temp_directory))
+            tftp_server.disconnect()
         return result
 
 

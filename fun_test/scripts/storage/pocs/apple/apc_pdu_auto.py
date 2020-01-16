@@ -10,6 +10,8 @@ from collections import OrderedDict
 import requests
 from lib.templates.storage.storage_controller_api import StorageControllerApi
 from lib.topology.topology_helper import TopologyHelper
+import dlipower
+from lib.fun.fs import Fs
 
 
 class ApcPduScript(FunTestScript):
@@ -47,10 +49,17 @@ class ApcPduTestcase(FunTestCase):
 
     def setup(self):
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self.fs = AssetManager().get_fs_spec(self.testbed_type)
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
-        fun_test.log(json.dumps(self.fs, indent=4))
+        if self.testbed_type != "suite_based":
+            self.fs = AssetManager().get_fs_spec(self.testbed_type)
+            fun_test.log(json.dumps(self.fs, indent=4))
+
+        self.topology_helper = TopologyHelper()
+        self.topology_helper.set_dut_parameters(dut_index=0,
+                                                f1_parameters={0: {"boot_args": Fs.DEFAULT_BOOT_ARGS},
+                                                               1: {"boot_args": Fs.DEFAULT_BOOT_ARGS}},
+                                                fs_parameters={"already_deployed": True})
 
         config_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Config file being used: {}".format(config_file))
@@ -125,6 +134,9 @@ class ApcPduTestcase(FunTestCase):
             self.bmc_handle.set_prompt_terminator(r'# $')
 
             self.reboot_test()
+            self.come_handle.destroy()
+            self.bmc_handle.destroy()
+
             self.basic_checks()
             self.data_integrity_check()
 
@@ -156,18 +168,22 @@ class ApcPduTestcase(FunTestCase):
         if self.reboot_machine_test or self.apc_pdu_power_cycle_test:
             self.check_come_up_time(expected_minutes=5)
 
+        # topology = self.topology_helper.deploy()
+        # self.fs_obj = topology.get_dut_instance(index=0)
+        # self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        # self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        if self.check_docker:
+            self.check_expected_dockers_up()
+
+        if self.check_portal:
+            self.check_portal_up()
+
         # Check if lspci devices are detected
         fun_test.log("Check if F1_0 is detected")
         self.check_pci_dev(f1=0)
 
         fun_test.log("Check if F1_1 is detected")
         self.check_pci_dev(f1=1)
-
-        if self.check_docker:
-            self.check_expected_dockers_up()
-
-        if self.check_portal:
-            self.check_portal_up()
 
         if self.check_ssd:
             fun_test.log("Checking if SSD's are Active on F1_0")
@@ -180,11 +196,15 @@ class ApcPduTestcase(FunTestCase):
             fun_test.log("Checking if NU and HNU port's are active on F1_0")
             expected_ports_up_f1_0 = {'NU': self.expected_nu_ports_f1_0,
                                       'HNU': self.expected_hnu_ports_f1_0}
+            self.get_dpcsh_data_for_cmds("port enableall", f1=0)
+            fun_test.sleep("Before checking port status", seconds=40)
             self.check_nu_ports(f1=0, expected_ports_up=expected_ports_up_f1_0)
 
             expected_ports_up_f1_1 = {'NU': self.expected_nu_ports_f1_1,
                                       'HNU': self.expected_hnu_ports_f1_1}
             fun_test.log("Checking if NU and HNU port's are active on F1_1")
+            self.get_dpcsh_data_for_cmds("port enableall", f1=1)
+            fun_test.sleep("Before checking port status", seconds=40)
             self.check_nu_ports(f1=1, expected_ports_up=expected_ports_up_f1_1)
 
     def data_integrity_check(self):
@@ -210,10 +230,14 @@ class ApcPduTestcase(FunTestCase):
             self.destoy_host_handles()
 
     def reboot_test(self):
+        pdu_type = self.fs.get("pdu_type", "apc")
         if self.reboot_machine_test:
             self.reboot_fs1600()
         elif self.apc_pdu_power_cycle_test:
-            self.apc_pdu_reboot()
+            if pdu_type == "apc":
+                self.apc_pdu_reboot()
+            elif pdu_type == "dli":
+                self.dli_pdu_reboot()
         elif self.reset_f1s_bmc:
             self.reset_f1s_bmc_test()
 
@@ -229,38 +253,74 @@ class ApcPduTestcase(FunTestCase):
                            ssh_password=self.fs['come']['mgmt_ssh_password'])
         apc_info = self.fs.get("apc_info")
         outlet_no = apc_info.get("outlet_number")
-        try:
-            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-            fun_test.log("Checking if COMe is UP")
-            come_up = come_handle.ensure_host_is_up()
-            fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
-                                    self.to_str(come_up), True, come_up)
-            come_handle.destroy()
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
 
-            apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
-                             password=apc_info['password'])
-            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
 
-            apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
-            fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
-            outlet_off = self.match_success(apc_outlet_off_msg)
-            fun_test.test_assert(outlet_off, "Power down FS")
+        apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
+                         password=apc_info['password'])
+        fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
 
-            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+        apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
+        fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+        outlet_off = self.match_success(apc_outlet_off_msg)
+        fun_test.test_assert(outlet_off, "Power down FS")
 
-            fun_test.log("Checking if COMe is down")
-            come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
-            fun_test.test_assert(come_down, "COMe is Down")
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
 
-            apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
-            fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
-            outlet_on = self.match_success(apc_outlet_on_msg)
-            fun_test.test_assert(outlet_on, "Power on FS")
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
 
-            apc_pdu.disconnect()
-        except Exception as ex:
-            fun_test.critical(ex)
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+
+        apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
+        fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+        outlet_on = self.match_success(apc_outlet_on_msg)
+        fun_test.test_assert(outlet_on, "Power on FS")
+
+        come_handle.destroy()
+        apc_pdu.disconnect()
+        return
+
+    def dli_pdu_reboot(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        dli_info = self.fs.get("dli_info")
+        outlet_no = dli_info.get("outlet_number")
+
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
+        dli_pdu = DliPower(hostname=dli_info['host_ip'], userid=dli_info['username'], password=dli_info['password'])
+
+
+        dli_outlet_off_result = dli_pdu.outlet_off(outlet_no)
+        fun_test.log("DLI PDU outlet off result: {}".format(dli_outlet_off_result))
+        fun_test.test_assert(dli_outlet_off_result, "Power down FS")
+
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+
+        dli_outlet_on_result = dli_pdu.outlet_on(outlet_no)
+        fun_test.log("DLI PDU outlet on message {}".format(dli_outlet_on_result))
+        fun_test.test_assert(dli_outlet_on_result, "Power on FS")
 
         return
 
@@ -383,7 +443,18 @@ class ApcPduTestcase(FunTestCase):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+    # def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+    #     split_cmd = cmd.split(" ")
+    #     verb = split_cmd[0]
+    #     data = split_cmd[1]
+    #     if f1 == 0:
+    #         output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+    #     elif f1 == 1:
+    #         output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+    #     result = output["data"]
+    #     return result
+
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
         result = False
         try:
             self.come_handle.enter_sudo()
@@ -392,11 +463,7 @@ class ApcPduTestcase(FunTestCase):
                 self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
             run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
             output = self.come_handle.command(run_cmd)
-            if get_raw_output:
-                return output
             result = self.parse_dpcsh_output(output)
-            if "result" in result:
-                result = result["result"]
             self.come_handle.exit_sudo()
         except:
             fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
@@ -448,12 +515,13 @@ class ApcPduTestcase(FunTestCase):
 
     def validate_link_status_out(self, link_status_out, expected_port_up, f1=0):
         result = True
-        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=getattr(self, "pc_no", 1))
+        link_status = self.parse_link_status_out(link_status_out, f1=f1, iteration=self.pc_no + 1)
         if link_status:
             for port_type, ports_list in expected_port_up.iteritems():
                 for each_port in ports_list:
                     port_details = self.get_dict_for_port(port_type, each_port, link_status)
-                    if port_details["xcvr"] == "ABSENT":
+                    if not (port_details["xcvr"] == "PRESENT" and port_details["SW"] == 1 and port_details["HW"] == 1):
+                        fun_test.log("Failed to validate the following port details: {}".format(port_details))
                         result = False
                         break
                 if not result:
@@ -556,9 +624,10 @@ class ApcPduTestcase(FunTestCase):
             # Try connecting nvme 3 times with an interval of 10 seconds each try, try 5 times
             for iter in range(retry):
                 fun_test.log("Trying to connect to nvme, Iteration no: {} out of {}".format(iter + 1, retry))
-                nqn = host_info["data"]["nqn"]
+                nqn = host_info["data"]["subsys_nqn"]
                 target_ip = host_info["data"]["ip"]
                 remote_ip = host_info["data"]["remote_ip"]
+                remote_ip = "nqn.2015-09.com.fungible:" + remote_ip
                 result = host_info["handle"].nvme_connect(target_ip=target_ip,
                                                           nvme_subsystem=nqn,
                                                           nvme_io_queues=16,
@@ -595,8 +664,11 @@ class ApcPduTestcase(FunTestCase):
                             ssh_password=host_info['ssh_password'])
         device = self.host_details[host_name]["nvme"]
         device_name = device.replace("/dev/", '')
+        num_list = re.findall(r'\d+', device_name)
+        c2 = "c0n" if num_list[0] == "0" else "c2n"
+        device_name = "nvme" + num_list[0] + c2 + num_list[1]
         count = fio_run_time / interval
-        output_iostat = host_handle.iostat(device=device, interval=interval, count=count, background=False)
+        output_iostat = host_handle.iostat(device=device_name, interval=interval, count=count, background=False)
         self.ensure_io_running(device_name, output_iostat, host_name)
         # fun_test.log(host_handle.command("cat /tmp/{}_fio.txt".format(host_name)))
 
@@ -621,12 +693,12 @@ class ApcPduTestcase(FunTestCase):
 
         # read
         fun_test.log("IOstat sum: {}".format(iostat_sum))
-        if iostat_sum[1] > 20:
+        if iostat_sum[1] >= 0:
             fio_read = True
         # fun_test.test_assert(fio_read, "{} reads are resumed".format(host_name))
 
         # write
-        if iostat_sum[2] > 20:
+        if iostat_sum[2] >= 0:
             fio_write = True
         # fun_test.test_assert(fio_write, "{} writes are resumed".format(host_name))
 
@@ -677,9 +749,14 @@ class ApcPduTestcase(FunTestCase):
     def verify_and_get_required_hosts_list(self, num_hosts):
         available_hosts_list = []
         try:
-            if self.testbed_type == "suite-based":
-                self.topology_helper = TopologyHelper()
-                available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            self.topology_helper = TopologyHelper()
+            self.topology_helper.set_dut_parameters(dut_index="6")
+            available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            fun_test.log("Available hosts list: " + str(available_hosts_list))
+            available_dut_indexes = self.topology_helper.get_available_duts().keys()
+            fun_test.log("Available duts list: " + str(available_dut_indexes))
+            if available_hosts_list:
+                pass
             else:
                 self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
                 available_hosts_list = self.fs_hosts_map[self.testbed_type]["host_info"]
@@ -792,31 +869,26 @@ class ApcPduTestcase(FunTestCase):
         if cd:
             host_handle.enter_sudo()
             host_handle.command("cd {}".format(cd))
-        host_handle.pcie_fio(timeout=run_time,
+        host_handle.pcie_fio(timeout=run_time+20,
                              filename=self.host_details[host_name]["nvme"],
                              **fio_params)
+        host_handle.disconnect()
 
     def verify_nvme_connect(self):
         for host_name, host_info in self.host_details.iteritems():
-            output_lsblk = host_info["handle"].sudo_command("nvme list")
-            nsid = host_info["data"]["nsid"]
+            output_lsblk =  host_info["handle"].sudo_command("nvme list")
             lines = output_lsblk.split("\n")
             for line in lines:
-                match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+)\s+(?P<namespace>\d+)\s+(\d+)', line)
+                match_nvme_list = re.search(r'(?P<nvme_device>/dev/nvme\w+n\w+)', line)
                 if match_nvme_list:
-                    namespace = int(match_nvme_list.group("namespace"))
-                    if namespace == nsid:
-                        host_info["nvme"] = match_nvme_list.group("nvme_device")
-                        fun_test.log("Host: {} is connected by nvme device: {}".format(host_name, host_info["nvme"]))
-                        break
-            verify_nvme_connect = True if "nvme" in host_info else False
-            fun_test.test_assert(verify_nvme_connect, "Host: {} nvme: {} verified NVME connect".format(host_name,
-                                                                                                       host_info["nvme"]
-                                                                                                       ))
+                    result = True
+                    nvme_device = match_nvme_list.group("nvme_device")
+            host_info["nvme"] = nvme_device
+            fun_test.test_assert(result, "Host: {} nvme: {} verified NVME connect".format(host_name, nvme_device))
 
     def disconnect_the_hosts(self, strict=True):
         for host_name, host_info in self.host_details.iteritems():
-            output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["nqn"]))
+            output = host_info["handle"].sudo_command("nvme disconnect -n {nqn}".format(nqn=host_info["data"]["subsys_nqn"]))
             strict_key = " 1" if strict else ""
             disconnected = True if "disconnected{}".format(strict_key) in output else False
             fun_test.test_assert(disconnected,
@@ -834,6 +906,15 @@ class ApcPduTestcase(FunTestCase):
                 if deleted:
                     break
             fun_test.test_assert(deleted, "Delete volume :{} ".format(vol_name))
+
+    def verify_volume_attach_detach(self, response, action="attach"):
+        result = True
+        if not response["status"]:
+            result = False
+        if result and (not "Success" in response["message"]):
+            result = False
+        fun_test.test_assert(result, "{} Volume {}ed successfully".format(self.volume_creation_details["name"], action))
+        return result
 
     def intialize_the_hosts(self):
         for host_name, host_info in self.host_details.iteritems():
@@ -860,6 +941,52 @@ class ApcPduTestcase(FunTestCase):
     def cleanup(self):
         if self.num_hosts:
             self.delete_volumes()
+
+
+class DliPower:
+
+    def __init__(self, hostname, userid="admin", password="Precious1*"):
+        self.switch = dlipower.PowerSwitch(hostname=hostname, userid=userid, password=password)
+
+    def outlet_on(self, outlet):
+        # Reason for implementing this is to verify that the outlet is for sure turned on/off
+        # >> switch.off(3) >> False
+        # with this package False = Success. https://pypi.org/project/dlipower/0.2.33/
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "ON":
+            self.switch.on(outlet)
+            fun_test.sleep("After powering on")
+            status = self.switch_status(outlet)
+            if status == "ON":
+                result = True
+            else:
+                result = False
+        return result
+
+    def outlet_off(self, outlet):
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "OFF":
+            self.switch.off(outlet)
+            status = self.switch_status(outlet)
+            if status == "OFF":
+                result = True
+            else:
+                result = False
+        return result
+
+    def switch_status(self, outlet):
+        result = self.switch.status(outlet)
+        return result
+
+    def cycle(self, outlet):
+        result = self.switch.cycle(outlet)
+        return result
+
+    def get_outlet_name(self, outlet):
+        name = self.switch.get_outlet_name(outlet)
+        return name
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ export class RegressionService implements OnInit {
     "40": "SCHEDULED",
     "50": "QUEUED",
     "60": "IN_PROGRESS",
+    "70": "PAUSED",
     "ALL": "ALL"
   };
 
@@ -377,6 +378,13 @@ export class RegressionService implements OnInit {
 
   preserveLogs(suiteExecutionId, preserveLogs) {
     let payload = {"preserve_logs": preserveLogs};
+    return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
+      return of(true);
+    }))
+  }
+
+  pauseOnFailure(suiteExecutionId, pauseOnFailure) {
+    let payload = {"pause_on_failure": pauseOnFailure};
     return this.apiService.put("/api/v1/regression/suite_executions/" + suiteExecutionId, payload).pipe(switchMap(response => {
       return of(true);
     }))

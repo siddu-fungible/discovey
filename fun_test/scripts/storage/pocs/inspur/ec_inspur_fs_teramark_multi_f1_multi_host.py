@@ -524,6 +524,10 @@ class ECVolumeLevelScript(FunTestScript):
                                                   container_name].exit_status(),
                                               message="Configure Static route")
 
+                # Display route and arp inside the container
+                self.funcp_obj[index].container_info[container_name].command("ip route")
+                self.funcp_obj[index].container_info[container_name].command("arp")
+
         # Forming shared variables for defined parameters
         fun_test.shared_variables["topology"] = self.topology
         fun_test.shared_variables["fs_obj"] = self.fs_obj

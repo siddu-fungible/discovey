@@ -1,6 +1,6 @@
 from lib.system.fun_test import FunTestLibException, fun_test
 import requests
-
+import json
 
 class StorageControllerApi(object):
     def __init__(self, api_server_ip, api_server_port=50220, username="admin", password="password"):
@@ -54,6 +54,7 @@ class StorageControllerApi(object):
                             for dpu in fs_props["dpus"]:
                                 if "uuid" in dpu:
                                     result.append(dpu["uuid"])
+                                    fun_test.log("DPU ID is {}".format(dpu["uuid"]))
                                 else:
                                     fun_test.critical("No DPU found in the current FS")
                         else:
@@ -145,6 +146,7 @@ class StorageControllerApi(object):
 
     def create_volume(self, pool_uuid, name, capacity, stripe_count, vol_type, encrypt=False, allow_expansion=False,
                       data_protection={}, compression_effort=0):
+        result = {"status": False, "data": {}}
         url = "storage/pools/{}/volumes".format(pool_uuid)
         data = {"name": name,  "capacity": capacity,  "vol_type": vol_type,
                 "encrypt": encrypt, "allow_expansion": allow_expansion, "stripe_count": stripe_count,
@@ -221,9 +223,38 @@ class StorageControllerApi(object):
         result = {"status": False, "data":{}}
         url = "api_server/health"
         response = self.execute_api("GET", url)
+        fun_test.log("GET {}".format(url))
         try:
             if response.ok:
                 result = response.json()
+                fun_test.log(json.dumps(result, indent=4))
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
+
+    def get_version(self):
+        version = ""
+        try:
+            topo_dict = self.execute_api("GET", "topology")
+            topo_dict = topo_dict.json()
+            version = topo_dict['data']["FS1"]['version']
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        return version
+
+    def get_volumes(self):
+        try:
+            res = self.execute_api("GET", "storage/volumes")
+            if res.ok:
+                res = res.json()
+            else:
+                fun_test.test_assert(
+                    "Unable to get the volume information from {}".format(fun_test.shared_variables["testbed"]))
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return res
+
+if __name__ == "__main__":
+    s = StorageControllerApi(api_server_ip="fs144-come")
+    s.get_dpu_ids()

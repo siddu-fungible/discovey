@@ -28,7 +28,7 @@ class ReportWorker(Thread):
 
             assets = Asset.objects.all()
             for asset in assets:
-                if not asset.disabled and asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
+                if asset.health_check_enabled and (asset.health_status == AssetHealthStates.UNHEALTHY):
                     asset_reports.append({"asset_name": asset.name,
                                           "health_status": asset.health_status,
                                           "health_check_message": asset.health_check_message})
@@ -168,29 +168,26 @@ class TestBedWorker(Thread):
 
     def set_health_status(self, asset_object, health_result, error_message):
         health_status = AssetHealthStates.HEALTHY
-        if asset_object.disabled:
-            health_status = AssetHealthStates.DISABLED
-        else:
-            if not asset_object.health_check_enabled:
+        if not asset_object.health_check_enabled:
+            health_status = AssetHealthStates.HEALTHY
+        elif asset_object.health_check_enabled:
+            if health_result:
                 health_status = AssetHealthStates.HEALTHY
-            elif asset_object.health_check_enabled:
-                if health_result:
-                    health_status = AssetHealthStates.HEALTHY
-                elif not health_result:
+            elif not health_result:
 
-                    current_health_status = asset_object.health_status
-                    health_status = current_health_status
-                    if current_health_status == AssetHealthStates.DEGRADING:
+                current_health_status = asset_object.health_status
+                health_status = current_health_status
+                if current_health_status == AssetHealthStates.DEGRADING:
 
-                        time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
+                    time_in_degrading_state = (get_current_time() - asset_object.state_change_time).total_seconds()
+                    health_status = AssetHealthStates.DEGRADING
+                    if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
+                        health_status = AssetHealthStates.UNHEALTHY
+                        self.alert("Setting {} to unhealthy".format(asset_object.name))
+                else:
+                    if not current_health_status == AssetHealthStates.UNHEALTHY:
                         health_status = AssetHealthStates.DEGRADING
-                        if time_in_degrading_state > UNHEALTHY_VERDICT_TIME:
-                            health_status = AssetHealthStates.UNHEALTHY
-                            self.alert("Setting {} to unhealthy".format(asset_object.name))
-                    else:
-                        if not current_health_status == AssetHealthStates.UNHEALTHY:
-                            health_status = AssetHealthStates.DEGRADING
-                            self.alert("Setting {} to degrading".format(asset_object.name))
+                        self.alert("Setting {} to degrading".format(asset_object.name))
 
         asset_object.set_health(status=health_status, message=error_message)
         return health_status

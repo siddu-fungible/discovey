@@ -407,7 +407,7 @@ class BwTest(FunTestCase):
     mtu = 0
     fcp = True
     rt = None
-    io_size = [1, 128, 256, 512, 1024, 4096]
+    io_size = [1, 128, 256, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         pass
@@ -616,7 +616,7 @@ class LatencyTest(FunTestCase):
     mtu = 0
     fcp = True
     rt = None
-    io_size = [1, 128, 256, 512, 1024, 4096]
+    io_size = [1, 128, 256, 512, 1024, 4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         pass
@@ -651,6 +651,7 @@ class LatencyTest(FunTestCase):
             link_capacity = "100G"
             hosts = 2
         for index in range(total_link_bw):
+            f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
             rdma_setup = f11_hosts[index]["roce_handle"].rdma_setup()

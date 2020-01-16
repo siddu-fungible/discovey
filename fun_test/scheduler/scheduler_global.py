@@ -55,6 +55,7 @@ class JobStatusType(Codes):
     SCHEDULED = 40
     QUEUED = 50
     IN_PROGRESS = 60
+    PAUSED = 70
 
     def code_to_string(self, code):
         result = "UNKNOWN"

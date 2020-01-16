@@ -115,6 +115,10 @@ def get_netesto_script(test_type='basic'):
         if 'remotebuffer' in flow:
             doclient_args.append("remoteBuffer=" + flow['remotebuffer'])
 
+        port_incr_lst = [] 
+        if 'port' in flow:
+            print "Reached here port "
+            doclient_args.append("port=" + flow['port']) 
         doclient_args.append("stats=1")
 
         doclient_args = " ".join(doclient_args)
@@ -228,6 +232,11 @@ def netesto_client(host, ssh_username="localadmin", ssh_password="Precious1*"):
         'mpoc-server04' : 'enp216s0',
         'mpoc-server05' : 'enp216s0',
         'mpoc-server06' : 'enp216s0',
+        'mpoc-server19' : 'enp175s0',
+        'mpoc-server20' : 'enp175s0',
+        'mpoc-server21' : 'enp175s0',
+        'mpoc-server22' : 'enp175s0',
+        'mpoc-server23' : 'enp175s0',
     }
 
     #if host == "mpoc-server42" or host == "mpoc-server46" or host == "mpoc-server-33":

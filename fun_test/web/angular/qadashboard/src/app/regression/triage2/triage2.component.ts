@@ -43,7 +43,6 @@ export class Triage2Component implements OnInit {
 
   createFormBuilder() {
     this.submissionForm = this.formBuilder.group({
-      'submitter': [null, Validators.required],
       'from_fun_os_sha': [null, Validators.required],
       'to_fun_os_sha': [null, Validators.required],
       'metric_id': [-1],

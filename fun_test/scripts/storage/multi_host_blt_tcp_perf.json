@@ -96,7 +96,7 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8), (32, 16)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(16, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)", "(32, 16)"],
     "full_run_iodepth": [128],
     "fio_full_run_time": 1200,
     "fio_full_run_timeout": 1230,

@@ -84,53 +84,63 @@
                 <ngx-json-viewer [json]="suiteExecution.parsedEnvironment" [expanded]="false"></ngx-json-viewer>
               </td>
             </tr>
+            <tr>
+              <td class="attribute-table-td">
+                <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution?.fields?.result"></app-smart-label>
+                 <span
+                  *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
+                  (click)="reRunModalOpen(suiteContent)"
+                  class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
+                </span>
+                <ng-template #suiteContent let-modal>
+                  <div class="fun-panel">
+                    <div class="fun-panel-header">
+                      Re-run options
+                      <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
+                    </div>
+                    <div class="fun-panel-body">
+                      <div class="re-run-div">
+                        <button (click)="toggleReRunOptions()" class="btn click-button"
+                                [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
+                          <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
+                        </button>
+                      </div>
+                      <div class="re-run-div">
+                        <button (click)="toggleReRunOptions()" class="btn click-button"
+                                [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
+                          <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
+                        </button>
+                      </div>
+                      <div class="re-run-div" *ngIf="suiteExecution?.fields?.test_bed_type !== 'simulation'">
+                        <button (click)="togglereUseBuildImage()" class="btn click-button"
+                                [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
+                          class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
+                        </button>
+                        (From the original run)
+                      </div>
+                      <div>
+                      </div>
+                      <app-section-horizontal-line></app-section-horizontal-line>
+                      <div style="display: flex; justify-content: flex-end">
+                        <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
+                        <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </ng-template>
+              </td>
+              <td class="attribute-table-td" *ngIf="suiteExecution?.fields.state >= stateMap.COMPLETED">
+                <span>
+                  <span class="attribute-table-main-text">Pause on failure</span>
+                  <app-toggle-button [checked]="suiteExecution?.fields?.pause_on_failure" (changed)="onTogglePauseOnFailure($event)"></app-toggle-button>
+                </span>
+              </td>
+            </tr>
           </table>
 
-          <div class="attribute-table-td">
-            <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution?.fields?.result"></app-smart-label>
-             <span
-              *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
-              (click)="reRunModalOpen(suiteContent)"
-              class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
-            </span>
-            <ng-template #suiteContent let-modal>
-              <div class="fun-panel">
-                <div class="fun-panel-header">
-                  Re-run options
-                  <span *ngIf="reRunScript"> Script: {{ reRunScript }}</span>
-                </div>
-                <div class="fun-panel-body">
-                  <div class="re-run-div">
-                    <button (click)="toggleReRunOptions()" class="btn click-button"
-                            [ngClass]="{'btn-primary': reRunOptionsReRunAll, 'btn-outline-primary': !reRunOptionsReRunAll}">
-                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunAll}"></i> Re-run all
-                    </button>
-                  </div>
-                  <div class="re-run-div">
-                    <button (click)="toggleReRunOptions()" class="btn click-button"
-                            [ngClass]="{'btn-primary': reRunOptionsReRunFailed, 'btn-outline-primary': !reRunOptionsReRunFailed}">
-                      <i class="fa" [ngClass]="{'fa-check': reRunOptionsReRunFailed}"></i> Re-run failed
-                    </button>
-                  </div>
-                  <div class="re-run-div" *ngIf="suiteExecution?.fields?.test_bed_type !== 'simulation'">
-                    <button (click)="togglereUseBuildImage()" class="btn click-button"
-                            [ngClass]="{'btn-primary': reUseBuildImage, 'btn-outline-primary': !reUseBuildImage}"><i
-                      class="fa" [ngClass]="{'fa-check': reUseBuildImage}"></i>Re-use Jenkins build image
-                    </button>
-                    (From the original run)
-                  </div>
-                  <div>
-                  </div>
-                  <app-section-horizontal-line></app-section-horizontal-line>
-                  <div style="display: flex; justify-content: flex-end">
-                    <span class="pseudo-anchor" (click)="modal.dismiss('Cross click')">Cancel</span> &nbsp;&nbsp;
-                    <button class="btn btn-success submit-button" (click)="modal.close(suiteExecution)">Submit
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </ng-template>
-          </div>
+
+
           <table *ngIf="suiteExecution" class="fun-table" style="margin: 10px">
             <tr>
               <td class="fun-table-header">

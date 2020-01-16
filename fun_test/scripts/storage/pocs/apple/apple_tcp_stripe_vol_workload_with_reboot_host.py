@@ -103,18 +103,18 @@ class StripeVolHostRebootTestScript(FunTestScript):
 
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(host_name))
-
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = host_handle.lsmod(module)
-                if not module_check:
-                    host_handle.modprobe(module)
-                    module_check = host_handle.lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+            # # Ensure all hosts are up after reboot
+            # fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+            #                      message="Ensure Host {} is reachable after reboot".format(host_name))
+            #
+            # # Ensure required modules are loaded on host server, if not load it
+            # for module in self.load_modules:
+            #     module_check = host_handle.lsmod(module)
+            #     if not module_check:
+            #         host_handle.modprobe(module)
+            #         module_check = host_handle.lsmod(module)
+            #         fun_test.sleep("Loading {} module".format(module))
+            #     fun_test.simple_assert(module_check, "{} module is loaded".format(module))
 
             # Stopping iptables service on all hosts
             host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
@@ -126,13 +126,13 @@ class StripeVolHostRebootTestScript(FunTestScript):
                 fun_test.log("IRQ balance not stopped on host: {}".format(host_name))
                 host_handle.sudo_command("tuned-adm profile network-throughput && tuned-adm active")
 
-        # Ensuring connectivity from Host to F1's
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(host_name, self.funcp_spec[0]["container_names"][index], ip))
+        # # Ensuring connectivity from Host to F1's
+        # for host_name in self.host_info:
+        #     host_handle = self.host_info[host_name]["handle"]
+        #     for index, ip in enumerate(self.f1_ips):
+        #         ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
+        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+        #                              format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
     def cleanup(self):
         pass

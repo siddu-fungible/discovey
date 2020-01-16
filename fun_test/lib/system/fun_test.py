@@ -51,8 +51,11 @@ class FunTimer:
     def start(self):
         self.start_time = time.time()
 
-    def is_expired(self):
-        return (self.elapsed_time()) > self.max_time
+    def is_expired(self, print_remaining_time=False):
+        result = (self.elapsed_time()) > self.max_time
+        if print_remaining_time:
+            fun_test.log("Remaining time: {}".format(self.remaining_time()))
+        return result
 
     def elapsed_time(self):
         current_time = time.time()
@@ -208,6 +211,7 @@ class FunTest:
             return
         else:
             self.fun_test_disabled = False
+        self.unknown_args = unknown
         self.fun_xml_obj = None
         self.logs_dir = args.logs_dir
         self.log_prefix = args.log_prefix
@@ -312,6 +316,21 @@ class FunTest:
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
+
+    def get_custom_arg(self, key):
+        value = None
+        if self.unknown_args and type(self.unknown_args) is list:
+            for unknown_arg_part in self.unknown_args:
+                parts = unknown_arg_part.split("=")
+                if len(parts) == 2:
+                    unknown_arg_key = parts[0].lstrip("--")
+                    if key == unknown_arg_key:
+                        value = parts[1]
+                        break
+                if len(parts) == 1:
+                    value = True
+                    break
+        return value
 
     def enable_time_series(self, enable=True):
         self.time_series_enabled = enable
@@ -1441,8 +1460,19 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.FAILED, context=context)
             self.critical(assert_message, context=context)
-            if self.pause_on_failure:
+            if self.pause_on_failure and not self.suite_execution_id:
                 pdb.set_trace()
+
+            """
+            if self.suite_execution_id:
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if suite_execution.pause_on_failure:
+                    fun_test.log("Pause on failure set for {}".format(assert_message))
+                    suite_execution.state = JobStatusType.PAUSED
+                    suite_execution.save()
+                    self.pause_loop()
+            """
+            self.check_pause_on_failure(assert_message)
             raise TestException(assert_message)
         if not ignore_on_success:
             self.log(assert_message, context=context)
@@ -1453,6 +1483,20 @@ class FunTest:
                 #    this_checkpoint = "{:.2f}: {}".format(self.profiling_timer.elapsed_time(), this_checkpoint)  #TODO: Duplicate line
                 self.add_checkpoint(checkpoint=this_checkpoint, expected=expected, actual=actual, result=FunTest.PASSED, context=context)
 
+    def pause_loop(self):
+        max_pause_loop_timer = FunTimer(max_time=24 * 60 * 60)
+        if self.suite_execution_id:
+            while not max_pause_loop_timer.is_expired():
+                self.sleep("Pause loop", seconds=60)
+                suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+                if not suite_execution.pause_on_failure:
+                    fun_test.log("Exiting pause loop")
+                    suite_execution.state = JobStatusType.IN_PROGRESS
+                    suite_execution.save()
+                    break
+        suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+        suite_execution.state = JobStatusType.IN_PROGRESS
+        suite_execution.save()
 
     def add_checkpoint(self,
                        checkpoint=None,
@@ -1728,6 +1772,15 @@ class FunTest:
             tags = json.loads(suite_execution.tags)
         return tags
 
+    def check_pause_on_failure(self, message):
+        if self.suite_execution_id:
+            suite_execution = models_helper.get_suite_execution(suite_execution_id=self.suite_execution_id)
+            if suite_execution.pause_on_failure:
+                self.log("Pause on failure set for {}".format(message))
+                suite_execution.state = JobStatusType.PAUSED
+                suite_execution.save()
+                self.pause_loop()
+
 fun_test = FunTest()
 
 
@@ -1884,6 +1937,9 @@ class FunTestScript(object):
 
         return script_result == FunTest.PASSED
 
+
+
+
     def _cleanup_fss(self):
         cleanup_error_found = False
 
@@ -2036,7 +2092,8 @@ class FunTestScript(object):
                         except Exception as ex:
                             fun_test.critical(str(ex))
 
-                    except TestException:
+                    except TestException as ex:
+                        fun_test.check_pause_on_failure(str(ex))
                         try:
                             test_case.cleanup()
                         except Exception as ex:
@@ -2048,6 +2105,8 @@ class FunTestScript(object):
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fun_test.add_checkpoint(result=FunTest.FAILED, checkpoint="Abnormal test-case termination")
+                        fun_test.check_pause_on_failure(str(ex))
+
                         try:
                             test_case.cleanup()
                         except Exception as ex:
@@ -2071,6 +2130,8 @@ class FunTestScript(object):
 
         except Exception as ex:
             fun_test.critical(str(ex))
+            fun_test.check_pause_on_failure(str(ex))
+
             try:
                 FunTestScript.cleanup(self)
             except Exception as ex:
@@ -2092,7 +2153,7 @@ class FunTestCase:
         s = "{}: {}".format(self.id, self.summary)
         return s
 
-    def set_test_details(self, id, summary, steps):
+    def set_test_details(self, id, summary, steps, test_rail_case_ids=None):
         self.id = id
         self.summary = summary
         self.steps = steps

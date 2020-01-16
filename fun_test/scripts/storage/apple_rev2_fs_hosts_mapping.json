@@ -60,5 +60,17 @@
       "cab04-qa-04",
       "cab04-qa-05"
     ]
+  },
+  "fs-118": {
+    "host_info": [
+      "cab04-qa-04",
+      "cab04-qa-05"
+    ]
+  },
+  "fs-117": {
+    "host_info": [
+      "cab04-qa-04",
+      "cab04-qa-05"
+    ]
   }
 }

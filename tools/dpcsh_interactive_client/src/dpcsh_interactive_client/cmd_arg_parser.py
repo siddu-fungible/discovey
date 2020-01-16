@@ -1039,6 +1039,11 @@ peek_nwqm_hnu_stats_parser.add_argument('-grep', help="Grep Regex pattern", defa
 peek_fae_stats_parser = peek_stats_parsers.add_parser('fae', help="Peek fae stats")
 peek_fae_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
 
+# hbm stats
+peek_hbm_stats_parser = peek_stats_parsers.add_parser('hbm', help="Peek hbm stats")
+peek_hbm_stats_parser.add_argument('-muh', help="muh id", default=None)
+peek_hbm_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)
+
 # Nu mpg stats
 peek_mpg_stats_parser = peek_stats_parsers.add_parser('mpg', help='Peek mpg stats')
 peek_mpg_stats_parser.add_argument('-grep', help="Grep Regex pattern", default=None)

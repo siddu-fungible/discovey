@@ -159,34 +159,34 @@ class ECVolumeLevelScript(FunTestScript):
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
 
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(host_name))
-
-            # TODO: enable after mpstat check is added
-            """
-            # Check and install systat package
-            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-            """
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = host_handle.lsmod(module)
-                if not module_check:
-                    host_handle.modprobe(module)
-                    module_check = host_handle.lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        # Ensuring connectivity from Host to F1's
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(host_name, self.funcp_spec[0]["container_names"][index], ip))
+        # for host_name in self.host_info:
+        #     host_handle = self.host_info[host_name]["handle"]
+        #     # Ensure all hosts are up after reboot
+        #     fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
+        #                          message="Ensure Host {} is reachable after reboot".format(host_name))
+        #
+        #     # TODO: enable after mpstat check is added
+        #     """
+        #     # Check and install systat package
+        #     install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+        #     fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+        #     """
+        #     # Ensure required modules are loaded on host server, if not load it
+        #     for module in self.load_modules:
+        #         module_check = host_handle.lsmod(module)
+        #         if not module_check:
+        #             host_handle.modprobe(module)
+        #             module_check = host_handle.lsmod(module)
+        #             fun_test.sleep("Loading {} module".format(module))
+        #         fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        #
+        # # Ensuring connectivity from Host to F1's
+        # for host_name in self.host_info:
+        #     host_handle = self.host_info[host_name]["handle"]
+        #     for index, ip in enumerate(self.f1_ips):
+        #         ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
+        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+        #                              format(host_name, self.funcp_spec[0]["container_names"][index], ip))
 
         # Ensuring perf_host is able to ping F1 IP
         if self.csi_perf_enabled or self.csi_cache_miss_enabled:
