@@ -30,6 +30,7 @@ from pytz import timezone
 from datetime import timedelta
 import random
 import collections
+import html2text
 
 
 activate(TIME_ZONE)
@@ -783,7 +784,7 @@ def send_summary_mail(job_id, extra_message=""):
         extra_message = "<p><b>{}</b></p><br>".format(extra_message)
     suite_detail_url = """
     <p>
-        <a href="%s">Details Link</a>
+        Details Link: %s
     </p>
     """ % (get_suite_detail_url(suite_execution_id=job_id))
 
@@ -819,7 +820,10 @@ def send_summary_mail(job_id, extra_message=""):
             to_addresses = [suite_execution.submitter_email, TEAM_REGRESSION_EMAIL]
             to_addresses.extend(json.loads(suite_execution.emails))
 
-            result = send_mail(subject=subject, content=html, to_addresses=to_addresses)
+            h = html2text.HTML2Text()
+            h.ignore_links = True
+            content = h.handle(html)
+            result = send_mail(subject=subject, content=content, to_addresses=to_addresses)
             # print html
             scheduler_logger.info("Sent mail")
             if not result["status"]:
