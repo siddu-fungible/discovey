@@ -174,40 +174,40 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
         fun_test.shared_variables["sc_api"] = self.sc_api
 
-        for key in self.host_handles:
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(key))
-
-            # TODO: enable after mpstat check is added
-            """
-            # Check and install systat package
-            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-            """
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = self.host_handles[key].lsmod(module)
-                if not module_check:
-                    self.host_handles[key].modprobe(module)
-                    module_check = self.host_handles[key].lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        # Ensuring connectivity from Host to F1's
-        for key in self.host_handles:
-            for index, ip in enumerate(self.f1_ips):
-                if self.funcp_spec[0]["container_names"][index] == "run_sc":
-                    continue
-                ping_status = self.host_handles[key].ping(dst=ip)
-                host_handle = self.host_handles[key]
-                if not ping_status:
-                    host_handle.command("arp -n")
-                    host_handle.command("route -n")
-                    host_handle.command("ifconfig")
-
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(key, self.funcp_spec[0]["container_names"][index], ip))
+        # for key in self.host_handles:
+        #     # Ensure all hosts are up after reboot
+        #     fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
+        #                          message="Ensure Host {} is reachable after reboot".format(key))
+        #
+        #     # TODO: enable after mpstat check is added
+        #     """
+        #     # Check and install systat package
+        #     install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+        #     fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+        #     """
+        #     # Ensure required modules are loaded on host server, if not load it
+        #     for module in self.load_modules:
+        #         module_check = self.host_handles[key].lsmod(module)
+        #         if not module_check:
+        #             self.host_handles[key].modprobe(module)
+        #             module_check = self.host_handles[key].lsmod(module)
+        #             fun_test.sleep("Loading {} module".format(module))
+        #         fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        #
+        # # Ensuring connectivity from Host to F1's
+        # for key in self.host_handles:
+        #     for index, ip in enumerate(self.f1_ips):
+        #         if self.funcp_spec[0]["container_names"][index] == "run_sc":
+        #             continue
+        #         ping_status = self.host_handles[key].ping(dst=ip)
+        #         host_handle = self.host_handles[key]
+        #         if not ping_status:
+        #             host_handle.command("arp -n")
+        #             host_handle.command("route -n")
+        #             host_handle.command("ifconfig")
+        #
+        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+        #                              format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         # Ensuring perf_host is able to ping F1 IP
         if self.csi_perf_enabled:
@@ -1037,11 +1037,44 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
         super(PreCommitSanity, self).cleanup()
 
 
+class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="Bundle sanity. Run fio random read after COMe reboot on the same BLT attached",
+                              steps='''
+        1. Reboot COMe.
+        2. Check docker containers F1-0, F1-1 and run_sc.
+        3. Run fio from the host.
+        4. Fio should succeed.
+        ''')
+
+    def setup(self):
+        fun_test.log("Rebooting COMe")
+        self.post_results = False
+        self.fs = fun_test.shared_variables["fs_objs"]
+        self.come_obj = fun_test.shared_variables["come_obj"]
+
+        reset = self.fs[0].reset(hard=False)
+        fun_test.test_assert(reset, "COMe reset successfully done")
+
+        ensure_up = self.fs[0].ensure_is_up()
+        fun_test.test_assert(ensure_up, "Ensure COMe is up")
+
+        containers_status = self.come_obj[0].ensure_expected_containers_running()
+        fun_test.test_assert(containers_status, "All containers up")
+
+    def run(self):
+        super(MultiHostFioRandReadAfterReboot, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandReadAfterReboot, self).cleanup()
+
 if __name__ == "__main__":
 
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
+    bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
 

@@ -569,6 +569,12 @@ def single_fs_setup(obj):
                         actual=obj.funcp_obj[index].container_info[container_name].exit_status(),
                         message="TFTP Image boot: init-fs1600 disabled: Configure Static route")
         '''
+    for host_name in obj.host_info:
+        host_handle = obj.host_info[host_name]["handle"]
+        ensure_all_hosts_up(host_handle=host_handle, reboot_timeout=obj.reboot_timeout,
+                            load_modules=obj.load_modules)
+        check_host_f1_connectivity(funcp_spec=obj.funcp_spec, host_handle=host_handle,
+                                   f1_ips=obj.f1_ips)
     return obj
 
 
@@ -769,6 +775,77 @@ def configure_endhost_interface(end_host, test_network, interface_name, timeout=
     fun_test.test_assert_expected(expected=0,
                                   actual=end_host.exit_status(),
                                   message="Adding static ARP to F1 route")
+
+
+def ensure_all_hosts_up(host_handle, reboot_timeout, load_modules=None):
+    result = False
+    try:
+        fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=reboot_timeout),
+                             message="Ensure Host {} is reachable after reboot".format(host_handle))
+
+        # TODO: enable after mpstat check is added
+        """
+        # Check and install systat package
+        install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
+        fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
+        """
+        # Ensure required modules are loaded on host server, if not load it
+        if load_modules:
+            for module in load_modules:
+                module_check = host_handle.lsmod(module)
+                if not module_check:
+                    host_handle.modprobe(module)
+                    module_check = host_handle.lsmod(module)
+                    fun_test.sleep("Loading {} module".format(module))
+                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp216s0", interface_bringup_timeout=120):
+    result = False
+    try:
+        # Ensuring connectivity from Host to F1's
+        interface_up = False
+        ip_assigned = False
+        match = ""
+        ip_match = ""
+        interface_status_timer = FunTimer(max_time=interface_bringup_timeout)
+        while not interface_status_timer.is_expired():
+            cmd_output = host_handle.command("ifconfig {}".format(interface))
+            match = re.search(r'UP.*RUNNING', cmd_output)
+            if not match:
+                fun_test.sleep("{} interface is still not in "
+                               "running state on {}".format(interface, host_handle.host_ip), 10)
+                fun_test.log("Remaining Time: {}\n".format(interface_status_timer.remaining_time()))
+
+            else:
+                interface_up = True
+                ip_match = re.search(r'inet\s[^\s]+', cmd_output)
+                if ip_match:
+                    ip_assigned = True
+                break
+        fun_test.simple_assert(interface_up, "Interface {} is up and running on host {}".format(interface, host_handle.host_ip))
+        fun_test.simple_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".format(interface,
+                                                                          host_handle.host_ip))
+
+        for index, ip in enumerate(f1_ips):
+            if funcp_spec[0]["container_names"][index] == "run_sc":
+                continue
+            ping_status = host_handle.ping(dst=ip)
+            if not ping_status:
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+
+            fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                                    format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
+        result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
 
 
 def build_simple_table(data, column_headers=[], split_values_to_columns=False):

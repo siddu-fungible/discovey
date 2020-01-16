@@ -237,6 +237,7 @@ class AssetManager:
         result["resources"] = None
         result["internal_resource_in_use"] = False  # set this if any DUT or Host within the test-bed is locked (shared asset)
 
+
         test_bed_name = test_bed_type
         if test_bed_type == "suite-based":
             if suite_base_test_bed_spec:
@@ -265,10 +266,13 @@ class AssetManager:
 
                     # return result
 
+        if test_bed_type == "fs-122":
+            i = 0
+
         if suite_base_test_bed_spec:
             return self.check_custom_test_bed_availability(custom_spec=suite_base_test_bed_spec)
 
-        in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
+        in_progress_suites = get_suite_executions_by_filter(test_bed_type=test_bed_type, state__gte=JobStatusType.IN_PROGRESS).exclude(suite_path__endswith="_container.json")
 
         in_use, error_message, used_by_suite_id, asset_in_use = False, "", -1, None
         assets_required_for_test_bed = None
@@ -652,6 +656,7 @@ class AssetManager:
                     in_progress = False
                     is_manual_locked = False
                     is_disabled = False
+                    is_unhealthy = False
                     if asset:
                         is_manual_locked = asset.manual_lock_user
                         is_disabled = asset.disabled
