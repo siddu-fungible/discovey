@@ -20,6 +20,7 @@
   },
   "BootSequenceFpga": {
     "fpga_up_time_within": 180
+
   },
   "BootSequenceBmc": {
     "bmc_up_time_within": 180
@@ -87,5 +88,8 @@
     "ioengine": "libaio",
     "output-format": "json"
   }
+  },
+  "SnakeTest": {
+    "runtime": 30
   }
 }

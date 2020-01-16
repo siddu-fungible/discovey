@@ -40,13 +40,18 @@ class PlatformGeneralTestCase(FunTestCase, Platform):
     def cleanup(self):
         if not getattr(self, "run_passed", False):
             self.collect_logs()
+            if getattr(self, "work_around_power_cycle", False):
+                apc_obj = RebootFs(self.fs)
+                apc_obj.apc_pdu_reboot()
+                Platform().fs_basic_checks()
 
 
 class DiscoverStaticIp(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=1,
                               summary="discover communication static ip addresses (fs-142)",
+                              test_rail_case_ids=["T23130"],
                               steps="""""")
 
     def setup(self):
@@ -70,8 +75,9 @@ class DiscoverStaticIp(PlatformGeneralTestCase):
 class DiscoverDhcpIp(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=8,
+        self.set_test_details(id=2,
                               summary="discover communication dhcp ip with MAC reservation addresses (fs-143)",
+                              test_rail_case_ids=["T23131"],
                               steps="""""")
 
     def setup(self):
@@ -95,8 +101,9 @@ class DiscoverDhcpIp(PlatformGeneralTestCase):
 class AlternateCommunicationToBmc(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=10,
+        self.set_test_details(id=3,
                               summary="alternate communication to platform via BMC",
+                              test_rail_case_ids=["T23133"],
                               steps="""""")
 
     @run_deco
@@ -113,7 +120,7 @@ class AlternateCommunicationToBmc(PlatformGeneralTestCase):
 class PlatformComponentVersioningDiscovery(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=11,
+        self.set_test_details(id=4,
                               summary="Verify Platform component versioning is according to release notes of DROP."
                                       "Revision should be detect correctly, with GPIO8_H for REV2 and GPIO8_L for REV1",
                               steps="""""")
@@ -136,7 +143,7 @@ class PlatformComponentVersioningDiscovery(PlatformGeneralTestCase):
 class BootSequenceFpga(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=29,
+        self.set_test_details(id=5,
                               summary="boot sequence - FPGA Angstrom linux bootup",
                               steps="""
                               1. Get all the systems IP information
@@ -152,6 +159,7 @@ class BootSequenceFpga(PlatformGeneralTestCase):
 
     @run_deco
     def run(self):
+        self.work_around_power_cycle = True
         self.fs_basic_checks()
         ip_data_before_reboot = self.get_mac_n_ip_addr_info_of_systems()
         fpga_reboot = self.reboot_system(system="fpga")
@@ -183,7 +191,7 @@ class BootSequenceFpga(PlatformGeneralTestCase):
 class BootSequenceBmc(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=30,
+        self.set_test_details(id=6,
                               summary="boot sequence - BMC bootup",
                               steps="""""")
 
@@ -228,7 +236,7 @@ class BootSequenceBmc(PlatformGeneralTestCase):
 class BootSequenceCome(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=31,
+        self.set_test_details(id=7,
                               summary="boot sequence - COMe",
                               steps="""""")
 
@@ -267,7 +275,7 @@ class BootSequenceCome(PlatformGeneralTestCase):
 class BmcLinkToggle(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=64,
+        self.set_test_details(id=8,
                               summary="""1. perform a physical/ifconfig up-down link toggle on BMC.
                                          2. observe failover of link on occasion of disconnect.""",
                               steps="""
@@ -290,7 +298,7 @@ class BmcLinkToggle(PlatformGeneralTestCase):
 
         max_time = 100
         timer = FunTimer(max_time=max_time)
-        self.switch_to_bmc_console(max_time=max_time)
+        self.switch_to_bmc_console_for(for_time=max_time)
 
         response = self.get_platform_link(system="bmc")
         fun_test.test_assert(response["link_detected"], "BMC bond0 interface is up (ethtool)")
@@ -322,7 +330,7 @@ class BmcLinkToggle(PlatformGeneralTestCase):
 class BmcColdBoot(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=68,
+        self.set_test_details(id=9,
                               summary="",
                               steps="""""")
 
@@ -342,7 +350,7 @@ class BmcColdBoot(PlatformGeneralTestCase):
 class BmcIpmiReset(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=69,
+        self.set_test_details(id=10,
                               summary="",
                               steps="""""")
 
@@ -371,7 +379,7 @@ class BmcIpmiReset(PlatformGeneralTestCase):
 class BmcTransportForCommunication(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=70,
+        self.set_test_details(id=11,
                               summary="bmc transport for communication",
                               steps="""""")
 
@@ -386,7 +394,7 @@ class BmcTransportForCommunication(PlatformGeneralTestCase):
 class TemperatureSensorBmcIpmi(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=71,
+        self.set_test_details(id=12,
                               summary="temperature sensor repository database of bmc",
                               steps="""""")
 
@@ -401,7 +409,7 @@ class TemperatureSensorBmcIpmi(PlatformGeneralTestCase):
 class FanSensorBootupIpmi(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=72,
+        self.set_test_details(id=13,
                               summary="fan sensor repository database of bmc",
                               steps="""""")
 
@@ -415,7 +423,7 @@ class FanSensorBootupIpmi(PlatformGeneralTestCase):
 class TemperatureFanMeasurement(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=73,
+        self.set_test_details(id=14,
                               summary="temperature and fan measurements reported on BMC(redfish)",
                               steps="""""")
 
@@ -428,7 +436,7 @@ class TemperatureFanMeasurement(PlatformGeneralTestCase):
 class InletExhasutThreshold(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=74,
+        self.set_test_details(id=15,
                               summary="max/min threshold of sensor on BMC (inlet, exhaust)",
                               steps="""""")
 
@@ -441,7 +449,7 @@ class InletExhasutThreshold(PlatformGeneralTestCase):
 class FanRedfishtool(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=78,
+        self.set_test_details(id=16,
                               summary="failure logs via ipmitool/redfish",
                               steps="""""")
 
@@ -455,7 +463,7 @@ class FanRedfishtool(PlatformGeneralTestCase):
 class F1AsicTemperature(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=79,
+        self.set_test_details(id=17,
                               summary="F1 asic temperature",
                               steps="""""")
 
@@ -468,7 +476,7 @@ class F1AsicTemperature(PlatformGeneralTestCase):
 class BootComeUefiOrBios(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=87,
+        self.set_test_details(id=18,
                               summary="",
                               steps="""""")
 
@@ -485,7 +493,7 @@ class BootComeUefiOrBios(PlatformGeneralTestCase):
 class PcieDiscoverySsdViaRc(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=108,
+        self.set_test_details(id=19,
                               summary="",
                               steps="""""")
 
@@ -508,7 +516,7 @@ class PcieDiscoverySsdViaRc(PlatformGeneralTestCase):
 class PcieDeviceDetection(PlatformGeneralTestCase):
 
     def describe(self):
-        self.set_test_details(id=115,
+        self.set_test_details(id=20,
                               summary="",
                               steps="""""")
 
@@ -523,7 +531,7 @@ class PcieDeviceDetection(PlatformGeneralTestCase):
 
 class HostConnectionViaPcieBus(StorageApi, PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=118,
+        self.set_test_details(id=21,
                               summary="",
                               steps="""""")
 
@@ -542,7 +550,7 @@ class HostConnectionViaPcieBus(StorageApi, PlatformGeneralTestCase):
 
 class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=22,
                               summary="",
                               steps="""""")
 
@@ -561,9 +569,25 @@ class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
         pass
 
 
+class SnakeTest(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=23,
+                              summary="",
+                              steps="""""")
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        PlatformGeneralTestCase.setup(self)
+        self.initialize_test_case_variables(testcase)
+
+    @run_deco
+    def run(self):
+        self.start_snake_test_verify(self.runtime)
+
+
 class General(PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=3,
+        self.set_test_details(id=24,
                               summary="",
                               steps="""""")
 
@@ -599,7 +623,8 @@ if __name__ == "__main__":
         PcieDiscoverySsdViaRc,
         PcieDeviceDetection,
         HostConnectionViaPcieBus,
-        ComeVolumeCreation
+        ComeVolumeCreation,
+        SnakeTest
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

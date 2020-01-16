@@ -4,6 +4,8 @@ from asset.asset_manager import AssetManager
 from collections import OrderedDict
 from lib.fun.fs import *
 from lib.templates.storage.storage_controller_api import StorageControllerApi
+import dlipower
+from lib.topology.topology_helper import TopologyHelper
 
 
 class IpmiTool:
@@ -259,6 +261,24 @@ class Platform(RedFishTool, IpmiTool):
         self.initialize_job_inputs()
         self.initialize_variables()
         self.intialize_handles()
+        self.initialize_dpcsh()
+
+    def initialize_dpcsh(self):
+        if getattr(self, "initialise_dpcsh", False):
+            if getattr(self, "load_new_image", False):
+                dut_index = 0
+                topology_helper = TopologyHelper()
+                topology_helper.set_dut_parameters(dut_index=dut_index,
+                                                   fs_parameters={"already_deployed": True})
+                topology = topology_helper.deploy()
+                fun_test.test_assert(topology, "Topology deployed")
+                fun_test.shared_varables["topology"] = topology
+            else:
+                topology = fun_test.shared_varables["topology"]
+            fs_obj = topology.get_dut_instance(index=0)
+            self.dpc_f1_0 = fs_obj.get_dpc_client(0)
+            self.dpc_f1_1 = fs_obj.get_dpc_client(1)
+
 
     def initialize_json_data(self):
         config_file = fun_test.get_script_name_without_ext() + ".json"
@@ -364,6 +384,10 @@ class Platform(RedFishTool, IpmiTool):
                 result["status"] = False
                 result["message"] = "Unable to set interface : {}".format(interface)
         return result
+
+    def switch_to_bmc_console_for(self, for_time=40):
+        self.fpga_handle.switch_to_bmc_console(time_out=for_time)
+        self.bmc_console = self.fpga_handle
 
     def get_platform_link(self, system="bmc", interface="bond0"):
         result = {"status": False, "link_detected": False}
@@ -863,24 +887,38 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
-        result = False
-        try:
-            self.come_handle.enter_sudo()
-            output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
-            if "No such file" in output:
-                self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
-            run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
-            output = self.come_handle.command(run_cmd)
-            if get_raw_output:
-                return output
-            result = self.parse_dpcsh_output(output)
-            if "result" in result:
-                result = result["result"]
-            self.come_handle.exit_sudo()
-        except:
-            fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+        split_cmd = cmd.split(" ")
+        verb = split_cmd[0]
+        data = split_cmd[1]
+        if getattr(self, "dpc_f1_0", False):
+            self.initialize_dpcsh()
+        if f1 == 0:
+            output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+        elif f1 == 1:
+            output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+        result = output["data"]
         return result
+
+
+    # def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+    #     result = False
+    #     try:
+    #         self.come_handle.enter_sudo()
+    #         output = self.come_handle.command("cd /opt/fungible/FunSDK/bin/Linux/dpcsh")
+    #         if "No such file" in output:
+    #             self.come_handle.command("cd /tmp/workspace/FunSDK/bin/Linux")
+    #         run_cmd = "./dpcsh --pcie_nvme_sock=/dev/nvme{} --nvme_cmd_timeout=60000 --nocli {}".format(f1, cmd)
+    #         output = self.come_handle.command(run_cmd)
+    #         if get_raw_output:
+    #             return output
+    #         result = self.parse_dpcsh_output(output)
+    #         if "result" in result:
+    #             result = result["result"]
+    #         self.come_handle.exit_sudo()
+    #     except:
+    #         fun_test.log("Unable to get the DPCSH data for command: {}".format(cmd))
+    #     return result
 
     @staticmethod
     def parse_dpcsh_output(data):
@@ -984,6 +1022,27 @@ class Platform(RedFishTool, IpmiTool):
         result = self.come_handle.ifconfig()
         self.exit_docker()
         return result
+
+    def start_snake_test_verify(self, runtime=60):
+        self.come_handle.enter_sudo()
+        output = self.come_handle.command("./system_test.sh {}".format(runtime), timeout=600)
+        self.verify_snake_test(output)
+        self.come_handle.exit_sudo()
+
+    def verify_snake_test(self, output):
+        f1_0_network_result = False
+        f1_1_network_result = False
+        f1_0_nt_match = re.search(r'F1-0:\s+Network\s+test\s+(?P<result>\w+)', output)
+        f1_1_nt_match = re.search(r'F1-1:\s+Network\s+test\s+(?P<result>\w+)', output)
+        if f1_0_nt_match:
+            result = f1_0_nt_match.group("result")
+            f1_0_network_result = True if result == "PASS" else False
+        if f1_1_nt_match:
+            result = f1_1_nt_match.group("result")
+            f1_1_network_result = True if result == "PASS" else False
+
+        fun_test.test_assert(f1_0_network_result, "Snake test on F1_0")
+        fun_test.test_assert(f1_1_network_result, "Snake test on F1_1")
 
 
 class StorageApi:
@@ -1155,3 +1214,148 @@ class StorageApi:
             result = True
         fun_test.test_assert(result, "Host: {}  IO running".format(host_name))
 
+
+class RebootFs:
+
+    def __init__(self, fs_spec):
+        self.fs = fs_spec
+
+    def apc_pdu_reboot(self):
+        '''
+        1. check if COMe is up, than power off.
+        2. check COMe now, if its down tha power on
+        :param come_handle:
+        :return:
+        '''
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        apc_info = self.fs.get("apc_info")
+        outlet_no = apc_info.get("outlet_number")
+        try:
+            fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+
+            fun_test.log("Checking if COMe is UP")
+            come_up = come_handle.ensure_host_is_up()
+            fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                    self.to_str(come_up), True, come_up)
+            come_handle.destroy()
+
+            apc_pdu = ApcPdu(host_ip=apc_info['host_ip'], username=apc_info['username'],
+                             password=apc_info['password'])
+            fun_test.sleep(message="Wait for few seconds after connect with apc power rack", seconds=5)
+
+            apc_outlet_off_msg = apc_pdu.outlet_off(outlet_no)
+            fun_test.log("APC PDU outlet off mesg {}".format(apc_outlet_off_msg))
+            outlet_off = self.match_success(apc_outlet_off_msg)
+            fun_test.test_assert(outlet_off, "Power down FS")
+
+            fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+
+            fun_test.log("Checking if COMe is down")
+            come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+            fun_test.test_assert(come_down, "COMe is Down")
+
+            apc_outlet_on_msg = apc_pdu.outlet_on(outlet_no)
+            fun_test.log("APC PDU outlet on message {}".format(apc_outlet_on_msg))
+            outlet_on = self.match_success(apc_outlet_on_msg)
+            fun_test.test_assert(outlet_on, "Power on FS")
+
+            apc_pdu.disconnect()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+        return
+
+    @staticmethod
+    def to_str(boolean_data):
+        if boolean_data:
+            return FunTest.PASSED
+        return FunTest.FAILED
+
+    @staticmethod
+    def match_success(output_message):
+        result = False
+        match_success = re.search(r'Success', output_message)
+        if match_success:
+            result = True
+        return result
+
+    def dli_pdu_reboot(self):
+        come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
+                           ssh_username=self.fs['come']['mgmt_ssh_username'],
+                           ssh_password=self.fs['come']['mgmt_ssh_password'])
+        dli_info = self.fs.get("dli_info")
+        outlet_no = dli_info.get("outlet_number")
+
+        fun_test.log("Iteration no: {} out of {}".format(self.pc_no + 1, self.iterations))
+
+        fun_test.log("Checking if COMe is UP")
+        come_up = come_handle.ensure_host_is_up()
+        fun_test.add_checkpoint("COMe is UP (before switching off fs outlet)",
+                                self.to_str(come_up), True, come_up)
+        come_handle.destroy()
+
+        dli_pdu = DliPower(hostname=dli_info['host_ip'], userid=dli_info['username'], password=dli_info['password'])
+
+        dli_outlet_off_result = dli_pdu.outlet_off(outlet_no)
+        fun_test.log("DLI PDU outlet off result: {}".format(dli_outlet_off_result))
+        fun_test.test_assert(dli_outlet_off_result, "Power down FS")
+
+        fun_test.sleep(message="Wait for few seconds after switching off fs outlet", seconds=15)
+
+        fun_test.log("Checking if COMe is down")
+        come_down = not (come_handle.ensure_host_is_up(max_wait_time=15))
+        fun_test.test_assert(come_down, "COMe is Down")
+
+        dli_outlet_on_result = dli_pdu.outlet_on(outlet_no)
+        fun_test.log("DLI PDU outlet on message {}".format(dli_outlet_on_result))
+        fun_test.test_assert(dli_outlet_on_result, "Power on FS")
+
+        return
+
+
+class DliPower:
+
+    def __init__(self, hostname, userid="admin", password="Precious1*"):
+        self.switch = dlipower.PowerSwitch(hostname=hostname, userid=userid, password=password)
+
+    def outlet_on(self, outlet):
+        # Reason for implementing this is to verify that the outlet is for sure turned on/off
+        # >> switch.off(3) >> False
+        # with this package False = Success. https://pypi.org/project/dlipower/0.2.33/
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "ON":
+            self.switch.on(outlet)
+            fun_test.sleep("After powering on")
+            status = self.switch_status(outlet)
+            if status == "ON":
+                result = True
+            else:
+                result = False
+        return result
+
+    def outlet_off(self, outlet):
+        result = True
+        status = self.switch_status(outlet)
+        if not status == "OFF":
+            self.switch.off(outlet)
+            status = self.switch_status(outlet)
+            if status == "OFF":
+                result = True
+            else:
+                result = False
+        return result
+
+    def switch_status(self, outlet):
+        result = self.switch.status(outlet)
+        return result
+
+    def cycle(self, outlet):
+        result = self.switch.cycle(outlet)
+        return result
+
+    def get_outlet_name(self, outlet):
+        name = self.switch.get_outlet_name(outlet)
+        return name
