@@ -1088,12 +1088,15 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         vol_uuid = fun_test.shared_variables["thin_uuid"][0]
         host_handle = self.host_info[self.host_info.keys()[0]]['handle']
         nvme_device_name = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
+        fun_test.log("Nvme device name is {}".format(nvme_device_name))
+        nvme_device_name = nvme_device_name.split("/")[-1]
+        fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
             if (vols['status'] and vols['data']) and not volume_found:
                 if vol_uuid in vols['data'].keys():
-                    fun_test.simple_assert(vols['data'][vol_uuid]['type'] == "raw volume",
+                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
                                            "BLT Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
