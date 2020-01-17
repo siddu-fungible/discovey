@@ -1085,7 +1085,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         volume_found = False
         lsblk_found = False
-        vol_uuid = self.detach_uuid_list[0]
+        vol_uuid = fun_test.shared_variables["thin_uuid"][0]
         host_handle = self.host_info[self.host_info.keys()[0]]['handle']
         nvme_device_name = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
         while not reboot_timer.is_expired():
