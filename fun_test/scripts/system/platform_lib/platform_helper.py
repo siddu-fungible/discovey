@@ -1047,8 +1047,6 @@ class Platform(RedFishTool, IpmiTool):
 
 class StorageApi:
     def __init__(self):
-        if not getattr(self, "volume_creation_details", False):
-            fun_test.crtical("Volume creation details JSON missing")
         if not getattr(self, "fs", False):
             self.initialise_fs()
         if not getattr(self, "come_handle", False):
@@ -1056,7 +1054,6 @@ class StorageApi:
                                     ssh_username=self.fs['come']['mgmt_ssh_username'],
                                     ssh_password=self.fs['come']['mgmt_ssh_password'])
         self.sc_api = StorageControllerApi(self.fs["come"]["mgmt_ip"])
-
         HOSTS_ASSET = ASSET_DIR + "/hosts.json"
         self.hosts_asset = fun_test.parse_file_to_json(file_name=HOSTS_ASSET)
 
@@ -1071,6 +1068,9 @@ class StorageApi:
 
     @handle_volume_deco
     def create_volume_and_run_fio(self):
+        if not getattr(self, "volume_creation_details", False):
+            fun_test.critical("Volume creation details JSON missing")
+            return
         self.pool_uuid = self.get_pool_id()
         self.volume_creation_details["pool_uuid"] = self.pool_uuid
         response = self.sc_api.create_stripe_volume(**self.volume_creation_details)
