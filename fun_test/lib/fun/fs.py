@@ -2410,8 +2410,9 @@ class Fs(object, ToDictMixin):
                                                                 non_blocking=non_blocking),
                                      message="ComE rebooted successfully. Non-blocking: {}".format(non_blocking),
                                      context=self.context)
-    
+            self.come = self.get_come()
             if not non_blocking:
+                # self.come = self.fs.get_come()
                 self.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
                 fun_test.test_assert(expression=self.come.initialize(disable_f1_index=self.disable_f1_index),
                                      message="ComE initialized",
