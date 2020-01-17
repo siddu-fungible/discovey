@@ -26,7 +26,7 @@
               </td>
             </tr>
             <tr>
-              <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state == stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
+              <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state >= stateMap.IN_PROGRESS || suiteExecution.fields.state <= stateMap.COMPLETED)">
                 <span class="attribute-table-main-text">Started at</span> {{ localizeTime(suiteExecution.fields.started_time) }}
               </td>
               <td class="attribute-table-td" *ngIf="suiteExecution && suiteExecution.fields && (suiteExecution.fields.state <= stateMap.COMPLETED)">
@@ -88,7 +88,7 @@
               <td class="attribute-table-td">
                 <span class="attribute-table-main-text">Result</span> <app-smart-label [value]="suiteExecution?.fields?.result"></app-smart-label>
                  <span
-                  *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
+                  *ngIf="(suiteExecution?.fields.state < stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
                   (click)="reRunModalOpen(suiteContent)"
                   class="pseudo-anchor anchor-button" style="padding: 5px">Re-run options
                 </span>
@@ -201,7 +201,7 @@
         <div class="card card-primary">
           <div class="card-header"><b>Script: {{ scriptInfo[scriptExecutionInfo.key]?.script_path }} </b>
             <span
-              *ngIf="(suiteExecution?.fields.state !== stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
+              *ngIf="(suiteExecution?.fields.state < stateMap.IN_PROGRESS) && (suiteExecution?.fields.state !== stateMap.ABORTED)"
               (click)="reRunModalOpen(suiteContent, scriptExecutionInfo.key)"
               class="anchor-button pseudo-anchor">Re-run options
             </span>
