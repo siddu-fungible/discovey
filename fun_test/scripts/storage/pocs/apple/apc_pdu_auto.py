@@ -720,7 +720,7 @@ class ApcPduTestcase(FunTestCase):
     def check_expected_dockers_up(self):
         fun_test.log("Check if all the Dockers are up")
         docker_count = 0
-        max_time = 100
+        max_time = 180
         timer = FunTimer(max_time)
         while not timer.is_expired():
             docker_count = self.get_docker_count()
