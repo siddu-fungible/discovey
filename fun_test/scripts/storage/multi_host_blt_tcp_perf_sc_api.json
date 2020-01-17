@@ -87,7 +87,7 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -253,14 +253,10 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
       "timeout": 7200
     },
-    "fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
-      "runtime": 300,
-      "timeout": 330
-    },
+    "fio_cmd_args": {"bs": "4k", "rw": "randread", "direct": 1, "prio": 0,  "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0, "numjobs":32, "iodepth": 4, "verify": "md5", "do_verify": 1, "timeout": 30},
     "fio_modes": [
       "randread"
     ],

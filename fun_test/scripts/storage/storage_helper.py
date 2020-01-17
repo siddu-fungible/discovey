@@ -260,16 +260,7 @@ def single_fs_setup(obj):
                                           password=obj.api_server_password)
 
         # Polling for API Server status
-        api_server_up_timer = FunTimer(max_time=obj.api_server_up_timeout)
-        while not api_server_up_timer.is_expired():
-            api_server_response = obj.sc_api.get_api_server_health()
-            if api_server_response["status"]:
-                fun_test.log("Bundle Image boot: API server is up and running")
-                break
-            else:
-                fun_test.sleep("waiting for API server to be up", 10)
-                fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
-        fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
+        fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
                                message="Bundle Image boot: API server is up")
         fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
         # Check if bond interface status is Up and Running
@@ -434,17 +425,7 @@ def single_fs_setup(obj):
                                           password=obj.api_server_password)
 
         # Polling for API Server status
-        api_server_up_timer = FunTimer(max_time=obj.api_server_up_timeout)
-        while not api_server_up_timer.is_expired():
-            api_server_response = obj.sc_api.get_api_server_health()
-            if api_server_response["status"]:
-                fun_test.log(
-                    "TFTP Image boot: init-fs1600 enabled: API server is up and running")
-                break
-            else:
-                fun_test.sleep(" waiting for API server to be up", 10)
-                fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
-        fun_test.simple_assert(expression=not api_server_up_timer.is_expired(),
+        fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
                                message="TFTP Image boot: init-fs1600 enabled: API server is up")
         fun_test.sleep(
             "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
@@ -846,6 +827,25 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
             fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                                     format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
         result = True
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def ensure_api_server_is_up(sc_api, timeout=120):
+    result = False
+    try:
+        # Polling for API Server status
+        api_server_up_timer = FunTimer(max_time=timeout)
+        while not api_server_up_timer.is_expired():
+            api_server_response = sc_api.get_api_server_health()
+            if api_server_response["status"]:
+                fun_test.log("API server is up and running")
+                result = True
+                break
+            else:
+                fun_test.sleep("Waiting for API server to be up", 10)
+                fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
