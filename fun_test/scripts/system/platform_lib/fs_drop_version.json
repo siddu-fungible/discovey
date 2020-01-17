@@ -1,0 +1,23 @@
+{
+  "fs-142": {
+    "come": {
+      "kernel_release": "4.15.0-54-generic",
+      "machine": "x86_64",
+      "operating_system": "GNU/Linux",
+      "kernel_name": "Linux",
+      "hardware_platform": "x86_64"
+    },
+    "bmc": {
+      "kernel_release": "3.14.17-ami",
+      "machine": "armv6l",
+      "operating_system": "GNU/Linux",
+      "kernel_name": "Linux"
+    },
+    "fpga": {
+      "kernel_release": "4.9.78-ltsi",
+      "machine": "armv7l",
+      "operating_system": "GNU/Linux",
+      "kernel_name": "Linux"
+    }
+  }
+}

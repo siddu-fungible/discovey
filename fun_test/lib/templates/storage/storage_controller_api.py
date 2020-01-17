@@ -171,6 +171,18 @@ class StorageControllerApi(object):
             fun_test.critical(str(ex))
         return result
 
+    def volume_attach_pcie(self, vol_uuid, remote_ip, huid=3, ctlid=0, fnid=2, transport="PCI"):
+        result = {"status": False, "data": {}}
+        url = "storage/volumes/{}/ports".format(vol_uuid)
+        data = {"transport": transport, "fnid":fnid, "huid":huid, "ctlid":ctlid, "remote_ip": remote_ip}
+        response = self.execute_api("POST", url, data=data)
+        try:
+            if response.ok:
+                result = response.json()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def detach_volume(self, port_uuid):
         result = {"status": False, "data": {}}
         url = "storage/ports/{}".format(port_uuid)

@@ -2924,6 +2924,91 @@ class Linux(object, ToDictMixin):
                     result["mime_type"] = m.group(1)
         return result
 
+    @fun_test.safe
+    def ifconfig(self, interface="", action=None):
+
+        result = []
+        cmd = "ifconfig"
+        if interface:
+            cmd += " " + interface
+            if action:
+                cmd += " " + action
+
+        ifconfig_output = self.command(cmd)
+        if ifconfig_output:
+            interfaces = ifconfig_output.split("\n\r")
+            for interface in interfaces:
+                one_data_set = {}
+                match_interface = re.search(r'(?P<interface>\w+)', interface)
+                match_ipv4 = re.search(r'[\s\S]*inet\s+(addr:)?(?P<ipv4>\d+.\d+.\d+.\d+)', interface)
+                match_ipv6 = re.search(r'[\s\S]*inet6\s+(addr:)?\s?(?P<ipv6>\w+::\w+:\w+:\w+:\w+)', interface)
+                match_ether = re.search(r'[\s\S]*ether\s+(?P<ether>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
+                match_hwaddr = re.search(r'[\s\S]*HWaddr\s+(?P<HWaddr>\w+:\w+:\w+:\w+:\w+:\w+)', interface)
+
+                if match_interface and (match_ipv4 or match_ipv6) and (match_ether or match_hwaddr):
+                    one_data_set["interface"] = match_interface.group("interface")
+                    one_data_set["ipv4"] = match_ipv4.group("ipv4") if match_ipv4 else ""
+                    one_data_set["ipv6"] = match_ipv6.group("ipv6") if match_ipv6 else ""
+                    one_data_set["ether"] = match_ether.group("ether") if match_ether else ""
+                    one_data_set["HWaddr"] = match_hwaddr.group("HWaddr") if match_hwaddr else ""
+                    result.append(one_data_set)
+        else:
+            result = None
+        return result
+
+    @fun_test.safe
+    def uname(self):
+        result = {}
+        cmd = "uname -snrmpio"
+        uname_output = self.command(cmd)
+        match_uname = re.search(r'(?P<kernel_name>\S+)\s+(?P<nodename>\S+)\s+(?P<kernel_release>\S+)\s+'
+                                r'(?P<machine>\S+)\s+(?P<processor>\S+)\s+(?P<hardware_platform>\S+)\s+'
+                                r'(?P<operating_system>\S+)', uname_output)
+        if match_uname:
+            result["kernel_name"] = match_uname.group("kernel_name")
+            result["nodename"] = match_uname.group("nodename")
+            result["kernel_release"] = match_uname.group("kernel_release")
+            result["machine"] = match_uname.group("machine")
+            result["processor"] = match_uname.group("processor")
+            result["hardware_platform"] = match_uname.group("hardware_platform")
+            result["operating_system"] = match_uname.group("operating_system")
+        return result
+
+    @fun_test.safe
+    def ethtool(self, interface):
+        result = {}
+        cmd = "ethtool {}".format(interface)
+        output = self.command(cmd)
+        lines = output.split("\n")
+        for line in lines:
+            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>\w+)', line)
+            if match_pattern:
+                key = match_pattern.group("key").lower()
+                key = key.replace(" ", "_")
+                value = match_pattern.group("value")
+                result[key] = value
+        return result
+
+    def ensure_host_is_down(self, max_wait_time=30):
+        service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
+        service_host = None
+        if service_host_spec:
+            service_host = Linux(**service_host_spec)
+        else:
+            fun_test.log("Regression service host could not be instantiated", context=self.context)
+
+        max_down_timer = FunTimer(max_time=max_wait_time)
+        result = False
+        ping_result = True
+        while ping_result and not max_down_timer.is_expired():
+            if service_host and ping_result:
+                ping_result = service_host.ping(dst=self.host_ip, count=5)
+        if not ping_result:
+            result = True
+        service_host.disconnect()
+        return result
+
+
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
         self.linux_obj = linux_obj

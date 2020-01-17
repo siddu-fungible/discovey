@@ -1,0 +1,95 @@
+{
+  "credentials": {
+    "username": "Administrator",
+    "password": "superuser"
+  },
+  "basic_checks": {
+    "reboot_machine_test": false,
+    "apc_pdu_power_cycle_test": false,
+    "check_docker": true,
+    "expected_dockers": 3,
+    "check_portal": false,
+    "check_ssd": true,
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "check_ports": true
+  },
+  "BootSequenceFpga": {
+    "fpga_up_time_within": 180
+
+  },
+  "BootSequenceBmc": {
+    "bmc_up_time_within": 180
+  },
+  "BootSequenceCome": {
+    "come_up_time_within": 300
+  },
+  "BmcLinkToggle": {
+    "bmc_up_time_within": 180
+  },
+  "BmcColdBoot": {
+    "iterations": 1
+  },
+  "BmcIpmiReset": {
+    "iterations": 1
+  },
+  "PcieDiscoverySsdViaRc": {
+    "expected_ssds_f1_0": 2,
+    "expected_ssds_f1_1": 2
+  },
+  "HostConnectionViaPcieBus": {
+    "volume_creation_details": {
+      "name": "platform_raw_volume_1",
+      "capacity": 5368709120,
+      "encrypt": true,
+      "stripe_count": 6,
+      "pvol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "compression_effort": 0
+    }
+  },
+  "ComeVolumeCreation": {
+    "volume_creation_details": {
+      "name": "platform_raw_volume_1",
+      "capacity": 32212254720,
+      "encrypt": false,
+      "stripe_count": 0,
+      "pvol_type": "VOL_TYPE_BLK_LOCAL_THIN",
+      "compression_effort": 0
+    },
+    "fio_read": {
+    "numjobs": 1,
+    "size": "100%",
+    "iodepth": 32,
+    "runtime": 60,
+    "group_reporting": 1,
+    "time_based": 1,
+    "rw": "randwrite",
+    "name": "fio_randwrite",
+    "direct": 1,
+    "bs": "4k",
+    "ioengine": "libaio",
+    "output-format": "json"
+  },
+    "fio_write": {
+    "numjobs": 1,
+    "size": "100%",
+    "iodepth": 32,
+    "runtime": 60,
+    "group_reporting": 1,
+    "time_based": 1,
+    "rw": "randread",
+    "name": "fio_randread",
+    "direct": 1,
+    "bs": "4k",
+    "ioengine": "libaio",
+    "output-format": "json"
+  }
+  },
+  "SnakeTest": {
+    "runtime": 30
+  }
+}

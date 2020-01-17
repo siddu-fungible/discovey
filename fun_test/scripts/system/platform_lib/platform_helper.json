@@ -1,0 +1,8 @@
+{
+  "credentials": {
+    "username": "Administrator",
+    "password": "superuser"
+  },
+  "expected_ssds": 12,
+  "expected_ports_up": {"NU": [0, 8, 20], "HNU": []}
+}
