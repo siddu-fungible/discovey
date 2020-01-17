@@ -2077,18 +2077,27 @@ class Fs(object, ToDictMixin):
         try:
             if self.bmc:
                 self.bmc.destroy()
+                self.bmc = None
         except:
             pass
+        finally:
+            self.bmc = None
         try:
             if self.come:
                 self.come.destroy()
+                self.come = None
         except:
             pass
+        finally:
+            self.come = None
         try:
             if self.fpga:
                 self.fpga.destroy()
+                self.fpga = None
         except:
             pass
+        finally:
+            self.fpga = None
 
     def get_asset_type(self):
         return self.asset_type

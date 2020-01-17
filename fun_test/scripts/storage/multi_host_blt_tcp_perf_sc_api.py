@@ -1059,8 +1059,9 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         ensure_up = self.fs[0].ensure_is_up()
         fun_test.test_assert(ensure_up, "Ensure COMe is up")
-
-        containers_status = self.come_obj[0].ensure_expected_containers_running()
+        fs_obj = self.fs[0]
+        come = fs_obj.get_come()
+        containers_status = come.ensure_expected_containers_running()
         fun_test.test_assert(containers_status, "All containers up")
 
     def run(self):
