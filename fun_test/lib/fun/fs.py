@@ -1094,6 +1094,7 @@ class BootupWorker(Thread):
                         fun_test.test_assert(expression=fs.come_reset(power_cycle=False, non_blocking=self.non_blocking),
                                              message="ComE rebooted successfully. Non-blocking: {}".format(self.non_blocking),
                                              context=self.context)
+
                     except Exception as ex:
                         fun_test.critical(str(ex))
                         fs.reset(hard=False)
@@ -2473,10 +2474,12 @@ class Fs(object, ToDictMixin):
         return self.come_initialized
 
     def come_reset(self, power_cycle=None, non_blocking=None, max_wait_time=300):
-        return self.bmc.come_reset(come=self.get_come(),
-                                   power_cycle=power_cycle,
-                                   non_blocking=non_blocking,
-                                   max_wait_time=max_wait_time)
+        result = self.bmc.come_reset(come=self.get_come(),
+                                     power_cycle=power_cycle,
+                                     non_blocking=non_blocking,
+                                     max_wait_time=max_wait_time)
+        self.come = None
+        return result
 
     def re_initialize(self):
         self.get_bmc(disable_f1_index=self.disable_f1_index)
