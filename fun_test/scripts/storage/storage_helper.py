@@ -204,6 +204,9 @@ def single_fs_setup(obj):
             obj.sc_objs.append(obj.f1_objs[curr_index][j].get_dpc_storage_controller())
 
     # Bringing up of FunCP docker container if it is needed
+    for come_obj in obj.come_obj:
+        come_obj.disconnect()
+        come_obj._set_defaults()
     obj.funcp_obj = {}
     obj.funcp_spec = {}
     obj.funcp_obj[0] = StorageFsTemplate(obj.come_obj[0])
