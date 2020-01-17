@@ -261,23 +261,21 @@ class Platform(RedFishTool, IpmiTool):
         self.initialize_job_inputs()
         self.initialize_variables()
         self.intialize_handles()
-        self.initialize_dpcsh()
 
     def initialize_dpcsh(self):
-        if getattr(self, "initialise_dpcsh", False):
-            if getattr(self, "load_new_image", False):
-                dut_index = 0
-                topology_helper = TopologyHelper()
-                topology_helper.set_dut_parameters(dut_index=dut_index,
-                                                   fs_parameters={"already_deployed": True})
-                topology = topology_helper.deploy()
-                fun_test.test_assert(topology, "Topology deployed")
-                fun_test.shared_varables["topology"] = topology
-            else:
-                topology = fun_test.shared_varables["topology"]
-            fs_obj = topology.get_dut_instance(index=0)
-            self.dpc_f1_0 = fs_obj.get_dpc_client(0)
-            self.dpc_f1_1 = fs_obj.get_dpc_client(1)
+        if getattr(self, "load_new_image", False):
+            dut_index = 0
+            topology_helper = TopologyHelper()
+            topology_helper.set_dut_parameters(dut_index=dut_index,
+                                               fs_parameters={"already_deployed": True})
+            topology = topology_helper.deploy()
+            fun_test.test_assert(topology, "Topology deployed")
+            fun_test.shared_variables["topology"] = topology
+        else:
+            topology = fun_test.shared_varables["topology"]
+        fs_obj = topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = fs_obj.get_dpc_client(1)
 
 
     def initialize_json_data(self):
@@ -887,11 +885,12 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0):
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
         split_cmd = cmd.split(" ")
         verb = split_cmd[0]
         data = split_cmd[1]
-        if getattr(self, "dpc_f1_0", False):
+        if not getattr(self, "dpc_f1_0", False):
+            self.load_new_image = True
             self.initialize_dpcsh()
         if f1 == 0:
             output = self.dpc_f1_0.json_execute(verb=verb, data=data)
