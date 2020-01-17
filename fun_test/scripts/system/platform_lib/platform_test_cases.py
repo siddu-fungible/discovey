@@ -5,12 +5,9 @@ from scripts.storage.pocs.apple.apc_pdu_auto import *
 
 def run_deco(func):
     def function_wrapper(self):
+        self.run_passed = False
+        func(self)
         self.run_passed = True
-        try:
-            func(self)
-        except Exception as ex:
-            fun_test.critical(ex)
-            self.run_passed = False
     return function_wrapper
 
 
