@@ -807,7 +807,8 @@ def send_summary_mail(job_id, extra_message=""):
         <br>
         </html>
         %s
-        """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)
+        """ % (css, banner, extra_message, suite_detail_url, table1, all_tables)   # gmail hates this
+        html = """Detailed results at: %s""" % (suite_detail_url)
 
         # print html
         attributes_dict = {x["name"]: x["value"] for x in suite_execution_attributes}
