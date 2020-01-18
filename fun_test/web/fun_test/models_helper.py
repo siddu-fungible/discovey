@@ -447,7 +447,7 @@ def _get_suite_executions(execution_id=None,
     if state_filter_string == "ALL":
         q = Q()
     elif int(state_filter_string) == JobStatusType.IN_PROGRESS:
-        q = Q(state=JobStatusType.IN_PROGRESS)
+        q = Q(state=JobStatusType.IN_PROGRESS) | Q(state=JobStatusType.PAUSED)
     elif int(state_filter_string) == JobStatusType.QUEUED:
         q = Q(state=JobStatusType.QUEUED)
     elif int(state_filter_string) == JobStatusType.COMPLETED:
