@@ -1,0 +1,42 @@
+{
+  "ConnectAllVolumestoHost" : {
+    "check_ssd": false,
+    "check_ports": false,
+    "expected_ssds_f1_0": 12,
+    "expected_ssds_f1_1": 12,
+    "expected_nu_ports_f1_0": [],
+    "expected_nu_ports_f1_1": [],
+    "expected_hnu_ports_f1_0": [],
+    "expected_hnu_ports_f1_1": [],
+    "reboot_machine_test": false,
+    "apc_pdu_power_cycle_test" : false,
+    "check_docker": true,
+    "check_portal": true,
+    "expected_dockers": 3,
+    "write_hosts": 1,
+    "read_hosts": 1,
+    "transport_type": "tcp",
+    "volumes" : 2,
+    "vol_type" : "VOL_TYPE_BLK_LOCAL_THIN",
+    "encrypt" : false,
+    "allow_expansion" : false,
+    "stripe_count" : 0,
+    "data_protection":{},
+    "crc":false,
+    "compression_effort" : 0,
+    "volume_type" : "raw volume",
+    "capacity" : 107374182400
+  },
+  "CreateRawVolumes" : {
+    "volumes" : 200,
+    "vol_type" : "VOL_TYPE_BLK_LOCAL_THIN",
+    "encrypt" : false,
+    "allow_expansion" : false,
+    "stripe_count" : 12,
+    "data_protection":{},
+    "crc":false,
+    "compression_effort" : 0,
+    "volume_type" : "raw volume",
+    "capacity" : 107374182400
+}
+}
