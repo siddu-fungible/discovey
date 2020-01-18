@@ -2765,12 +2765,13 @@ class Fs(object, ToDictMixin):
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 10
         fpga = self.get_fpga()
+        """
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
             if validate_uptime:
                 fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
-
+        """
         bmc = self.get_bmc()
         fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
                              context=self.context, message="BMC reachable after reset")
