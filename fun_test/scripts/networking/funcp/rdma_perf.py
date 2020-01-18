@@ -855,7 +855,7 @@ class BwWriteFcp9000(BwTest):
     rt = "write"
     fcp = True
     mtu = 9000
-    io_size = [4096]
+    io_size = [4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         self.set_test_details(id=5,
@@ -870,7 +870,7 @@ class LatWriteFcp9000(LatencyTest):
     rt = "write"
     mtu = 9000
     fcp = True
-    io_size = [4096]
+    io_size = [4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         self.set_test_details(id=6,
@@ -913,7 +913,7 @@ class BwWriteNfcp9000(BwTest):
     rt = "write"
     mtu = 9000
     fcp = False
-    io_size = [4096]
+    io_size = [4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         self.set_test_details(id=9,
@@ -928,7 +928,7 @@ class LatWriteNfcp9000(LatencyTest):
     rt = "write"
     mtu = 9000
     fcp = False
-    io_size = [4096]
+    io_size = [4096, 8192, 16384, 32768, 65536, 131072]
 
     def describe(self):
         self.set_test_details(id=10,
