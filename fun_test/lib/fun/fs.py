@@ -973,6 +973,7 @@ class BootupWorker(Thread):
                         pass
 
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+                    self.fs.renew_device_handles()
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
@@ -2077,6 +2078,12 @@ class Fs(object, ToDictMixin):
     def register_all_statistics(self):
         self.register_statistics(statistics_type=Fs.StatisticsType.BAM)
         self.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
+
+    def renew_device_handles(self):
+        self.reset_device_handles()
+        self.bmc = self.get_bmc()
+        self.come = self.get_come()
+        self.fpga = self.get_fpga()
 
     def reset_device_handles(self):
         try:
