@@ -529,7 +529,7 @@ def _make_gateway(index=0):
 ## flash image ##
 @roles('bmc')
 @task
-def flashF(index=0, flags=False, type=None, image=None, version=None):
+def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
     """ flash image of chip[index] over type tftp with provided arguments """
     global child
     CCHUID = 3 - int(index)
@@ -601,11 +601,17 @@ def flashF(index=0, flags=False, type=None, image=None, version=None):
     child.expect ('\nf1 # ')
     child.sendline('{} 0xa800000080000000 {}:{};'.format(command, env.TFTPSERVER, fimage))
     child.expect ('\nf1 # ')
-    child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
+    if old:
+        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
+    else:
+        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos.signed.bin;authfw 0xffffffff99000000'.format(command, env.TFTPSERVER))
     child.expect ('\nf1 # ')
     child.sendline ('echo booting to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
-    child.sendline('bootelf -p 0xffffffff99000000')
+    if old:
+        child.sendline('bootelf -p 0xffffffff99000000')
+    else:
+        child.sendline('bootelf -p ${loadaddr}')
     try:
         child.expect ('\nf1 # ', timeout=30)
     except:
@@ -673,12 +679,8 @@ def imageF(index=0, server=env.TFTPSERVER, imagefile=env.DEFAULT_TFTPFILE, type=
     """ upgrade image of chip[index] over type [nfs|tftp] with provided arguments """
     global child
     image = "%s:%s" % (server, imagefile)
-
-    rootuser = env.get('TFTPROOT', 'localadmin')
-    rootpass = env.get('TFTPPASS', 'Precious1*')
-    env.passwords.update({'{}@{}:22'.format(rootuser, server) : rootpass })
-    unsigned = execute(check_file_unsigned, image, type, hosts='{}@{}:22'.format(rootuser, server))
-
+    env.signed_image = True if '.signed' in image else False
+    print ("{} file {} seem {} ...".format(type, image, 'signed' if env.signed_image == True else 'unsigned'))
     command = 'nfs' if 'nfs' in type else 'tftpboot'
     child = connectF(index, True)
     child.sendline ('echo connected to chip={} ...'.format(index))
@@ -703,18 +705,13 @@ def imageF(index=0, server=env.TFTPSERVER, imagefile=env.DEFAULT_TFTPFILE, type=
     child.expect ('\nf1 # ')
     if '.gz' in image:
         child.sendline('{} 0xa800000080000000 {}; unzip 0xa800000080000000 0xffffffff99000000;'.format(command, image))
-        child.expect ('\nf1 # ')
     else:
         child.sendline('{} 0xffffffff99000000 {};'.format(command, image))
-        child.expect ('\nf1 # ')
+    child.expect ('hex\)\r\r\n')
 
     time.sleep(2)
-    if not unsigned:
-        child.sendline('authfw 0xffffffff99000000;')
-        child.expect ('authentication OK\r\r\nf1 # ')
-    else:
-        child.sendline('echo skipping_authfw;')
-        child.expect ('\nf1 # ')
+    child.sendline('authfw 0xffffffff99000000;')
+    child.expect ('authentication OK\r\r\nf1 # ')
 
     child.close()
 
@@ -752,16 +749,24 @@ def argsF(index=0, bootargs=BOOTARGS):
 def bootF(index=0):
     """ boot the image on chip[index] """
     global child
+    print ("downloaded file was {} ...".format('signed' if env.signed_image == True else 'unsigned'))
     child = connectF(index, False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
-    child.sendline('bootelf -p 0xffffffff99000000;')
+    if env.signed_image:
+        child.sendline('bootelf -p ${loadaddr};')
+    else:
+        child.sendline('bootelf -p 0xffffffff99000000;')
     try:
-        child.expect ('\nf1 # ', timeout=20)
-    except:
+        i = child.expect (['Image not authorised', '\nf1 #'], timeout=20)
+        if i == 0:
+            raise("\n\nnewer uboot strictly do allow UNSIGNED IMAGES ... please compile with SIGN=1 ...\n\n")
+        if i == 1:
+            raise("\n\nSeem DPU did not boot. User intervention required !!! ...\n\n")
+    except pexpect.TIMEOUT as e:
         SESSION_ACTIVE_MSG = "\n\ntimeout: Seem DPU are actively booted up. Kindly monitor using cmd= nc {} 999{}\n\n".format(env.host, index) 
-        sys.exit(SESSION_ACTIVE_MSG)
         child.close()
+        sys.exit(SESSION_ACTIVE_MSG)
 
 @roles('bmc')
 #@task
