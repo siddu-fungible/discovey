@@ -862,7 +862,7 @@ def ensure_dpu_online(sc_api, dpu_index, timeout=120):
             if api_server_response["status"]:
                 data = api_server_response["data"]
                 if "available" in data and data["available"] and "state" in data and data["state"] == "Online":
-                    fun_test.log("DPU {} is online".index(dpu_index))
+                    fun_test.log("DPU {} is online".format(dpu_index))
                     result = True
                     break
             else:
