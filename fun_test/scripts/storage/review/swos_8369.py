@@ -75,7 +75,7 @@ class VerifyImageVersion(FunTestCase):
 class CreateRawVolumes(FunTestCase):
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Create Raw volumes",
+                              summary="Create Stripe volumes",
                               steps='''''')
 
     def setup(self):
@@ -102,8 +102,8 @@ class CreateRawVolumes(FunTestCase):
 
         fun_test.log("Global Config: {}".format(self.__dict__))
         sc = StorageControllerApi(api_server_ip=fun_test.shared_variables["come_ip"])
-        sc.configure_dataplane_ip(dpu_id="FS1.0", ip="15.53.1.2", subnet_mask="255.255.255.0", next_hop="15.53.1.1")
-        sc.configure_dataplane_ip(dpu_id="FS1.1", ip="15.53.2.2", subnet_mask="255.255.255.0", next_hop="15.53.2.1")
+        sc.configure_dataplane_ip(dpu_id="FS1.0", ip="15.53.1.2", subnet_mask="255.255.255.0", next_hop="15.53.1.1",interface_name="test")
+        sc.configure_dataplane_ip(dpu_id="FS1.1", ip="15.53.2.2", subnet_mask="255.255.255.0", next_hop="15.53.2.1",interface_name="test")
 
 
     def run(self):
