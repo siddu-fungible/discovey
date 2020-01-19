@@ -342,10 +342,12 @@ def single_fs_setup(obj):
                     #    result["status"],
                     #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".format(node, ip))
+                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
 
         else:
             # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
             pass
+
     elif obj.tftp_image_path:
         fun_test.log("TFTP image installation")
         # Check the init-fs1600 service is running
@@ -846,6 +848,25 @@ def ensure_api_server_is_up(sc_api, timeout=120):
             else:
                 fun_test.sleep("Waiting for API server to be up", 10)
                 fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def ensure_dpu_online(sc_api, dpu_index, timeout=120):
+    result = False
+    try:
+        # Polling for API Server status
+        dpu_online_timer = FunTimer(max_time=timeout)
+        while not dpu_online_timer.is_expired(print_remaining_time=True):
+            api_server_response = sc_api.get_dpu_state(dpu_index=dpu_index)
+            if api_server_response["status"]:
+                data = api_server_response["data"]
+                if "available" in data and data["available"] and "state" in data and data["state"] == "Online":
+                    fun_test.log("DPU {} is online".format(dpu_index))
+                    result = True
+                    break
+            else:
+                fun_test.sleep("Waiting for DPU {} to be online".format(dpu_index), 10)
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

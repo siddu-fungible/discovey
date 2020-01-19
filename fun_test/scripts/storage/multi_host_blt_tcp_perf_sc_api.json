@@ -256,7 +256,7 @@
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
       "timeout": 7200
     },
-    "fio_cmd_args": {"bs": "4k", "rw": "randread", "direct": 1, "prio": 0,  "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0, "numjobs":32, "iodepth": 4, "verify": "md5", "do_verify": 1, "timeout": 30},
+    "fio_cmd_args": {"bs": "4k", "rw": "randread", "size": "100%", "direct": 1, "prio": 0,  "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0, "numjobs":32, "iodepth": 4, "verify": "md5", "do_verify": 1, "timeout": 30},
     "fio_modes": [
       "randread"
     ],

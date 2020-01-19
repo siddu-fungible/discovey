@@ -232,6 +232,21 @@ class StorageControllerApi(object):
             fun_test.critical(str(ex))
         return result
 
+    def get_dpu_state(self, dpu_index):
+        result = {"status": False, "data":{}}
+        url = "topology/dpus/FS1.{}/state".format(dpu_index)
+        response = self.execute_api("GET", url)
+        fun_test.log("GET {}".format(url))
+        try:
+            if response.ok:
+                result = response.json()
+                fun_test.log(json.dumps(result, indent=4))
+            else:
+                fun_test.log("Response not ok: {}", response.text)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
     def get_version(self):
         version = ""
         try:
