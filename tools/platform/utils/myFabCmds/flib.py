@@ -760,7 +760,7 @@ def bootF(index=0):
     try:
         i = child.expect (['Image not authorised', '\nf1 #'], timeout=20)
         if i == 0:
-            raise("\n\nnewer uboot strictly do allow UNSIGNED IMAGES ... please compile with SIGN=1 ...\n\n")
+            raise("\n\nnewer uboot strictly boot only SIGNED IMAGES ... please compile with SIGN=1 ...\n\n")
         if i == 1:
             raise("\n\nSeem DPU did not boot. User intervention required !!! ...\n\n")
     except pexpect.TIMEOUT as e:
