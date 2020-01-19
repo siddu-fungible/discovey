@@ -886,7 +886,7 @@ class Platform(RedFishTool, IpmiTool):
         return result
 
     def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
-        split_cmd = cmd.split(" ")
+        split_cmd = cmd.split(" ", 1)
         verb = split_cmd[0]
         data = split_cmd[1]
         if not getattr(self, "dpc_f1_0", False):
@@ -1042,6 +1042,58 @@ class Platform(RedFishTool, IpmiTool):
 
         fun_test.test_assert(f1_0_network_result, "Snake test on F1_0")
         fun_test.test_assert(f1_1_network_result, "Snake test on F1_1")
+
+    def verify_port_link_status(self, f1=0, port_num_list=[0], speed="100g", verify_sw=True, verify_hw=True, verfiy_fec=False):
+        link_status = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0)
+        link_status_json = self.parse_link_status_out(link_status, f1, create_table=False)
+        for port_num in port_num_list:
+            result = self.verify_link_status_json(link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec)
+            fun_test.test_assert(result, "Validate port : {}".format(port_num))
+
+    def verify_link_status_json(self, link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec,
+                                verify_xcvr=True):
+        result = True
+        key = "lport-{}".format(port_num)
+        link_details = link_status_json[key]
+        speed = speed.upper()
+        if verify_sw and link_details["SW"] != 1:
+            result = False
+        if verify_hw and link_details["HW"] != 1:
+            result = False
+        if verfiy_fec and link_details["FEC"] != 1:
+            result = False
+        if verify_xcvr and link_details["xcvr"] != "PRESENT":
+            result = False
+        if link_details["speed"] != speed:
+            result = False
+        return result
+
+    def split_n_verify_port_link_status(self, port_num, speed, f1=0, verify_sw=True, verify_hw=True, verfiy_fec=False,
+                                        verify_using_ethtool=True):
+        if speed == "100g":
+            brkmode = "no_brk_100g"
+            port_num_list = [port_num]
+            self.port_break_dpcsh(port_num, brkmode)
+        elif speed == "25g":
+            brkmode = "brk_4x25g"
+            port_num_list = range(port_num, port_num + 8)
+            self.port_break_dpcsh(port_num, brkmode)
+
+            port_num_next = port_num + 4
+            self.port_break_dpcsh(port_num_next, brkmode)
+
+        self.verify_port_link_status(f1, port_num_list, speed, verify_sw=verify_sw, verify_hw=verify_hw,
+                                     verfiy_fec=verfiy_fec)
+        if verify_using_ethtool:
+            self.verify_port_link_status_ethtool()
+
+    def verify_port_link_status_ethtool(self):
+        pass
+
+    def port_break_dpcsh(self, port_num=0, brkmode="no_brk_100g"):
+        port_break_cmd = 'port breakoutset {"portnum":%s, "shape":0} {"brkmode":%s}' % (port_num, brkmode)
+        self.get_dpcsh_data_for_cmds(port_break_cmd)
+        fun_test.sleep("Port breakoutset", seconds=2)
 
 
 class StorageApi:

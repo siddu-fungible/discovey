@@ -582,6 +582,35 @@ class SnakeTest(PlatformGeneralTestCase):
         self.start_snake_test_verify(self.runtime)
 
 
+class PortSplitTestCase(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="Port break down, regroup",
+                              steps="""""")
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        PlatformGeneralTestCase.setup(self)
+        # self.initialize_test_case_variables(testcase)
+        self.load_new_image = True
+        # self.initialize_dpcsh()
+
+    @run_deco
+    def run(self):
+        self.get_dpcsh_data_for_cmds("port enableall")
+
+        port_num = 0
+
+        speed = "100g"
+        self.split_n_verify_port_link_status(port_num, speed)
+
+        speed = "25g"
+        self.split_n_verify_port_link_status(port_num, speed)
+
+        speed = "100g"
+        self.split_n_verify_port_link_status(port_num, speed)
+
+
 class General(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=24,
@@ -621,7 +650,8 @@ if __name__ == "__main__":
         PcieDeviceDetection,
         HostConnectionViaPcieBus,
         ComeVolumeCreation,
-        SnakeTest
+        SnakeTest,
+        PortSplitTestCase
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
