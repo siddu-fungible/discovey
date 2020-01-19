@@ -2,13 +2,33 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+from lib.host.swagger_client.api.storage_api import StorageApi
+from lib.host.swagger_client.api.topology_api import TopologyApi
+from lib.host.swagger_client.api.system_api import SystemApi
+from lib.host.swagger_client.api_client import ApiClient
+from lib.host.swagger_client.configuration import Configuration
 
 
 class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
-    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
+                 api_password="password", api_server_ip=None, api_server_port=9000):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
+
+        if not api_server_ip:
+            api_server_ip = target_ip
+
+        configuration = Configuration()
+        configuration.host = "https://%s:%s/FunCC/v1" % (api_server_ip, api_server_port)
+        configuration.username = api_username
+        configuration.password = api_password
+        configuration.verify_ssl = False
+        api_client = ApiClient(configuration)
+
+        self.storage_api = StorageApi(api_client)
+        self.topology_api = TopologyApi(api_client)
+        self.system_api = SystemApi(api_client)
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -486,6 +506,9 @@ class StorageController(NetworkController, DpcshClient):
 
 
 if __name__ == "__main__":
-    sc = StorageController(target_ip="10.1.20.67", target_port=42220)
+    sc = StorageController(target_ip="fs53-come", target_port=42220)
     output = sc.command("peek stats")
     sc.print_result(output)
+    result1 = sc.system_api.get_apiserver_health()
+    result2 = sc.storage_api.get_all_pools()
+    result3 = sc.topology_api.get_node(node_id="FS1.0")
