@@ -66,7 +66,7 @@ class PalladiumTc(FunTestCase):
                   "RUN_TARGET": self.run_target,
                   "HW_MODEL": self.hw_model}
 
-        build_result = jenkins_manager.build(params=params, extra_emails=self.extra_emails)
+        build_result = jenkins_manager.build(params=params, extra_emails=self.extra_emails, wait_time_for_build_complete=60 * 30)
         fun_test.test_assert(build_result, "Build completed normally")
 
 

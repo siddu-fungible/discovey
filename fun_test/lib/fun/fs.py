@@ -973,6 +973,7 @@ class BootupWorker(Thread):
                         pass
 
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
+                    self.fs.renew_device_handles()
 
             if fs.bundle_image_parameters:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
@@ -2078,6 +2079,12 @@ class Fs(object, ToDictMixin):
         self.register_statistics(statistics_type=Fs.StatisticsType.BAM)
         self.register_statistics(statistics_type=Fs.StatisticsType.DEBUG_VP_UTIL)
 
+    def renew_device_handles(self):
+        self.reset_device_handles()
+        self.bmc = self.get_bmc()
+        self.come = self.get_come()
+        self.fpga = self.get_fpga()
+
     def reset_device_handles(self):
         try:
             if self.bmc:
@@ -2758,21 +2765,23 @@ class Fs(object, ToDictMixin):
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 10
         fpga = self.get_fpga()
+        """
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
             if validate_uptime:
                 fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
-
+        """
         bmc = self.get_bmc()
         fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
                              context=self.context, message="BMC reachable after reset")
-
-        if validate_uptime:
+        """  WORKAROUND
+        if validate_uptime:  
             fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
+        """
 
         come = self.get_come().clone()
-        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180,
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
             fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")

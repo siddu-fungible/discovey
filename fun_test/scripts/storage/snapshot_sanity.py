@@ -513,6 +513,23 @@ class SnapVolumeTestCase(FunTestCase):
                 else:
                     fun_test.shared_variables["nvme_discovery"] = True
 
+        # Create SNAP vol
+        if hasattr(self, "skip_fio") and self.skip_fio:
+            x = 1
+            command_result = self.storage_controller.create_snap_volume(
+                capacity=self.blt_details["capacity"],
+                block_size=self.blt_details["block_size"],
+                name="snap_vol_" + str(x),
+                uuid=self.snap_uuid[x],
+                cow_uuid=self.cow_uuid[x],
+                base_uuid=self.thin_uuid[x],
+                command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Snap volume with uuid {} using BV : {} & COW : {}".
+                                 format(self.cow_uuid[x], self.thin_uuid[x], self.cow_uuid[x]))
+            snap_vol_created = True
+            fun_test.sleep("Snap vol created")
+
     def run(self):
         testcase = self.__class__.__name__
         test_method = testcase[3:]
@@ -709,6 +726,9 @@ class SnapVolCreation(SnapVolumeTestCase):
                               4. Create a SNAP volume
         ''')
 
+    def run(self):
+        pass
+
 
 class SnapVolRead(SnapVolumeTestCase):
 
@@ -740,7 +760,7 @@ class SnapVolDiffWrite(SnapVolumeTestCase):
 
 if __name__ == "__main__":
     bltscript = Singledpu()
-    # bltscript.add_test_case(SnapVolCreation())
+    bltscript.add_test_case(SnapVolCreation())
     bltscript.add_test_case(SnapVolRead())
     bltscript.add_test_case(SnapVolDiffWrite())
     bltscript.run()

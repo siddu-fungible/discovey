@@ -293,6 +293,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        fun_test.shared_variables['benchmark_dict'] = benchmark_dict
 
         if testcase not in benchmark_dict or not benchmark_dict[testcase]:
             benchmark_parsing = False
@@ -1049,23 +1050,75 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         ''')
 
     def setup(self):
+        # super(MultiHostFioRandReadAfterReboot, self).setup()
+        self.testcase = self.__class__.__name__
+
+    def run(self):
         fun_test.log("Rebooting COMe")
         self.post_results = False
         self.fs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
+        self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
+        self.host_info = fun_test.shared_variables["host_info"]
 
+        reboot_timer = FunTimer(max_time=600)
+
+        # Reset COMe
         reset = self.fs[0].reset(hard=False)
         fun_test.test_assert(reset, "COMe reset successfully done")
 
+        # Ensure COMe is up
         ensure_up = self.fs[0].ensure_is_up()
         fun_test.test_assert(ensure_up, "Ensure COMe is up")
+
+        # Ensure all containers are up
         fs_obj = self.fs[0]
         come = fs_obj.get_come()
         containers_status = come.ensure_expected_containers_running()
         fun_test.test_assert(containers_status, "All containers up")
 
-    def run(self):
-        super(MultiHostFioRandReadAfterReboot, self).run()
+        # Ensure API server is up
+        self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
+        fun_test.test_assert(ensure_api_server_is_up(self.sc_api), "Ensure API server is up")
+
+        fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
+
+        volume_found = False
+        lsblk_found = False
+        vol_uuid = fun_test.shared_variables["thin_uuid"][0]
+        host_handle = self.host_info[self.host_info.keys()[0]]['handle']
+        nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
+        fun_test.log("Nvme device name is {}".format(nvme_device))
+        nvme_device_name = nvme_device.split("/")[-1]
+        fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
+        while not reboot_timer.is_expired():
+            # Check whether EC vol is listed in storage/volumes
+            vols = self.sc_api.get_volumes()
+            if (vols['status'] and vols['data']) and not volume_found:
+                if vol_uuid in vols['data'].keys():
+                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
+                                           "BLT Volume {} is persistent".format(vol_uuid))
+                    volume_found = True
+            if volume_found:
+                # Check lsblk output for nvme
+                lsblk_output = host_handle.lsblk("-b")
+                fun_test.simple_assert(lsblk_output, "Listing available volumes")
+                fun_test.log("lsblk Output: \n{}".format(lsblk_output))
+
+                if nvme_device_name in lsblk_output:
+                    lsblk_found = True
+                    break
+            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
+
+        fun_test.test_assert(lsblk_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
+                                                                                            host_handle))
+
+        # Run fio
+        benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
+        cmd_args = benchmark_dict["fio_cmd_args"]
+
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fun_test.test_assert(fio_output, "Ensure fio reads were successful")
 
     def cleanup(self):
         super(MultiHostFioRandReadAfterReboot, self).cleanup()

@@ -196,6 +196,7 @@ users_info = [
     ]
 ]
 
+
 for user_info in users_info:
 
     username = user_info[0]

@@ -715,8 +715,8 @@
     "ssh_password": "Precious1*",
     "ipmi_info": {
       "host_ip": "mktg15-ilo",
-      "username": "ADMIN",
-      "password": "ADMIN"
+      "username": "admin",
+      "password": "Precious1*"
     }
   },
       "mktg16": {
