@@ -98,6 +98,7 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["num_volumes"] = self.num_volume
         fun_test.shared_variables["numa_cpus"] = fetch_numa_cpus(self.end_host, self.ethernet_adapter)
         fun_test.shared_variables["db_log_time"] = get_current_time()
+        fun_test.shared_variables["remote_ip"] = remote_ip
 
         configure_endhost_interface(end_host=self.end_host,
                                     test_network=test_network,
@@ -165,6 +166,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         self.numa_cpus = fun_test.shared_variables["numa_cpus"]
         ctlr_uuid = fun_test.shared_variables["ctlr_uuid"]
         test_network = fun_test.shared_variables["test_network"]
+        self.remote_ip = fun_test.shared_variables['remote_ip']
 
         (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,
                                                                                        self.command_timeout)
@@ -190,17 +192,19 @@ class ECVolumeLevelTestcase(FunTestCase):
 
         # Checking nvme-connect status
         if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(self.attach_transport.lower(),
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}".format(self.attach_transport.lower(),
                                                                              test_network["f1_loopback_ip"],
                                                                              self.transport_port,
-                                                                             self.nvme_subsystem)
+                                                                             self.nvme_subsystem,
+                                                                             self.remote_ip)
         else:
-            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {}".format(
+            nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
                 self.attach_transport.lower(),
                 test_network["f1_loopback_ip"],
                 self.transport_port,
                 self.nvme_subsystem,
-                self.io_queues)
+                self.io_queues,
+                self.remote_ip)
 
         nvme_connect_status = self.end_host.sudo_command(command=nvme_connect_cmd, timeout=self.command_timeout)
         fun_test.log("nvme_connect_status output is: {}".format(nvme_connect_status))
