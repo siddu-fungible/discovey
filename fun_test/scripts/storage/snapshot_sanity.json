@@ -83,6 +83,7 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
+    "skip_fio": true,
     "fio_cmd_args": {
       "size": "100%",
       "verify": "pattern",

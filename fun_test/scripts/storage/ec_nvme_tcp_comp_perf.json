@@ -6,7 +6,7 @@
     "num_ssd": 6,
     "num_volume": 1,
     "command_timeout": 5,
-    "reboot_timeout": 360,
+    "reboot_timeout": 1500,
     "ethernet_adapter": "Mellanox",
     "end_host_name":"poc-server-01",
     "csr_network": {

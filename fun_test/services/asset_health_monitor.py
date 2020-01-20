@@ -189,6 +189,7 @@ class TestBedWorker(Thread):
                         health_status = AssetHealthStates.DEGRADING
                         self.alert("Setting {} to degrading".format(asset_object.name))
 
+        self.logger.info("Asset: {} health_status: {}".format(asset_object.name, health_status))
         asset_object.set_health(status=health_status, message=error_message)
         return health_status
 
@@ -240,5 +241,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    # service.run(filter_test_bed_name="fs-118")
-    service.run()
+    service.run(filter_test_bed_name="fs-125")
+    # service.run()

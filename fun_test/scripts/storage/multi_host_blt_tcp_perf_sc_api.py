@@ -1060,6 +1060,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
         self.host_info = fun_test.shared_variables["host_info"]
+        self.f1_ips = fun_test.shared_variables["f1_ips"]
 
         reboot_timer = FunTimer(max_time=600)
 
@@ -1112,6 +1113,24 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         fun_test.test_assert(lsblk_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
                                                                                             host_handle))
+
+        # Check host F1 connectivity
+        docker_f1_handle = come.get_funcp_container(f1_index=0)
+        fun_test.log("Checking host F1 connectivity")
+        for ip in self.f1_ips:
+            ping_status = host_handle.ping(dst=ip)
+            if not ping_status:
+                fun_test.log("Routes from docker container")
+                docker_f1_handle.command("arp -n")
+                docker_f1_handle.command("route -n")
+                docker_f1_handle.command("ifconfig")
+                fun_test.log("Routes from host")
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+
+            fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+                                    format(host_handle.host_ip, ip))
 
         # Run fio
         benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
