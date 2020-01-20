@@ -618,6 +618,42 @@ def compare(actual, expected, threshold, operation):
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
 
 
+def get_nvme_device(host_obj):
+    result = {'status': False}
+    nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
+    if "failed to open" in nvme_list_raw.lower():
+        nvme_list_raw = nvme_list_raw + "}"
+        temp1 = nvme_list_raw.replace('\n', '')
+        temp2 = re.search(r'{.*', temp1).group()
+        nvme_list_dict = json.loads(temp2, strict=False)
+    else:
+        try:
+            nvme_list_dict = json.loads(nvme_list_raw)
+        except:
+            nvme_list_raw = nvme_list_raw + "}"
+            nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+
+    try:
+        nvme_device_list = []
+        for device in nvme_list_dict["Devices"]:
+            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or \
+                    "fs1600" in device["ModelNumber"].lower():
+                nvme_device_list.append(device["DevicePath"])
+            elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                    nvme_device_list.append(device["DevicePath"])
+        fio_filename = str(':'.join(nvme_device_list))
+        result = {'status': True, 'nvme_device': fio_filename}
+    except:
+        fio_filename = None
+        result = {'status': False, 'nvme_device': fio_filename}
+
+    # return fio_filename
+    # {'status': True, 'nvme_device': '/dev/nvme1n1'}
+    return result
+
+
 def fetch_nvme_device(end_host, nsid, size=None):
     lsblk_output = end_host.lsblk("-b")
     fun_test.simple_assert(lsblk_output, "Listing available volumes")
@@ -851,6 +887,7 @@ def ensure_api_server_is_up(sc_api, timeout=120):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
 
 def ensure_dpu_online(sc_api, dpu_index, timeout=120):
     result = False
