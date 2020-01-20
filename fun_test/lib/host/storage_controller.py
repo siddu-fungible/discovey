@@ -4,7 +4,8 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.host.swagger_client.api.storage_api import StorageApi
 from lib.host.swagger_client.api.topology_api import TopologyApi
-from lib.host.swagger_client.api.system_api import SystemApi
+from lib.host.swagger_client.api.controller_api import ControllerApi
+from lib.host.swagger_client.api.network_api import NetworkApi
 from lib.host.swagger_client.api_client import ApiClient
 from lib.host.swagger_client.configuration import Configuration
 
@@ -28,7 +29,8 @@ class StorageController(NetworkController, DpcshClient):
 
         self.storage_api = StorageApi(api_client)
         self.topology_api = TopologyApi(api_client)
-        self.system_api = SystemApi(api_client)
+        self.controller_api = ControllerApi(api_client)
+        self.network_api = NetworkApi(api_client)
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -509,9 +511,6 @@ if __name__ == "__main__":
     sc = StorageController(target_ip="fs53-come", target_port=42220)
     # output = sc.command("peek stats")
     # sc.print_result(output)
-    print sc.system_api.get_apiserver_health()
+    result1 = sc.controller_api.get_sc_health()
     result2 = sc.storage_api.get_all_pools()
-    print result2
-
-    result3 = sc.topology_api.get_node(node_id="FS1.0")
-    print result3
+    result3 = sc.topology_api.get_hierarchical_topology()
