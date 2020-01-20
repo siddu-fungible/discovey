@@ -618,7 +618,7 @@ def compare(actual, expected, threshold, operation):
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
 
 
-def get_nvme_device(host_obj):
+def fetch_nvme_list(host_obj):
     result = {'status': False}
     nvme_list_raw = host_obj.sudo_command("nvme list -o json")
     host_obj.disconnect()
