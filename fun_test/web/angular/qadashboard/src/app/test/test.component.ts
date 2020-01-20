@@ -12,11 +12,13 @@ import {Tree} from "@angular/router/src/utils/tree";
 class TreeNode {
   id: number;
   name: string;
+  leaf: boolean;
   meta_data: any = null;
   children: TreeNode [] = null;
 
   constructor(props) {
     this.name = props.name;
+    this.leaf = props.leaf;
   }
 
   addChild(node: TreeNode) {
@@ -37,8 +39,10 @@ enum EditMode {
 class FlatNode {
   name: string = null;
   leaf: boolean = false;
+  collapsed: boolean = true;
   hide: boolean = true;
   indent: number = 0;
+  highlight: boolean = false;
   children: FlatNode[] = [];
   addChild(childNode) {
     this.children.push(childNode);
@@ -76,6 +80,7 @@ export class TestComponent implements OnInit {
   currentDescription: string;
   flatNodes: FlatNode[] = [];
   tree: TreeNode = null;
+  currentFlatNode: FlatNode = null;
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -84,12 +89,12 @@ export class TestComponent implements OnInit {
               private service: TestBedService,
               private userService: UserService
   ) {
-    this.tree = new TreeNode({name: "Stats"});
-    let systemNode = this.tree.addChild(new TreeNode({name: "system"}));
-    let storageNode = this.tree.addChild(new TreeNode({name: "storage"}));
-    systemNode.addChild(new TreeNode({name: "BAM"}));
-    systemNode.addChild(new TreeNode({name: "VP utilization"}));
-    storageNode.addChild(new TreeNode({name: "SSD"}));
+    this.tree = new TreeNode({name: "Stats", leaf: false});
+    let systemNode = this.tree.addChild(new TreeNode({name: "system", leaf: false}));
+    let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false}));
+    systemNode.addChild(new TreeNode({name: "BAM", leaf: true}));
+    systemNode.addChild(new TreeNode({name: "VP utilization", leaf: true}));
+    storageNode.addChild(new TreeNode({name: "SSD", leaf: true}));
 
   }
 
@@ -99,6 +104,7 @@ export class TestComponent implements OnInit {
     if (this.tree) {
       let flatNode = new FlatNode();
       flatNode.name = treeNode.name;
+      flatNode.leaf = treeNode.leaf;
       this.flatNodes.push(flatNode);
       flatNode.indent = 0;
       flatNode.hide = false;
@@ -119,6 +125,7 @@ export class TestComponent implements OnInit {
     let flatNode = new FlatNode();
     this.flatNodes.push(flatNode);
     flatNode.name = childNode.name;
+    flatNode.leaf = childNode.leaf;
     flatNode.indent = parentsIndent + 1;
     flatNode.hide = true;
     if (childNode.children) {
@@ -131,7 +138,13 @@ export class TestComponent implements OnInit {
 
 
   clickNode(flatNode) {
+    if (this.currentFlatNode) {
+      this.currentFlatNode.highlight = false;
+    }
+    flatNode.highlight = true;
+    this.currentFlatNode = flatNode;
     if (!flatNode.leaf) {
+      flatNode.collapsed = !flatNode.collapsed;
       for (let child of flatNode.children) {
         if (child.hide) {
           this.expandNode(child);
@@ -150,6 +163,7 @@ export class TestComponent implements OnInit {
 
   collapseNode(node): void {
     if (!node.leaf) {
+      node.collapsed = true;
       for (let child of node.children) {
         this.collapseNode(child);
       }

@@ -86,3 +86,9 @@ display-checkpoint {
     border-width: 10px;
     left: 97%;
 }
+
+.highlight {
+  text-decoration: underline !important;
+  color: black !important;
+  font-weight: 600 !important;
+}
