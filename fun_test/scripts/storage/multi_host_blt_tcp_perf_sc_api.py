@@ -512,9 +512,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                 subsys_nqn = self.subsys_nqn_list[index]
                 host_nqn = self.host_nqn_list[index]
 
+                """
                 host_nqn_workaround = True
                 if host_nqn_workaround:
                     host_nqn = subsys_nqn.split(":")[0] + ":" + host_nqn
+                """
 
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
