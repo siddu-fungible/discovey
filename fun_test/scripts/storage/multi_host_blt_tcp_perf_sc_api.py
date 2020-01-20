@@ -11,6 +11,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.templates.storage.storage_controller_api import *
+import copy
 
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
@@ -1060,6 +1061,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.come_obj = fun_test.shared_variables["come_obj"]
         self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
         self.host_info = fun_test.shared_variables["host_info"]
+        self.f1_ips = fun_test.shared_variables["f1_ips"]
 
         reboot_timer = FunTimer(max_time=600)
 
@@ -1084,7 +1086,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
 
         volume_found = False
-        lsblk_found = False
+        nvme_list_found = False
         vol_uuid = fun_test.shared_variables["thin_uuid"][0]
         host_handle = self.host_info[self.host_info.keys()[0]]['handle']
         nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
@@ -1100,25 +1102,50 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                                            "BLT Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
-                # Check lsblk output for nvme
-                lsblk_output = host_handle.lsblk("-b")
-                fun_test.simple_assert(lsblk_output, "Listing available volumes")
-                fun_test.log("lsblk Output: \n{}".format(lsblk_output))
-
-                if nvme_device_name in lsblk_output:
-                    lsblk_found = True
+                nvme_list_output = host_handle.sudo_command("nvme list")
+                if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
+                    nvme_list_found = True
                     break
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
 
-        fun_test.test_assert(lsblk_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
+        fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
                                                                                             host_handle))
+
+        # Check host F1 connectivity
+        docker_f1_handle = come.get_funcp_container(f1_index=0)
+        fun_test.log("Checking host F1 connectivity")
+        for ip in self.f1_ips:
+            ping_status = host_handle.ping(dst=ip)
+            if not ping_status:
+                fun_test.log("Routes from docker container")
+                docker_f1_handle.command("arp -n")
+                docker_f1_handle.command("route -n")
+                docker_f1_handle.command("ifconfig")
+                fun_test.log("Routes from host")
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+
+            fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+                                    format(host_handle.host_ip, ip))
 
         # Run fio
         benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
         cmd_args = benchmark_dict["fio_cmd_args"]
 
         fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
-        fun_test.test_assert(fio_output, "Ensure fio reads were successful")
+        fun_test.test_assert(fio_output, "Ensure fio reads are successful")
+
+        write_cmd_args = copy.deepcopy(cmd_args)
+        write_cmd_args.update({"rw": "randwrite"})
+        write_cmd_args.update({"do_verify": 0})
+
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **write_cmd_args)
+        fun_test.test_assert(fio_output, "Ensure fio writes are successful reboot")
+
+        # Reading the written output
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):
         super(MultiHostFioRandReadAfterReboot, self).cleanup()
