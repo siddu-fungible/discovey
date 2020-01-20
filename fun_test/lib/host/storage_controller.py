@@ -221,7 +221,7 @@ class StorageController(NetworkController, DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
-    def power_toggle_device(self, action, device_id, command_duration=TIMEOUT):
+    def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
         data = ["output"]
         params = {"slot": device_id, "type": "hotswap", "action": action}
         data.append(params)
