@@ -507,8 +507,11 @@ class StorageController(NetworkController, DpcshClient):
 
 if __name__ == "__main__":
     sc = StorageController(target_ip="fs53-come", target_port=42220)
-    output = sc.command("peek stats")
-    sc.print_result(output)
-    result1 = sc.system_api.get_apiserver_health()
+    # output = sc.command("peek stats")
+    # sc.print_result(output)
+    print sc.system_api.get_apiserver_health()
     result2 = sc.storage_api.get_all_pools()
+    print result2
+
     result3 = sc.topology_api.get_node(node_id="FS1.0")
+    print result3

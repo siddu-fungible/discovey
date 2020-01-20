@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,14 +31,69 @@ class AdditionalFields(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'field_type': 'str',
+        'field': 'object'
     }
 
     attribute_map = {
+        'field_type': 'field_type',
+        'field': 'field'
     }
 
-    def __init__(self):  # noqa: E501
+    def __init__(self, field_type=None, field=None):  # noqa: E501
         """AdditionalFields - a model defined in Swagger"""  # noqa: E501
+
+        self._field_type = None
+        self._field = None
         self.discriminator = None
+
+        self.field_type = field_type
+        if field is not None:
+            self.field = field
+
+    @property
+    def field_type(self):
+        """Gets the field_type of this AdditionalFields.  # noqa: E501
+
+
+        :return: The field_type of this AdditionalFields.  # noqa: E501
+        :rtype: str
+        """
+        return self._field_type
+
+    @field_type.setter
+    def field_type(self, field_type):
+        """Sets the field_type of this AdditionalFields.
+
+
+        :param field_type: The field_type of this AdditionalFields.  # noqa: E501
+        :type: str
+        """
+        if field_type is None:
+            raise ValueError("Invalid value for `field_type`, must not be `None`")  # noqa: E501
+
+        self._field_type = field_type
+
+    @property
+    def field(self):
+        """Gets the field of this AdditionalFields.  # noqa: E501
+
+
+        :return: The field of this AdditionalFields.  # noqa: E501
+        :rtype: object
+        """
+        return self._field
+
+    @field.setter
+    def field(self, field):
+        """Sets the field of this AdditionalFields.
+
+
+        :param field: The field of this AdditionalFields.  # noqa: E501
+        :type: object
+        """
+
+        self._field = field
 
     def to_dict(self):
         """Returns the model properties as a dict"""

@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -34,7 +34,7 @@ class StoragepoolsApi(object):
         self.api_client = api_client
 
     def add_global_pool_dpu(self, **kwargs):  # noqa: E501
-        """Add dpu to the global pool  # noqa: E501
+        """(INTERNAL) Add dpu to the global pool  # noqa: E501
 
         Add a dpu to the default global pool. The dpu specified by dpu_id MUST already exist in the topology  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -56,7 +56,7 @@ class StoragepoolsApi(object):
             return data
 
     def add_global_pool_dpu_with_http_info(self, **kwargs):  # noqa: E501
-        """Add dpu to the global pool  # noqa: E501
+        """(INTERNAL) Add dpu to the global pool  # noqa: E501
 
         Add a dpu to the default global pool. The dpu specified by dpu_id MUST already exist in the topology  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -231,7 +231,7 @@ class StoragepoolsApi(object):
         :param async_req bool
         :param str pool_uuid: FSC assigned pool UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -254,7 +254,7 @@ class StoragepoolsApi(object):
         :param async_req bool
         :param str pool_uuid: FSC assigned pool UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -314,7 +314,7 @@ class StoragepoolsApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseDataWithFreeformObjects',  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),

@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,179 +31,138 @@ class Drive(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'storage_backend': 'str',
-        'drive_uuid': 'str',
-        'dpu_id': 'str',
-        'slot_id': 'int',
+        'uuid': 'str',
+        'dpu': 'str',
+        'fault_zone': 'list[str]',
         'nguid_low': 'int',
         'nguid_high': 'int',
+        'slot_id': 'int',
         'state': 'ResourceState',
         'plugged': 'bool',
-        'total_capacity_bytes': 'int',
-        'available_capacity_bytes': 'int',
-        'volumes': 'list[Volume]',
+        'capacity': 'int',
         'created_at': 'datetime',
         'modified_at': 'datetime'
     }
 
     attribute_map = {
-        'storage_backend': 'storage_backend',
-        'drive_uuid': 'drive_uuid',
-        'dpu_id': 'dpu_id',
-        'slot_id': 'slot_id',
+        'uuid': 'uuid',
+        'dpu': 'dpu',
+        'fault_zone': 'fault_zone',
         'nguid_low': 'nguid_low',
         'nguid_high': 'nguid_high',
+        'slot_id': 'slot_id',
         'state': 'state',
         'plugged': 'plugged',
-        'total_capacity_bytes': 'total_capacity_bytes',
-        'available_capacity_bytes': 'available_capacity_bytes',
-        'volumes': 'volumes',
+        'capacity': 'capacity',
         'created_at': 'created_at',
         'modified_at': 'modified_at'
     }
 
-    def __init__(self, storage_backend='ssd', drive_uuid=None, dpu_id=None, slot_id=None, nguid_low=None, nguid_high=None, state=None, plugged=None, total_capacity_bytes=None, available_capacity_bytes=None, volumes=None, created_at=None, modified_at=None):  # noqa: E501
+    def __init__(self, uuid=None, dpu=None, fault_zone=None, nguid_low=None, nguid_high=None, slot_id=None, state=None, plugged=None, capacity=None, created_at=None, modified_at=None):  # noqa: E501
         """Drive - a model defined in Swagger"""  # noqa: E501
 
-        self._storage_backend = None
-        self._drive_uuid = None
-        self._dpu_id = None
-        self._slot_id = None
+        self._uuid = None
+        self._dpu = None
+        self._fault_zone = None
         self._nguid_low = None
         self._nguid_high = None
+        self._slot_id = None
         self._state = None
         self._plugged = None
-        self._total_capacity_bytes = None
-        self._available_capacity_bytes = None
-        self._volumes = None
+        self._capacity = None
         self._created_at = None
         self._modified_at = None
         self.discriminator = None
 
-        if storage_backend is not None:
-            self.storage_backend = storage_backend
-        if drive_uuid is not None:
-            self.drive_uuid = drive_uuid
-        self.dpu_id = dpu_id
-        self.slot_id = slot_id
+        if uuid is not None:
+            self.uuid = uuid
+        self.dpu = dpu
+        if fault_zone is not None:
+            self.fault_zone = fault_zone
         if nguid_low is not None:
             self.nguid_low = nguid_low
         if nguid_high is not None:
             self.nguid_high = nguid_high
+        self.slot_id = slot_id
         if state is not None:
             self.state = state
         if plugged is not None:
             self.plugged = plugged
-        if total_capacity_bytes is not None:
-            self.total_capacity_bytes = total_capacity_bytes
-        if available_capacity_bytes is not None:
-            self.available_capacity_bytes = available_capacity_bytes
-        if volumes is not None:
-            self.volumes = volumes
+        if capacity is not None:
+            self.capacity = capacity
         if created_at is not None:
             self.created_at = created_at
         if modified_at is not None:
             self.modified_at = modified_at
 
     @property
-    def storage_backend(self):
-        """Gets the storage_backend of this Drive.  # noqa: E501
-
-
-        :return: The storage_backend of this Drive.  # noqa: E501
-        :rtype: str
-        """
-        return self._storage_backend
-
-    @storage_backend.setter
-    def storage_backend(self, storage_backend):
-        """Sets the storage_backend of this Drive.
-
-
-        :param storage_backend: The storage_backend of this Drive.  # noqa: E501
-        :type: str
-        """
-        allowed_values = ["ssd", "hard disk"]  # noqa: E501
-        if storage_backend not in allowed_values:
-            raise ValueError(
-                "Invalid value for `storage_backend` ({0}), must be one of {1}"  # noqa: E501
-                .format(storage_backend, allowed_values)
-            )
-
-        self._storage_backend = storage_backend
-
-    @property
-    def drive_uuid(self):
-        """Gets the drive_uuid of this Drive.  # noqa: E501
+    def uuid(self):
+        """Gets the uuid of this Drive.  # noqa: E501
 
         unique id of drive assigned by FS  # noqa: E501
 
-        :return: The drive_uuid of this Drive.  # noqa: E501
+        :return: The uuid of this Drive.  # noqa: E501
         :rtype: str
         """
-        return self._drive_uuid
+        return self._uuid
 
-    @drive_uuid.setter
-    def drive_uuid(self, drive_uuid):
-        """Sets the drive_uuid of this Drive.
+    @uuid.setter
+    def uuid(self, uuid):
+        """Sets the uuid of this Drive.
 
         unique id of drive assigned by FS  # noqa: E501
 
-        :param drive_uuid: The drive_uuid of this Drive.  # noqa: E501
+        :param uuid: The uuid of this Drive.  # noqa: E501
         :type: str
         """
 
-        self._drive_uuid = drive_uuid
+        self._uuid = uuid
 
     @property
-    def dpu_id(self):
-        """Gets the dpu_id of this Drive.  # noqa: E501
+    def dpu(self):
+        """Gets the dpu of this Drive.  # noqa: E501
 
         id of dpu to which this drive is attached  # noqa: E501
 
-        :return: The dpu_id of this Drive.  # noqa: E501
+        :return: The dpu of this Drive.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_id
+        return self._dpu
 
-    @dpu_id.setter
-    def dpu_id(self, dpu_id):
-        """Sets the dpu_id of this Drive.
+    @dpu.setter
+    def dpu(self, dpu):
+        """Sets the dpu of this Drive.
 
         id of dpu to which this drive is attached  # noqa: E501
 
-        :param dpu_id: The dpu_id of this Drive.  # noqa: E501
+        :param dpu: The dpu of this Drive.  # noqa: E501
         :type: str
         """
-        if dpu_id is None:
-            raise ValueError("Invalid value for `dpu_id`, must not be `None`")  # noqa: E501
+        if dpu is None:
+            raise ValueError("Invalid value for `dpu`, must not be `None`")  # noqa: E501
 
-        self._dpu_id = dpu_id
+        self._dpu = dpu
 
     @property
-    def slot_id(self):
-        """Gets the slot_id of this Drive.  # noqa: E501
+    def fault_zone(self):
+        """Gets the fault_zone of this Drive.  # noqa: E501
 
-        dpu slot to which drive is connected  # noqa: E501
 
-        :return: The slot_id of this Drive.  # noqa: E501
-        :rtype: int
+        :return: The fault_zone of this Drive.  # noqa: E501
+        :rtype: list[str]
         """
-        return self._slot_id
+        return self._fault_zone
 
-    @slot_id.setter
-    def slot_id(self, slot_id):
-        """Sets the slot_id of this Drive.
+    @fault_zone.setter
+    def fault_zone(self, fault_zone):
+        """Sets the fault_zone of this Drive.
 
-        dpu slot to which drive is connected  # noqa: E501
 
-        :param slot_id: The slot_id of this Drive.  # noqa: E501
-        :type: int
+        :param fault_zone: The fault_zone of this Drive.  # noqa: E501
+        :type: list[str]
         """
-        if slot_id is None:
-            raise ValueError("Invalid value for `slot_id`, must not be `None`")  # noqa: E501
 
-        self._slot_id = slot_id
+        self._fault_zone = fault_zone
 
     @property
     def nguid_low(self):
@@ -248,6 +207,31 @@ class Drive(object):
         self._nguid_high = nguid_high
 
     @property
+    def slot_id(self):
+        """Gets the slot_id of this Drive.  # noqa: E501
+
+        dpu slot to which drive is connected  # noqa: E501
+
+        :return: The slot_id of this Drive.  # noqa: E501
+        :rtype: int
+        """
+        return self._slot_id
+
+    @slot_id.setter
+    def slot_id(self, slot_id):
+        """Sets the slot_id of this Drive.
+
+        dpu slot to which drive is connected  # noqa: E501
+
+        :param slot_id: The slot_id of this Drive.  # noqa: E501
+        :type: int
+        """
+        if slot_id is None:
+            raise ValueError("Invalid value for `slot_id`, must not be `None`")  # noqa: E501
+
+        self._slot_id = slot_id
+
+    @property
     def state(self):
         """Gets the state of this Drive.  # noqa: E501
 
@@ -290,67 +274,25 @@ class Drive(object):
         self._plugged = plugged
 
     @property
-    def total_capacity_bytes(self):
-        """Gets the total_capacity_bytes of this Drive.  # noqa: E501
+    def capacity(self):
+        """Gets the capacity of this Drive.  # noqa: E501
 
 
-        :return: The total_capacity_bytes of this Drive.  # noqa: E501
+        :return: The capacity of this Drive.  # noqa: E501
         :rtype: int
         """
-        return self._total_capacity_bytes
+        return self._capacity
 
-    @total_capacity_bytes.setter
-    def total_capacity_bytes(self, total_capacity_bytes):
-        """Sets the total_capacity_bytes of this Drive.
+    @capacity.setter
+    def capacity(self, capacity):
+        """Sets the capacity of this Drive.
 
 
-        :param total_capacity_bytes: The total_capacity_bytes of this Drive.  # noqa: E501
+        :param capacity: The capacity of this Drive.  # noqa: E501
         :type: int
         """
 
-        self._total_capacity_bytes = total_capacity_bytes
-
-    @property
-    def available_capacity_bytes(self):
-        """Gets the available_capacity_bytes of this Drive.  # noqa: E501
-
-
-        :return: The available_capacity_bytes of this Drive.  # noqa: E501
-        :rtype: int
-        """
-        return self._available_capacity_bytes
-
-    @available_capacity_bytes.setter
-    def available_capacity_bytes(self, available_capacity_bytes):
-        """Sets the available_capacity_bytes of this Drive.
-
-
-        :param available_capacity_bytes: The available_capacity_bytes of this Drive.  # noqa: E501
-        :type: int
-        """
-
-        self._available_capacity_bytes = available_capacity_bytes
-
-    @property
-    def volumes(self):
-        """Gets the volumes of this Drive.  # noqa: E501
-
-
-        :return: The volumes of this Drive.  # noqa: E501
-        :rtype: list[Volume]
-        """
-        return self._volumes
-
-    @volumes.setter
-    def volumes(self, volumes):
-        """Sets the volumes of this Drive.
-
-
-        :param volumes: The volumes of this Drive.  # noqa: E501
-        :type: list[Volume]
-        """
-
-        self._volumes = volumes
+        self._capacity = capacity
 
     @property
     def created_at(self):

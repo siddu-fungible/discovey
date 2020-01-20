@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -33,47 +33,47 @@ class TopologydriveApi(object):
             api_client = ApiClient()
         self.api_client = api_client
 
-    def add_drive(self, dpu_id, body_pool_create, **kwargs):  # noqa: E501
-        """Add drive to the specified dpu  # noqa: E501
+    def add_drive(self, dpu_id, body_drive_create, **kwargs):  # noqa: E501
+        """(INTERNAL) Add drive to the specified dpu  # noqa: E501
 
         Add a drive to the specified dpu. The dpu specified by dpu_id MUST already exist  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.add_drive(dpu_id, body_pool_create, async_req=True)
+        >>> thread = api.add_drive(dpu_id, body_drive_create, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
         :param str dpu_id: DPU id (required)
-        :param BodyDriveCreate body_pool_create: (required)
-        :return: ResponseCreateUuid
+        :param BodyDriveCreate body_drive_create: (required)
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('async_req'):
-            return self.add_drive_with_http_info(dpu_id, body_pool_create, **kwargs)  # noqa: E501
+            return self.add_drive_with_http_info(dpu_id, body_drive_create, **kwargs)  # noqa: E501
         else:
-            (data) = self.add_drive_with_http_info(dpu_id, body_pool_create, **kwargs)  # noqa: E501
+            (data) = self.add_drive_with_http_info(dpu_id, body_drive_create, **kwargs)  # noqa: E501
             return data
 
-    def add_drive_with_http_info(self, dpu_id, body_pool_create, **kwargs):  # noqa: E501
-        """Add drive to the specified dpu  # noqa: E501
+    def add_drive_with_http_info(self, dpu_id, body_drive_create, **kwargs):  # noqa: E501
+        """(INTERNAL) Add drive to the specified dpu  # noqa: E501
 
         Add a drive to the specified dpu. The dpu specified by dpu_id MUST already exist  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.add_drive_with_http_info(dpu_id, body_pool_create, async_req=True)
+        >>> thread = api.add_drive_with_http_info(dpu_id, body_drive_create, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
         :param str dpu_id: DPU id (required)
-        :param BodyDriveCreate body_pool_create: (required)
-        :return: ResponseCreateUuid
+        :param BodyDriveCreate body_drive_create: (required)
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['dpu_id', 'body_pool_create']  # noqa: E501
+        all_params = ['dpu_id', 'body_drive_create']  # noqa: E501
         all_params.append('async_req')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -92,10 +92,10 @@ class TopologydriveApi(object):
         if ('dpu_id' not in params or
                 params['dpu_id'] is None):
             raise ValueError("Missing the required parameter `dpu_id` when calling `add_drive`")  # noqa: E501
-        # verify the required parameter 'body_pool_create' is set
-        if ('body_pool_create' not in params or
-                params['body_pool_create'] is None):
-            raise ValueError("Missing the required parameter `body_pool_create` when calling `add_drive`")  # noqa: E501
+        # verify the required parameter 'body_drive_create' is set
+        if ('body_drive_create' not in params or
+                params['body_drive_create'] is None):
+            raise ValueError("Missing the required parameter `body_drive_create` when calling `add_drive`")  # noqa: E501
 
         collection_formats = {}
 
@@ -111,8 +111,8 @@ class TopologydriveApi(object):
         local_var_files = {}
 
         body_params = None
-        if 'body_pool_create' in params:
-            body_params = params['body_pool_create']
+        if 'body_drive_create' in params:
+            body_params = params['body_drive_create']
         # HTTP header `Accept`
         header_params['Accept'] = self.api_client.select_header_accept(
             ['application/json'])  # noqa: E501
@@ -125,14 +125,14 @@ class TopologydriveApi(object):
         auth_settings = ['basicAuth']  # noqa: E501
 
         return self.api_client.call_api(
-            '/topology/{dpu_id}/drives', 'POST',
+            '/topology/dpus/{dpu_id}/drives', 'POST',
             path_params,
             query_params,
             header_params,
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseCreateUuid',  # noqa: E501
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -141,7 +141,7 @@ class TopologydriveApi(object):
             collection_formats=collection_formats)
 
     def delete_drive(self, drive_uuid, **kwargs):  # noqa: E501
-        """delete drive  # noqa: E501
+        """(INTERNAL) delete drive  # noqa: E501
 
         Deletes the drive with specified uuid  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -163,7 +163,7 @@ class TopologydriveApi(object):
             return data
 
     def delete_drive_with_http_info(self, drive_uuid, **kwargs):  # noqa: E501
-        """delete drive  # noqa: E501
+        """(INTERNAL) delete drive  # noqa: E501
 
         Deletes the drive with specified uuid  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -251,7 +251,7 @@ class TopologydriveApi(object):
         :param async_req bool
         :param str drive_uuid: FSC assigned drive UUID (required)
         :param BodyDriveFormat body_drive_format: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -274,7 +274,7 @@ class TopologydriveApi(object):
         :param async_req bool
         :param str drive_uuid: FSC assigned drive UUID (required)
         :param BodyDriveFormat body_drive_format: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -338,7 +338,7 @@ class TopologydriveApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseCreateUuid',  # noqa: E501
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -358,7 +358,7 @@ class TopologydriveApi(object):
         :param async_req bool
         :param str drive_uuid: FSC assigned drive UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: None
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -381,7 +381,7 @@ class TopologydriveApi(object):
         :param async_req bool
         :param str drive_uuid: FSC assigned drive UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: None
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -441,7 +441,7 @@ class TopologydriveApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type=None,  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -450,7 +450,7 @@ class TopologydriveApi(object):
             collection_formats=collection_formats)
 
     def update_drive(self, drive_uuid, body_drive_update, **kwargs):  # noqa: E501
-        """modify drive attributes  # noqa: E501
+        """(INTERNAL) modify drive attributes  # noqa: E501
 
         Modify attributes of an existing drive. An op parameter is used to specify the command  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -473,7 +473,7 @@ class TopologydriveApi(object):
             return data
 
     def update_drive_with_http_info(self, drive_uuid, body_drive_update, **kwargs):  # noqa: E501
-        """modify drive attributes  # noqa: E501
+        """(INTERNAL) modify drive attributes  # noqa: E501
 
         Modify attributes of an existing drive. An op parameter is used to specify the command  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an

@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,93 +31,93 @@ class Dpu(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'dpu_id': 'str',
-        'dpu_name': 'str',
-        'dpu_class': 'str',
-        'parent_id': 'str',
-        'fault_zones': 'list[str]',
+        'uuid': 'str',
+        'name': 'str',
+        'node_class': 'str',
         'mgmt_ip': 'str',
-        'mgmt_ports': 'dict(str, str)',
-        'ip_assignment_dhcp': 'bool',
+        'network_agent': 'str',
         'dataplane_ip': 'str',
         'fpg_num': 'int',
-        'subnet_mask': 'str',
-        'next_hop': 'str',
-        'drives': 'list[BodyDriveCreate]',
+        'storage_agent': 'str',
+        'drives': 'list[Drive]',
+        'fault_zones': 'list[str]',
+        'capacity': 'int',
         'state': 'ResourceState',
+        'available': 'bool',
+        'dp_ip_setup': 'DpIpSetup',
         'additional_fields': 'AdditionalFields',
         'created_at': 'datetime',
         'modified_at': 'datetime'
     }
 
     attribute_map = {
-        'dpu_id': 'dpu_id',
-        'dpu_name': 'dpu_name',
-        'dpu_class': 'dpu_class',
-        'parent_id': 'parent_id',
-        'fault_zones': 'fault_zones',
+        'uuid': 'uuid',
+        'name': 'name',
+        'node_class': 'node_class',
         'mgmt_ip': 'mgmt_ip',
-        'mgmt_ports': 'mgmt_ports',
-        'ip_assignment_dhcp': 'ip_assignment_dhcp',
+        'network_agent': 'network_agent',
         'dataplane_ip': 'dataplane_ip',
         'fpg_num': 'fpg_num',
-        'subnet_mask': 'subnet_mask',
-        'next_hop': 'next_hop',
+        'storage_agent': 'storage_agent',
         'drives': 'drives',
+        'fault_zones': 'fault_zones',
+        'capacity': 'capacity',
         'state': 'state',
+        'available': 'available',
+        'dp_ip_setup': 'dp_ip_setup',
         'additional_fields': 'additional_fields',
         'created_at': 'created_at',
         'modified_at': 'modified_at'
     }
 
-    def __init__(self, dpu_id=None, dpu_name=None, dpu_class=None, parent_id=None, fault_zones=None, mgmt_ip=None, mgmt_ports=None, ip_assignment_dhcp=None, dataplane_ip=None, fpg_num=None, subnet_mask=None, next_hop=None, drives=None, state=None, additional_fields=None, created_at=None, modified_at=None):  # noqa: E501
+    def __init__(self, uuid=None, name=None, node_class=None, mgmt_ip=None, network_agent=None, dataplane_ip=None, fpg_num=None, storage_agent=None, drives=None, fault_zones=None, capacity=None, state=None, available=None, dp_ip_setup=None, additional_fields=None, created_at=None, modified_at=None):  # noqa: E501
         """Dpu - a model defined in Swagger"""  # noqa: E501
 
-        self._dpu_id = None
-        self._dpu_name = None
-        self._dpu_class = None
-        self._parent_id = None
-        self._fault_zones = None
+        self._uuid = None
+        self._name = None
+        self._node_class = None
         self._mgmt_ip = None
-        self._mgmt_ports = None
-        self._ip_assignment_dhcp = None
+        self._network_agent = None
         self._dataplane_ip = None
         self._fpg_num = None
-        self._subnet_mask = None
-        self._next_hop = None
+        self._storage_agent = None
         self._drives = None
+        self._fault_zones = None
+        self._capacity = None
         self._state = None
+        self._available = None
+        self._dp_ip_setup = None
         self._additional_fields = None
         self._created_at = None
         self._modified_at = None
         self.discriminator = None
 
-        self.dpu_id = dpu_id
-        self.dpu_name = dpu_name
-        if dpu_class is not None:
-            self.dpu_class = dpu_class
-        if parent_id is not None:
-            self.parent_id = parent_id
-        if fault_zones is not None:
-            self.fault_zones = fault_zones
+        self.uuid = uuid
+        self.name = name
+        if node_class is not None:
+            self.node_class = node_class
         if mgmt_ip is not None:
             self.mgmt_ip = mgmt_ip
-        if mgmt_ports is not None:
-            self.mgmt_ports = mgmt_ports
-        if ip_assignment_dhcp is not None:
-            self.ip_assignment_dhcp = ip_assignment_dhcp
+        if network_agent is not None:
+            self.network_agent = network_agent
         if dataplane_ip is not None:
             self.dataplane_ip = dataplane_ip
         if fpg_num is not None:
             self.fpg_num = fpg_num
-        if subnet_mask is not None:
-            self.subnet_mask = subnet_mask
-        if next_hop is not None:
-            self.next_hop = next_hop
+        if storage_agent is not None:
+            self.storage_agent = storage_agent
         if drives is not None:
             self.drives = drives
+        if fault_zones is not None:
+            self.fault_zones = fault_zones
+        if capacity is not None:
+            self.capacity = capacity
         if state is not None:
             self.state = state
+        if available is not None:
+            self.available = available
+        if dp_ip_setup is not None:
+            self.dp_ip_setup = dp_ip_setup
         if additional_fields is not None:
             self.additional_fields = additional_fields
         if created_at is not None:
@@ -126,119 +126,75 @@ class Dpu(object):
             self.modified_at = modified_at
 
     @property
-    def dpu_id(self):
-        """Gets the dpu_id of this Dpu.  # noqa: E501
+    def uuid(self):
+        """Gets the uuid of this Dpu.  # noqa: E501
 
         unique id of dpu  # noqa: E501
 
-        :return: The dpu_id of this Dpu.  # noqa: E501
+        :return: The uuid of this Dpu.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_id
+        return self._uuid
 
-    @dpu_id.setter
-    def dpu_id(self, dpu_id):
-        """Sets the dpu_id of this Dpu.
+    @uuid.setter
+    def uuid(self, uuid):
+        """Sets the uuid of this Dpu.
 
         unique id of dpu  # noqa: E501
 
-        :param dpu_id: The dpu_id of this Dpu.  # noqa: E501
+        :param uuid: The uuid of this Dpu.  # noqa: E501
         :type: str
         """
-        if dpu_id is None:
-            raise ValueError("Invalid value for `dpu_id`, must not be `None`")  # noqa: E501
+        if uuid is None:
+            raise ValueError("Invalid value for `uuid`, must not be `None`")  # noqa: E501
 
-        self._dpu_id = dpu_id
+        self._uuid = uuid
 
     @property
-    def dpu_name(self):
-        """Gets the dpu_name of this Dpu.  # noqa: E501
+    def name(self):
+        """Gets the name of this Dpu.  # noqa: E501
 
         Descriptive name of dpu  # noqa: E501
 
-        :return: The dpu_name of this Dpu.  # noqa: E501
+        :return: The name of this Dpu.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_name
+        return self._name
 
-    @dpu_name.setter
-    def dpu_name(self, dpu_name):
-        """Sets the dpu_name of this Dpu.
+    @name.setter
+    def name(self, name):
+        """Sets the name of this Dpu.
 
         Descriptive name of dpu  # noqa: E501
 
-        :param dpu_name: The dpu_name of this Dpu.  # noqa: E501
+        :param name: The name of this Dpu.  # noqa: E501
         :type: str
         """
-        if dpu_name is None:
-            raise ValueError("Invalid value for `dpu_name`, must not be `None`")  # noqa: E501
+        if name is None:
+            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
-        self._dpu_name = dpu_name
+        self._name = name
 
     @property
-    def dpu_class(self):
-        """Gets the dpu_class of this Dpu.  # noqa: E501
+    def node_class(self):
+        """Gets the node_class of this Dpu.  # noqa: E501
 
 
-        :return: The dpu_class of this Dpu.  # noqa: E501
+        :return: The node_class of this Dpu.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_class
+        return self._node_class
 
-    @dpu_class.setter
-    def dpu_class(self, dpu_class):
-        """Sets the dpu_class of this Dpu.
+    @node_class.setter
+    def node_class(self, node_class):
+        """Sets the node_class of this Dpu.
 
 
-        :param dpu_class: The dpu_class of this Dpu.  # noqa: E501
+        :param node_class: The node_class of this Dpu.  # noqa: E501
         :type: str
         """
 
-        self._dpu_class = dpu_class
-
-    @property
-    def parent_id(self):
-        """Gets the parent_id of this Dpu.  # noqa: E501
-
-        id of parent node of this dpu  # noqa: E501
-
-        :return: The parent_id of this Dpu.  # noqa: E501
-        :rtype: str
-        """
-        return self._parent_id
-
-    @parent_id.setter
-    def parent_id(self, parent_id):
-        """Sets the parent_id of this Dpu.
-
-        id of parent node of this dpu  # noqa: E501
-
-        :param parent_id: The parent_id of this Dpu.  # noqa: E501
-        :type: str
-        """
-
-        self._parent_id = parent_id
-
-    @property
-    def fault_zones(self):
-        """Gets the fault_zones of this Dpu.  # noqa: E501
-
-
-        :return: The fault_zones of this Dpu.  # noqa: E501
-        :rtype: list[str]
-        """
-        return self._fault_zones
-
-    @fault_zones.setter
-    def fault_zones(self, fault_zones):
-        """Sets the fault_zones of this Dpu.
-
-
-        :param fault_zones: The fault_zones of this Dpu.  # noqa: E501
-        :type: list[str]
-        """
-
-        self._fault_zones = fault_zones
+        self._node_class = node_class
 
     @property
     def mgmt_ip(self):
@@ -262,46 +218,25 @@ class Dpu(object):
         self._mgmt_ip = mgmt_ip
 
     @property
-    def mgmt_ports(self):
-        """Gets the mgmt_ports of this Dpu.  # noqa: E501
+    def network_agent(self):
+        """Gets the network_agent of this Dpu.  # noqa: E501
 
 
-        :return: The mgmt_ports of this Dpu.  # noqa: E501
-        :rtype: dict(str, str)
+        :return: The network_agent of this Dpu.  # noqa: E501
+        :rtype: str
         """
-        return self._mgmt_ports
+        return self._network_agent
 
-    @mgmt_ports.setter
-    def mgmt_ports(self, mgmt_ports):
-        """Sets the mgmt_ports of this Dpu.
-
-
-        :param mgmt_ports: The mgmt_ports of this Dpu.  # noqa: E501
-        :type: dict(str, str)
-        """
-
-        self._mgmt_ports = mgmt_ports
-
-    @property
-    def ip_assignment_dhcp(self):
-        """Gets the ip_assignment_dhcp of this Dpu.  # noqa: E501
+    @network_agent.setter
+    def network_agent(self, network_agent):
+        """Sets the network_agent of this Dpu.
 
 
-        :return: The ip_assignment_dhcp of this Dpu.  # noqa: E501
-        :rtype: bool
-        """
-        return self._ip_assignment_dhcp
-
-    @ip_assignment_dhcp.setter
-    def ip_assignment_dhcp(self, ip_assignment_dhcp):
-        """Sets the ip_assignment_dhcp of this Dpu.
-
-
-        :param ip_assignment_dhcp: The ip_assignment_dhcp of this Dpu.  # noqa: E501
-        :type: bool
+        :param network_agent: The network_agent of this Dpu.  # noqa: E501
+        :type: str
         """
 
-        self._ip_assignment_dhcp = ip_assignment_dhcp
+        self._network_agent = network_agent
 
     @property
     def dataplane_ip(self):
@@ -346,46 +281,25 @@ class Dpu(object):
         self._fpg_num = fpg_num
 
     @property
-    def subnet_mask(self):
-        """Gets the subnet_mask of this Dpu.  # noqa: E501
+    def storage_agent(self):
+        """Gets the storage_agent of this Dpu.  # noqa: E501
 
 
-        :return: The subnet_mask of this Dpu.  # noqa: E501
+        :return: The storage_agent of this Dpu.  # noqa: E501
         :rtype: str
         """
-        return self._subnet_mask
+        return self._storage_agent
 
-    @subnet_mask.setter
-    def subnet_mask(self, subnet_mask):
-        """Sets the subnet_mask of this Dpu.
+    @storage_agent.setter
+    def storage_agent(self, storage_agent):
+        """Sets the storage_agent of this Dpu.
 
 
-        :param subnet_mask: The subnet_mask of this Dpu.  # noqa: E501
+        :param storage_agent: The storage_agent of this Dpu.  # noqa: E501
         :type: str
         """
 
-        self._subnet_mask = subnet_mask
-
-    @property
-    def next_hop(self):
-        """Gets the next_hop of this Dpu.  # noqa: E501
-
-
-        :return: The next_hop of this Dpu.  # noqa: E501
-        :rtype: str
-        """
-        return self._next_hop
-
-    @next_hop.setter
-    def next_hop(self, next_hop):
-        """Sets the next_hop of this Dpu.
-
-
-        :param next_hop: The next_hop of this Dpu.  # noqa: E501
-        :type: str
-        """
-
-        self._next_hop = next_hop
+        self._storage_agent = storage_agent
 
     @property
     def drives(self):
@@ -393,7 +307,7 @@ class Dpu(object):
 
 
         :return: The drives of this Dpu.  # noqa: E501
-        :rtype: list[BodyDriveCreate]
+        :rtype: list[Drive]
         """
         return self._drives
 
@@ -403,10 +317,52 @@ class Dpu(object):
 
 
         :param drives: The drives of this Dpu.  # noqa: E501
-        :type: list[BodyDriveCreate]
+        :type: list[Drive]
         """
 
         self._drives = drives
+
+    @property
+    def fault_zones(self):
+        """Gets the fault_zones of this Dpu.  # noqa: E501
+
+
+        :return: The fault_zones of this Dpu.  # noqa: E501
+        :rtype: list[str]
+        """
+        return self._fault_zones
+
+    @fault_zones.setter
+    def fault_zones(self, fault_zones):
+        """Sets the fault_zones of this Dpu.
+
+
+        :param fault_zones: The fault_zones of this Dpu.  # noqa: E501
+        :type: list[str]
+        """
+
+        self._fault_zones = fault_zones
+
+    @property
+    def capacity(self):
+        """Gets the capacity of this Dpu.  # noqa: E501
+
+
+        :return: The capacity of this Dpu.  # noqa: E501
+        :rtype: int
+        """
+        return self._capacity
+
+    @capacity.setter
+    def capacity(self, capacity):
+        """Sets the capacity of this Dpu.
+
+
+        :param capacity: The capacity of this Dpu.  # noqa: E501
+        :type: int
+        """
+
+        self._capacity = capacity
 
     @property
     def state(self):
@@ -428,6 +384,48 @@ class Dpu(object):
         """
 
         self._state = state
+
+    @property
+    def available(self):
+        """Gets the available of this Dpu.  # noqa: E501
+
+
+        :return: The available of this Dpu.  # noqa: E501
+        :rtype: bool
+        """
+        return self._available
+
+    @available.setter
+    def available(self, available):
+        """Sets the available of this Dpu.
+
+
+        :param available: The available of this Dpu.  # noqa: E501
+        :type: bool
+        """
+
+        self._available = available
+
+    @property
+    def dp_ip_setup(self):
+        """Gets the dp_ip_setup of this Dpu.  # noqa: E501
+
+
+        :return: The dp_ip_setup of this Dpu.  # noqa: E501
+        :rtype: DpIpSetup
+        """
+        return self._dp_ip_setup
+
+    @dp_ip_setup.setter
+    def dp_ip_setup(self, dp_ip_setup):
+        """Sets the dp_ip_setup of this Dpu.
+
+
+        :param dp_ip_setup: The dp_ip_setup of this Dpu.  # noqa: E501
+        :type: DpIpSetup
+        """
+
+        self._dp_ip_setup = dp_ip_setup
 
     @property
     def additional_fields(self):

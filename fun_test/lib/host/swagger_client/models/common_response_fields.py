@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -44,7 +44,7 @@ class CommonResponseFields(object):
         'warning': 'warning'
     }
 
-    def __init__(self, status=False, message=None, error_message=None, warning=None):  # noqa: E501
+    def __init__(self, status=None, message=None, error_message=None, warning=None):  # noqa: E501
         """CommonResponseFields - a model defined in Swagger"""  # noqa: E501
 
         self._status = None

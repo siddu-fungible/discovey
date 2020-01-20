@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -39,7 +39,9 @@ class BodyVolumeIntentCreate(object):
         'encrypt': 'bool',
         'allow_expansion': 'bool',
         'stripe_count': 'int',
-        'crc_type': 'int',
+        'crc_enabled': 'bool',
+        'is_clone': 'bool',
+        'clone_source_volume_uuid': 'str',
         'additional_fields': 'AdditionalFields'
     }
 
@@ -52,11 +54,13 @@ class BodyVolumeIntentCreate(object):
         'encrypt': 'encrypt',
         'allow_expansion': 'allow_expansion',
         'stripe_count': 'stripe_count',
-        'crc_type': 'crc_type',
+        'crc_enabled': 'crc_enabled',
+        'is_clone': 'is_clone',
+        'clone_source_volume_uuid': 'clone_source_volume_uuid',
         'additional_fields': 'additional_fields'
     }
 
-    def __init__(self, name=None, vol_type=None, capacity=None, compression_effort=None, data_protection=None, encrypt=None, allow_expansion=None, stripe_count=None, crc_type=None, additional_fields=None):  # noqa: E501
+    def __init__(self, name=None, vol_type=None, capacity=None, compression_effort=None, data_protection=None, encrypt=None, allow_expansion=None, stripe_count=None, crc_enabled=None, is_clone=None, clone_source_volume_uuid=None, additional_fields=None):  # noqa: E501
         """BodyVolumeIntentCreate - a model defined in Swagger"""  # noqa: E501
 
         self._name = None
@@ -67,7 +71,9 @@ class BodyVolumeIntentCreate(object):
         self._encrypt = None
         self._allow_expansion = None
         self._stripe_count = None
-        self._crc_type = None
+        self._crc_enabled = None
+        self._is_clone = None
+        self._clone_source_volume_uuid = None
         self._additional_fields = None
         self.discriminator = None
 
@@ -83,8 +89,12 @@ class BodyVolumeIntentCreate(object):
             self.allow_expansion = allow_expansion
         if stripe_count is not None:
             self.stripe_count = stripe_count
-        if crc_type is not None:
-            self.crc_type = crc_type
+        if crc_enabled is not None:
+            self.crc_enabled = crc_enabled
+        if is_clone is not None:
+            self.is_clone = is_clone
+        if clone_source_volume_uuid is not None:
+            self.clone_source_volume_uuid = clone_source_volume_uuid
         if additional_fields is not None:
             self.additional_fields = additional_fields
 
@@ -265,25 +275,67 @@ class BodyVolumeIntentCreate(object):
         self._stripe_count = stripe_count
 
     @property
-    def crc_type(self):
-        """Gets the crc_type of this BodyVolumeIntentCreate.  # noqa: E501
+    def crc_enabled(self):
+        """Gets the crc_enabled of this BodyVolumeIntentCreate.  # noqa: E501
 
 
-        :return: The crc_type of this BodyVolumeIntentCreate.  # noqa: E501
-        :rtype: int
+        :return: The crc_enabled of this BodyVolumeIntentCreate.  # noqa: E501
+        :rtype: bool
         """
-        return self._crc_type
+        return self._crc_enabled
 
-    @crc_type.setter
-    def crc_type(self, crc_type):
-        """Sets the crc_type of this BodyVolumeIntentCreate.
+    @crc_enabled.setter
+    def crc_enabled(self, crc_enabled):
+        """Sets the crc_enabled of this BodyVolumeIntentCreate.
 
 
-        :param crc_type: The crc_type of this BodyVolumeIntentCreate.  # noqa: E501
-        :type: int
+        :param crc_enabled: The crc_enabled of this BodyVolumeIntentCreate.  # noqa: E501
+        :type: bool
         """
 
-        self._crc_type = crc_type
+        self._crc_enabled = crc_enabled
+
+    @property
+    def is_clone(self):
+        """Gets the is_clone of this BodyVolumeIntentCreate.  # noqa: E501
+
+
+        :return: The is_clone of this BodyVolumeIntentCreate.  # noqa: E501
+        :rtype: bool
+        """
+        return self._is_clone
+
+    @is_clone.setter
+    def is_clone(self, is_clone):
+        """Sets the is_clone of this BodyVolumeIntentCreate.
+
+
+        :param is_clone: The is_clone of this BodyVolumeIntentCreate.  # noqa: E501
+        :type: bool
+        """
+
+        self._is_clone = is_clone
+
+    @property
+    def clone_source_volume_uuid(self):
+        """Gets the clone_source_volume_uuid of this BodyVolumeIntentCreate.  # noqa: E501
+
+
+        :return: The clone_source_volume_uuid of this BodyVolumeIntentCreate.  # noqa: E501
+        :rtype: str
+        """
+        return self._clone_source_volume_uuid
+
+    @clone_source_volume_uuid.setter
+    def clone_source_volume_uuid(self, clone_source_volume_uuid):
+        """Sets the clone_source_volume_uuid of this BodyVolumeIntentCreate.
+
+
+        :param clone_source_volume_uuid: The clone_source_volume_uuid of this BodyVolumeIntentCreate.  # noqa: E501
+        :type: str
+        """
+
+        self._clone_source_volume_uuid = clone_source_volume_uuid
 
     @property
     def additional_fields(self):

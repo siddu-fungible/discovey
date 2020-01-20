@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -32,28 +32,23 @@ class SuccessResponseFields(object):
     """
     swagger_types = {
         'status': 'bool',
-        'message': 'str',
-        'warning': 'str'
+        'message': 'str'
     }
 
     attribute_map = {
         'status': 'status',
-        'message': 'message',
-        'warning': 'warning'
+        'message': 'message'
     }
 
-    def __init__(self, status=True, message=None, warning=None):  # noqa: E501
+    def __init__(self, status=True, message=None):  # noqa: E501
         """SuccessResponseFields - a model defined in Swagger"""  # noqa: E501
 
         self._status = None
         self._message = None
-        self._warning = None
         self.discriminator = None
 
         self.status = status
         self.message = message
-        if warning is not None:
-            self.warning = warning
 
     @property
     def status(self):
@@ -100,27 +95,6 @@ class SuccessResponseFields(object):
             raise ValueError("Invalid value for `message`, must not be `None`")  # noqa: E501
 
         self._message = message
-
-    @property
-    def warning(self):
-        """Gets the warning of this SuccessResponseFields.  # noqa: E501
-
-
-        :return: The warning of this SuccessResponseFields.  # noqa: E501
-        :rtype: str
-        """
-        return self._warning
-
-    @warning.setter
-    def warning(self, warning):
-        """Sets the warning of this SuccessResponseFields.
-
-
-        :param warning: The warning of this SuccessResponseFields.  # noqa: E501
-        :type: str
-        """
-
-        self._warning = warning
 
     def to_dict(self):
         """Returns the model properties as a dict"""

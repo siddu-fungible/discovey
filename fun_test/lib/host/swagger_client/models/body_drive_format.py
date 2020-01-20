@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,62 +31,42 @@ class BodyDriveFormat(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'drive_uuid': 'str',
         'dpu_id': 'str',
         'nguid_low': 'int',
         'nguid_high': 'int',
-        'capacity_bytes': 'int'
+        'slot_id': 'int',
+        'fault_zones': 'list[str]',
+        'capacity': 'int'
     }
 
     attribute_map = {
-        'drive_uuid': 'drive_uuid',
         'dpu_id': 'dpu_id',
         'nguid_low': 'nguid_low',
         'nguid_high': 'nguid_high',
-        'capacity_bytes': 'capacity_bytes'
+        'slot_id': 'slot_id',
+        'fault_zones': 'fault_zones',
+        'capacity': 'capacity'
     }
 
-    def __init__(self, drive_uuid=None, dpu_id=None, nguid_low=None, nguid_high=None, capacity_bytes=None):  # noqa: E501
+    def __init__(self, dpu_id=None, nguid_low=None, nguid_high=None, slot_id=None, fault_zones=None, capacity=None):  # noqa: E501
         """BodyDriveFormat - a model defined in Swagger"""  # noqa: E501
 
-        self._drive_uuid = None
         self._dpu_id = None
         self._nguid_low = None
         self._nguid_high = None
-        self._capacity_bytes = None
+        self._slot_id = None
+        self._fault_zones = None
+        self._capacity = None
         self.discriminator = None
 
-        self.drive_uuid = drive_uuid
         self.dpu_id = dpu_id
-        if nguid_low is not None:
-            self.nguid_low = nguid_low
-        if nguid_high is not None:
-            self.nguid_high = nguid_high
-        if capacity_bytes is not None:
-            self.capacity_bytes = capacity_bytes
-
-    @property
-    def drive_uuid(self):
-        """Gets the drive_uuid of this BodyDriveFormat.  # noqa: E501
-
-
-        :return: The drive_uuid of this BodyDriveFormat.  # noqa: E501
-        :rtype: str
-        """
-        return self._drive_uuid
-
-    @drive_uuid.setter
-    def drive_uuid(self, drive_uuid):
-        """Sets the drive_uuid of this BodyDriveFormat.
-
-
-        :param drive_uuid: The drive_uuid of this BodyDriveFormat.  # noqa: E501
-        :type: str
-        """
-        if drive_uuid is None:
-            raise ValueError("Invalid value for `drive_uuid`, must not be `None`")  # noqa: E501
-
-        self._drive_uuid = drive_uuid
+        self.nguid_low = nguid_low
+        self.nguid_high = nguid_high
+        self.slot_id = slot_id
+        if fault_zones is not None:
+            self.fault_zones = fault_zones
+        if capacity is not None:
+            self.capacity = capacity
 
     @property
     def dpu_id(self):
@@ -131,6 +111,8 @@ class BodyDriveFormat(object):
         :param nguid_low: The nguid_low of this BodyDriveFormat.  # noqa: E501
         :type: int
         """
+        if nguid_low is None:
+            raise ValueError("Invalid value for `nguid_low`, must not be `None`")  # noqa: E501
 
         self._nguid_low = nguid_low
 
@@ -152,29 +134,77 @@ class BodyDriveFormat(object):
         :param nguid_high: The nguid_high of this BodyDriveFormat.  # noqa: E501
         :type: int
         """
+        if nguid_high is None:
+            raise ValueError("Invalid value for `nguid_high`, must not be `None`")  # noqa: E501
 
         self._nguid_high = nguid_high
 
     @property
-    def capacity_bytes(self):
-        """Gets the capacity_bytes of this BodyDriveFormat.  # noqa: E501
+    def slot_id(self):
+        """Gets the slot_id of this BodyDriveFormat.  # noqa: E501
 
+        dpu slot to which drive is connected  # noqa: E501
 
-        :return: The capacity_bytes of this BodyDriveFormat.  # noqa: E501
+        :return: The slot_id of this BodyDriveFormat.  # noqa: E501
         :rtype: int
         """
-        return self._capacity_bytes
+        return self._slot_id
 
-    @capacity_bytes.setter
-    def capacity_bytes(self, capacity_bytes):
-        """Sets the capacity_bytes of this BodyDriveFormat.
+    @slot_id.setter
+    def slot_id(self, slot_id):
+        """Sets the slot_id of this BodyDriveFormat.
+
+        dpu slot to which drive is connected  # noqa: E501
+
+        :param slot_id: The slot_id of this BodyDriveFormat.  # noqa: E501
+        :type: int
+        """
+        if slot_id is None:
+            raise ValueError("Invalid value for `slot_id`, must not be `None`")  # noqa: E501
+
+        self._slot_id = slot_id
+
+    @property
+    def fault_zones(self):
+        """Gets the fault_zones of this BodyDriveFormat.  # noqa: E501
 
 
-        :param capacity_bytes: The capacity_bytes of this BodyDriveFormat.  # noqa: E501
+        :return: The fault_zones of this BodyDriveFormat.  # noqa: E501
+        :rtype: list[str]
+        """
+        return self._fault_zones
+
+    @fault_zones.setter
+    def fault_zones(self, fault_zones):
+        """Sets the fault_zones of this BodyDriveFormat.
+
+
+        :param fault_zones: The fault_zones of this BodyDriveFormat.  # noqa: E501
+        :type: list[str]
+        """
+
+        self._fault_zones = fault_zones
+
+    @property
+    def capacity(self):
+        """Gets the capacity of this BodyDriveFormat.  # noqa: E501
+
+
+        :return: The capacity of this BodyDriveFormat.  # noqa: E501
+        :rtype: int
+        """
+        return self._capacity
+
+    @capacity.setter
+    def capacity(self, capacity):
+        """Sets the capacity of this BodyDriveFormat.
+
+
+        :param capacity: The capacity of this BodyDriveFormat.  # noqa: E501
         :type: int
         """
 
-        self._capacity_bytes = capacity_bytes
+        self._capacity = capacity
 
     def to_dict(self):
         """Returns the model properties as a dict"""

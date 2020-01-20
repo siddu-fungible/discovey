@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,14 +31,68 @@ class VolumeStats(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'physical_usage': 'int',
+        'physical_writes': 'int'
     }
 
     attribute_map = {
+        'physical_usage': 'physical_usage',
+        'physical_writes': 'physical_writes'
     }
 
-    def __init__(self):  # noqa: E501
+    def __init__(self, physical_usage=None, physical_writes=None):  # noqa: E501
         """VolumeStats - a model defined in Swagger"""  # noqa: E501
+
+        self._physical_usage = None
+        self._physical_writes = None
         self.discriminator = None
+
+        if physical_usage is not None:
+            self.physical_usage = physical_usage
+        if physical_writes is not None:
+            self.physical_writes = physical_writes
+
+    @property
+    def physical_usage(self):
+        """Gets the physical_usage of this VolumeStats.  # noqa: E501
+
+
+        :return: The physical_usage of this VolumeStats.  # noqa: E501
+        :rtype: int
+        """
+        return self._physical_usage
+
+    @physical_usage.setter
+    def physical_usage(self, physical_usage):
+        """Sets the physical_usage of this VolumeStats.
+
+
+        :param physical_usage: The physical_usage of this VolumeStats.  # noqa: E501
+        :type: int
+        """
+
+        self._physical_usage = physical_usage
+
+    @property
+    def physical_writes(self):
+        """Gets the physical_writes of this VolumeStats.  # noqa: E501
+
+
+        :return: The physical_writes of this VolumeStats.  # noqa: E501
+        :rtype: int
+        """
+        return self._physical_writes
+
+    @physical_writes.setter
+    def physical_writes(self, physical_writes):
+        """Sets the physical_writes of this VolumeStats.
+
+
+        :param physical_writes: The physical_writes of this VolumeStats.  # noqa: E501
+        :type: int
+        """
+
+        self._physical_writes = physical_writes
 
     def to_dict(self):
         """Returns the model properties as a dict"""

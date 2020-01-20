@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -35,6 +35,7 @@ class BodyDriveCreate(object):
         'slot_id': 'int',
         'nguid_low': 'int',
         'nguid_high': 'int',
+        'fault_zones': 'list[str]',
         'state': 'ResourceState'
     }
 
@@ -43,26 +44,28 @@ class BodyDriveCreate(object):
         'slot_id': 'slot_id',
         'nguid_low': 'nguid_low',
         'nguid_high': 'nguid_high',
+        'fault_zones': 'fault_zones',
         'state': 'state'
     }
 
-    def __init__(self, uuid_in=None, slot_id=None, nguid_low=None, nguid_high=None, state=None):  # noqa: E501
+    def __init__(self, uuid_in=None, slot_id=None, nguid_low=None, nguid_high=None, fault_zones=None, state=None):  # noqa: E501
         """BodyDriveCreate - a model defined in Swagger"""  # noqa: E501
 
         self._uuid_in = None
         self._slot_id = None
         self._nguid_low = None
         self._nguid_high = None
+        self._fault_zones = None
         self._state = None
         self.discriminator = None
 
         if uuid_in is not None:
             self.uuid_in = uuid_in
         self.slot_id = slot_id
-        if nguid_low is not None:
-            self.nguid_low = nguid_low
-        if nguid_high is not None:
-            self.nguid_high = nguid_high
+        self.nguid_low = nguid_low
+        self.nguid_high = nguid_high
+        if fault_zones is not None:
+            self.fault_zones = fault_zones
         if state is not None:
             self.state = state
 
@@ -132,6 +135,8 @@ class BodyDriveCreate(object):
         :param nguid_low: The nguid_low of this BodyDriveCreate.  # noqa: E501
         :type: int
         """
+        if nguid_low is None:
+            raise ValueError("Invalid value for `nguid_low`, must not be `None`")  # noqa: E501
 
         self._nguid_low = nguid_low
 
@@ -153,8 +158,31 @@ class BodyDriveCreate(object):
         :param nguid_high: The nguid_high of this BodyDriveCreate.  # noqa: E501
         :type: int
         """
+        if nguid_high is None:
+            raise ValueError("Invalid value for `nguid_high`, must not be `None`")  # noqa: E501
 
         self._nguid_high = nguid_high
+
+    @property
+    def fault_zones(self):
+        """Gets the fault_zones of this BodyDriveCreate.  # noqa: E501
+
+
+        :return: The fault_zones of this BodyDriveCreate.  # noqa: E501
+        :rtype: list[str]
+        """
+        return self._fault_zones
+
+    @fault_zones.setter
+    def fault_zones(self, fault_zones):
+        """Sets the fault_zones of this BodyDriveCreate.
+
+
+        :param fault_zones: The fault_zones of this BodyDriveCreate.  # noqa: E501
+        :type: list[str]
+        """
+
+        self._fault_zones = fault_zones
 
     @property
     def state(self):

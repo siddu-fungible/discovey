@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -31,10 +31,9 @@ class BodyDpuCreate(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'dpu_id': 'str',
-        'dpu_name': 'str',
+        'node_id': 'str',
+        'name': 'str',
         'dpu_class': 'str',
-        'parent_id': 'str',
         'fault_zones': 'list[str]',
         'mgmt_ip': 'str',
         'mgmt_ports': 'dict(str, str)',
@@ -44,15 +43,13 @@ class BodyDpuCreate(object):
         'fpg_num': 'int',
         'subnet_mask': 'str',
         'next_hop': 'str',
-        'drives': 'list[BodyDriveCreate]',
-        'state': 'ResourceState'
+        'drives': 'list[Drive]'
     }
 
     attribute_map = {
-        'dpu_id': 'dpu_id',
-        'dpu_name': 'dpu_name',
+        'node_id': 'node_id',
+        'name': 'name',
         'dpu_class': 'dpu_class',
-        'parent_id': 'parent_id',
         'fault_zones': 'fault_zones',
         'mgmt_ip': 'mgmt_ip',
         'mgmt_ports': 'mgmt_ports',
@@ -62,17 +59,15 @@ class BodyDpuCreate(object):
         'fpg_num': 'fpg_num',
         'subnet_mask': 'subnet_mask',
         'next_hop': 'next_hop',
-        'drives': 'drives',
-        'state': 'state'
+        'drives': 'drives'
     }
 
-    def __init__(self, dpu_id=None, dpu_name=None, dpu_class=None, parent_id=None, fault_zones=None, mgmt_ip=None, mgmt_ports=None, disable_add_alert=None, ip_assignment_dhcp=None, dataplane_ip=None, fpg_num=None, subnet_mask=None, next_hop=None, drives=None, state=None):  # noqa: E501
+    def __init__(self, node_id=None, name=None, dpu_class=None, fault_zones=None, mgmt_ip=None, mgmt_ports=None, disable_add_alert=None, ip_assignment_dhcp=None, dataplane_ip=None, fpg_num=None, subnet_mask=None, next_hop=None, drives=None):  # noqa: E501
         """BodyDpuCreate - a model defined in Swagger"""  # noqa: E501
 
-        self._dpu_id = None
-        self._dpu_name = None
+        self._node_id = None
+        self._name = None
         self._dpu_class = None
-        self._parent_id = None
         self._fault_zones = None
         self._mgmt_ip = None
         self._mgmt_ports = None
@@ -83,22 +78,17 @@ class BodyDpuCreate(object):
         self._subnet_mask = None
         self._next_hop = None
         self._drives = None
-        self._state = None
         self.discriminator = None
 
-        self.dpu_id = dpu_id
-        if dpu_name is not None:
-            self.dpu_name = dpu_name
+        self.node_id = node_id
+        if name is not None:
+            self.name = name
         if dpu_class is not None:
             self.dpu_class = dpu_class
-        if parent_id is not None:
-            self.parent_id = parent_id
         if fault_zones is not None:
             self.fault_zones = fault_zones
-        if mgmt_ip is not None:
-            self.mgmt_ip = mgmt_ip
-        if mgmt_ports is not None:
-            self.mgmt_ports = mgmt_ports
+        self.mgmt_ip = mgmt_ip
+        self.mgmt_ports = mgmt_ports
         if disable_add_alert is not None:
             self.disable_add_alert = disable_add_alert
         if ip_assignment_dhcp is not None:
@@ -113,54 +103,52 @@ class BodyDpuCreate(object):
             self.next_hop = next_hop
         if drives is not None:
             self.drives = drives
-        if state is not None:
-            self.state = state
 
     @property
-    def dpu_id(self):
-        """Gets the dpu_id of this BodyDpuCreate.  # noqa: E501
+    def node_id(self):
+        """Gets the node_id of this BodyDpuCreate.  # noqa: E501
 
         unique id of dpu to be added  # noqa: E501
 
-        :return: The dpu_id of this BodyDpuCreate.  # noqa: E501
+        :return: The node_id of this BodyDpuCreate.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_id
+        return self._node_id
 
-    @dpu_id.setter
-    def dpu_id(self, dpu_id):
-        """Sets the dpu_id of this BodyDpuCreate.
+    @node_id.setter
+    def node_id(self, node_id):
+        """Sets the node_id of this BodyDpuCreate.
 
         unique id of dpu to be added  # noqa: E501
 
-        :param dpu_id: The dpu_id of this BodyDpuCreate.  # noqa: E501
+        :param node_id: The node_id of this BodyDpuCreate.  # noqa: E501
         :type: str
         """
-        if dpu_id is None:
-            raise ValueError("Invalid value for `dpu_id`, must not be `None`")  # noqa: E501
+        if node_id is None:
+            raise ValueError("Invalid value for `node_id`, must not be `None`")  # noqa: E501
 
-        self._dpu_id = dpu_id
+        self._node_id = node_id
 
     @property
-    def dpu_name(self):
-        """Gets the dpu_name of this BodyDpuCreate.  # noqa: E501
+    def name(self):
+        """Gets the name of this BodyDpuCreate.  # noqa: E501
 
 
-        :return: The dpu_name of this BodyDpuCreate.  # noqa: E501
+        :return: The name of this BodyDpuCreate.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_name
+        return self._name
 
-    @dpu_name.setter
-    def dpu_name(self, dpu_name):
-        """Sets the dpu_name of this BodyDpuCreate.
+    @name.setter
+    def name(self, name):
+        """Sets the name of this BodyDpuCreate.
 
 
-        :param dpu_name: The dpu_name of this BodyDpuCreate.  # noqa: E501
+        :param name: The name of this BodyDpuCreate.  # noqa: E501
         :type: str
         """
 
-        self._dpu_name = dpu_name
+        self._name = name
 
     @property
     def dpu_class(self):
@@ -182,29 +170,6 @@ class BodyDpuCreate(object):
         """
 
         self._dpu_class = dpu_class
-
-    @property
-    def parent_id(self):
-        """Gets the parent_id of this BodyDpuCreate.  # noqa: E501
-
-        id of parent node of this node  # noqa: E501
-
-        :return: The parent_id of this BodyDpuCreate.  # noqa: E501
-        :rtype: str
-        """
-        return self._parent_id
-
-    @parent_id.setter
-    def parent_id(self, parent_id):
-        """Sets the parent_id of this BodyDpuCreate.
-
-        id of parent node of this node  # noqa: E501
-
-        :param parent_id: The parent_id of this BodyDpuCreate.  # noqa: E501
-        :type: str
-        """
-
-        self._parent_id = parent_id
 
     @property
     def fault_zones(self):
@@ -245,6 +210,8 @@ class BodyDpuCreate(object):
         :param mgmt_ip: The mgmt_ip of this BodyDpuCreate.  # noqa: E501
         :type: str
         """
+        if mgmt_ip is None:
+            raise ValueError("Invalid value for `mgmt_ip`, must not be `None`")  # noqa: E501
 
         self._mgmt_ip = mgmt_ip
 
@@ -266,6 +233,8 @@ class BodyDpuCreate(object):
         :param mgmt_ports: The mgmt_ports of this BodyDpuCreate.  # noqa: E501
         :type: dict(str, str)
         """
+        if mgmt_ports is None:
+            raise ValueError("Invalid value for `mgmt_ports`, must not be `None`")  # noqa: E501
 
         self._mgmt_ports = mgmt_ports
 
@@ -401,7 +370,7 @@ class BodyDpuCreate(object):
 
 
         :return: The drives of this BodyDpuCreate.  # noqa: E501
-        :rtype: list[BodyDriveCreate]
+        :rtype: list[Drive]
         """
         return self._drives
 
@@ -411,31 +380,10 @@ class BodyDpuCreate(object):
 
 
         :param drives: The drives of this BodyDpuCreate.  # noqa: E501
-        :type: list[BodyDriveCreate]
+        :type: list[Drive]
         """
 
         self._drives = drives
-
-    @property
-    def state(self):
-        """Gets the state of this BodyDpuCreate.  # noqa: E501
-
-
-        :return: The state of this BodyDpuCreate.  # noqa: E501
-        :rtype: ResourceState
-        """
-        return self._state
-
-    @state.setter
-    def state(self, state):
-        """Sets the state of this BodyDpuCreate.
-
-
-        :param state: The state of this BodyDpuCreate.  # noqa: E501
-        :type: ResourceState
-        """
-
-        self._state = state
 
     def to_dict(self):
         """Returns the model properties as a dict"""

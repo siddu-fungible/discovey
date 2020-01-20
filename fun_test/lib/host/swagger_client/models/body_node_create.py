@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -32,10 +32,10 @@ class BodyNodeCreate(object):
     """
     swagger_types = {
         'node_id': 'str',
+        'fault_zones': 'list[str]',
         'name': 'str',
         'node_class': 'str',
-        'parent_id': 'str',
-        'fault_zones': 'list[str]',
+        'parent': 'str',
         'mgmt_ip': 'str',
         'mgmt_ports': 'dict(str, str)',
         'additional_fields': 'AdditionalFields'
@@ -43,37 +43,37 @@ class BodyNodeCreate(object):
 
     attribute_map = {
         'node_id': 'node_id',
+        'fault_zones': 'fault_zones',
         'name': 'name',
         'node_class': 'node_class',
-        'parent_id': 'parent_id',
-        'fault_zones': 'fault_zones',
+        'parent': 'parent',
         'mgmt_ip': 'mgmt_ip',
         'mgmt_ports': 'mgmt_ports',
         'additional_fields': 'additional_fields'
     }
 
-    def __init__(self, node_id=None, name=None, node_class=None, parent_id=None, fault_zones=None, mgmt_ip=None, mgmt_ports=None, additional_fields=None):  # noqa: E501
+    def __init__(self, node_id=None, fault_zones=None, name=None, node_class=None, parent=None, mgmt_ip=None, mgmt_ports=None, additional_fields=None):  # noqa: E501
         """BodyNodeCreate - a model defined in Swagger"""  # noqa: E501
 
         self._node_id = None
+        self._fault_zones = None
         self._name = None
         self._node_class = None
-        self._parent_id = None
-        self._fault_zones = None
+        self._parent = None
         self._mgmt_ip = None
         self._mgmt_ports = None
         self._additional_fields = None
         self.discriminator = None
 
         self.node_id = node_id
+        if fault_zones is not None:
+            self.fault_zones = fault_zones
         if name is not None:
             self.name = name
         if node_class is not None:
             self.node_class = node_class
-        if parent_id is not None:
-            self.parent_id = parent_id
-        if fault_zones is not None:
-            self.fault_zones = fault_zones
+        if parent is not None:
+            self.parent = parent
         if mgmt_ip is not None:
             self.mgmt_ip = mgmt_ip
         if mgmt_ports is not None:
@@ -105,6 +105,27 @@ class BodyNodeCreate(object):
             raise ValueError("Invalid value for `node_id`, must not be `None`")  # noqa: E501
 
         self._node_id = node_id
+
+    @property
+    def fault_zones(self):
+        """Gets the fault_zones of this BodyNodeCreate.  # noqa: E501
+
+
+        :return: The fault_zones of this BodyNodeCreate.  # noqa: E501
+        :rtype: list[str]
+        """
+        return self._fault_zones
+
+    @fault_zones.setter
+    def fault_zones(self, fault_zones):
+        """Sets the fault_zones of this BodyNodeCreate.
+
+
+        :param fault_zones: The fault_zones of this BodyNodeCreate.  # noqa: E501
+        :type: list[str]
+        """
+
+        self._fault_zones = fault_zones
 
     @property
     def name(self):
@@ -149,48 +170,27 @@ class BodyNodeCreate(object):
         self._node_class = node_class
 
     @property
-    def parent_id(self):
-        """Gets the parent_id of this BodyNodeCreate.  # noqa: E501
+    def parent(self):
+        """Gets the parent of this BodyNodeCreate.  # noqa: E501
 
         id of parent node of this node  # noqa: E501
 
-        :return: The parent_id of this BodyNodeCreate.  # noqa: E501
+        :return: The parent of this BodyNodeCreate.  # noqa: E501
         :rtype: str
         """
-        return self._parent_id
+        return self._parent
 
-    @parent_id.setter
-    def parent_id(self, parent_id):
-        """Sets the parent_id of this BodyNodeCreate.
+    @parent.setter
+    def parent(self, parent):
+        """Sets the parent of this BodyNodeCreate.
 
         id of parent node of this node  # noqa: E501
 
-        :param parent_id: The parent_id of this BodyNodeCreate.  # noqa: E501
+        :param parent: The parent of this BodyNodeCreate.  # noqa: E501
         :type: str
         """
 
-        self._parent_id = parent_id
-
-    @property
-    def fault_zones(self):
-        """Gets the fault_zones of this BodyNodeCreate.  # noqa: E501
-
-
-        :return: The fault_zones of this BodyNodeCreate.  # noqa: E501
-        :rtype: list[str]
-        """
-        return self._fault_zones
-
-    @fault_zones.setter
-    def fault_zones(self, fault_zones):
-        """Sets the fault_zones of this BodyNodeCreate.
-
-
-        :param fault_zones: The fault_zones of this BodyNodeCreate.  # noqa: E501
-        :type: list[str]
-        """
-
-        self._fault_zones = fault_zones
+        self._parent = parent
 
     @property
     def mgmt_ip(self):

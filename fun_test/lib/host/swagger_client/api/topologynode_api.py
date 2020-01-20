@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -44,7 +44,7 @@ class TopologynodeApi(object):
 
         :param async_req bool
         :param BodyNodeCreate body_node_create: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuidString
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -66,7 +66,7 @@ class TopologynodeApi(object):
 
         :param async_req bool
         :param BodyNodeCreate body_node_create: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuidString
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -124,7 +124,213 @@ class TopologynodeApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseCreateUuid',  # noqa: E501
+            response_type='ResponseDataWithCreateUuidString',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def add_node_dpu(self, node_id, body_dpu_create, **kwargs):  # noqa: E501
+        """(INTERNAL) Add a dpu to a node  # noqa: E501
+
+        Add a new dpu to a node  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.add_node_dpu(node_id, body_dpu_create, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :param BodyDpuCreate body_dpu_create: (required)
+        :return: ResponseDataEmpty
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.add_node_dpu_with_http_info(node_id, body_dpu_create, **kwargs)  # noqa: E501
+        else:
+            (data) = self.add_node_dpu_with_http_info(node_id, body_dpu_create, **kwargs)  # noqa: E501
+            return data
+
+    def add_node_dpu_with_http_info(self, node_id, body_dpu_create, **kwargs):  # noqa: E501
+        """(INTERNAL) Add a dpu to a node  # noqa: E501
+
+        Add a new dpu to a node  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.add_node_dpu_with_http_info(node_id, body_dpu_create, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :param BodyDpuCreate body_dpu_create: (required)
+        :return: ResponseDataEmpty
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['node_id', 'body_dpu_create']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method add_node_dpu" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'node_id' is set
+        if ('node_id' not in params or
+                params['node_id'] is None):
+            raise ValueError("Missing the required parameter `node_id` when calling `add_node_dpu`")  # noqa: E501
+        # verify the required parameter 'body_dpu_create' is set
+        if ('body_dpu_create' not in params or
+                params['body_dpu_create'] is None):
+            raise ValueError("Missing the required parameter `body_dpu_create` when calling `add_node_dpu`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'node_id' in params:
+            path_params['node_id'] = params['node_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body_dpu_create' in params:
+            body_params = params['body_dpu_create']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/nodes/{node_id}/dpus', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataEmpty',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def delete_dpu(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) delete dpu  # noqa: E501
+
+        Deletes the dpu with specified id  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.delete_dpu(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.delete_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.delete_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+            return data
+
+    def delete_dpu_with_http_info(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) delete dpu  # noqa: E501
+
+        Deletes the dpu with specified id  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.delete_dpu_with_http_info(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dpu_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method delete_dpu" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dpu_id' is set
+        if ('dpu_id' not in params or
+                params['dpu_id'] is None):
+            raise ValueError("Missing the required parameter `dpu_id` when calling `delete_dpu`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dpu_id' in params:
+            path_params['dpu_id'] = params['dpu_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/dpus/{dpu_id}', 'DELETE',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -231,6 +437,307 @@ class TopologynodeApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def download_node_specific_logs(self, node_id, **kwargs):  # noqa: E501
+        """download node specific logs  # noqa: E501
+
+        Returns node logs  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.download_node_specific_logs(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: file
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.download_node_specific_logs_with_http_info(node_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.download_node_specific_logs_with_http_info(node_id, **kwargs)  # noqa: E501
+            return data
+
+    def download_node_specific_logs_with_http_info(self, node_id, **kwargs):  # noqa: E501
+        """download node specific logs  # noqa: E501
+
+        Returns node logs  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.download_node_specific_logs_with_http_info(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: file
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['node_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method download_node_specific_logs" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'node_id' is set
+        if ('node_id' not in params or
+                params['node_id'] is None):
+            raise ValueError("Missing the required parameter `node_id` when calling `download_node_specific_logs`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'node_id' in params:
+            path_params['node_id'] = params['node_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/zip'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/nodes/{node_id}/logs/download', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='file',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def dpu_download_logs(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) download dpu specific logs  # noqa: E501
+
+        Returns dpu logs  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.dpu_download_logs(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: file
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.dpu_download_logs_with_http_info(dpu_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.dpu_download_logs_with_http_info(dpu_id, **kwargs)  # noqa: E501
+            return data
+
+    def dpu_download_logs_with_http_info(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) download dpu specific logs  # noqa: E501
+
+        Returns dpu logs  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.dpu_download_logs_with_http_info(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: file
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dpu_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method dpu_download_logs" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dpu_id' is set
+        if ('dpu_id' not in params or
+                params['dpu_id'] is None):
+            raise ValueError("Missing the required parameter `dpu_id` when calling `dpu_download_logs`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dpu_id' in params:
+            path_params['dpu_id'] = params['dpu_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/zip'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/dpus/{dpu_id}/logs/download', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='file',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def get_dpu(self, dpu_id, **kwargs):  # noqa: E501
+        """get dpu properties/single property  # noqa: E501
+
+        Returns dpu properties for specified dpu id. If field is specified, returns only the specified field property  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_dpu(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :param str field: Specific field name of object attribute to retrieve
+        :return: ResponseDataWithFreeformObject
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.get_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.get_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+            return data
+
+    def get_dpu_with_http_info(self, dpu_id, **kwargs):  # noqa: E501
+        """get dpu properties/single property  # noqa: E501
+
+        Returns dpu properties for specified dpu id. If field is specified, returns only the specified field property  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_dpu_with_http_info(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :param str field: Specific field name of object attribute to retrieve
+        :return: ResponseDataWithFreeformObject
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dpu_id', 'field']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_dpu" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dpu_id' is set
+        if ('dpu_id' not in params or
+                params['dpu_id'] is None):
+            raise ValueError("Missing the required parameter `dpu_id` when calling `get_dpu`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dpu_id' in params:
+            path_params['dpu_id'] = params['dpu_id']  # noqa: E501
+
+        query_params = []
+        if 'field' in params:
+            query_params.append(('field', params['field']))  # noqa: E501
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/dpus/{dpu_id}', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def get_node(self, node_id, **kwargs):  # noqa: E501
         """get node properties/single property  # noqa: E501
 
@@ -243,7 +750,7 @@ class TopologynodeApi(object):
         :param async_req bool
         :param str node_id: Node id (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -266,7 +773,7 @@ class TopologynodeApi(object):
         :param async_req bool
         :param str node_id: Node id (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -326,7 +833,7 @@ class TopologynodeApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseDataWithFreeformObjects',  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -334,40 +841,246 @@ class TopologynodeApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
-    def node_download_logs(self, node_id, **kwargs):  # noqa: E501
-        """download node specific logs  # noqa: E501
+    def replace_node(self, node_id, body_node_create, **kwargs):  # noqa: E501
+        """modify node attributes  # noqa: E501
 
-        Returns node logs  # noqa: E501
+        Modify attributes of an existing node. An op parameter is used to specify the command  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.node_download_logs(node_id, async_req=True)
+        >>> thread = api.replace_node(node_id, body_node_create, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
         :param str node_id: Node id (required)
-        :return: file
+        :param BodyNodeCreate body_node_create: (required)
+        :return: SuccessResponseFields
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('async_req'):
-            return self.node_download_logs_with_http_info(node_id, **kwargs)  # noqa: E501
+            return self.replace_node_with_http_info(node_id, body_node_create, **kwargs)  # noqa: E501
         else:
-            (data) = self.node_download_logs_with_http_info(node_id, **kwargs)  # noqa: E501
+            (data) = self.replace_node_with_http_info(node_id, body_node_create, **kwargs)  # noqa: E501
             return data
 
-    def node_download_logs_with_http_info(self, node_id, **kwargs):  # noqa: E501
-        """download node specific logs  # noqa: E501
+    def replace_node_with_http_info(self, node_id, body_node_create, **kwargs):  # noqa: E501
+        """modify node attributes  # noqa: E501
 
-        Returns node logs  # noqa: E501
+        Modify attributes of an existing node. An op parameter is used to specify the command  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.node_download_logs_with_http_info(node_id, async_req=True)
+        >>> thread = api.replace_node_with_http_info(node_id, body_node_create, async_req=True)
         >>> result = thread.get()
 
         :param async_req bool
         :param str node_id: Node id (required)
-        :return: file
+        :param BodyNodeCreate body_node_create: (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['node_id', 'body_node_create']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method replace_node" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'node_id' is set
+        if ('node_id' not in params or
+                params['node_id'] is None):
+            raise ValueError("Missing the required parameter `node_id` when calling `replace_node`")  # noqa: E501
+        # verify the required parameter 'body_node_create' is set
+        if ('body_node_create' not in params or
+                params['body_node_create'] is None):
+            raise ValueError("Missing the required parameter `body_node_create` when calling `replace_node`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'node_id' in params:
+            path_params['node_id'] = params['node_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body_node_create' in params:
+            body_params = params['body_node_create']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/nodes/{node_id}', 'PUT',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def shutdown_dpu(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) Shut down a dpu  # noqa: E501
+
+        Shutdown a topology dpu  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.shutdown_dpu(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.shutdown_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.shutdown_dpu_with_http_info(dpu_id, **kwargs)  # noqa: E501
+            return data
+
+    def shutdown_dpu_with_http_info(self, dpu_id, **kwargs):  # noqa: E501
+        """(INTERNAL) Shut down a dpu  # noqa: E501
+
+        Shutdown a topology dpu  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.shutdown_dpu_with_http_info(dpu_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dpu_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method shutdown_dpu" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dpu_id' is set
+        if ('dpu_id' not in params or
+                params['dpu_id'] is None):
+            raise ValueError("Missing the required parameter `dpu_id` when calling `shutdown_dpu`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dpu_id' in params:
+            path_params['dpu_id'] = params['dpu_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/dpus/{dpu_id}/shutdown', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def shutdown_node(self, node_id, **kwargs):  # noqa: E501
+        """Shut down a node  # noqa: E501
+
+        Shutdown a topology node. dpus in this node will also be affected  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.shutdown_node(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.shutdown_node_with_http_info(node_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.shutdown_node_with_http_info(node_id, **kwargs)  # noqa: E501
+            return data
+
+    def shutdown_node_with_http_info(self, node_id, **kwargs):  # noqa: E501
+        """Shut down a node  # noqa: E501
+
+        Shutdown a topology node. dpus in this node will also be affected  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.shutdown_node_with_http_info(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: SuccessResponseFields
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -383,14 +1096,14 @@ class TopologynodeApi(object):
             if key not in all_params:
                 raise TypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method node_download_logs" % key
+                    " to method shutdown_node" % key
                 )
             params[key] = val
         del params['kwargs']
         # verify the required parameter 'node_id' is set
         if ('node_id' not in params or
                 params['node_id'] is None):
-            raise ValueError("Missing the required parameter `node_id` when calling `node_download_logs`")  # noqa: E501
+            raise ValueError("Missing the required parameter `node_id` when calling `shutdown_node`")  # noqa: E501
 
         collection_formats = {}
 
@@ -408,7 +1121,7 @@ class TopologynodeApi(object):
         body_params = None
         # HTTP header `Accept`
         header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/zip'])  # noqa: E501
+            ['application/json'])  # noqa: E501
 
         # HTTP header `Content-Type`
         header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
@@ -418,14 +1131,121 @@ class TopologynodeApi(object):
         auth_settings = ['basicAuth']  # noqa: E501
 
         return self.api_client.call_api(
-            '/topology/nodes/{node_id}/logs/download', 'GET',
+            '/topology/nodes/{node_id}/shutdown', 'POST',
             path_params,
             query_params,
             header_params,
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='file',  # noqa: E501
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def update_dpu(self, dpu_id, body_node_update, **kwargs):  # noqa: E501
+        """modify node attributes  # noqa: E501
+
+        Modify attributes of an existing node. An op parameter is used to specify the command  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.update_dpu(dpu_id, body_node_update, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :param BodyNodeUpdate body_node_update: (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.update_dpu_with_http_info(dpu_id, body_node_update, **kwargs)  # noqa: E501
+        else:
+            (data) = self.update_dpu_with_http_info(dpu_id, body_node_update, **kwargs)  # noqa: E501
+            return data
+
+    def update_dpu_with_http_info(self, dpu_id, body_node_update, **kwargs):  # noqa: E501
+        """modify node attributes  # noqa: E501
+
+        Modify attributes of an existing node. An op parameter is used to specify the command  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.update_dpu_with_http_info(dpu_id, body_node_update, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dpu_id: DPU id (required)
+        :param BodyNodeUpdate body_node_update: (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dpu_id', 'body_node_update']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method update_dpu" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dpu_id' is set
+        if ('dpu_id' not in params or
+                params['dpu_id'] is None):
+            raise ValueError("Missing the required parameter `dpu_id` when calling `update_dpu`")  # noqa: E501
+        # verify the required parameter 'body_node_update' is set
+        if ('body_node_update' not in params or
+                params['body_node_update'] is None):
+            raise ValueError("Missing the required parameter `body_node_update` when calling `update_dpu`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dpu_id' in params:
+            path_params['dpu_id'] = params['dpu_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body_node_update' in params:
+            body_params = params['body_node_update']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/dpus/{dpu_id}', 'PATCH',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -445,7 +1265,7 @@ class TopologynodeApi(object):
         :param async_req bool
         :param str node_id: Node id (required)
         :param BodyNodeUpdate body_node_update: (required)
-        :return: None
+        :return: SuccessResponseFields
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -468,7 +1288,7 @@ class TopologynodeApi(object):
         :param async_req bool
         :param str node_id: Node id (required)
         :param BodyNodeUpdate body_node_update: (required)
-        :return: None
+        :return: SuccessResponseFields
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -532,7 +1352,207 @@ class TopologynodeApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type=None,  # noqa: E501
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def update_node_software(self, node_id, **kwargs):  # noqa: E501
+        """Update software on a node  # noqa: E501
+
+        Software update  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.update_node_software(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :param file file: The file to upload.
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.update_node_software_with_http_info(node_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.update_node_software_with_http_info(node_id, **kwargs)  # noqa: E501
+            return data
+
+    def update_node_software_with_http_info(self, node_id, **kwargs):  # noqa: E501
+        """Update software on a node  # noqa: E501
+
+        Software update  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.update_node_software_with_http_info(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :param file file: The file to upload.
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['node_id', 'file']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method update_node_software" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'node_id' is set
+        if ('node_id' not in params or
+                params['node_id'] is None):
+            raise ValueError("Missing the required parameter `node_id` when calling `update_node_software`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'node_id' in params:
+            path_params['node_id'] = params['node_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+        if 'file' in params:
+            local_var_files['file'] = params['file']  # noqa: E501
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['multipart/form-data'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/nodes/{node_id}/upload', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def upgrade_node_status(self, node_id, **kwargs):  # noqa: E501
+        """(INTERNAL) status of node software upgrade  # noqa: E501
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.upgrade_node_status(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: ResponseDataWithUpgradeStatus
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.upgrade_node_status_with_http_info(node_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.upgrade_node_status_with_http_info(node_id, **kwargs)  # noqa: E501
+            return data
+
+    def upgrade_node_status_with_http_info(self, node_id, **kwargs):  # noqa: E501
+        """(INTERNAL) status of node software upgrade  # noqa: E501
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.upgrade_node_status_with_http_info(node_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str node_id: Node id (required)
+        :return: ResponseDataWithUpgradeStatus
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['node_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method upgrade_node_status" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'node_id' is set
+        if ('node_id' not in params or
+                params['node_id'] is None):
+            raise ValueError("Missing the required parameter `node_id` when calling `upgrade_node_status`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'node_id' in params:
+            path_params['node_id'] = params['node_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/topology/nodes/{node_id}/upgrade_status', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithUpgradeStatus',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),

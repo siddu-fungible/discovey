@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -42,7 +42,10 @@ class Volume(object):
         'zip_effort': 'ZipEffort',
         'allow_expansion': 'bool',
         'stripe_count': 'int',
-        'crc_type': 'int',
+        'crc_enabled': 'bool',
+        'crc_type': 'str',
+        'is_clone': 'bool',
+        'clone_source_volume_uuid': 'str',
         'state': 'ResourceState',
         'rebuild_state': 'RebuildState',
         'rebuild_percent': 'int',
@@ -68,7 +71,10 @@ class Volume(object):
         'zip_effort': 'zip_effort',
         'allow_expansion': 'allow_expansion',
         'stripe_count': 'stripe_count',
+        'crc_enabled': 'crc_enabled',
         'crc_type': 'crc_type',
+        'is_clone': 'is_clone',
+        'clone_source_volume_uuid': 'clone_source_volume_uuid',
         'state': 'state',
         'rebuild_state': 'rebuild_state',
         'rebuild_percent': 'rebuild_percent',
@@ -82,7 +88,7 @@ class Volume(object):
         'modified_at': 'modified_at'
     }
 
-    def __init__(self, name=None, uuid=None, vol_type=None, pool=None, dpu=None, capacity=None, compress=None, encrypt=None, zip_effort=None, allow_expansion=None, stripe_count=None, crc_type=None, state=None, rebuild_state=None, rebuild_percent=None, spare_vol=None, ports=None, src_vols=None, stats=None, physical_capacity=None, additional_fields=None, created_at=None, modified_at=None):  # noqa: E501
+    def __init__(self, name=None, uuid=None, vol_type=None, pool=None, dpu=None, capacity=None, compress=None, encrypt=None, zip_effort=None, allow_expansion=None, stripe_count=None, crc_enabled=None, crc_type='nocrc', is_clone=None, clone_source_volume_uuid=None, state=None, rebuild_state=None, rebuild_percent=None, spare_vol=None, ports=None, src_vols=None, stats=None, physical_capacity=None, additional_fields=None, created_at=None, modified_at=None):  # noqa: E501
         """Volume - a model defined in Swagger"""  # noqa: E501
 
         self._name = None
@@ -96,7 +102,10 @@ class Volume(object):
         self._zip_effort = None
         self._allow_expansion = None
         self._stripe_count = None
+        self._crc_enabled = None
         self._crc_type = None
+        self._is_clone = None
+        self._clone_source_volume_uuid = None
         self._state = None
         self._rebuild_state = None
         self._rebuild_percent = None
@@ -129,8 +138,14 @@ class Volume(object):
             self.allow_expansion = allow_expansion
         if stripe_count is not None:
             self.stripe_count = stripe_count
+        if crc_enabled is not None:
+            self.crc_enabled = crc_enabled
         if crc_type is not None:
             self.crc_type = crc_type
+        if is_clone is not None:
+            self.is_clone = is_clone
+        if clone_source_volume_uuid is not None:
+            self.clone_source_volume_uuid = clone_source_volume_uuid
         if state is not None:
             self.state = state
         if rebuild_state is not None:
@@ -395,12 +410,33 @@ class Volume(object):
         self._stripe_count = stripe_count
 
     @property
+    def crc_enabled(self):
+        """Gets the crc_enabled of this Volume.  # noqa: E501
+
+
+        :return: The crc_enabled of this Volume.  # noqa: E501
+        :rtype: bool
+        """
+        return self._crc_enabled
+
+    @crc_enabled.setter
+    def crc_enabled(self, crc_enabled):
+        """Sets the crc_enabled of this Volume.
+
+
+        :param crc_enabled: The crc_enabled of this Volume.  # noqa: E501
+        :type: bool
+        """
+
+        self._crc_enabled = crc_enabled
+
+    @property
     def crc_type(self):
         """Gets the crc_type of this Volume.  # noqa: E501
 
 
         :return: The crc_type of this Volume.  # noqa: E501
-        :rtype: int
+        :rtype: str
         """
         return self._crc_type
 
@@ -410,10 +446,58 @@ class Volume(object):
 
 
         :param crc_type: The crc_type of this Volume.  # noqa: E501
-        :type: int
+        :type: str
         """
+        allowed_values = ["crc16", "crc32", "crc32c", "crc64", "nocrc"]  # noqa: E501
+        if crc_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `crc_type` ({0}), must be one of {1}"  # noqa: E501
+                .format(crc_type, allowed_values)
+            )
 
         self._crc_type = crc_type
+
+    @property
+    def is_clone(self):
+        """Gets the is_clone of this Volume.  # noqa: E501
+
+
+        :return: The is_clone of this Volume.  # noqa: E501
+        :rtype: bool
+        """
+        return self._is_clone
+
+    @is_clone.setter
+    def is_clone(self, is_clone):
+        """Sets the is_clone of this Volume.
+
+
+        :param is_clone: The is_clone of this Volume.  # noqa: E501
+        :type: bool
+        """
+
+        self._is_clone = is_clone
+
+    @property
+    def clone_source_volume_uuid(self):
+        """Gets the clone_source_volume_uuid of this Volume.  # noqa: E501
+
+
+        :return: The clone_source_volume_uuid of this Volume.  # noqa: E501
+        :rtype: str
+        """
+        return self._clone_source_volume_uuid
+
+    @clone_source_volume_uuid.setter
+    def clone_source_volume_uuid(self, clone_source_volume_uuid):
+        """Sets the clone_source_volume_uuid of this Volume.
+
+
+        :param clone_source_volume_uuid: The clone_source_volume_uuid of this Volume.  # noqa: E501
+        :type: str
+        """
+
+        self._clone_source_volume_uuid = clone_source_volume_uuid
 
     @property
     def state(self):

@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -32,7 +32,7 @@ class BodyDriveUpdate(object):
     """
     swagger_types = {
         'op': 'DriveUpdateOp',
-        'dpu_id': 'str',
+        'dpu': 'str',
         'state': 'ResourceState',
         'plugged': 'bool',
         'slot_id': 'int',
@@ -41,18 +41,18 @@ class BodyDriveUpdate(object):
 
     attribute_map = {
         'op': 'op',
-        'dpu_id': 'dpu_id',
+        'dpu': 'dpu',
         'state': 'state',
         'plugged': 'plugged',
         'slot_id': 'slot_id',
         'inject_error': 'inject_error'
     }
 
-    def __init__(self, op=None, dpu_id=None, state=None, plugged=None, slot_id=None, inject_error=None):  # noqa: E501
+    def __init__(self, op=None, dpu=None, state=None, plugged=None, slot_id=None, inject_error=None):  # noqa: E501
         """BodyDriveUpdate - a model defined in Swagger"""  # noqa: E501
 
         self._op = None
-        self._dpu_id = None
+        self._dpu = None
         self._state = None
         self._plugged = None
         self._slot_id = None
@@ -60,8 +60,8 @@ class BodyDriveUpdate(object):
         self.discriminator = None
 
         self.op = op
-        if dpu_id is not None:
-            self.dpu_id = dpu_id
+        if dpu is not None:
+            self.dpu = dpu
         if state is not None:
             self.state = state
         if plugged is not None:
@@ -95,27 +95,27 @@ class BodyDriveUpdate(object):
         self._op = op
 
     @property
-    def dpu_id(self):
-        """Gets the dpu_id of this BodyDriveUpdate.  # noqa: E501
+    def dpu(self):
+        """Gets the dpu of this BodyDriveUpdate.  # noqa: E501
 
         id of dpu to which this drive is to be moved  # noqa: E501
 
-        :return: The dpu_id of this BodyDriveUpdate.  # noqa: E501
+        :return: The dpu of this BodyDriveUpdate.  # noqa: E501
         :rtype: str
         """
-        return self._dpu_id
+        return self._dpu
 
-    @dpu_id.setter
-    def dpu_id(self, dpu_id):
-        """Sets the dpu_id of this BodyDriveUpdate.
+    @dpu.setter
+    def dpu(self, dpu):
+        """Sets the dpu of this BodyDriveUpdate.
 
         id of dpu to which this drive is to be moved  # noqa: E501
 
-        :param dpu_id: The dpu_id of this BodyDriveUpdate.  # noqa: E501
+        :param dpu: The dpu of this BodyDriveUpdate.  # noqa: E501
         :type: str
         """
 
-        self._dpu_id = dpu_id
+        self._dpu = dpu
 
     @property
     def state(self):

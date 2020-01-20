@@ -3,7 +3,7 @@
 """
     Fungible Storage Controller Intent API
 
-    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)`  # noqa: E501
+    REST API for interfacing between the management/orchestration system and Fungible Storage Controller `(FSC)` `INTERNAL`: The API is for internal controller use only `DEBUG`: The API will not be available in production use   # noqa: E501
 
     OpenAPI spec version: 1.0.0
     Contact: storage@fungible.com
@@ -34,7 +34,7 @@ class StorageApi(object):
         self.api_client = api_client
 
     def add_global_pool_dpu(self, **kwargs):  # noqa: E501
-        """Add dpu to the global pool  # noqa: E501
+        """(INTERNAL) Add dpu to the global pool  # noqa: E501
 
         Add a dpu to the default global pool. The dpu specified by dpu_id MUST already exist in the topology  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -56,7 +56,7 @@ class StorageApi(object):
             return data
 
     def add_global_pool_dpu_with_http_info(self, **kwargs):  # noqa: E501
-        """Add dpu to the global pool  # noqa: E501
+        """(INTERNAL) Add dpu to the global pool  # noqa: E501
 
         Add a dpu to the default global pool. The dpu specified by dpu_id MUST already exist in the topology  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -128,6 +128,113 @@ class StorageApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def attach_snapshot(self, snapshot_uuid, body_volume_attach, **kwargs):  # noqa: E501
+        """Attach snapshot  # noqa: E501
+
+        Attach a snapshot to a host using specified transport  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.attach_snapshot(snapshot_uuid, body_volume_attach, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str snapshot_uuid: FSC assigned snapshot UUID (required)
+        :param BodyVolumeAttach body_volume_attach: (required)
+        :return: ResponseDataWithCreateUuid
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.attach_snapshot_with_http_info(snapshot_uuid, body_volume_attach, **kwargs)  # noqa: E501
+        else:
+            (data) = self.attach_snapshot_with_http_info(snapshot_uuid, body_volume_attach, **kwargs)  # noqa: E501
+            return data
+
+    def attach_snapshot_with_http_info(self, snapshot_uuid, body_volume_attach, **kwargs):  # noqa: E501
+        """Attach snapshot  # noqa: E501
+
+        Attach a snapshot to a host using specified transport  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.attach_snapshot_with_http_info(snapshot_uuid, body_volume_attach, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str snapshot_uuid: FSC assigned snapshot UUID (required)
+        :param BodyVolumeAttach body_volume_attach: (required)
+        :return: ResponseDataWithCreateUuid
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['snapshot_uuid', 'body_volume_attach']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method attach_snapshot" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'snapshot_uuid' is set
+        if ('snapshot_uuid' not in params or
+                params['snapshot_uuid'] is None):
+            raise ValueError("Missing the required parameter `snapshot_uuid` when calling `attach_snapshot`")  # noqa: E501
+        # verify the required parameter 'body_volume_attach' is set
+        if ('body_volume_attach' not in params or
+                params['body_volume_attach'] is None):
+            raise ValueError("Missing the required parameter `body_volume_attach` when calling `attach_snapshot`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'snapshot_uuid' in params:
+            path_params['snapshot_uuid'] = params['snapshot_uuid']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body_volume_attach' in params:
+            body_params = params['body_volume_attach']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/storage/snapshots/{snapshot_uuid}/ports', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def attach_volume(self, volume_uuid, body_volume_attach, **kwargs):  # noqa: E501
         """Attach volume  # noqa: E501
 
@@ -140,7 +247,7 @@ class StorageApi(object):
         :param async_req bool
         :param str volume_uuid: FSC assigned volume UUID (required)
         :param BodyVolumeAttach body_volume_attach: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -163,7 +270,7 @@ class StorageApi(object):
         :param async_req bool
         :param str volume_uuid: FSC assigned volume UUID (required)
         :param BodyVolumeAttach body_volume_attach: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -227,7 +334,114 @@ class StorageApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseCreateUuid',  # noqa: E501
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def create_snapshot(self, volume_uuid, body_volume_snapshot_create, **kwargs):  # noqa: E501
+        """Create a new snapshot of a volume  # noqa: E501
+
+        Create new snapshot volume using the specified parameters  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.create_snapshot(volume_uuid, body_volume_snapshot_create, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str volume_uuid: FSC assigned volume UUID (required)
+        :param BodyVolumeSnapshotCreate body_volume_snapshot_create: (required)
+        :return: ResponseDataWithCreateUuid
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.create_snapshot_with_http_info(volume_uuid, body_volume_snapshot_create, **kwargs)  # noqa: E501
+        else:
+            (data) = self.create_snapshot_with_http_info(volume_uuid, body_volume_snapshot_create, **kwargs)  # noqa: E501
+            return data
+
+    def create_snapshot_with_http_info(self, volume_uuid, body_volume_snapshot_create, **kwargs):  # noqa: E501
+        """Create a new snapshot of a volume  # noqa: E501
+
+        Create new snapshot volume using the specified parameters  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.create_snapshot_with_http_info(volume_uuid, body_volume_snapshot_create, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str volume_uuid: FSC assigned volume UUID (required)
+        :param BodyVolumeSnapshotCreate body_volume_snapshot_create: (required)
+        :return: ResponseDataWithCreateUuid
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['volume_uuid', 'body_volume_snapshot_create']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method create_snapshot" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'volume_uuid' is set
+        if ('volume_uuid' not in params or
+                params['volume_uuid'] is None):
+            raise ValueError("Missing the required parameter `volume_uuid` when calling `create_snapshot`")  # noqa: E501
+        # verify the required parameter 'body_volume_snapshot_create' is set
+        if ('body_volume_snapshot_create' not in params or
+                params['body_volume_snapshot_create'] is None):
+            raise ValueError("Missing the required parameter `body_volume_snapshot_create` when calling `create_snapshot`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'volume_uuid' in params:
+            path_params['volume_uuid'] = params['volume_uuid']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body_volume_snapshot_create' in params:
+            body_params = params['body_volume_snapshot_create']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/storage/volumes/{volume_uuid}/snapshots', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -246,7 +460,7 @@ class StorageApi(object):
 
         :param async_req bool
         :param BodyVolumeIntentCreate body_volume_intent_create: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -268,7 +482,7 @@ class StorageApi(object):
 
         :param async_req bool
         :param BodyVolumeIntentCreate body_volume_intent_create: (required)
-        :return: ResponseCreateUuid
+        :return: ResponseDataWithCreateUuid
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -326,7 +540,7 @@ class StorageApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseCreateUuid',  # noqa: E501
+            response_type='ResponseDataWithCreateUuid',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -419,6 +633,105 @@ class StorageApi(object):
 
         return self.api_client.call_api(
             '/storage/ports/{port_uuid}', 'DELETE',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='SuccessResponseFields',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def delete_snapshot(self, snapshot_uuid, **kwargs):  # noqa: E501
+        """Delete snapshot  # noqa: E501
+
+        Deletes the snapshot volume with specified uuid  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.delete_snapshot(snapshot_uuid, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str snapshot_uuid: FSC assigned snapshot UUID (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.delete_snapshot_with_http_info(snapshot_uuid, **kwargs)  # noqa: E501
+        else:
+            (data) = self.delete_snapshot_with_http_info(snapshot_uuid, **kwargs)  # noqa: E501
+            return data
+
+    def delete_snapshot_with_http_info(self, snapshot_uuid, **kwargs):  # noqa: E501
+        """Delete snapshot  # noqa: E501
+
+        Deletes the snapshot volume with specified uuid  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.delete_snapshot_with_http_info(snapshot_uuid, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str snapshot_uuid: FSC assigned snapshot UUID (required)
+        :return: SuccessResponseFields
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['snapshot_uuid']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method delete_snapshot" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'snapshot_uuid' is set
+        if ('snapshot_uuid' not in params or
+                params['snapshot_uuid'] is None):
+            raise ValueError("Missing the required parameter `snapshot_uuid` when calling `delete_snapshot`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'snapshot_uuid' in params:
+            path_params['snapshot_uuid'] = params['snapshot_uuid']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/storage/snapshots/{snapshot_uuid}', 'DELETE',
             path_params,
             query_params,
             header_params,
@@ -623,6 +936,97 @@ class StorageApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def get_all_snapshots(self, **kwargs):  # noqa: E501
+        """Get volume snapshots created across all volumes  # noqa: E501
+
+        Returns volume snapshots across cluster  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_all_snapshots(async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :return: ResponseDataWithMapOfSnapshots
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.get_all_snapshots_with_http_info(**kwargs)  # noqa: E501
+        else:
+            (data) = self.get_all_snapshots_with_http_info(**kwargs)  # noqa: E501
+            return data
+
+    def get_all_snapshots_with_http_info(self, **kwargs):  # noqa: E501
+        """Get volume snapshots created across all volumes  # noqa: E501
+
+        Returns volume snapshots across cluster  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_all_snapshots_with_http_info(async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :return: ResponseDataWithMapOfSnapshots
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = []  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_all_snapshots" % key
+                )
+            params[key] = val
+        del params['kwargs']
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/storage/snapshots', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithMapOfSnapshots',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def get_pool_by_uuid(self, pool_uuid, **kwargs):  # noqa: E501
         """get pool properties/single property  # noqa: E501
 
@@ -635,7 +1039,7 @@ class StorageApi(object):
         :param async_req bool
         :param str pool_uuid: FSC assigned pool UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -658,7 +1062,7 @@ class StorageApi(object):
         :param async_req bool
         :param str pool_uuid: FSC assigned pool UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -718,7 +1122,7 @@ class StorageApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseDataWithFreeformObjects',  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -738,7 +1142,7 @@ class StorageApi(object):
         :param async_req bool
         :param str port_uuid: FSC assigned port UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -761,7 +1165,7 @@ class StorageApi(object):
         :param async_req bool
         :param str port_uuid: FSC assigned port UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -821,7 +1225,7 @@ class StorageApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseDataWithFreeformObjects',  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -946,7 +1350,7 @@ class StorageApi(object):
         :param async_req bool
         :param str volume_uuid: FSC assigned volume UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -969,7 +1373,7 @@ class StorageApi(object):
         :param async_req bool
         :param str volume_uuid: FSC assigned volume UUID (required)
         :param str field: Specific field name of object attribute to retrieve
-        :return: ResponseDataWithFreeformObjects
+        :return: ResponseDataWithFreeformObject
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -1029,7 +1433,106 @@ class StorageApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='ResponseDataWithFreeformObjects',  # noqa: E501
+            response_type='ResponseDataWithFreeformObject',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def get_volume_snapshots(self, volume_uuid, **kwargs):  # noqa: E501
+        """Get volume snapshots created  # noqa: E501
+
+        Returns all volume snapshots  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_volume_snapshots(volume_uuid, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str volume_uuid: FSC assigned volume UUID (required)
+        :return: ResponseDataWithMapOfSnapshots
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.get_volume_snapshots_with_http_info(volume_uuid, **kwargs)  # noqa: E501
+        else:
+            (data) = self.get_volume_snapshots_with_http_info(volume_uuid, **kwargs)  # noqa: E501
+            return data
+
+    def get_volume_snapshots_with_http_info(self, volume_uuid, **kwargs):  # noqa: E501
+        """Get volume snapshots created  # noqa: E501
+
+        Returns all volume snapshots  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.get_volume_snapshots_with_http_info(volume_uuid, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str volume_uuid: FSC assigned volume UUID (required)
+        :return: ResponseDataWithMapOfSnapshots
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['volume_uuid']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_volume_snapshots" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'volume_uuid' is set
+        if ('volume_uuid' not in params or
+                params['volume_uuid'] is None):
+            raise ValueError("Missing the required parameter `volume_uuid` when calling `get_volume_snapshots`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'volume_uuid' in params:
+            path_params['volume_uuid'] = params['volume_uuid']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = ['basicAuth']  # noqa: E501
+
+        return self.api_client.call_api(
+            '/storage/volumes/{volume_uuid}/snapshots', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ResponseDataWithMapOfSnapshots',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -1242,7 +1745,7 @@ class StorageApi(object):
             collection_formats=collection_formats)
 
     def inject_fault_volume(self, volume_uuid, **kwargs):  # noqa: E501
-        """(DEBUG) Inject volume failure  # noqa: E501
+        """(INTERNAL, DEBUG) Inject volume failure  # noqa: E501
 
         Pseudo-inject a failure in the specified volume  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
@@ -1264,7 +1767,7 @@ class StorageApi(object):
             return data
 
     def inject_fault_volume_with_http_info(self, volume_uuid, **kwargs):  # noqa: E501
-        """(DEBUG) Inject volume failure  # noqa: E501
+        """(INTERNAL, DEBUG) Inject volume failure  # noqa: E501
 
         Pseudo-inject a failure in the specified volume  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
