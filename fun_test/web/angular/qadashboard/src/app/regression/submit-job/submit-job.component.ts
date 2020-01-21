@@ -79,7 +79,7 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
-  selectedTestBedType: string = this.DEFAULT_TEST_BED;
+  selectedTestBedType: string [] = [this.DEFAULT_TEST_BED];
   testBedTypes: any = null;
   testBedNames: string[] = [];
   submitting: string = null;
@@ -196,7 +196,7 @@ export class SubmitJobComponent implements OnInit {
     this.fetchTestBeds();
     this.fetchSuites();
     this.emailOnFailOnly = false;
-    this.selectedTestBedType = this.DEFAULT_TEST_BED;
+    this.selectedTestBedType = [this.DEFAULT_TEST_BED];
 
   }
 
@@ -509,7 +509,7 @@ export class SubmitJobComponent implements OnInit {
       if (this.suiteSelectionMode === 'BY_SUITE') {
         payload["suite_id"] = this.selectedSuite.id;
         if (this.selectedSuite.name === "storage_sanity.json") {
-          this.selectedTestBedType = "fs-6";
+          this.selectedTestBedType = ["fs-6"];
         }
       } else {
         payload["script_pk"] = this.selectedScriptPk;
@@ -548,7 +548,7 @@ export class SubmitJobComponent implements OnInit {
     payload["environment"] = {};
 
 
-    if (this.selectedTestBedType) {
+    if (this.selectedTestBedType.length > 0) {
       payload["environment"]["test_bed_type"] = this.selectedTestBedType; //TODO: this is not needed after scheduler_v2
     }
 
@@ -697,8 +697,13 @@ export class SubmitJobComponent implements OnInit {
 
   isTestBedFs(): boolean {
     let result = null;
-    if (this.selectedTestBedType) {
-      result = this.selectedTestBedType.indexOf('fs') > -1 || this.selectedTestBedType.indexOf('suite-based') > -1;
+    if (this.selectedTestBedType && this.selectedTestBedType.length > 0) {
+      for (let index = 0; index < this.selectedTestBedType.length; index++) {
+        result = this.selectedTestBedType[index].indexOf('fs') > -1 || this.selectedTestBedType[index].indexOf('suite-based') > -1;
+        if (result) {
+          break;
+        }
+      }
     }
     return result;
   }
