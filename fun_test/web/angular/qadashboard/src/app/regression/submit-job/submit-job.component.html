@@ -71,14 +71,23 @@
 
           <tr>
             <td class="no-wrap">
-              <label for="testbed-type" class="required-label">Testbed type</label>
+              <label for="testbed-type" class="required-label">Select test-bed type</label>
             </td>
-            <td>
+            <!--td>
               <select id="testbed-type" [(ngModel)]="selectedTestBedType">
                 <option *ngFor="let tb of testBedNames" [ngValue]="tb"
                         [selected]="selectedTestBedType == tb">{{ tb }}</option>
               </select>
+
+            </td-->
+            <td *ngIf="testBedNames.length > 0">
+              <div class="field-width">
+                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="testBedNames" [(ngModel)]="selectedTestBedType"
+                                         [settings]="dropdownSettings">
+                </ng-multiselect-dropdown>
+              </div>
             </td>
+
           </tr>
 
           <ng-container *ngIf="selectedTestBedType && isTestBedFs() && mode === Mode.REGULAR">
