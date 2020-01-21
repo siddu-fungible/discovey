@@ -53,8 +53,8 @@ DEFAULT_BUILD_PARAMS = {
 
 class JenkinsManager():
     CONNECT_TIMEOUT = 60
-    # JENKINS_BASE_URL = "http://jenkins-sw-master:8080"
-    JENKINS_BASE_URL = "http://jenkins-sw-master/ci"
+    JENKINS_BASE_URL = "http://jenkins-sw-master:8080"
+    # JENKINS_BASE_URL = "http://jenkins-sw-master/ci"
     SERVICE_PASSWORD = JENKINS_PASSWORD
     SERVICE_USERNAME = JENKINS_USERNAME
 
