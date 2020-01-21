@@ -71,7 +71,7 @@ TFTP_DIRECTORY = "/tftpboot"
 
 REGRESSION_SERVICE_HOST = "regression_service_host"
 JENKINS_USERNAME = "regression"
-JENKINS_PASSWORD = "11b1bcc7ac9f43aee95ed4af0917bf5852"
+JENKINS_PASSWORD = "1199085daa5c095956f3c3fb5adcde0c3a"
 
 TESTRAIL_BACKUP_DIRECTORY = "{}/testrail_backup".format(DATA_STORE_DIR)
 TESTRAIL_URL = "http://qa-ubuntu-02/testrail/index.php"
