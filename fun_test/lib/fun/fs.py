@@ -2770,7 +2770,7 @@ class Fs(object, ToDictMixin):
         return True
 
     def ensure_is_up(self, validate_uptime=False):
-        worst_case_uptime = 60 * 10
+        worst_case_uptime = 60 * 7
         fpga = self.get_fpga()
         """
         if fpga:
