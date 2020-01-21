@@ -1191,7 +1191,7 @@
         "pcie_interface_info": {
           "0": {
             "host_info": {
-              "name": "cab02-qa-05"
+              "name": "cab16-qa-05"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
@@ -1210,7 +1210,7 @@
           },
           "4": {
             "host_info": {
-              "name": "cab02-qa-06"
+              "name": "cab16-qa-06"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
@@ -1229,7 +1229,7 @@
           },
           "8": {
             "host_info": {
-              "name": "cab02-qa-07"
+              "name": "cab16-qa-07"
             },
             "type": "INTERFACE_TYPE_PCIE",
             "hosts": 1
