@@ -79,7 +79,7 @@ export class SubmitJobComponent implements OnInit {
   schedulingTimeTimezone = "IST";
   daysOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   selectedDays: string[] = [];
-  selectedTestBedType: string [] = [this.DEFAULT_TEST_BED];
+  selectedTestBedType: string [] = [];//[this.DEFAULT_TEST_BED];
   testBedTypes: any = null;
   testBedNames: string[] = [];
   submitting: string = null;
@@ -196,7 +196,7 @@ export class SubmitJobComponent implements OnInit {
     this.fetchTestBeds();
     this.fetchSuites();
     this.emailOnFailOnly = false;
-    this.selectedTestBedType = [this.DEFAULT_TEST_BED];
+    this.selectedTestBedType = [];//[this.DEFAULT_TEST_BED];
 
   }
 
