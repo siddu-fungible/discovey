@@ -1251,7 +1251,7 @@ class Linux(object, ToDictMixin):
         output = output.rstrip()
         exit_code = None
         try:
-            exit_code = int(output[-1])
+            exit_code = int(output)
         except ValueError:
             pass
         return exit_code
