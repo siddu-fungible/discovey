@@ -241,5 +241,5 @@ class AssetHealthMonitor(Service):
 
 if __name__ == "__main__":
     service = AssetHealthMonitor()
-    service.run(filter_test_bed_name="fs-125")
-    # service.run()
+    #service.run(filter_test_bed_name="fs-125")
+    service.run()
