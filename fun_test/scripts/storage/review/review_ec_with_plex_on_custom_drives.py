@@ -317,24 +317,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Creating plex in custom drives
-            if "drive_ids_list" in self.ec_info:
-                props_tree = "{}/{}/{}/{}".format("storage", "volumes", self.ec_info["volume_types"]["ndata"], "drives")
-                fetch_drives = self.storage_controller.peek(props_tree)
-                fun_test.simple_assert(fetch_drives["status"], "Fetch drive details")
-
-                id_uuid_mapping = {}
-                # Forming a dictionary of drive_id: drive_uuid
-                for drive in fetch_drives["data"]:
-                    if fetch_drives["data"][drive]["drive_id"] not in id_uuid_mapping:
-                        id_uuid_mapping[fetch_drives["data"][drive]["drive_id"]] = drive
-                fun_test.log("Drive id and drive uuid mapping: {}".format(id_uuid_mapping))
-
-                # Forming drive_uuid_list to pass to ec_volume_config method
-                self.ec_info["drive_uuids"] = []
-                for drive_id in self.ec_info["drive_ids_list"]:
-                    fun_test.log(id_uuid_mapping[drive_id])
-                    self.ec_info["drive_uuids"].append(id_uuid_mapping[drive_id])
-                fun_test.log(self.ec_info["drive_uuids"])
+            get_drive_uuid = get_drive_uuid_from_device_id(sc_obj=self.storage_controller,
+                                                           drive_ids_list=self.ec_info["drive_ids_list"])
+            fun_test.simple_assert(get_drive_uuid["status"], "Drive uuid mapping with device id")
+            self.ec_info["drive_uuids"] = get_drive_uuid["drive_uuids"]
 
             command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
             fun_test.log(command_result)
