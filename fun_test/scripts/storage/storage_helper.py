@@ -2352,3 +2352,25 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
         fun_test.critical("Unable to get the individual drive status...")
 
     return min_capacity
+
+
+def get_drive_uuid_from_device_id(sc_obj, drive_ids_list):
+    result = {"status": False, "drive_uuids": []}
+    # Fetching drive information
+    props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", "drives")
+    fetch_drives = sc_obj.storage_controller.peek(props_tree)
+    fun_test.simple_assert(fetch_drives["status"], "Fetch drive details")
+
+    id_uuid_mapping = {}
+    # Forming a dictionary of drive_id: drive_uuid
+    for drive in fetch_drives["data"]:
+        if fetch_drives["data"][drive]["drive_id"] not in id_uuid_mapping:
+            id_uuid_mapping[fetch_drives["data"][drive]["drive_id"]] = drive
+    fun_test.log("Drive id and drive uuid mapping: {}".format(id_uuid_mapping))
+
+    for drive_id in drive_ids_list:
+        result["drive_uuids"].append(id_uuid_mapping[drive_id])
+    if len(result["drive_uuids"]) != 0:
+        result["status"] = True
+
+    return result
