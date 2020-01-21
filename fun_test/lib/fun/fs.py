@@ -2789,6 +2789,8 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
+            if come.uptime() > worst_case_uptime:
+                come.command("ps -ef | grep Reset")
             fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
