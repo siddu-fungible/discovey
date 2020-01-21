@@ -445,7 +445,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             # Create one TCP controller per host
             self.nvme_block_device = []
             self.ctrlr_uuid = []
-            self.nqn_list = []note
+            self.nqn_list = []
             for i in range(0, self.num_hosts):
                 cur_uuid = utils.generate_uuid()
                 self.ctrlr_uuid.append(cur_uuid)
