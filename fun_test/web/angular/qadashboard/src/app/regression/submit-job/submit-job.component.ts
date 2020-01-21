@@ -655,6 +655,9 @@ export class SubmitJobComponent implements OnInit {
       this.apiService.post('/regression/submit_job', payload).subscribe(function (result) {
         self.jobId = parseInt(result.data);
         window.location.href = "/regression/suite_detail/" + self.jobId;
+        if (ctrl.selectedTestBedType.length > 1) {
+          window.location.href = "/regression";
+        }
         ctrl.logger.success(`Job: ${self.jobId} Submitted`);
         console.log("Job: " + self.jobId + " Submitted");
         ctrl.submitting = null;
