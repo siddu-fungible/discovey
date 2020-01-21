@@ -1,5 +1,5 @@
 from web.fun_test.django_interactive import *
-from web.fun_test.models import SuiteExecution
+from web.fun_test.models import SuiteExecution, Suite
 
 import sys
 
@@ -28,5 +28,12 @@ for job in s:
         if filter_test_bed not in duts_used:
             print_it = False
 
+    suite_name = ""
+    try:
+        suite = Suite.objects.get(id=job.suite_id)
+        suite_name = suite.name
+    except:
+        pass
+
     if print_it:
-        print "http://integration.fungible.local/regression/suite_detail/{}".format(job.execution_id)
+        print "http://integration.fungible.local/regression/suite_detail/{} {}".format(job.execution_id, suite_name)
