@@ -92,9 +92,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -274,9 +272,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -456,9 +452,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -702,7 +696,7 @@
   "CreateDelete256": {
     "drive_margin": 0,
     "num_ssd": 1,
-    "blt_count": 25,
+    "blt_count": 100,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -749,7 +743,7 @@
   "CreateDelete384": {
     "drive_margin": 0,
     "num_ssd": 1,
-    "blt_count": 25,
+    "blt_count": 100,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -796,7 +790,7 @@
   "CreateDelete512": {
     "drive_margin": 0,
     "num_ssd": 1,
-    "blt_count": 25,
+    "blt_count": 100,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -841,8 +835,6 @@
     "csi_perf_iodepth": [128]
   },
   "MultipleBLT256": {
-    // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
-    // Change once fix is pushed for the bug.
     "drive_margin": 0,
     "num_ssd": 2,
     "blt_count": 12,
@@ -872,9 +864,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1053,9 +1043,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1232,9 +1220,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1457,9 +1443,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1519,9 +1503,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 4)",
@@ -1581,9 +1563,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 4)",
@@ -1645,9 +1625,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 4)",
@@ -1706,9 +1684,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1767,9 +1743,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)",
@@ -1829,9 +1803,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(512, 3)",
@@ -1891,9 +1863,7 @@
     },
     "fio_modes": [
       "write",
-      "read",
-      "randwrite",
-      "randread"
+      "randwrite"
     ],
     "fio_bs_iodepth": [
       "(510, 3)",
