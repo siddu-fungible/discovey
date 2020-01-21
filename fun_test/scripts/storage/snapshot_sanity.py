@@ -97,6 +97,16 @@ class Singledpu(FunTestScript):
         if not hasattr(self, "update_deploy_script"):
             self.update_deploy_script = False
 
+        # Using Parameters passed during execution, this will override global and config parameters
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "disable_wu_watchdog" in job_inputs:
+            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
+        else:
+            self.disable_wu_watchdog = False
+
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
 
