@@ -1065,7 +1065,9 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.f1_ips = fun_test.shared_variables["f1_ips"]
 
-        reboot_timer = FunTimer(max_time=600)
+        total_reconnect_time = 600
+        add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)
 
         # Reset COMe
         reset = self.fs[0].reset(hard=False)
