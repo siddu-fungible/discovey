@@ -1124,7 +1124,17 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                 if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
                     nvme_list_found = True
                     break
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
+            else:
+                fun_test.log("Checking for routes on host and docker containers")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                docker_f1_handle.command("arp -n")
+                docker_f1_handle.command("route -n")
+                docker_f1_handle.command("ifconfig")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
         if not nvme_list_found:
             fun_test.log("Printing dmesg from host {}".format(host_handle))
