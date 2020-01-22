@@ -1094,7 +1094,19 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
         fun_test.log("Nvme device name is {}".format(nvme_device))
         nvme_device_name = nvme_device.split("/")[-1]
+        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
+
+        fun_test.log("Checking for routes on host and docker containers")
+        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+        docker_f1_handle.command("arp -n")
+        docker_f1_handle.command("route -n")
+        docker_f1_handle.command("ifconfig")
+        fun_test.log("\nRoutes from host {}".format(host_handle))
+        host_handle.command("arp -n")
+        host_handle.command("route -n")
+        host_handle.command("ifconfig")
+
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
@@ -1114,16 +1126,15 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                                                                                             host_handle))
 
         # Check host F1 connectivity
-        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Checking host F1 connectivity")
         for ip in self.f1_ips:
             ping_status = host_handle.ping(dst=ip)
             if not ping_status:
-                fun_test.log("Routes from docker container")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
                 docker_f1_handle.command("arp -n")
                 docker_f1_handle.command("route -n")
                 docker_f1_handle.command("ifconfig")
-                fun_test.log("Routes from host")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
                 host_handle.command("arp -n")
                 host_handle.command("route -n")
                 host_handle.command("ifconfig")
