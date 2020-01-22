@@ -32,7 +32,6 @@
       "override": true,
       "override_node": "NUMA node0 CPU(s)"
     },
-    "csi_perf_pdtrace_hbm_size_kb": 204800,
     "csr_network": {
       "0": {
         "test_interface_ip": "20.1.1.1/24",
@@ -67,10 +66,97 @@
   },
   "SnapVolCreation": {
     "drive_margin": 0,
+    "snap_count": 1,
     "num_ssd": 1,
     "blt_count": 1,
     "controllers": 1,
     "syslog": "default",
+    "nqn": "nqn1",
+    "skip_fio": true,
+    "snap_attach": false,
+    "attach_basevol": true,
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "SnapVolAttach": {
+    "drive_margin": 0,
+    "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "skip_fio": true,
+    "snap_attach": true,
+    "attach_basevol": true,
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "SnapVolRead": {
+    "drive_margin": 0,
+      "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "attach_basevol": true,
+    "snap_attach": true,
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
@@ -83,7 +169,6 @@
     "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
-    "skip_fio": true,
     "fio_cmd_args": {
       "size": "100%",
       "verify": "pattern",
@@ -96,7 +181,7 @@
       "read"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)"
+      "(4096, 1)"
     ],
     "expected_volume_stats": {
       "write": {
@@ -119,18 +204,18 @@
         "num_reads": 1024,
         "num_writes": 0
       }
-    },
-    "collect_network_stats": false,
-    "csi_perf_iodepth": [
-      128
-    ]
+    }
   },
-    "SnapVolRead": {
+  "SnapVolAttachNoBv": {
+    "snap_count": 1,
     "drive_margin": 0,
     "num_ssd": 1,
     "blt_count": 1,
     "controllers": 1,
     "syslog": "default",
+    "skip_fio": true,
+    "snap_attach": true,
+    "attach_basevol": false,
     "nqn": "nqn1",
     "transport_type": "tcp",
     "transport_port": 1099,
@@ -152,10 +237,10 @@
     },
     "fio_modes": [
       "write",
-      "read"
+      "write"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)"
+      "(4096, 1)"
     ],
     "expected_volume_stats": {
       "write": {
@@ -178,16 +263,14 @@
         "num_reads": 1024,
         "num_writes": 0
       }
-    },
-    "collect_network_stats": false,
-    "csi_perf_iodepth": [
-      128
-    ]
+    }
   },
   "SnapVolDiffWrite": {
+    "snap_count": 1,
     "drive_margin": 0,
     "num_ssd": 1,
     "blt_count": 1,
+    "attach_basevol": true,
     "controllers": 1,
     "syslog": "default",
     "nqn": "nqn1",
@@ -214,7 +297,7 @@
       "write"
     ],
     "fio_bs_iodepth": [
-      "(4, 1)"
+      "(4096, 1)"
     ],
     "expected_volume_stats": {
       "write": {
@@ -237,10 +320,6 @@
         "num_reads": 1024,
         "num_writes": 0
       }
-    },
-    "collect_network_stats": false,
-    "csi_perf_iodepth": [
-      128
-    ]
+    }
   }
 }

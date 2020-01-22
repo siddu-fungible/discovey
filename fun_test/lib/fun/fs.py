@@ -1237,6 +1237,7 @@ class ComE(Linux):
     CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
     CORES_DIRECTORY = "/opt/fungible/cores"
+    BLD_PROPS_PATH = "/opt/fungible/bld_props.json"
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
@@ -1272,6 +1273,9 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
+
+    def get_build_properties(self):
+        self.command("cat {}".format(self.BLD_PROPS_PATH))
 
     def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
@@ -1419,6 +1423,7 @@ class ComE(Linux):
     def initialize(self, reset=False, disable_f1_index=None):
         self.disable_f1_index = disable_f1_index
         self.dpc_ready = None
+        self.get_build_properties()
         fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
         fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
         for f1_index in range(self.NUM_F1S):
@@ -1436,6 +1441,8 @@ class ComE(Linux):
 
         if not self.fs.already_deployed:
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+
+
         return True
 
     def upload_sc_logs(self):
@@ -2763,7 +2770,7 @@ class Fs(object, ToDictMixin):
         return True
 
     def ensure_is_up(self, validate_uptime=False):
-        worst_case_uptime = 60 * 10
+        worst_case_uptime = 60 * 7
         fpga = self.get_fpga()
         """
         if fpga:
@@ -2782,6 +2789,8 @@ class Fs(object, ToDictMixin):
         fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
+            if come.uptime() > worst_case_uptime:
+                come.command("ps -ef | grep Reset")
             fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
