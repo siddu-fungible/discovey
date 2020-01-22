@@ -1082,8 +1082,10 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(containers_status, "All containers up")
 
         # Ensure API server is up
+        api_server_timeout = fun_test.shared_variables['benchmark_dict'][self.testcase]["api_server_up_timeout"]
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api), "Ensure API server is up")
+        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=api_server_timeout),
+                             "Ensure API server is up")
 
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
 
@@ -1113,7 +1115,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
             if (vols['status'] and vols['data']) and not volume_found:
                 if vol_uuid in vols['data'].keys():
                     fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
-                                           "BLT Volume {} is persistent".format(vol_uuid))
+                                         "BLT Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
                 nvme_list_output = host_handle.sudo_command("nvme list")
@@ -1122,8 +1124,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                     break
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
 
+        if not nvme_list_found:
+            fun_test.log("Printing dmesg from host {}".format(host_handle))
+            host_handle.command("dmesg")
         fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
-                                                                                            host_handle))
+                                                                                                host_handle))
 
         # Check host F1 connectivity
         fun_test.log("Checking host F1 connectivity")
@@ -1140,7 +1145,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                 host_handle.command("ifconfig")
 
             fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
-                                    format(host_handle.host_ip, ip))
+                                   format(host_handle.host_ip, ip))
 
         # Run fio
         benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
@@ -1163,12 +1168,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
     def cleanup(self):
         super(MultiHostFioRandReadAfterReboot, self).cleanup()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
     bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
-
