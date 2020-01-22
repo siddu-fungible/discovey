@@ -1,9 +1,10 @@
-
 from lib.system.fun_test import *
 from lib.system import utils
+from lib.host.traffic_generator import TrafficGenerator
 from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.fun.fs import Fs
 from lib.host.linux import Linux
+from scripts.storage.funcp_deploy import FunCpDockerContainer
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
@@ -11,7 +12,6 @@ from scripts.networking.helper import *
 from collections import OrderedDict
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.templates.storage.storage_controller_api import *
-import copy
 
 '''
 Script to track the performance of various read write combination with multiple (12) local thin block volumes using FIO
@@ -151,6 +151,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
 
         # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
         self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
+
         self = single_fs_setup(self)
 
         # Forming shared variables for defined parameters
@@ -170,48 +171,14 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
-        if self.csi_perf_enabled:
+        fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
+
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
-        fun_test.shared_variables["sc_api"] = self.sc_api
-
-        # for key in self.host_handles:
-        #     # Ensure all hosts are up after reboot
-        #     fun_test.test_assert(self.host_handles[key].ensure_host_is_up(max_wait_time=self.reboot_timeout),
-        #                          message="Ensure Host {} is reachable after reboot".format(key))
-        #
-        #     # TODO: enable after mpstat check is added
-        #     """
-        #     # Check and install systat package
-        #     install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-        #     fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-        #     """
-        #     # Ensure required modules are loaded on host server, if not load it
-        #     for module in self.load_modules:
-        #         module_check = self.host_handles[key].lsmod(module)
-        #         if not module_check:
-        #             self.host_handles[key].modprobe(module)
-        #             module_check = self.host_handles[key].lsmod(module)
-        #             fun_test.sleep("Loading {} module".format(module))
-        #         fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-        #
-        # # Ensuring connectivity from Host to F1's
-        # for key in self.host_handles:
-        #     for index, ip in enumerate(self.f1_ips):
-        #         if self.funcp_spec[0]["container_names"][index] == "run_sc":
-        #             continue
-        #         ping_status = self.host_handles[key].ping(dst=ip)
-        #         host_handle = self.host_handles[key]
-        #         if not ping_status:
-        #             host_handle.command("arp -n")
-        #             host_handle.command("route -n")
-        #             host_handle.command("ifconfig")
-        #
-        #         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-        #                              format(key, self.funcp_spec[0]["container_names"][index], ip))
 
         # Ensuring perf_host is able to ping F1 IP
-        if self.csi_perf_enabled:
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             # csi_perf_host_instance = csi_perf_host_obj.get_instance()  # TODO: Returning as NoneType
             csi_perf_host_instance = Linux(host_ip=self.csi_perf_host_obj.spec["host_ip"],
                                            ssh_username=self.csi_perf_host_obj.spec["ssh_username"],
@@ -226,15 +193,14 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
-        come_reboot = False
         if "blt" in fun_test.shared_variables and fun_test.shared_variables["blt"]["setup_created"]:
             self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
             try:
                 self.blt_details = fun_test.shared_variables["blt_details"]
                 self.thin_uuid_list = fun_test.shared_variables["thin_uuid"]
-                self.subsys_nqn_list = fun_test.shared_variables["subsys_nqn_list"]
-                self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.nqn_list = fun_test.shared_variables["nqn_list"]
 
                 # Setting the syslog level back to 6
                 if self.syslog != "default":
@@ -248,7 +214,7 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 # Executing NVMe disconnect from all the hosts
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
-                    nqn = self.subsys_nqn_list[index]
+                    nqn = self.nqn_list[index]
 
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(nqn)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
@@ -259,21 +225,29 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 # Detaching and deleting the volume
                 for i, vol_uuid in enumerate(self.thin_uuid_list):
                     num_hosts = len(self.host_info)
-                    # Detaching volume
-                    detach_volume = self.sc_api.detach_volume(port_uuid=self.detach_uuid_list[i])
-                    fun_test.log("Detach volume API response: {}".format(detach_volume))
-                    fun_test.test_assert(detach_volume["status"], "Detach Volume {}".format(self.detach_uuid_list[i]))
+                    ctrlr_index = i % num_hosts
+                    ns_id = (i / num_hosts) + 1
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[ctrlr_index], ns_id=ns_id, command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Detaching BLT volume {} from controller {}".
+                                         format(vol_uuid, self.ctrlr_uuid[ctrlr_index]))
 
-                    delete_volume = self.sc_api.delete_volume(vol_uuid=self.thin_uuid_list[i])
-                    fun_test.test_assert(delete_volume["status"],
-                                         "Deleting BLT Vol with uuid {} on DUT".format(self.thin_uuid_list[i]))
+                    command_result = self.storage_controller.delete_volume(uuid=vol_uuid,
+                                                                           type=str(self.blt_details['type']),
+                                                                           command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting BLT {} with uuid {} on DUT".
+                                         format(i + 1, vol_uuid))
+
+                # Deleting the controller
+                for index, host_name in enumerate(self.host_info):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Deleting storage controller {}".
+                                         format(self.ctrlr_uuid[index]))
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
-
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
@@ -294,7 +268,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
-        fun_test.shared_variables['benchmark_dict'] = benchmark_dict
 
         if testcase not in benchmark_dict or not benchmark_dict[testcase]:
             benchmark_parsing = False
@@ -362,7 +335,9 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.csi_perf_enabled = fun_test.shared_variables["csi_perf_enabled"]
-        if self.csi_perf_enabled:
+        self.csi_cache_miss_enabled = fun_test.shared_variables["csi_cache_miss_enabled"]
+
+        if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             self.perf_listener_host_name = fun_test.shared_variables["perf_listener_host_name"]
             self.perf_listener_ip = fun_test.shared_variables["perf_listener_ip"]
         self.host_ips = fun_test.shared_variables["host_ips"]
@@ -376,7 +351,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         self.remote_ip = self.host_ips[0]
         fun_test.shared_variables["remote_ip"] = self.remote_ip
         self.num_duts = fun_test.shared_variables["num_duts"]
-        self.sc_api = fun_test.shared_variables["sc_api"]
 
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
@@ -390,12 +364,11 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warm_up_traffic" in job_inputs:
             self.warm_up_traffic = job_inputs["warm_up_traffic"]
+        if "warm_up_count" in job_inputs:
+            self.warm_up_count = job_inputs["warm_up_count"]
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
-        if "full_runtime" in job_inputs:
-            self.fio_full_run_time = job_inputs["full_runtime"]
-            self.fio_full_run_timeout = self.fio_full_run_time + 60
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -407,19 +380,24 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if ("blt" not in fun_test.shared_variables or not fun_test.shared_variables["blt"]["setup_created"]):
             fun_test.shared_variables["blt"] = {}
             fun_test.shared_variables["blt"]["setup_created"] = False
             fun_test.shared_variables["blt"]["warmup_done"] = False
             fun_test.shared_variables["blt_details"] = self.blt_details
 
-            # Creating pool
-            if self.create_pool:
-                pass
-            # Fetching pool uuid as per pool name provided
-            pool_name = self.default_pool if not self.create_pool else self.pool_name
-            self.pool_uuid = self.sc_api.get_pool_uuid_by_name(name=pool_name)
+            # Enabling counters
+            """
+            command_result = self.storage_controller.json_execute(verb="enable_counters",
+                                                                  command_duration=self.command_timeout)
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "Enabling Internal Stats/Counters")
+            """
+
+            # Configuring controller IP
+            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
+            fun_test.log(command_result)
+            fun_test.test_assert(command_result["status"], "ip_cfg on DUT instance")
 
             # If the number of hosts is less than the number of volumes then expand the host_ips list to equal to
             # number of volumes by repeating the existing entries for the required number of times
@@ -447,51 +425,60 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                   "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
                 self.blt_details["capacity"] = job_inputs["capacity"]
 
-            # Create BLT's using SC API
+            # Create BLT's
             self.thin_uuid_list = []
             for i in range(self.blt_count):
-                create_raw_vol = self.sc_api.create_volume(pool_uuid=self.pool_uuid, name="thin_block" + str(i + 1),
-                                                           capacity=self.blt_details["capacity"],
-                                                           vol_type=self.blt_details["type"],
-                                                           stripe_count=self.blt_details["stripe_count"])
-                fun_test.log("Create BLT volume API response: {}".format(create_raw_vol))
-                fun_test.test_assert(create_raw_vol["status"], "Create BLT {} with uuid {} on DUT".
-                                     format(i + 1, create_raw_vol["data"]["uuid"]))
-                self.thin_uuid_list.append(create_raw_vol["data"]["uuid"])
+                cur_uuid = utils.generate_uuid()
+                self.thin_uuid_list.append(cur_uuid)
+                command_result = self.storage_controller.create_volume(type=self.blt_details["type"],
+                                                                       capacity=self.blt_details["capacity"],
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="thin_block" + str(i + 1), group_id=i+1,
+                                                                       uuid=cur_uuid,
+                                                                       command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Create BLT {} with uuid {} on DUT".format(i + 1,
+                                                                                                          cur_uuid))
+
             fun_test.shared_variables["thin_uuid"] = self.thin_uuid_list
 
             # Create one TCP controller per host
             self.nvme_block_device = []
-            self.subsys_nqn_list = []
-            self.host_nqn_list = []
-            self.detach_uuid_list = []
+            self.ctrlr_uuid = []
+            self.nqn_list = []note
+            for i in range(0, self.num_hosts):
+                cur_uuid = utils.generate_uuid()
+                self.ctrlr_uuid.append(cur_uuid)
+                nqn = "nqn" + str(i + 1)
+                self.nqn_list.append(nqn)
+                command_result = self.storage_controller.create_controller(ctrlr_id=i,
+                                                                           ctrlr_uuid=cur_uuid,
+                                                                           ctrlr_type="BLOCK",
+                                                                           transport=self.transport_type.upper(),
+                                                                           remote_ip=self.host_ips[i],
+                                                                           subsys_nqn=nqn,
+                                                                           host_nqn=self.host_ips[i],
+                                                                           port=self.transport_port,
+                                                                           command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Creating TCP controller for {} with uuid {} on DUT".
+                                     format(self.host_ips[i], cur_uuid))
+
+            fun_test.shared_variables["ctrlr_uuid"] = self.ctrlr_uuid
+            fun_test.shared_variables["nqn_list"] = self.nqn_list
 
             # Attach controller to BLTs
             for i in range(self.blt_count):
                 ctrlr_index = i % self.num_hosts
                 ns_id = (i / self.num_hosts) + 1
-                attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.thin_uuid_list[i],
-                                                                 transport=self.transport_type.upper(),
-                                                                 remote_ip=self.host_ips[ctrlr_index])
-                fun_test.log("Attach volume API response: {}".format(attach_volume))
-                fun_test.test_assert(attach_volume["status"], "Attaching BLT volume {} to the host {}".
-                                     format(self.thin_uuid_list[i], self.host_ips[ctrlr_index]))
-                # Extracting the NVMe subsys nqn from the volume attach output, which needs to be passed to the -n
-                # option in the NVMe connect command
-                subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
-                    attach_volume["data"].get("nqn")
-                fun_test.simple_assert(subsys_nqn, "Extracted the controller's Subsys NQN to which volume {} got "
-                                                   "attached".format(self.thin_uuid_list[i]))
-                fun_test.simple_assert("host_nqn" in attach_volume["data"],
-                                       "Extracted the Controller's Host NQN to which volume {} got attached".
-                                       format(self.thin_uuid_list[i]))
-                host_nqn = attach_volume["data"]["host_nqn"]
-                self.subsys_nqn_list.append(subsys_nqn)
-                self.host_nqn_list.append(host_nqn)
-                self.detach_uuid_list.append(attach_volume["data"]["uuid"])
-
-            fun_test.shared_variables["detach_uuid_list"] = self.detach_uuid_list
-            fun_test.shared_variables["subsys_nqn_list"] = self.subsys_nqn_list
+                command_result = self.storage_controller.attach_volume_to_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[ctrlr_index], vol_uuid=self.thin_uuid_list[i],
+                    ns_id=ns_id, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "Attaching BLT volume {} to the host {} via controller "
+                                                               "{}".format(self.thin_uuid_list[i],
+                                                                           self.host_ips[ctrlr_index],
+                                                                           self.ctrlr_uuid[ctrlr_index]))
 
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
@@ -509,15 +496,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for index, host_name in enumerate(self.host_info):
                 host_handle = self.host_info[host_name]["handle"]
                 host_ip = self.host_info[host_name]["ip"]
-                subsys_nqn = self.subsys_nqn_list[index]
-                host_nqn = self.host_nqn_list[index]
-
-                """
-                host_nqn_workaround = True
-                if host_nqn_workaround:
-                    host_nqn = subsys_nqn.split(":")[0] + ":" + host_nqn
-                """
-
+                nqn = self.nqn_list[index]
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
                 irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
@@ -550,14 +529,14 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
                                                                                   self.test_network["f1_loopback_ip"],
-                                                                                  self.transport_port, subsys_nqn,
-                                                                                  self.nvme_io_queues, host_nqn))
+                                                                                  self.transport_port, nqn,
+                                                                                  self.nvme_io_queues, host_ip))
                     fun_test.log(command_result)
                 else:
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
                                                                             self.test_network["f1_loopback_ip"],
-                                                                            self.transport_port, subsys_nqn, host_nqn))
+                                                                            self.transport_port, nqn, host_ip))
                     fun_test.log(command_result)
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
@@ -602,70 +581,74 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.shared_variables["blt"]["setup_created"] = True
 
-            thread_id = {}
-            end_host_thread = {}
-
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             # Pre-conditioning the volume (one time task)
             if self.warm_up_traffic:
+                total_warmup_done = 0
                 # self.nvme_block_device_str = ':'.join(self.nvme_block_device)
                 # fun_test.shared_variables["nvme_block_device_str"] = self.nvme_block_device_str
-                fio_output = {}
-                for index, host_name in enumerate(self.host_info):
-                    fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
-                                 "provided")
-                    warm_up_fio_cmd_args = {}
-                    jobs = ""
-                    fio_output[index] = {}
-                    end_host_thread[index] = self.host_info[host_name]["handle"].clone()
-                    wait_time = self.num_hosts - index
-                    if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                        # Adding the allowed CPUs into the fio warmup command
-                        # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
-                        #    format(self.host_info[host_name]["host_numa_cpus"])
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
-                        for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
-                            jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
-                            fio_cpus_allowed_args) + str(jobs)
-                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
-                        #                                    **warm_up_fio_cmd_args)
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename="nofile",
-                                                                         **warm_up_fio_cmd_args)
-                    else:
-                        # Adding the allowed CPUs into the fio warmup command
-                        self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
-                        # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
-                        filename = self.host_info[host_name]["fio_filename"]
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename=filename,
-                                                                         **self.warm_up_fio_cmd_args)
+                for count in range(self.warm_up_count):
+                    fun_test.log("Starting Volume Warmup: Round {}".format(count + 1))
+                    thread_id = {}
+                    end_host_thread = {}
+                    fio_output = {}
+                    for index, host_name in enumerate(self.host_info):
+                        fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
+                                     "provided")
+                        warm_up_fio_cmd_args = {}
+                        jobs = ""
+                        fio_output[index] = {}
+                        end_host_thread[index] = self.host_info[host_name]["handle"].clone()
+                        wait_time = self.num_hosts - index
+                        if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                            # Adding the allowed CPUs into the fio warmup command
+                            # self.warm_up_fio_cmd_args["multiple_jobs"] += "  --cpus_allowed={}".\
+                            #    format(self.host_info[host_name]["host_numa_cpus"])
+                            fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                            for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                                jobs += " --name=pre-cond-job-{} --filename={}".format(id + 1, device)
+                            warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + str(
+                                fio_cpus_allowed_args) + str(jobs)
+                            warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename="nofile", timeout=self.warm_up_fio_cmd_args["timeout"],
+                            #                                    **warm_up_fio_cmd_args)
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename="nofile",
+                                                                             **warm_up_fio_cmd_args)
+                        else:
+                            # Adding the allowed CPUs into the fio warmup command
+                            self.warm_up_fio_cmd_args["cpus_allowed"] = self.host_info[host_name]["host_numa_cpus"]
+                            # fio_output = self.host_handles[key].pcie_fio(filename=self.nvme_block_device_str, **self.warm_up_fio_cmd_args)
+                            filename = self.host_info[host_name]["fio_filename"]
+                            thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                             func=fio_parser,
+                                                                             arg1=end_host_thread[index],
+                                                                             host_index=index,
+                                                                             filename=filename,
+                                                                             **self.warm_up_fio_cmd_args)
 
-                    fun_test.sleep("Fio threadzz", seconds=1)
+                        fun_test.sleep("Fio threadzz", seconds=1)
 
-                fun_test.sleep("Fio threads started", 10)
-                try:
+                    fun_test.sleep("Fio threads started", 10)
                     for index, host_name in enumerate(self.host_info):
                         fun_test.log("Joining fio thread {}".format(index))
                         fun_test.join_thread(fun_test_thread_id=thread_id[index])
                         fun_test.log("FIO Command Output:")
                         fun_test.log(fun_test.shared_variables["fio"][index])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {}".
-                                             format(host_name))
+                        fun_test.test_assert(fun_test.shared_variables["fio"][index], "Volume warmup on host {} - "
+                                                                                      "Round {}".format(host_name,
+                                                                                                        count + 1))
                         fio_output[index] = {}
                         fio_output[index] = fun_test.shared_variables["fio"][index]
+                        total_warmup_done += 1
                         fun_test.shared_variables["blt"]["warmup_done"] = True
-                except Exception as ex:
-                    fun_test.log("Fio warmup failed")
-                    fun_test.critical(str(ex))
 
+                if total_warmup_done == len(self.host_info) * self.warm_up_count:
+                    fun_test.shared_variables["blt"]["warmup_done"] = True
+                    fun_test.log("Successfully completed {} round(s) of volume warmup".format(self.warm_up_count))
                 fun_test.sleep("Sleeping for {} seconds before actual test".format(self.iter_interval),
                                self.iter_interval)
 
@@ -703,9 +686,18 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
+        if "test_bs" in job_inputs:
+            self.fio_bs = job_inputs["test_bs"]
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
+            # In case for the given IO depths if the expected_fio_result dictionary don't have the expected values, then
+            # add that IO depth into the expected_fio_result dictionary by setting its value equal to the one set to
+            # its first attribute
+            for combo in self.fio_jobs_iodepth:
+                if combo not in self.expected_fio_result:
+                    first_combo = sorted(self.expected_fio_result.keys())[0]
+                    self.expected_fio_result[combo] = self.expected_fio_result[first_combo]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
@@ -822,7 +814,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
             fun_test.sleep("Fio threads started", 10)
             # Starting csi perf stats collection if it's set
-            if self.csi_perf_enabled:
+            if self.csi_perf_enabled or self.csi_cache_miss_enabled:
                 if row_data_dict["iodepth"] in self.csi_perf_iodepth:
                     try:
                         fun_test.sleep("for IO to be fully active", 120)
@@ -830,7 +822,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
                                                        listener_ip=self.perf_listener_ip, fs=self.fs[0],
                                                        listener_port=4420)  # Temp change for testing
                         csi_perf_obj.prepare(f1_index=0)
-                        csi_perf_obj.start(f1_index=0, dpc_client=self.storage_controller)
+                        csi_perf_obj.start(f1_index=0)  #  , dpc_client=self.storage_controller)
                         fun_test.log("csi perf stats collection is started")
                         # dpcsh_client = self.fs.get_dpc_client(f1_index=0, auto_disconnect=True)
                         fun_test.sleep("Allowing CSI performance data to be collected", 300)
@@ -1041,138 +1033,10 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
         super(PreCommitSanity, self).cleanup()
 
 
-class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
-    def describe(self):
-        self.set_test_details(id=4,
-                              summary="Bundle sanity. Run fio random read after COMe reboot on the same BLT attached",
-                              steps='''
-        1. Reboot COMe.
-        2. Check docker containers F1-0, F1-1 and run_sc.
-        3. Run fio from the host.
-        4. Fio should succeed.
-        ''')
-
-    def setup(self):
-        # super(MultiHostFioRandReadAfterReboot, self).setup()
-        self.testcase = self.__class__.__name__
-
-    def run(self):
-        fun_test.log("Rebooting COMe")
-        self.post_results = False
-        self.fs = fun_test.shared_variables["fs_objs"]
-        self.come_obj = fun_test.shared_variables["come_obj"]
-        self.detach_uuid_list = fun_test.shared_variables["detach_uuid_list"]
-        self.host_info = fun_test.shared_variables["host_info"]
-        self.f1_ips = fun_test.shared_variables["f1_ips"]
-
-        reboot_timer = FunTimer(max_time=600)
-
-        # Reset COMe
-        reset = self.fs[0].reset(hard=False)
-        fun_test.test_assert(reset, "COMe reset successfully done")
-
-        # Ensure COMe is up
-        ensure_up = self.fs[0].ensure_is_up()
-        fun_test.test_assert(ensure_up, "Ensure COMe is up")
-
-        # Ensure all containers are up
-        fs_obj = self.fs[0]
-        come = fs_obj.get_come()
-        containers_status = come.ensure_expected_containers_running()
-        fun_test.test_assert(containers_status, "All containers up")
-
-        # Ensure API server is up
-        api_server_timeout = fun_test.shared_variables['benchmark_dict'][self.testcase]["api_server_up_timeout"]
-        self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=api_server_timeout),
-                             "Ensure API server is up")
-
-        fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
-
-        volume_found = False
-        nvme_list_found = False
-        vol_uuid = fun_test.shared_variables["thin_uuid"][0]
-        host_handle = self.host_info[self.host_info.keys()[0]]['handle']
-        nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
-        fun_test.log("Nvme device name is {}".format(nvme_device))
-        nvme_device_name = nvme_device.split("/")[-1]
-        docker_f1_handle = come.get_funcp_container(f1_index=0)
-        fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
-
-        fun_test.log("Checking for routes on host and docker containers")
-        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-        docker_f1_handle.command("arp -n")
-        docker_f1_handle.command("route -n")
-        docker_f1_handle.command("ifconfig")
-        fun_test.log("\nRoutes from host {}".format(host_handle))
-        host_handle.command("arp -n")
-        host_handle.command("route -n")
-        host_handle.command("ifconfig")
-
-        while not reboot_timer.is_expired():
-            # Check whether EC vol is listed in storage/volumes
-            vols = self.sc_api.get_volumes()
-            if (vols['status'] and vols['data']) and not volume_found:
-                if vol_uuid in vols['data'].keys():
-                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
-                                         "BLT Volume {} is persistent".format(vol_uuid))
-                    volume_found = True
-            if volume_found:
-                nvme_list_output = host_handle.sudo_command("nvme list")
-                if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
-                    nvme_list_found = True
-                    break
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
-
-        if not nvme_list_found:
-            fun_test.log("Printing dmesg from host {}".format(host_handle))
-            host_handle.command("dmesg")
-        fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
-                                                                                                host_handle))
-
-        # Check host F1 connectivity
-        fun_test.log("Checking host F1 connectivity")
-        for ip in self.f1_ips:
-            ping_status = host_handle.ping(dst=ip)
-            if not ping_status:
-                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-                docker_f1_handle.command("arp -n")
-                docker_f1_handle.command("route -n")
-                docker_f1_handle.command("ifconfig")
-                fun_test.log("\nRoutes from host {}".format(host_handle))
-                host_handle.command("arp -n")
-                host_handle.command("route -n")
-                host_handle.command("ifconfig")
-
-            fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
-                                   format(host_handle.host_ip, ip))
-
-        # Run fio
-        benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
-        cmd_args = benchmark_dict["fio_cmd_args"]
-
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
-        fun_test.test_assert(fio_output, "Ensure fio reads are successful")
-
-        write_cmd_args = copy.deepcopy(cmd_args)
-        write_cmd_args.update({"rw": "randwrite"})
-        write_cmd_args.update({"do_verify": 0})
-
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **write_cmd_args)
-        fun_test.test_assert(fio_output, "Ensure fio writes are successful reboot")
-
-        # Reading the written output
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
-        fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
-
-    def cleanup(self):
-        super(MultiHostFioRandReadAfterReboot, self).cleanup()
-
-
 if __name__ == "__main__":
+
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
-    bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
