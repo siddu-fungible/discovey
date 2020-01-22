@@ -1251,7 +1251,7 @@ class Linux(object, ToDictMixin):
         output = output.rstrip()
         exit_code = None
         try:
-            exit_code = int(output[-1])
+            exit_code = int(output)
         except ValueError:
             pass
         return exit_code
@@ -2981,7 +2981,7 @@ class Linux(object, ToDictMixin):
         output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
-            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>\w+)', line)
+            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>[\w//]+)', line)
             if match_pattern:
                 key = match_pattern.group("key").lower()
                 key = key.replace(" ", "_")

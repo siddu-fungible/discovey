@@ -71,17 +71,26 @@
 
           <tr>
             <td class="no-wrap">
-              <label for="testbed-type" class="required-label">Testbed type</label>
+              <label for="testbed-type" class="required-label">Select test-bed type</label>
             </td>
-            <td>
+            <!--td>
               <select id="testbed-type" [(ngModel)]="selectedTestBedType">
                 <option *ngFor="let tb of testBedNames" [ngValue]="tb"
                         [selected]="selectedTestBedType == tb">{{ tb }}</option>
               </select>
+
+            </td-->
+            <td *ngIf="testBedNames.length > 0">
+              <div class="field-width">
+                <ng-multiselect-dropdown [placeholder]="'Select'" [data]="testBedNames" [(ngModel)]="selectedTestBedType"
+                                         [settings]="dropdownSettings">
+                </ng-multiselect-dropdown>
+              </div>
             </td>
+
           </tr>
 
-          <ng-container *ngIf="selectedTestBedType && isTestBedFs() && mode === Mode.REGULAR">
+          <ng-container *ngIf="selectedTestBedType.length > 0 && isTestBedFs() && mode === Mode.REGULAR">
             <tr>
               <td>
                 <input type="radio" name="build-type-radio" [(ngModel)]="buildType" [value]="BuildType.TFTP_IMAGE_PATH"> Use image on TFTP server
@@ -138,7 +147,7 @@
 
 
 
-          <tr *ngIf="selectedTestBedType && selectedTestBedType.indexOf('simulation') > -1">
+          <tr *ngIf="selectedTestBedType.length > 0 && selectedTestBedType.indexOf('simulation') > -1">
             <td class="no-wrap">
               <label for="build-url">Custom path to funos-posix</label>
             </td>
@@ -150,7 +159,7 @@
           </tr>
           <ng-container *ngIf="buildType === BuildType.WITH_JENKINS_BUILD">
 
-            <ng-container *ngIf="selectedTestBedType && isTestBedFs()">
+            <ng-container *ngIf="selectedTestBedType.length > 0 && isTestBedFs()">
               <tr>
                 <td colspan="2">
                   <app-section-horizontal-line [text]="'Jenkins params'"></app-section-horizontal-line>
@@ -346,7 +355,7 @@
             <app-json-input [initialValue]="jobInputs" (dataChanged)="jobInputsChanged($event)"></app-json-input>
           </td>
         </tr>
-        <tr *ngIf="selectedTestBedType">
+        <tr *ngIf="selectedTestBedType.length > 0">
           <td class="no-wrap">
             <label>Boot-args (JSON): </label>
           </td>

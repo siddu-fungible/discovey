@@ -221,6 +221,18 @@ class StorageController(NetworkController, DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
+    def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
+        data = ["output"]
+        params = {"slot": device_id, "type": "hotswap", "action": action}
+        data.append(params)
+        return self.json_execute(verb="slot", data=data, command_duration=command_duration)
+
+    def get_ssd_power_status(self, device_id, command_duration=TIMEOUT):
+        data = ["input"]
+        params = {"slot": device_id, "type": "powergood"}
+        data.append(params)
+        return self.json_execute(verb="slot", data=data, command_duration=command_duration)
+
     def configure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         result = True

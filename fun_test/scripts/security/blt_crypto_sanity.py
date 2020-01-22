@@ -49,9 +49,10 @@ def get_nvme_device(host_obj):
     return fio_filename
 
 
-# Disconnect linux objects
 def fio_parser(arg1, **kwargs):
-    arg1.pcie_fio(**kwargs)
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"] = fio_output
+    fun_test.simple_assert(fio_output, "Fio result")
     arg1.disconnect()
 
 

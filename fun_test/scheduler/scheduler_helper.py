@@ -324,56 +324,59 @@ def queue_job3(suite_id=None,
         is_auto_scheduled_job = is_auto_scheduled(scheduling_type=scheduling_type, repeat_in_minutes=repeat_in_minutes)
         job_state = JobStatusType.AUTO_SCHEDULED if is_auto_scheduled_job else JobStatusType.SUBMITTED
 
+        test_bed_types = test_bed_type
 
-        suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
-                                                            scheduled_time=get_current_time(),
-                                                            completed_time=get_current_time(),
-                                                            suite_path=final_suite_name,
-                                                            suite_id=suite_id,
-                                                            tags=tags,
-                                                            suite_container_execution_id=suite_container_execution_id,
-                                                            test_bed_type=test_bed_type,
-                                                            submitter_email=submitter_email,
-                                                            state=job_state,
-                                                            pause_on_failure=pause_on_failure)
-        if suite_type == SuiteType.DYNAMIC:
-            if original_suite_execution_id:  # Must be a re-run
-                models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
-                                                    re_run_suite_execution_id=suite_execution.execution_id)
-            else:
-                scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
+        for test_bed_type in test_bed_types:
+            suite_execution = models_helper.add_suite_execution(submitted_time=get_current_time(),
+                                                                scheduled_time=get_current_time(),
+                                                                completed_time=get_current_time(),
+                                                                suite_path=final_suite_name,
+                                                                suite_id=suite_id,
+                                                                tags=tags,
+                                                                suite_container_execution_id=suite_container_execution_id,
+                                                                test_bed_type=test_bed_type,
+                                                                submitter_email=submitter_email,
+                                                                state=job_state,
+                                                                pause_on_failure=pause_on_failure)
+            if suite_type == SuiteType.DYNAMIC:
+                if original_suite_execution_id:  # Must be a re-run
+                    models_helper.set_suite_re_run_info(original_suite_execution_id=original_suite_execution_id,
+                                                        re_run_suite_execution_id=suite_execution.execution_id)
+                else:
+                    scheduler_logger.error("Suite is dynamic, but original_suite_execution_id is missing")
 
-        suite_execution.suite_path = final_suite_name
-        suite_execution.script_path = script_path
-        suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
-        suite_execution.suite_type = suite_type
-        suite_execution.scheduling_type = scheduling_type
+            suite_execution.suite_path = final_suite_name
+            suite_execution.script_path = script_path
+            suite_execution.dynamic_suite_spec = json.dumps(dynamic_suite_spec)
+            suite_execution.suite_type = suite_type
+            suite_execution.scheduling_type = scheduling_type
 
-        suite_execution.requested_days = json.dumps(requested_days)
-        suite_execution.requested_hour = requested_hour
-        suite_execution.requested_minute = requested_minute
-        suite_execution.timezone_string = timezone_string
-        suite_execution.repeat_in_minutes = repeat_in_minutes
+            suite_execution.requested_days = json.dumps(requested_days)
+            suite_execution.requested_hour = requested_hour
+            suite_execution.requested_minute = requested_minute
+            suite_execution.timezone_string = timezone_string
+            suite_execution.repeat_in_minutes = repeat_in_minutes
 
-        suite_execution.tags = json.dumps(tags)
-        suite_execution.emails = json.dumps(emails)
-        suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
+            suite_execution.tags = json.dumps(tags)
+            suite_execution.emails = json.dumps(emails)
+            suite_execution.email_on_failure_only = email_on_fail_only if email_on_fail_only else False
 
-        suite_execution.environment = json.dumps(environment)
-        suite_execution.inputs = json.dumps(inputs)
-        suite_execution.build_url = build_url
-        suite_execution.version = version
-        suite_execution.requested_priority_category = requested_priority_category
-        suite_execution.description = description
-        suite_execution.rich_inputs = rich_inputs
-        suite_execution.max_run_time = max_run_time
-        suite_execution.pause_on_failure = pause_on_failure
-        job_spec_valid, error_message = validate_spec(spec=suite_execution)
-        if not job_spec_valid:
-            raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
-        suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
-        # print ("queue_job_3: {}".format(suite_execution.execution_id))
-        suite_execution.save()
+            environment["test_bed_type"] = test_bed_type
+            suite_execution.environment = json.dumps(environment)
+            suite_execution.inputs = json.dumps(inputs)
+            suite_execution.build_url = build_url
+            suite_execution.version = version
+            suite_execution.requested_priority_category = requested_priority_category
+            suite_execution.description = description
+            suite_execution.rich_inputs = rich_inputs
+            suite_execution.max_run_time = max_run_time
+            suite_execution.pause_on_failure = pause_on_failure
+            job_spec_valid, error_message = validate_spec(spec=suite_execution)
+            if not job_spec_valid:
+                raise SchedulerException("Invalid job spec: {}, Error message: {}".format(suite_execution, error_message))
+            suite_execution.is_auto_scheduled_job = is_auto_scheduled_job
+            # print ("queue_job_3: {}".format(suite_execution.execution_id))
+            suite_execution.save()
 
         result = suite_execution.execution_id
 

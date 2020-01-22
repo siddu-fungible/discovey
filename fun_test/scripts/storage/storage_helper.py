@@ -737,7 +737,7 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
     return result
 
 
-def ensure_api_server_is_up(sc_api, timeout=120):
+def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
     result = False
     try:
         # Polling for API Server status
