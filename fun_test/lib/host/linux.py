@@ -2981,7 +2981,7 @@ class Linux(object, ToDictMixin):
         output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
-            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>\w+)', line)
+            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>[\w//]+)', line)
             if match_pattern:
                 key = match_pattern.group("key").lower()
                 key = key.replace(" ", "_")
