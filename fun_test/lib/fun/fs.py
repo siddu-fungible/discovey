@@ -2791,6 +2791,8 @@ class Fs(object, ToDictMixin):
         if validate_uptime:
             if come.uptime() > worst_case_uptime:
                 come.command("ps -ef | grep Reset")
+                come.command("lsmod")
+                come.command("dmesg")
             fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
