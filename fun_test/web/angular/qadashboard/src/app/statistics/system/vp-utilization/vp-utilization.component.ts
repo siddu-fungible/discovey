@@ -18,6 +18,7 @@ import {slideInOutAnimation, showAnimation} from "../../../animations/generic-an
 export class VpUtilizationComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
   @Input() selectedAsset: RegisteredAsset = null;
+  @Input() clusterLevel: boolean = null;
   @Input() title: string = null;
   data: any = null;
   parsedData: any = {};

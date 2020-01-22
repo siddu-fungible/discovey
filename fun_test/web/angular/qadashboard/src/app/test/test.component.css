@@ -6,9 +6,6 @@
   padding: 10px;
 }
 
-
-
-
 .sidenav {
   height: 100%;
   width: 25%;
@@ -24,20 +21,18 @@
   margin: 10px;
 }
 
-
-
 .main {
   margin-left: 25%;
 }
 
 .fun-panel {
   margin-top: 10px;
-  border: 1px solid rgba(0,0,0,.125);
+  border: 1px solid rgba(0, 0, 0, .125);
 }
 
 .fun-panel-header {
   padding: 5px;
-  background-color: rgba(0,0,0,.03);
+  background-color: rgba(0, 0, 0, .03);
 }
 
 .fun-panel-body {
@@ -45,50 +40,57 @@
 
 }
 
-
 display-checkpoint {
   background-color: lightgrey;
 }
 
-
 /* this is the box */
 .container {
-    width: 150px;
-    background: #fff;
-    border: 1px solid black;
-    position: absolute;
-    text-align: center;
-    color: black;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
+  width: 150px;
+  background: #fff;
+  border: 1px solid black;
+  position: absolute;
+  text-align: center;
+  color: black;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
 
 /* this CS forms the triangles */
 .container:after,
 .container:before {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-style: solid;
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
 }
 
-
 .container:after {
-    border-color: transparent transparent transparent white;
-    border-width: 10px;
-    left: 96%;
+  border-color: transparent transparent transparent white;
+  border-width: 10px;
+  left: 96%;
 
 }
 
 .container:before {
-    border-color: transparent transparent transparent black;
-    border-width: 10px;
-    left: 97%;
+  border-color: transparent transparent transparent black;
+  border-width: 10px;
+  left: 97%;
 }
 
 .highlight {
   text-decoration: underline !important;
   color: black !important;
   font-weight: 600 !important;
+}
+
+.selectedOption {
+  border: 1px solid #337ab7;
+  margin-right: 4px;
+  background: #337ab7;
+  padding: 0 5px;
+  color: #fff;
+  border-radius: 2px;
+  float: left;
 }

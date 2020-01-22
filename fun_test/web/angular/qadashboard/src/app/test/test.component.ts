@@ -7,18 +7,18 @@ import {CommonService} from "../services/common/common.service";
 import {TestBedService} from "../regression/test-bed/test-bed.service";
 import {UserService} from "../services/user/user.service";
 import {LoggerService} from "../services/logger/logger.service";
-import {Tree} from "@angular/router/src/utils/tree";
 
 class TreeNode {
   id: number;
   name: string;
   leaf: boolean;
-  meta_data: any = null;
+  meta_data: any = {"checked": false};
   children: TreeNode [] = null;
 
   constructor(props) {
     this.name = props.name;
     this.leaf = props.leaf;
+    this.id = props.id;
   }
 
   addChild(node: TreeNode) {
@@ -30,25 +30,6 @@ class TreeNode {
   }
 }
 
-enum EditMode {
-  NONE = 0,
-  MANUAL_LOCK_INITIAL = "Set manual lock",
-  MANUAL_LOCK_UPDATE_EXPIRATION = "Update manual lock expiration"
-}
-
-class FlatNode {
-  name: string = null;
-  leaf: boolean = false;
-  collapsed: boolean = true;
-  hide: boolean = true;
-  indent: number = 0;
-  highlight: boolean = false;
-  children: FlatNode[] = [];
-  addChild(childNode) {
-    this.children.push(childNode);
-  }
-}
-
 @Component({
   selector: 'app-test',
   templateUrl: './test.component.html',
@@ -56,31 +37,9 @@ class FlatNode {
 })
 
 export class TestComponent implements OnInit {
-
-  @Input() data: any = null;
-  @Output() clickedNode: EventEmitter<any> = new EventEmitter();
-  @Input() embed: boolean = false;
-  schedulingTime = {hour: 1, minute: 1};
-  testBeds: any [] = null;
-  automationStatus = {};
-  manualStatus = {};
-  assetLevelManualLockStatus = {};
-  currentEditMode: EditMode = EditMode.NONE;
-  currentTestBed: any = null;
-  EditMode = EditMode;
-  users: any = null;
-  lockPanelHeader: string = null;
-  selectedUser: any = null;
-  assetSelectedUser: any = null;
-  assets = null;
-  driver = null;
-  refreshing: string = null;
-  userMap: any = null;
-  editingDescription: boolean = false;
-  currentDescription: string;
-  flatNodes: FlatNode[] = [];
   tree: TreeNode = null;
-  currentFlatNode: FlatNode = null;
+  selectedStats: any[] = [];
+  selectedStatsSet: any = new Set();
 
   constructor(private regressionService: RegressionService,
               private apiService: ApiService,
@@ -89,99 +48,37 @@ export class TestComponent implements OnInit {
               private service: TestBedService,
               private userService: UserService
   ) {
-    this.tree = new TreeNode({name: "Stats", leaf: false});
-    let systemNode = this.tree.addChild(new TreeNode({name: "system", leaf: false}));
-    let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false}));
-    systemNode.addChild(new TreeNode({name: "BAM", leaf: true}));
-    systemNode.addChild(new TreeNode({name: "VP utilization", leaf: true}));
-    storageNode.addChild(new TreeNode({name: "SSD", leaf: true}));
+    this.tree = new TreeNode({name: "Stats", leaf: false, id: 0});
+    let systemNode = this.tree.addChild(new TreeNode({name: "system", leaf: false, id: 0}));
+    let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false, id: 1}));
+    let bamNode = systemNode.addChild(new TreeNode({name: "BAM", leaf: false, id: 0}));
+    let vpNode = systemNode.addChild(new TreeNode({name: "VP utilization", leaf: false, id: 1}));
+    let defaultPool = bamNode.addChild(new TreeNode({name: "default_alloc_pool", leaf: false, id: 0}));
+    defaultPool.addChild(new TreeNode({name: "usage_percent", leaf: true, id: 0}));
+    vpNode.addChild(new TreeNode({name: "utilization_distribution", leaf: true, id: 0}));
+    vpNode.addChild(new TreeNode({name: "utilization_by_cluster", leaf: true, id: 1}));
+    storageNode.addChild(new TreeNode({name: "SSD", leaf: true, id: 0}));
 
   }
 
   ngOnInit() {
-
-    let treeNode = this.tree;
-    if (this.tree) {
-      let flatNode = new FlatNode();
-      flatNode.name = treeNode.name;
-      flatNode.leaf = treeNode.leaf;
-      this.flatNodes.push(flatNode);
-      flatNode.indent = 0;
-      flatNode.hide = false;
-      if (this.tree.children) {
-        this.tree.children.forEach(thisChildNode => {
-          let flatNodeChild = this.addChild(this.tree, thisChildNode, flatNode, flatNode.indent);
-          flatNodeChild.hide = false;
-          flatNode.addChild(flatNodeChild);
-          //this.flatNodes.push(flatNodeChild);
-
-        })
-      }
-    }
   }
 
-
-  addChild(parentNode, childNode, parentFlatNode, parentsIndent) {
-    let flatNode = new FlatNode();
-    this.flatNodes.push(flatNode);
-    flatNode.name = childNode.name;
-    flatNode.leaf = childNode.leaf;
-    flatNode.indent = parentsIndent + 1;
-    flatNode.hide = true;
-    if (childNode.children) {
-      childNode.children.forEach(thisChildNode => {
-        flatNode.addChild(this.addChild(childNode, thisChildNode, flatNode, flatNode.indent));
-      })
-    }
-    return flatNode;
-  }
-
-
-  clickNode(flatNode) {
-    if (this.currentFlatNode) {
-      this.currentFlatNode.highlight = false;
-    }
-    flatNode.highlight = true;
-    this.currentFlatNode = flatNode;
-    if (!flatNode.leaf) {
-      flatNode.collapsed = !flatNode.collapsed;
-      for (let child of flatNode.children) {
-        if (child.hide) {
-          this.expandNode(child);
-        } else {
-          this.collapseNode(child);
-        }
-      }
+  clicked(flatNode): void {
+    console.log(flatNode.lineage);
+    console.log(flatNode.treeNode.meta_data.checked);
+    if (flatNode.treeNode.meta_data.checked) {
+      this.selectedStatsSet.add(flatNode.name);
     } else {
-      this.clickedNode.emit(flatNode);
-    }
-  }
-
-  expandNode(node): void {
-    node.hide = false;
-  }
-
-  collapseNode(node): void {
-    if (!node.leaf) {
-      node.collapsed = true;
-      for (let child of node.children) {
-        this.collapseNode(child);
-      }
-    }
-    node.hide = true;
-  }
-
-  getIndentHtml = (node) => {
-    let s = "";
-    if (node.hasOwnProperty("indent")) {
-      for (let i = 0; i < node.indent - 1; i++) {
-        s += "<span style=\"color: white\">&rarr;</span>";
-      }
-      if (node.indent)
-        s += "<span>&nbsp;&nbsp;</span>";
+      this.selectedStatsSet.delete(flatNode.name);
     }
 
-    return s;
-  };
+    // this.selectedStats = Array.from(this.selectedStatsSet);
+  }
+
+  deleteStats(stat): void {
+    this.selectedStatsSet.delete(stat);
+
+  }
 
 }

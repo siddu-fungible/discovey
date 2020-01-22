@@ -1,5 +1,3 @@
-
-
 <div class="fun-flex-container fun-action-nav">
   <app-back></app-back>
   <div class="fun-spacer"></div>
@@ -8,15 +6,18 @@
   <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context
     options
   </button>
-  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': viewingCharts}" (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select
+  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': viewingCharts}"
+          (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select
     charts
   </button>
   <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console
     log
   </button>
-  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingArtifactPanel}" (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs
+  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingArtifactPanel}"
+          (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs
   </button>
-  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingTablesPanel}" (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables
+  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingTablesPanel}"
+          (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables
   </button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
@@ -85,12 +86,21 @@
   <div style="display: flex; align-items: flex-end; flex-direction: column">
     <div class="fun-cancel-link" (click)="viewChartsClick()">Close</div>
   </div>
-  <div>Chart selection options</div>
+  <div class="fun-flex-container">
+    <app-tree class="fun-flex-item" [tree]="tree" (clickedNode)="clicked($event)"></app-tree>
+    <div class="fun-flex-item">
+      <div class="selectedOption" *ngFor="let stat of selectedStatsSet">
+      {{stat}}
+      </div>
+    </div>
+  </div>
+  <br>
+  <span class="fun-button-add" (click)="setStatistics()">Submit</span>
 </div>
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="" style="overflow: auto; height: 100%; width: 100%;">
   <div *ngIf="showingArtifactPanel" [@show]="showingArtifactPanel" style="padding: 10px">
-      <app-section-header [title]="'Artifacts'"></app-section-header>
+    <app-section-header [title]="'Artifacts'"></app-section-header>
     <div class="fun-panel-body">
       <div style="padding: 10px">
         <span>Filters:</span>
@@ -110,7 +120,6 @@
           </option>
         </select>
       </div>
-
 
 
       <table class="fun-table">
@@ -157,7 +166,8 @@
             <table class="fun-table">
               <tr>
                 <td class="fun-table-header"
-                    *ngFor="let header of testCaseTable.data.table_data.headers">{{ header }}</td>
+                    *ngFor="let header of testCaseTable.data.table_data.headers">{{ header }}
+                </td>
               </tr>
               <tr *ngFor="let row of testCaseTable.data.table_data.rows">
                 <td *ngFor="let rowElement of row">{{ rowElement }}</td>
@@ -242,7 +252,9 @@
                         (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
                   </span>
                 &nbsp;
-                  <i tooltip [tooltipContentString]="'Logs are not downloaded yet'" placement="right" (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)" class="fa fa-download" *ngIf="!checkpoint?.timeSeries"></i>
+                <i tooltip [tooltipContentString]="'Logs are not downloaded yet'" placement="right"
+                   (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)"
+                   class="fa fa-download" *ngIf="!checkpoint?.timeSeries"></i>
               </td>
               <td>{{ checkpoint.data.context_id }}</td>
               <td>{{ checkpoint.data.checkpoint }}</td>
@@ -287,7 +299,8 @@
                               <small>{{ seriesElement.relative_epoch_time | number: '1.3-3' }}</small>
                             </td>
                             <td>
-                              <div id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
+                              <div
+                                id="{{ currentTestCaseExecution.test_case_id }}_{{ seriesElement.data?.checkpoint_index }}_{{ seriesElement.data?.context_id }}">
                                   <span class="checkpoint-span">Checkpoint: <app-smart-label
                                     [value]="seriesElement.data.result"></app-smart-label>&nbsp;{{ seriesElement.data?.checkpoint }}
                                   </span>

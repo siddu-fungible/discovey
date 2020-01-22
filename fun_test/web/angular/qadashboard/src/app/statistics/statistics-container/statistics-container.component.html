@@ -14,12 +14,17 @@
       <app-bam
         [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
         [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo"
-        *ngIf="statistic.statisticsSubCategory.name ==='bam'">
+        *ngIf="statistic.statisticsSubCategory.name ==='usage_percent'">
       </app-bam>
       <app-vp-utilization
         [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
-        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo"
-        *ngIf="statistic.statisticsSubCategory.name ==='debug_vp_util'">
+        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="false"
+        *ngIf="statistic.statisticsSubCategory.name ==='utilization_distribution'">
+      </app-vp-utilization>
+      <app-vp-utilization
+        [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
+        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="true"
+        *ngIf="statistic.statisticsSubCategory.name ==='utilization_by_cluster'">
       </app-vp-utilization>
     </ng-container>
   </ng-container>

@@ -1,23 +1,13 @@
 <div class="fun-flex-container" style="padding: 10px; width: 100%">
   <div class="fun-flex-item" style="flex: 0 0 40%">
-    <div *ngFor="let flatNode of flatNodes">
-    <div *ngIf="!flatNode.hide">
-       <span [innerHTML]="getIndentHtml(flatNode) | safeHtml">
-                         </span><span [ngClass]="{highlight: flatNode.highlight}" class="fun-action-link"
-                                      (click)="clickNode(flatNode)">{{ flatNode.name }}</span>
-      <span *ngIf="!flatNode.leaf">
-        &nbsp;
-        <span class="fa fa-angle-down" style="font-weight: bolder; font-size: medium" *ngIf="!flatNode.collapsed"
-              (click)="clickNode(flatNode)">
-              </span>
-        <span class="fa fa-angle-right" style="font-weight: bolder; font-size: medium" *ngIf="flatNode.collapsed"
-              (click)="clickNode(flatNode)">
-              </span>
-            </span>
-    </div>
-  </div>
+    <app-tree [tree]="tree" (clickedNode)="clicked($event)"></app-tree>
   </div>
   <div class="fun-flex-item" style="flex: 0 0 60%">
-    Charts coming soon
+    <div>
+      <span  class="selectedOption" *ngFor="let stat of selectedStatsSet">
+      {{stat}}
+      <!--<span  style="cursor: pointer" (click)="deleteStats(stat)">&#10006;</span>-->
+    </span>
+    </div>
   </div>
 </div>
