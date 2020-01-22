@@ -24,7 +24,7 @@ export class BamComponent implements OnInit, OnChanges {
   suiteExecutionId: number = null;
   bmUsagePerClusterPoolNames: string [] = ["default_alloc_pool", "nu_erp_fcp_pool"];
   bmUsagePerClusterPoolKeys: string [] = ["usage_percent"];
-  clusterIndexes = Array.from(Array(9).keys());
+  clusterIndexes = Array.from(Array(8).keys());
   detectedF1Indexes = new Set();
   showTable: boolean = false;
   showCharts: boolean = false;

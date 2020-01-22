@@ -87,7 +87,7 @@ class F1 {
 
 
   constructor() {
-    for (let index = 0; index < 9; index++) {
+    for (let index = 0; index < 8; index++) {
       this.clusters.push(new Cluster(index));
     }
   }
