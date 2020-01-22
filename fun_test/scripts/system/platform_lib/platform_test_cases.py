@@ -598,17 +598,29 @@ class PortSplitTestCase(PlatformGeneralTestCase):
     @run_deco
     def run(self):
         self.get_dpcsh_data_for_cmds("port enableall")
+        self.docker_bringup_all_fpg_ports(f1=0)
+        fun_test.sleep("Ports to be up", seconds=40)
 
         port_num = 0
+        brkmode = "no_brk_100g"
+        self.port_break_dpcsh(port_num, brkmode)
 
-        speed = "100g"
-        self.split_n_verify_port_link_status(port_num, speed)
+        port_num = 4
+        self.port_break_dpcsh(port_num, brkmode)
 
+        port_num = 0
         speed = "25g"
         self.split_n_verify_port_link_status(port_num, speed)
 
-        speed = "100g"
-        self.split_n_verify_port_link_status(port_num, speed)
+        port_num = 0
+        brkmode = "no_brk_100g"
+        self.port_break_dpcsh(port_num, brkmode)
+
+        port_num = 4
+        self.port_break_dpcsh(port_num, brkmode)
+
+        self.verify_port_link_status_ethtool(f1=0, port_num_list=[1, 2, 3], speed="100g", link_detected="no")
+
 
 
 class General(PlatformGeneralTestCase):

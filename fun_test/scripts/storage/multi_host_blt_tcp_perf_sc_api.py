@@ -1065,7 +1065,9 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.f1_ips = fun_test.shared_variables["f1_ips"]
 
-        reboot_timer = FunTimer(max_time=600)
+        total_reconnect_time = 600
+        add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)
 
         # Reset COMe
         reset = self.fs[0].reset(hard=False)
@@ -1082,8 +1084,10 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(containers_status, "All containers up")
 
         # Ensure API server is up
+        api_server_timeout = fun_test.shared_variables['benchmark_dict'][self.testcase]["api_server_up_timeout"]
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api), "Ensure API server is up")
+        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=api_server_timeout),
+                             "Ensure API server is up")
 
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
 
@@ -1094,42 +1098,66 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
         fun_test.log("Nvme device name is {}".format(nvme_device))
         nvme_device_name = nvme_device.split("/")[-1]
+        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
+
+        fun_test.log("Checking for routes on host and docker containers")
+        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+        docker_f1_handle.command("arp -n")
+        docker_f1_handle.command("route -n")
+        docker_f1_handle.command("ifconfig")
+        fun_test.log("\nRoutes from host {}".format(host_handle))
+        host_handle.command("arp -n")
+        host_handle.command("route -n")
+        host_handle.command("ifconfig")
+
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
             if (vols['status'] and vols['data']) and not volume_found:
                 if vol_uuid in vols['data'].keys():
                     fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
-                                           "BLT Volume {} is persistent".format(vol_uuid))
+                                         "BLT Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
                 nvme_list_output = host_handle.sudo_command("nvme list")
                 if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
                     nvme_list_found = True
                     break
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
+            else:
+                fun_test.log("Checking for routes on host and docker containers")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                docker_f1_handle.command("arp -n")
+                docker_f1_handle.command("route -n")
+                docker_f1_handle.command("ifconfig")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
+        if not nvme_list_found:
+            fun_test.log("Printing dmesg from host {}".format(host_handle))
+            host_handle.command("dmesg")
         fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
-                                                                                            host_handle))
+                                                                                                host_handle))
 
         # Check host F1 connectivity
-        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Checking host F1 connectivity")
         for ip in self.f1_ips:
             ping_status = host_handle.ping(dst=ip)
             if not ping_status:
-                fun_test.log("Routes from docker container")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
                 docker_f1_handle.command("arp -n")
                 docker_f1_handle.command("route -n")
                 docker_f1_handle.command("ifconfig")
-                fun_test.log("Routes from host")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
                 host_handle.command("arp -n")
                 host_handle.command("route -n")
                 host_handle.command("ifconfig")
 
             fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
-                                    format(host_handle.host_ip, ip))
+                                   format(host_handle.host_ip, ip))
 
         # Run fio
         benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
@@ -1152,12 +1180,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
     def cleanup(self):
         super(MultiHostFioRandReadAfterReboot, self).cleanup()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
     bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
-
