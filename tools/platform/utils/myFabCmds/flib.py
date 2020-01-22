@@ -819,3 +819,24 @@ def redfish_generic(tag='Systems'):
         redfish_credentials = env.thissetup['rf'][0:3]
         rfcmd = "redfishtool -r {} -u {} -p {} -A Basic -S Always ".format(*redfish_credentials) + tag
         local(rfcmd)
+
+@roles('come')
+@task
+def get_and_build_drv(version=None, install=False):
+    if not version:
+        sys.exit('\nATTENTION !! please provide a valid bundle number to extract ...\n')
+    bundle_drops_directory = '/home/fun/bundle_drops'
+    with settings(hide('stdout', 'stderr'), warn_only=True):
+        if not exists(bundle_drops_directory):
+            run('mkdir -p {}'.format(bundle_drops_directory))
+        with cd (bundle_drops_directory):
+            run('wget http://vnc-shared-06.fungible.local:9669/fs1600-bundles/{}/install_funeth-bld-{}.sh'.format(version, version))
+            sudo('bash install_funeth-bld-{}.sh --noexec --target drivers_{}'.format(version, version))
+            with cd('drivers_{}/temp'.format(version)):
+                sudo('tar xzf fungible-host-drivers.src.tgz')
+                sudo('tar xzf generator-bin.tgz')
+                sudo('tar xzf hci.tgz')
+                with prefix('export WORKSPACE=$(pwd) && export SDKDIR=$(pwd)'):
+                    sudo('bash build_driver.sh')
+
+    print ("drivers should not be avaliable in {}/drivers_{}/temp/opt/fungible/drivers".format(bundle_drops_directory, version))
