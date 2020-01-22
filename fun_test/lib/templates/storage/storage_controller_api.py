@@ -233,7 +233,7 @@ class StorageControllerApi(object):
         return result
 
     def get_dpu_state(self, dpu_index):
-        result = {"status": False, "data":{}}
+        result = {"status": False, "data": {}}
         url = "topology/dpus/FS1.{}/state".format(dpu_index)
         response = self.execute_api("GET", url)
         fun_test.log("GET {}".format(url))
@@ -269,6 +269,7 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return res
+
 
 if __name__ == "__main__":
     s = StorageControllerApi(api_server_ip="fs144-come")
