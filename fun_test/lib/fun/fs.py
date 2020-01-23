@@ -2497,7 +2497,8 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.set_f1s()
         self.come.initialize(disable_f1_index=self.disable_f1_index)
-        self.come.setup_dpc()
+        if not self.already_deployed:
+            self.come.setup_dpc()
 
 
         self.come.detect_pfs()
