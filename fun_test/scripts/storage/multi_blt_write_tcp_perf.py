@@ -301,8 +301,8 @@ class MultiBLTVolumePerformanceTestcase(FunTestCase):
         self.host_handles = fun_test.shared_variables["host_handles"]
         self.host_ips = fun_test.shared_variables["host_ips"]
         self.end_host = self.host_handles[self.host_ips[0]]
-        self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
-        self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
+        # self.numa_cpus = fun_test.shared_variables["numa_cpus"][self.host_ips[0]]
+        # self.total_numa_cpus = fun_test.shared_variables["total_numa_cpus"][self.host_ips[0]]
         self.num_f1s = fun_test.shared_variables["num_f1s"]
         self.test_network = {}
         self.test_network["f1_loopback_ip"] = self.f1_ips
