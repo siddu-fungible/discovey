@@ -80,7 +80,7 @@
       }
     },
     "host_info": [
-      "cab02-qa-12"
+      "mktg-server-01"
     ]
   },
   "fs-121": {
@@ -164,7 +164,8 @@
       }
     },
     "host_info": [
-        "mktg-server-09"
+        "mktg-server-02",
+        "mktg-server-03"
     ]
   },
   "fs-122": {
@@ -626,7 +627,7 @@
       }
     },
     "host_info": [
-      "mktg-server-13"
+      "cab02-qa-09"
     ]
   },
   "fs-144": {
@@ -794,7 +795,7 @@
       }
     },
     "host_info": [
-      "mktg-server-11"
+      "cab02-qa-12"
     ]
   },
   "fs-inspur": {
