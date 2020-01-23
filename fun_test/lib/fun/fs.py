@@ -1414,23 +1414,27 @@ class ComE(Linux):
         self.dpc_ready = None
         self.get_build_properties()
         fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
-        fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
-        for f1_index in range(self.NUM_F1S):
-            self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
-
-        fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
-        fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
-        fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
-        if self.fs.statistics_enabled:
-            fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
-            self.fs.dpc_for_statistics_ready = True
-        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
-        if self.hbm_dump_enabled:
-            fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
-
         if not self.fs.already_deployed:
-            self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+            fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
+            for f1_index in range(self.NUM_F1S):
+                self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
+            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
+            fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
+
+            if self.fs.statistics_enabled:
+                fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
+                self.fs.dpc_for_statistics_ready = True
+
+            self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
+            if self.hbm_dump_enabled:
+                fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
+            self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+        else:
+            self.fs.dpc_for_statistics_ready = True
+            self.dpc_ready = True
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
 
         return True
 
@@ -1596,7 +1600,7 @@ class ComE(Linux):
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
-        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
+        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")   #TODO
         fun_test.test_assert(expression=self.list_files("dpcsh.tgz"),
                              message="dpcsh.tgz downloaded",
                              context=self.context)
