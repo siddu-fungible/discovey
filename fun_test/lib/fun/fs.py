@@ -949,17 +949,6 @@ class BootupWorker(Thread):
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
-                # try:
-                #    come_initialized = come.initialize()
-                #    try:
-                #        fs_health = self.fs.health()
-                #        expected_containers_running = come.ensure_expected_containers_running()
-                #    except Exception as ex:
-                #        fun_test.critical(str(ex))
-                # except Exception as ex:
-                #    fun_test.critical(str(ex))
-
-                # if not come_initialized or not fs_health or not expected_containers_running:
                 if True:
                     come.fs_reset()
                     fs.come = None
