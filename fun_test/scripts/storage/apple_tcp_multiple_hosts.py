@@ -20,10 +20,10 @@ def fio_parser(arg1, host_index, **kwargs):
 
 
 def get_iostat(host_thread, count, sleep_time, iostat_interval, iostat_iter, iostat_timeout):
-    host_thread.sudo_command("sleep {} ; free -g ; iostat {} {} -d nvme0n1 > /tmp/iostat.log".
+    host_thread.sudo_command("sleep {} ; free -g ; iostat {} {} -d nvme0c0n1 > /tmp/iostat.log".
                              format(sleep_time, iostat_interval, iostat_iter), timeout=iostat_timeout)
     fun_test.shared_variables["iostat_output"][count] = \
-        host_thread.sudo_command("awk '/^nvme0n1/' <(cat /tmp/iostat.log) | sed 1d")
+        host_thread.sudo_command("awk '/^nvme0c0n1/' <(cat /tmp/iostat.log) | sed 1d")
     host_thread.disconnect()
 
 

@@ -145,6 +145,8 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = False
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))

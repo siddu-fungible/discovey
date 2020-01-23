@@ -2835,7 +2835,7 @@ if __name__ == "__main__8_14_1:4K_RAND_WR_COMP":
     print json.dumps(new_charts, indent=4)
 
 
-if __name__ == "__main__":
+if __name__ == "__main_bltvolume__":
     owner_info = "Alagarswamy Devaraj (alagarswamy.devaraj@fungible.com)"
     source = "TBD"
     base_line_date = datetime(year=2019, month=12, day=03, minute=0, hour=0, second=1)
@@ -2885,3 +2885,75 @@ if __name__ == "__main__":
         new_charts.append(leaf_chart.get_metrics_json_blob())
 
     print json.dumps(new_charts, indent=4)
+
+if __name__ == "__main__":
+    metric_model_name = "AlibabaRdmaPerformance"
+    charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
+    for chart in charts:
+        if "latency" in chart.internal_chart_name:
+            chart.positive = False
+        else:
+            chart.positive = True
+        chart.save()
+    print "edited all the rdma charts positive flag"
+
+    internal_1500_2_hosts_chart_names = ["alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_1",
+                            "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_1",
+                            "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_1"]
+
+    internal_9000_2_hosts_chart_names = ["alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth_size_4096",
+                                         "alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate_size_4096",
+                                         "alibaba_rdma_fcp_f1_2_mtu_9000_write_latency_size_4096"]
+
+    internal_1500_4_hosts_chart_names = ["alibaba_rdma_fcp_f1_2_mtu_1500_write_bandwidth_size_1_hosts_4",
+                                         "alibaba_rdma_fcp_f1_2_mtu_1500_write_packet_rate_size_1_hosts_4",
+                                         "alibaba_rdma_fcp_f1_2_mtu_1500_write_latency_size_1_hosts_4"]
+
+    internal_9000_4_hosts_chart_names = ["alibaba_rdma_fcp_f1_2_mtu_9000_write_bandwidth_size_4096_hosts_4",
+                                         "alibaba_rdma_fcp_f1_2_mtu_9000_write_packet_rate_size_4096_hosts_4",
+                                         "alibaba_rdma_fcp_f1_2_mtu_9000_write_latency_size_4096_hosts_4"]
+
+    sizes = {8192: "8192", 16384: "16K", 32768: "32K", 65536: "64K", 131072: "128K"}
+    internal_chart_names = [internal_1500_2_hosts_chart_names, internal_1500_4_hosts_chart_names,
+                            internal_9000_2_hosts_chart_names, internal_9000_4_hosts_chart_names]
+    base_line_date = datetime(year=2020, month=01, day=15, minute=0, hour=0, second=1)
+    for internal_names in internal_chart_names:
+        for internal_name in internal_names:
+            new_charts = []
+            chart = MetricChart.objects.get(internal_chart_name=internal_name)
+            positive = chart.positive
+            for size in sizes:
+                chart_name = "Size " + sizes[size]
+                index = internal_name.find('size_') + 5
+                internal_chart_name = internal_name[:index] + sizes[size]
+                if "hosts" in internal_name:
+                    internal_chart_name = internal_name[:index] + sizes[size] + "_hosts_4"
+                data_sets = chart.get_data_sets()
+                for data_set in data_sets:
+                    data_set["output"]["reference"] = -1
+                    data_set["output"]["min"] = 0
+                    data_set["output"]["max"] = -1
+                    data_set["output"]["expected"] = -1
+                    data_set["output"]["best"] = -1
+                    if positive:
+                        data_set["inputs"]["input_size_bandwidth"] = size
+                    else:
+                        data_set["inputs"]["input_size_latency"] = size
+                # print json.dumps(data_sets)
+                leaf_chart = ml.create_leaf(chart_name=chart_name,
+                                            internal_chart_name=internal_chart_name,
+                                            data_sets=data_sets,
+                                            leaf=True,
+                                            description=chart.description,
+                                            owner_info=chart.owner_info,
+                                            source=chart.source,
+                                            positive=chart.positive, y1_axis_title=chart.y1_axis_title,
+                                            visualization_unit=chart.y1_axis_title,
+                                            metric_model_name=chart.metric_model_name,
+                                            base_line_date=base_line_date,
+                                            work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                            workspace_ids=[])
+                new_charts.append(leaf_chart.get_metrics_json_blob())
+            # print json.dumps(new_charts, indent=4)
+    print "added new charts for different sizes"

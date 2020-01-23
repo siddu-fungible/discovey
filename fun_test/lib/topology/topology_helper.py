@@ -212,10 +212,10 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
-    def deploy(self):
+    def deploy(self, already_deployed=False):
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
-        fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology), "Allocate topology")
+        fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
         if not fun_test.is_simulation():
             fun_test.test_assert(self.validate_topology(), "Validate topology")
         return self.expanded_topology
@@ -318,7 +318,7 @@ class TopologyHelper:
         return True
 
     @fun_test.safe
-    def allocate_topology(self, topology):
+    def allocate_topology(self, topology, already_deployed=False):
 
         if True:  # Storage style where each container has F1 and Host in it
 
@@ -347,7 +347,10 @@ class TopologyHelper:
                 fun_test.simple_assert(orchestrator, "Topology retrieved container orchestrator")
 
                 fun_test.debug("Allocating the DUT")
-                self.allocate_dut(dut_index=dut_index, dut_obj=dut_obj, orchestrator_obj=orchestrator)
+                self.allocate_dut(dut_index=dut_index,
+                                  dut_obj=dut_obj,
+                                  orchestrator_obj=orchestrator,
+                                  already_deployed=already_deployed)
 
             peer_allocation_duts = duts.values()  # DUT indexes that need peer allocation
             simulation_mode_found = False
@@ -501,9 +504,11 @@ class TopologyHelper:
         return linux_obj
 
     @fun_test.safe
-    def allocate_dut(self, dut_index, dut_obj, orchestrator_obj=None):
+    def allocate_dut(self, dut_index, dut_obj, orchestrator_obj=None, already_deployed=False):
         fun_test.simple_assert(orchestrator_obj, "orchestrator")
-        dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index, dut_obj=dut_obj)
+        dut_instance = orchestrator_obj.launch_dut_instance(dut_index=dut_index,
+                                                            dut_obj=dut_obj,
+                                                            already_deployed=already_deployed)
         fun_test.test_assert(dut_instance, "allocate_dut: Launch DUT instance")
         dut_obj.set_instance(dut_instance)
         return dut_instance
@@ -614,55 +619,79 @@ class TopologyHelper:
 
 
 if __name__ == "__main__":
-    topology_dict = {
-        "name": "Basic Storage",
-        "dut_info": {
-            0: {
-                "mode": Dut.MODE_SIMULATION,
-                "type": Dut.DUT_TYPE_FSU,
-                "interface_info": {
-                    1: {
-                        "hosts": 1
-                    }
-                },
-                "start_mode": F1.START_MODE_NORMAL
-            }
+    """
+    -    topology_dict = {
+    -        "name": "Basic Storage",
+    -        "dut_info": {
+    -            0: {
+    -                "mode": Dut.MODE_SIMULATION,
+    -                "type": Dut.DUT_TYPE_FSU,
+    -                "interface_info": {
+    -                    1: {
+    -                        "hosts": 1
+    -                    }
+    -                },
+    -                "start_mode": F1.START_MODE_NORMAL
+    -            }
+    -
+    -        }
+    -    }
+    -
+    -    topology_dict = {
+    -        "name": "Basic Storage",
+    -        "dut_info": {
+    -            0: {
+    -                "mode": Dut.MODE_SIMULATION,
+    -                "type": Dut.DUT_TYPE_FSU,
+    -                "interface_info": {
+    -                    1: {
+    -                        "hosts": 0
+    -                    }
+    -                },
+    -                "start_mode": F1.START_MODE_DPCSH_ONLY
+    -            }
+    -
+    -        }
+    -    }
+    -
+    -    topology_dict = {
+    -        "name": "Basic Storage",
+    -        "dut_info": {
+    -            0: {
+    -                "mode": Dut.MODE_SIMULATION,
+    -                "type": Dut.DUT_TYPE_FSU,
+    -                "interface_info": {
+    -                    1: {
+    -                        "vms": 1
+    -                    }
+    -                },
+    -                "start_mode": F1.START_MODE_DPCSH_ONLY
+    -            }
+    -
+    -        }
+    -    }
 
-        }
-    }
+    
+    """
 
-    topology_dict = {
-        "name": "Basic Storage",
-        "dut_info": {
-            0: {
-                "mode": Dut.MODE_SIMULATION,
-                "type": Dut.DUT_TYPE_FSU,
-                "interface_info": {
-                    1: {
-                        "hosts": 0
-                    }
-                },
-                "start_mode": F1.START_MODE_DPCSH_ONLY
-            }
 
-        }
-    }
+    spec = fun_test.get_asset_manager().get_test_bed_spec(name="fs-inspur")
+    topology_helper = TopologyHelper(spec=spec)
 
-    topology_dict = {
-        "name": "Basic Storage",
-        "dut_info": {
-            0: {
-                "mode": Dut.MODE_SIMULATION,
-                "type": Dut.DUT_TYPE_FSU,
-                "interface_info": {
-                    1: {
-                        "vms": 1
-                    }
-                },
-                "start_mode": F1.START_MODE_DPCSH_ONLY
-            }
+    """
+    topology_helper.set_dut_parameters(dut_index=0,
+                                       custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g",
+                                       fs_parameters={"already_deployed": True})
+    """
+    expanded_topology = topology_helper.get_expanded_topology()
+    dut = expanded_topology.get_dut(index=0)
+    bond_interfaces = dut.get_bond_interfaces(f1_index=0)
+    first_bond_interface = bond_interfaces[0]
+    print first_bond_interface.ip
+    hosts = expanded_topology.get_hosts()
+    first_host = hosts[hosts.keys()[0]]
+    host_instance = first_host.get_instance()
+    # host_instance_ip = host_instance.get_test_interface(index=0).ip
 
-        }
-    }
+    topology_helper.deploy(already_deployed=True)
 
-    TopologyHelper(spec=topology_dict).deploy()
