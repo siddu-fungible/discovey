@@ -64,7 +64,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "SnapVolCreation": {
+  "C12991": {
     "drive_margin": 0,
     "snap_count": 1,
     "num_ssd": 1,
@@ -106,7 +106,7 @@
       }
     }
   },
-  "SnapVolAttach": {
+  "C35434": {
     "drive_margin": 0,
     "snap_count": 1,
     "num_ssd": 1,
@@ -148,7 +148,49 @@
       }
     }
   },
-  "SnapVolRead": {
+  "C17750": {
+    "drive_margin": 0,
+    "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "skip_fio": true,
+    "snap_attach": true,
+    "attach_basevol": false,
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "C35290": {
     "drive_margin": 0,
       "snap_count": 1,
     "num_ssd": 1,
@@ -178,123 +220,7 @@
     },
     "fio_modes": [
       "write",
-      "read"
-    ],
-    "fio_bs_iodepth": [
-      "(4096, 1)"
-    ],
-    "expected_volume_stats": {
-      "write": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 1024
-      },
-      "read": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 0
-      },
-      "randwrite": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 1024
-      },
-      "randread": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 0
-      }
-    }
-  },
-  "SnapVolAttachNoBv": {
-    "snap_count": 1,
-    "drive_margin": 0,
-    "num_ssd": 1,
-    "blt_count": 1,
-    "controllers": 1,
-    "syslog": "default",
-    "skip_fio": true,
-    "snap_attach": true,
-    "attach_basevol": false,
-    "nqn": "nqn1",
-    "transport_type": "tcp",
-    "transport_port": 1099,
-    "nvme_io_queues": 16,
-    "blt_details": {
-      "capacity": 5368709120,
-      "block_size": 4096
-    },
-    "command_timeout": 5,
-    "iter_interval": 2,
-    "fio_loop": 1,
-    "detach_vol": false,
-    "fio_cmd_args": {
-      "size": "100%",
-      "verify": "pattern",
-      "verify_pattern": "\\\"DEADBEEF\\\"",
-      "verify_fatal": 1,
-      "timeout": 1200
-    },
-    "fio_modes": [
-      "write",
-      "write"
-    ],
-    "fio_bs_iodepth": [
-      "(4096, 1)"
-    ],
-    "expected_volume_stats": {
-      "write": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 1024
-      },
-      "read": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 0
-      },
-      "randwrite": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 1024
-      },
-      "randread": {
-        "fault_injection": 0,
-        "num_reads": 1024,
-        "num_writes": 0
-      }
-    }
-  },
-  "SnapVolDiffWrite": {
-    "snap_count": 1,
-    "drive_margin": 0,
-    "num_ssd": 1,
-    "blt_count": 1,
-    "attach_basevol": true,
-    "controllers": 1,
-    "syslog": "default",
-    "nqn": "nqn1",
-    "transport_type": "tcp",
-    "transport_port": 1099,
-    "nvme_io_queues": 16,
-    "blt_details": {
-      "capacity": 5368709120,
-      "block_size": 4096
-    },
-    "command_timeout": 5,
-    "iter_interval": 2,
-    "fio_loop": 1,
-    "detach_vol": false,
-    "fio_cmd_args": {
-      "size": "100%",
-      "verify": "pattern",
-      "verify_pattern": "\\\"DEADBEEF\\\"",
-      "verify_fatal": 1,
-      "timeout": 1200
-    },
-    "fio_modes": [
-      "write",
-      "write"
+      "randread"
     ],
     "fio_bs_iodepth": [
       "(4096, 1)"
