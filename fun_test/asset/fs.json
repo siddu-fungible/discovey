@@ -274,14 +274,14 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.167"
+      "mgmt_ip": "10.1.112.108"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "10.1.112.107"
     },
-    "gateway_ip": "10.1.105.1",
+    "gateway_ip": "10.1.112.1",
     "apc_info": {
       "username": "localadmin",
       "password": "Precious1*",
