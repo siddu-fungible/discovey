@@ -114,16 +114,20 @@ def single_fs_setup(obj):
     already_deployed = False
     if hasattr(obj, "already_deployed"):
         already_deployed = obj.already_deployed
-
     fun_test.log("Parameter already_deployed is set to: {}".format(already_deployed))
+
+    # Overriding default Number of F1 per FS value (Useful if only F1 needs to be brought up in setup)
+    num_f1_per_fs = 2
+    if hasattr(obj, "num_f1_per_fs"):
+        num_f1_per_fs = obj.num_f1_per_fs
+    fun_test.log("Number of F1 per FS value is set to: {}".format(num_f1_per_fs))
 
     # Deploying of DUTs
     for dut_index in obj.available_dut_indexes:
         obj.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                f1_parameters={0: {"boot_args": obj.bootargs[0]},
-                                                              1: {"boot_args": obj.bootargs[1]}},
-                                               fs_parameters={"already_deployed": already_deployed})
-    obj.topology = obj.topology_helper.deploy()
+                                                              1: {"boot_args": obj.bootargs[1]}})
+    obj.topology = obj.topology_helper.deploy(already_deployed=already_deployed)
     fun_test.test_assert(obj.topology, "Topology deployed")
 
     # Datetime required for daily Dashboard data filter
@@ -324,6 +328,8 @@ def single_fs_setup(obj):
         fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         if not already_deployed:
             for node_index, node in enumerate(nodes):
+                if node_index >= obj.num_f1_per_fs:
+                    continue
                 # Extracting the DUT's bond interface details
                 ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
                 ip = ip.split('/')[0]
