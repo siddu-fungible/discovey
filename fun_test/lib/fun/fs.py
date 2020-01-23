@@ -2794,6 +2794,10 @@ class Fs(object, ToDictMixin):
 
         return True
 
+    def get_storage_controller(self, f1_index=0):
+        f1 = self.get_f1(index=f1_index)
+        return f1.get_dpc_storage_controller()
+
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
         dpc_client = f1.get_dpc_client(auto_disconnect=auto_disconnect, statistics=statistics, csi_perf=csi_perf)
