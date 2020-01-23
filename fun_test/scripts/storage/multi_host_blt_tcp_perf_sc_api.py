@@ -271,9 +271,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
+        # fun_test.log("FS cleanup")  #Infra cleans'up the topology
+        # for fs in fun_test.shared_variables["fs_objs"]:
+        #    fs.cleanup()
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
