@@ -487,8 +487,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
     def cleanup(self):
-        self.stats_obj.stop(self.stats_collect_details)
-        self.storage_controller.verbose = True
+        pass
 
 
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):
