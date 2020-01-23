@@ -2783,7 +2783,7 @@ class Fs(object, ToDictMixin):
         #    fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
         come = self.get_come().clone()
-        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=(180 * 2) + 60,  # WORKAROUND
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
             if come.uptime() > worst_case_uptime:
