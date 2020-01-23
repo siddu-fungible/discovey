@@ -317,7 +317,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
             # Creating plex in custom drives
-            get_drive_uuid = get_drive_uuid_from_device_id(sc_obj=self.storage_controller,
+            get_drive_uuid = get_drive_uuid_from_device_id(storage_controller=self.storage_controller,
                                                            drive_ids_list=self.ec_info["drive_ids_list"])
             fun_test.simple_assert(get_drive_uuid["status"], "Drive uuid mapping with device id")
             self.ec_info["drive_uuids"] = get_drive_uuid["drive_uuids"]
