@@ -272,6 +272,9 @@ class SnapVolumeTestCase(FunTestCase):
         self.nqn_list = []
         self.bv_attach = False
 
+        if not hasattr(self, "snap_attach"):
+            self.snap_attach = False
+
         self.ctrlr_uuid = utils.generate_uuid()
         nqn = "nqn"
         self.nqn_list.append(nqn)
@@ -539,7 +542,7 @@ class SnapVolumeTestCase(FunTestCase):
         for x in range(1, self.snap_count + 1, 1):
             if self.snap_attach:
                 command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                                       ns_id=x,
+                                                                                       ns_id=x + 1,
                                                                                        command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 if command_result["status"]:
