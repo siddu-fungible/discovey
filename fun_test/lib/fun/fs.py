@@ -707,8 +707,7 @@ class Bmc(Linux):
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-        self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
-
+        output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
         return True
 
     def reset_come(self):
@@ -853,6 +852,8 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
+            if self.fs.get_revision() in ["2"]:
+                ERROR_REGEXES.append('i2c write error.*')
             for error_regex in ERROR_REGEXES:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
