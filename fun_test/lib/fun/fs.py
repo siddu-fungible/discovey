@@ -1413,8 +1413,10 @@ class ComE(Linux):
         self.disable_f1_index = disable_f1_index
         self.dpc_ready = None
         self.get_build_properties()
-        fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
         if not self.fs.already_deployed:
+            fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup",
+                                   context=self.context)
+
             fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
             for f1_index in range(self.NUM_F1S):
                 self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
