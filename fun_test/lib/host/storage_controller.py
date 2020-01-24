@@ -32,6 +32,20 @@ class StorageController(NetworkController, DpcshClient):
         self.controller_api = ControllerApi(api_client)
         self.network_api = NetworkApi(api_client)
 
+    def health(self):
+        api_server_health = False
+        timer = FunTimer(max_time=120)
+        while not timer.is_expired():
+            try:
+                if self.controller_api.get_sc_health().status:
+                    fun_test.log("Api Server is Healthy")
+                    api_server_health = True
+                    break
+            except:
+                fun_test.critical("API server not up yet")
+            fun_test.sleep("Waiting for API server, remaining time: %s" % timer.remaining_time(), seconds=15)
+        return api_server_health
+
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
             cfg_dict = {"class": "controller", "opcode": "IPCFG", "params": {"ip": ip, "port": port}}
