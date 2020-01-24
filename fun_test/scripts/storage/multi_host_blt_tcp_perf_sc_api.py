@@ -1067,7 +1067,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         total_reconnect_time = 600
         add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
-        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time) #WORKAROUND, why do we need so much time
 
         # Reset COMe
         reset = self.fs[0].reset(hard=False)
