@@ -1192,5 +1192,38 @@
       "password": "Precious1*",
       "host_ip": "r10-pdu3"
     }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs174-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs174-come"
+    },
+    "name": "fs-174",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "",
+      "mgmt_ip": "fs174-fpga",
+      "telnet_ip": "fs-terminal.fungible.local",
+      "telnet_port": 2037,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "r8-pdu3.fungible.local"
+    }
   }
 ]
