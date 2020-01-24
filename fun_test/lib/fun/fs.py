@@ -948,6 +948,7 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
+                come.get_build_properties()
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
