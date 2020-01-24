@@ -9,7 +9,7 @@
     "update_workspace": false,
     "update_deploy_script": false,
     "funcp_mode": ["ep", "storage"],
-    "num_f1_per_fs": 2,
+    "num_f1_per_fs": 1,
     "num_f1s": 1,
     "num_hosts": 12,
     "fpg_int_prefix": "fpg",
