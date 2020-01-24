@@ -1152,6 +1152,7 @@ class ComEInitializationWorker(Thread):
 
             if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
                 self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                come = self.fs.get_come(clone=True)
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
