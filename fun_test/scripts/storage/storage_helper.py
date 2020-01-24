@@ -117,10 +117,10 @@ def single_fs_setup(obj):
     fun_test.log("Parameter already_deployed is set to: {}".format(already_deployed))
 
     # Overriding default Number of F1 per FS value (Useful if only F1 needs to be brought up in setup)
-    num_f1_per_fs = 2
-    if hasattr(obj, "num_f1_per_fs"):
-        num_f1_per_fs = obj.num_f1_per_fs
-    fun_test.log("Number of F1 per FS value is set to: {}".format(num_f1_per_fs))
+    if not hasattr(obj, "num_f1_per_fs"):
+        obj.num_f1_per_fs = 2
+
+    fun_test.log("Number of F1 per FS value is set to: {}".format(obj.num_f1_per_fs))
 
     # Deploying of DUTs
     for dut_index in obj.available_dut_indexes:
