@@ -327,6 +327,7 @@ def single_fs_setup(obj):
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
         fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         for node_index, node in enumerate(nodes):
+            # Commenting out the code as it's causing issue in dataplane assignment
             if node_index >= obj.num_f1_per_fs:
                 continue
             # Extracting the DUT's bond interface details
@@ -338,49 +339,49 @@ def single_fs_setup(obj):
                 str(0)]["route"][0]
             next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
             obj.f1_ips.append(ip)
-        if not already_deployed:
-            # Configuring Dataplane IP
-            fun_test.log(
-                "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
-                "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-            dataplane_configuration_success = False
-            num_tries = 3
-
-            while not dataplane_configuration_success and num_tries:
-                fun_test.log("Trials remaining {}".format(num_tries))
-                num_tries -= 1
-                result = obj.sc_api.configure_dataplane_ip(
-                    dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                    use_dhcp=False)
+            if not already_deployed:
+                # Configuring Dataplane IP
                 fun_test.log(
-                    "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
+                    "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
+                    "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
+                dataplane_configuration_success = False
+                num_tries = 3
 
-                dataplane_configuration_success = result["status"]
-                if not dataplane_configuration_success:
-                    fun_test.sleep("Wait for retry", seconds=10)
-                    try:
+                while not dataplane_configuration_success and num_tries:
+                    fun_test.log("Trials remaining {}".format(num_tries))
+                    num_tries -= 1
+                    result = obj.sc_api.configure_dataplane_ip(
+                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
+                        use_dhcp=False)
+                    fun_test.log(
+                        "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
+
+                    dataplane_configuration_success = result["status"]
+                    if not dataplane_configuration_success:
+                        fun_test.sleep("Wait for retry", seconds=10)
+                        try:
+                            fun_test.log("Just for debugging Start")
+                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp -n")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                    else:
                         fun_test.log("Just for debugging Start")
                         container_handle = obj.funcp_obj[0].container_info["F1-0"]
                         container_handle.ping(ip[:- 1] + "1")
-                        container_handle.command("arp -n")
+                        container_handle.command("arp")
                         container_handle.command("route -n")
                         container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
                         container_handle.command("ifconfig")
                         fun_test.log("Just for debugging End")
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                else:
-                    fun_test.log("Just for debugging Start")
-                    container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                    container_handle.ping(ip[:- 1] + "1")
-                    container_handle.command("arp")
-                    container_handle.command("route -n")
-                    container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                    container_handle.command("ifconfig")
-                    fun_test.log("Just for debugging End")
-            fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
-                                 format(node, ip))
-            fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
+                fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
+                                     format(node, ip))
+                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
     else:
         # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
         pass
