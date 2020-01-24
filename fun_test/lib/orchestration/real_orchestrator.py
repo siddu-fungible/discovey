@@ -15,7 +15,7 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
         s.TO_DICT_VARS.append("ORCHESTRATOR_TYPE")
         return s
 
-    def launch_dut_instance(self, dut_index, dut_obj):
+    def launch_dut_instance(self, dut_index, dut_obj, already_deployed=False):
         fs_obj = None
         fs_spec = None
         disable_f1_index = None
@@ -45,7 +45,8 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             fun_cp_callback=fun_cp_callback,
                             power_cycle_come=True,
                             skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
-                            fs_parameters=fs_parameters)
+                            fs_parameters=fs_parameters,
+                            already_deployed=already_deployed)
             self.dut_instance = fs_obj
             # Start Fs
             fun_test.test_assert(fs_obj.bootup(non_blocking=True, threaded=True), "FS bootup non-blocking initiated")

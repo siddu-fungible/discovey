@@ -582,6 +582,47 @@ class SnakeTest(PlatformGeneralTestCase):
         self.start_snake_test_verify(self.runtime)
 
 
+class PortSplitTestCase(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=24,
+                              summary="Port break down, regroup",
+                              steps="""""")
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        PlatformGeneralTestCase.setup(self)
+        # self.initialize_test_case_variables(testcase)
+        self.load_new_image = True
+        # self.initialize_dpcsh()
+
+    @run_deco
+    def run(self):
+        self.get_dpcsh_data_for_cmds("port enableall")
+        self.docker_bringup_all_fpg_ports(f1=0)
+        fun_test.sleep("Ports to be up", seconds=40)
+
+        port_num = 0
+        brkmode = "no_brk_100g"
+        self.port_break_dpcsh(port_num, brkmode)
+
+        port_num = 4
+        self.port_break_dpcsh(port_num, brkmode)
+
+        port_num = 0
+        speed = "25g"
+        self.split_n_verify_port_link_status(port_num, speed)
+
+        port_num = 0
+        brkmode = "no_brk_100g"
+        self.port_break_dpcsh(port_num, brkmode)
+
+        port_num = 4
+        self.port_break_dpcsh(port_num, brkmode)
+
+        self.verify_port_link_status_ethtool(f1=0, port_num_list=[1, 2, 3], speed="100g", link_detected="no")
+
+
+
 class General(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=24,
@@ -621,7 +662,8 @@ if __name__ == "__main__":
         PcieDeviceDetection,
         HostConnectionViaPcieBus,
         ComeVolumeCreation,
-        SnakeTest
+        SnakeTest,
+        PortSplitTestCase
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

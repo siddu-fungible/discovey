@@ -7,9 +7,9 @@
     "update_workspace": false,
     "update_deploy_script": false,
     "funcp_mode": ["ep", "storage"],
-    "num_f1_per_fs": 1,
+    "num_f1_per_fs": 2,
     "num_f1s": 1,
-    "num_hosts": 1,
+    "num_hosts": 4,
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 0,
     "f1_in_use": 0,
@@ -22,28 +22,6 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "csi_perf_pdtrace_hbm_size_kb": 204800,
-    "csr_network": {
-      "0": {
-        "test_interface_ip": "20.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:30",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "20.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      },
-      "4": {
-        "test_interface_ip": "21.1.1.1/24",
-        "test_interface_mac": "fe:dc:ba:44:66:31",
-        "test_net_route": {
-          "net": "29.1.1.0/24",
-          "gw": "21.1.1.2",
-          "arp": "00:de:ad:be:ef:00"
-        },
-        "f1_loopback_ip": "29.1.1.1"
-      }
-    },
     "api_server_port": 50220,
     "api_server_username": "admin",
     "api_server_password": "password",
@@ -54,7 +32,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "VolumeCreation": {
+  "RandReadWrite8kBlocks": {
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -72,15 +50,13 @@
       },
       "ndata": 4,
       "nparity": 2,
-      "capacity": 10737418240,
+      "capacity": 790273982464,
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 4,
+      "drive_ids_list": [1, 5, 6, 8, 3, 10]
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -95,29 +71,19 @@
     "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "ioengine": "libaio", "name": "bs_write", "do_verify": 0, "verify": "md5",  "timeout": 3600},
-    "fio_read_cmd_args": {"bs": "4k", "iodepth": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "ioengine": "libaio", "name": "bs_write", "do_verify": 1, "verify": "md5", "timeout": 3600},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
     "fio_size_timeout": 3600,
-    "fio_modes": ["randwrite"],
-    "fio_iodepth": [8, 16, 32, 64, 96, 128],
-    "full_run_iodepth": [8, 16],
-    "fio_job_name": "inspur_8k_random_write",
+    "fio_modes": ["randrw"],
+    "fio_iodepth": [32, 64],
+    "full_run_iodepth": [4],
+    "fio_job_name": "inspur_8k_random_read_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "collect_network_stats": false,
     "csi_perf_iodepth": [64],
-    "cal_amplification": true,
-    "volumes" : 200,
-    "vol_type" : "VOL_TYPE_BLK_LOCAL_THIN",
-    "encrypt" : false,
-    "allow_expansion" : false,
-    "stripe_count" : 12,
-    "data_protection":{},
-    "crc":false,
-    "compression_effort" : 0,
-    "volume_type" : "raw volume",
-    "capacity" : 107374182400
+    "cal_amplification": true
   }
 }

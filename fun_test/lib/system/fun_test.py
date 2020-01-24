@@ -315,6 +315,7 @@ class FunTest:
         self.started_epoch_time = get_current_epoch_time()
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
+        self.script_file_name = ""
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
@@ -856,7 +857,8 @@ class FunTest:
         self.pause_on_failure = False
 
     def set_topology_json_filename(self, filename):
-        self.fun_xml_obj.set_topology_json_filename(filename=filename)
+        if self.fun_xml_obj:
+            self.fun_xml_obj.set_topology_json_filename(filename=filename)
 
     def register_topologies(self, topology):
         self.topologies.append(topology)

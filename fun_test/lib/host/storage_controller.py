@@ -243,6 +243,18 @@ class StorageController(NetworkController, DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
+    def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
+        data = ["output"]
+        params = {"slot": device_id, "type": "hotswap", "action": action}
+        data.append(params)
+        return self.json_execute(verb="slot", data=data, command_duration=command_duration)
+
+    def get_ssd_power_status(self, device_id, command_duration=TIMEOUT):
+        data = ["input"]
+        params = {"slot": device_id, "type": "powergood"}
+        data.append(params)
+        return self.json_execute(verb="slot", data=data, command_duration=command_duration)
+
     def configure_ec_volume(self, ec_info, command_timeout=TIMEOUT):
 
         result = True
@@ -274,6 +286,15 @@ class StorageController(NetworkController, DpcshClient):
             ec_info['use_lsv'] = True
             fun_test.log("Configuring encryption enabled EC volume with key size: {}, xtweak size: {}".format(
                 ec_info['key_size'], ec_info['xtweak_size']))
+
+        # Check if drive_uuid is provided to create volume
+        if "drive_uuids" in ec_info.keys():
+            if len(ec_info["drive_uuids"]) < ec_info["num_volumes"] * (ec_info["ndata"] + ec_info["nparity"]):
+                fun_test.log("Repeating drive uuids for rest of volume plexes")
+                ec_info["drive_uuids"] = ec_info["drive_uuids"] * ec_info["num_volumes"]
+                ec_info["drive_uuids"] = ec_info["drive_uuids"][
+                                        :ec_info["num_volumes"] * (ec_info["ndata"] + ec_info["nparity"])]
+            fun_test.log("Plex will be created in custom defined drives: {}".format(ec_info["drive_uuids"]))
 
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
@@ -318,21 +339,43 @@ class StorageController(NetworkController, DpcshClient):
                                                          ec_info["volume_block"][vtype]
 
             # Configuring ndata and nparity number of BLT volumes
-            for vtype in ["ndata", "nparity"]:
-                ec_info["uuids"][num][vtype] = []
-                for i in range(ec_info[vtype]):
-                    this_uuid = utils.generate_uuid()
-                    ec_info["uuids"][num][vtype].append(this_uuid)
-                    ec_info["uuids"][num]["blt"].append(this_uuid)
-                    command_result = self.create_volume(
-                        type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
-                        block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
-                        group_id=num+3, command_duration=command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"],
-                                         "Creating {} {} {} {} {} bytes volume on DUT instance".
-                                         format(num, i, vtype, ec_info["volume_types"][vtype],
-                                                ec_info["volume_capacity"][num][vtype]))
+            if "drive_uuids" in ec_info:
+                plex_count = 0
+                for vtype in ["ndata", "nparity"]:
+                    ec_info["uuids"][num][vtype] = []
+                    for i in range(ec_info[vtype]):
+                        this_uuid = utils.generate_uuid()
+                        ec_info["uuids"][num][vtype].append(this_uuid)
+                        ec_info["uuids"][num]["blt"].append(this_uuid)
+                        command_result = self.create_volume(
+                            type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                            block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:],
+                            uuid=this_uuid,
+                            group_id=num + 3, drive_uuid=ec_info["drive_uuids"][plex_count],
+                            command_duration=command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"],
+                                             "Creating {} {} {} {} {} bytes volume on drive uuid {} DUT instance".
+                                             format(num, i, vtype, ec_info["volume_types"][vtype],
+                                                    ec_info["volume_capacity"][num][vtype],
+                                                    ec_info["drive_uuids"][plex_count]))
+                        plex_count += 1
+            else:
+                for vtype in ["ndata", "nparity"]:
+                    ec_info["uuids"][num][vtype] = []
+                    for i in range(ec_info[vtype]):
+                        this_uuid = utils.generate_uuid()
+                        ec_info["uuids"][num][vtype].append(this_uuid)
+                        ec_info["uuids"][num]["blt"].append(this_uuid)
+                        command_result = self.create_volume(
+                            type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                            block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
+                            group_id=num+3, command_duration=command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"],
+                                             "Creating {} {} {} {} {} bytes volume on DUT instance".
+                                             format(num, i, vtype, ec_info["volume_types"][vtype],
+                                                    ec_info["volume_capacity"][num][vtype]))
 
             # Configuring EC volume on top of BLT volumes
             this_uuid = utils.generate_uuid()

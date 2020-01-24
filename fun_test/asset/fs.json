@@ -42,12 +42,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.21.0"
+      "mgmt_ip": "fs6-bmc"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.21.10"
+      "mgmt_ip": "fs6-come"
     },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
@@ -55,8 +55,10 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.21.20"
+      "mgmt_ip": "fs6-fpga"
     },
+    "mpg_ips": ["10.1.21.168", "10.1.21.169"],
+
     "name": "fs-6"
   },
   {
@@ -274,14 +276,14 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.167"
+      "mgmt_ip": "10.1.112.108"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.168"
+      "mgmt_ip": "10.1.112.107"
     },
-    "gateway_ip": "10.1.105.1",
+    "gateway_ip": "10.1.112.1",
     "apc_info": {
       "username": "localadmin",
       "password": "Precious1*",
@@ -859,7 +861,7 @@
     },
     "name": "fs-144",
     "revision": "2",
-    "mpg_ips": ["10.1.108.88", "10.1.108.89"],
+    "mpg_ips": ["10.1.105.88", "10.1.105.89"],
     "gateway_ip": "10.1.105.1",
     "bundle_compatible": true,
     "fpga": {
@@ -890,8 +892,8 @@
       "mgmt_ip": "10.1.105.122"
     },
     "mpg_ips": [
-      "10.1.108.99",
-      "10.1.108.100"
+      "10.1.105.99",
+      "10.1.105.100"
     ],
     "fpga": {
       "mgmt_ssh_password": "root",

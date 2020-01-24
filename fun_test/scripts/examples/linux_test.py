@@ -24,9 +24,8 @@ linux_obj.scp(source_file_path="/tmp/a.sh", target_ip="qa-ubuntu-02", target_use
 # linux_obj.logger = NoLogger()
 output = linux_obj.command(command="grep ATTENTION /root/parser.log", include_last_line=True)
 
-o = linux_obj.command("ls -l")
 o = linux_obj.command("date")
+o = linux_obj.command("ls -l /jj")
 
-localhost_obj = Linux(host_ip="127.0.0.1", localhost=True)
-localhost_obj.command("lsmod")
+linux_obj.exit_status()
 

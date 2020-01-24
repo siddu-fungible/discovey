@@ -886,7 +886,7 @@ class Platform(RedFishTool, IpmiTool):
         return result
 
     def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
-        split_cmd = cmd.split(" ")
+        split_cmd = cmd.split(" ", 1)
         verb = split_cmd[0]
         data = split_cmd[1]
         if not getattr(self, "dpc_f1_0", False):
@@ -1042,6 +1042,96 @@ class Platform(RedFishTool, IpmiTool):
 
         fun_test.test_assert(f1_0_network_result, "Snake test on F1_0")
         fun_test.test_assert(f1_1_network_result, "Snake test on F1_1")
+
+    def verify_port_link_status(self, f1=0, port_num_list=[0], speed="100g", verify_sw=True, verify_hw=True, verfiy_fec=False, strict=True):
+        link_status = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0)
+        link_status_json = self.parse_link_status_out(link_status, f1, create_table=False)
+        result_list = []
+        for port_num in port_num_list:
+            result = self.verify_link_status_json(link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec)
+            result_list.append(result)
+            if strict:
+                fun_test.test_assert(result, "Validate port : {}".format(port_num))
+        final_result = all(result_list)
+        return final_result
+
+    def verify_link_status_json(self, link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec,
+                                verify_xcvr=True):
+        result = True
+        key = "lport-{}".format(port_num)
+        link_details = link_status_json[key]
+        speed = speed.upper()
+        if verify_sw and link_details["SW"] != 1:
+            result = False
+        if verify_hw and link_details["HW"] != 1:
+            result = False
+        if verfiy_fec and link_details["FEC"] != 1:
+            result = False
+        if verify_xcvr and link_details["xcvr"] != "PRESENT":
+            result = False
+        if link_details["speed"] != speed:
+            result = False
+        return result
+
+    def brk_mode_speed_conversion(self, speed=None, brkmode=None):
+        result = None
+        if speed == "100g":
+            result = "no_brk_100g"
+        if speed == "25g":
+            result = "brk_4x25g"
+        if brkmode == "brk_4x25g":
+            result = "25g"
+        if brkmode == "no_brk_100g":
+            result = "100g"
+        return result
+
+
+    def split_n_verify_port_link_status(self, port_num, speed, f1=0, verify_sw=True, verify_hw=True, verfiy_fec=False,
+                                        verify_using_ethtool=True):
+        brkmode = self.brk_mode_speed_conversion(speed=speed)
+        if speed == "100g":
+            port_num_list = [port_num]
+            self.port_break_dpcsh(port_num, brkmode)
+        elif speed == "25g":
+            port_num_list = range(port_num, port_num + 8)
+            self.port_break_dpcsh(port_num, brkmode)
+
+            port_num_next = port_num + 4
+            self.port_break_dpcsh(port_num_next, brkmode)
+
+        self.verify_port_link_status(f1, port_num_list, speed, verify_sw=verify_sw, verify_hw=verify_hw,
+                                     verfiy_fec=verfiy_fec)
+        if verify_using_ethtool:
+            self.verify_port_link_status_ethtool(f1, port_num_list, speed)
+
+    def verify_port_link_status_ethtool(self, f1, port_num_list=[0], speed="100g", link_detected="yes"):
+        docker = self.come_handle.get_funcp_container(f1)
+        for fpg_port in port_num_list:
+            result = True
+            fpg = "fpg" + str(fpg_port)
+            response = docker.ethtool(fpg)
+            fun_test.test_assert_expected(link_detected, response["link_detected"], fpg + " link detected status")
+            eth_speed = str(int(re.search(r"\d+", response["speed"]).group())/1000) + "g"
+            fun_test.test_assert_expected(speed, eth_speed, fpg + "speed")
+        docker.disconnect()
+
+    def port_break_dpcsh(self, port_num=0, brkmode="no_brk_100g", f1=0):
+        port_num_list = [port_num]
+        speed = self.brk_mode_speed_conversion(brkmode=brkmode)
+        fpg = "fpg" + str(port_num)
+
+        port_break_cmd = 'port breakoutset {"portnum":%s, "shape":0} {"brkmode":%s}' % (port_num, brkmode)
+        self.get_dpcsh_data_for_cmds(f1=f1, cmd=port_break_cmd)
+        fun_test.sleep("Port breakout set", seconds=10)
+
+        result = self.verify_port_link_status(f1, port_num_list, speed, verify_sw=False, verify_hw=False, verfiy_fec=False, strict=False)
+        fun_test.test_assert(result, "{} set to brkmode: {}".format(fpg, brkmode))
+
+    def docker_bringup_all_fpg_ports(self, f1):
+        docker = self.come_handle.get_funcp_container(f1)
+        cmd = "for e in $(ifconfig -a | grep fpg | awk -F: '{print $1}'); do ifconfig $e up; done"
+        docker.command(cmd)
+        fun_test.sleep("All the fpg ports to be up", seconds=20)
 
 
 class StorageApi:

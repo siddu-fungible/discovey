@@ -49,9 +49,10 @@ def get_nvme_device(host_obj):
     return fio_filename
 
 
-# Disconnect linux objects
 def fio_parser(arg1, **kwargs):
-    arg1.pcie_fio(**kwargs)
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"] = fio_output
+    fun_test.simple_assert(fio_output, "Fio result")
     arg1.disconnect()
 
 
@@ -682,7 +683,7 @@ class BLTCryptoVolumeTestCase(FunTestCase):
 
             for mode in self.fio_modes:
                 tmp = combo.split(',')
-                fio_block_size = tmp[0].strip('() ') + 'k'
+                fio_block_size = tmp[0].strip('() ')
                 fio_iodepth = tmp[1].strip('() ')
 
                 fun_test.log("Running FIO {} only test with the block size and IO depth set to {} & {}".
@@ -1338,6 +1339,32 @@ class BLTAlternateEncrypt(BLTCryptoVolumeTestCase):
         ''')
 
 
+class MultiVolRandKeyUnaligned(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=31,
+                              summary="Create BLT's with random key & capacity and run FIO on single BLT with write,"
+                                      "read,randwrite/read pattern, with unaligned block size",
+                              steps='''
+                                        1. Create 8 BLT with rand capacity & rand encryption key.
+                                        2. Attach it to external linux/container.
+                                        3. Run Fio with different block size & IO depth in parallel.
+                                      ''')
+
+
+class MultiVolRandKeyAesUnaligned(BLTCryptoVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=32,
+                              summary="Create BLT's with random key & capacity and run FIO on single BLT with write,"
+                                      "read,randwrite/read pattern, with AES unaligned block size",
+                              steps='''
+                                        1. Create 8 BLT with rand capacity & rand encryption key.
+                                        2. Attach it to external linux/container.
+                                        3. Run Fio with different block size & IO depth in parallel.
+                                      ''')
+
+
 if __name__ == "__main__":
     bltscript = BLTCryptoVolumeScript()
     bltscript.add_test_case(BLTKey256())
@@ -1370,5 +1397,7 @@ if __name__ == "__main__":
     bltscript.add_test_case(BLTFioEncZeroPattern())
     bltscript.add_test_case(BLTFioEncDeadBeefPattern())
     bltscript.add_test_case(BLTAlternateEncrypt())
+    bltscript.add_test_case(MultiVolRandKeyUnaligned())
+    bltscript.add_test_case(MultiVolRandKeyAesUnaligned())
 
     bltscript.run()

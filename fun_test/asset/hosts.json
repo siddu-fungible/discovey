@@ -679,32 +679,32 @@
       "password": "ADMIN"
     }
   },
-  "cab02-qa-05": {
-    "host_ip": "cab02-qa-05",
+  "cab16-qa-05": {
+    "host_ip": "cab16-qa-05",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
-      "host_ip": "cab02-qa-05-ilo",
+      "host_ip": "cab16-qa-05-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
   },
-  "cab02-qa-06": {
-    "host_ip": "cab02-qa-06",
+  "cab16-qa-06": {
+    "host_ip": "cab16-qa-06",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
-      "host_ip": "cab02-qa-06-ilo",
+      "host_ip": "cab16-qa-06-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
   },
-  "cab02-qa-07": {
-    "host_ip": "cab02-qa-07",
+  "cab16-qa-07": {
+    "host_ip": "cab16-qa-07",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {
-      "host_ip": "cab02-qa-07-ilo",
+      "host_ip": "cab16-qa-07-ilo",
       "username": "ADMIN",
       "password": "ADMIN"
     }
