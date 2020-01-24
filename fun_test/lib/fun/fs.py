@@ -2547,7 +2547,8 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files,
-                           fs=self)
+                           fs=self,
+                           connect_retry_timeout_max=30)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
