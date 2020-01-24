@@ -953,7 +953,7 @@ class BootupWorker(Thread):
                 fs_health = False
                 expected_containers_running = False
                 if True:
-                    come.fs_reset()
+                    fs.reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
@@ -2768,8 +2768,7 @@ class Fs(object, ToDictMixin):
             if come.list_files(come.FS_RESET_COMMAND):
                 come.fs_reset()
             else:
-                bmc = self.get_bmc()
-                bmc.reboot()
+                self.reboot_bmc()
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
