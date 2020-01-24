@@ -42,12 +42,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.21.0"
+      "mgmt_ip": "fs6-bmc"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.21.10"
+      "mgmt_ip": "fs6-come"
     },
     "workarounds": {
       "skip_funeth_come_power_cycle": true
@@ -55,8 +55,10 @@
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.21.20"
+      "mgmt_ip": "fs6-fpga"
     },
+    "mpg_ips": ["10.1.21.168", "10.1.21.169"],
+
     "name": "fs-6"
   },
   {
