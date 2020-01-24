@@ -754,7 +754,7 @@ def umount_all_nvme_devices(host_obj):
             if output_list:
                 for device in output_list:
                     res = host_obj.unmount_volume(volume=device)
-                    fun_test.simple_assert(res, "Umount () on {}".format(device, host_obj))
+                    fun_test.critical("Umount {} failed on {}".format(device, host_obj))
                     result = result and res
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -770,7 +770,7 @@ def disconnect_all_nqn(host_obj):
             if output_list:
                 for nqn in output_list:
                     res = host_obj.nvme_disconnect(nvme_subsystem=nqn[4:])
-                    fun_test.simple_assert(res, "Disconnect () on {}".format(nqn, host_obj))
+                    fun_test.critical("Disconnect {} failed on {}".format(nqn, host_obj))
                     result = result and res
     except Exception as ex:
         fun_test.critical(str(ex))
@@ -782,7 +782,7 @@ def cleanup_host(host_obj):
     try:
         fun_test.log("Performing cleanup on host {}".format(host_obj))
         result["umount"] = umount_all_nvme_devices(host_obj)
-        result["subnqn"] = disconnect_all_nqn(host_obj)
+        result["nvme_disconnect"] = disconnect_all_nqn(host_obj)
         result["nvme_list"] = True
         nvme_list_output = host_obj.sudo_command("nvme list")
         if nvme_list_output:
@@ -799,7 +799,7 @@ def cleanup_host(host_obj):
         nvme_modules.reverse()
         for module in nvme_modules:
             if host_obj.modprobe(module=module):
-                result["load_nvme_modules"] = result["unload_nvme_modules"] and False
+                result["load_nvme_modules"] = result["load_nvme_modules"] and False
     except Exception as ex:
         fun_test.critical(str(ex))
     return result

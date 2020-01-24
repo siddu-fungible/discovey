@@ -2453,6 +2453,8 @@ class Linux(object, ToDictMixin):
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(volume)
+                if directory:
+                    pattern = r'.*{}.*'.format(directory)
                 mnt_out = self.command("mount")
                 match = re.search(pattern, mnt_out, re.M)
                 if match:
