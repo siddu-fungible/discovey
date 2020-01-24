@@ -561,11 +561,11 @@ class BwTest(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 1000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 1000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")

@@ -127,6 +127,8 @@ class ECVolumeLevelScript(FunTestScript):
             self.f1_in_use = job_inputs["f1_in_use"]
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -487,8 +489,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         pass
 
     def cleanup(self):
-        self.stats_obj.stop(self.stats_collect_details)
-        self.storage_controller.verbose = True
+        pass
 
 
 class RandReadWrite8kBlocks(ECVolumeLevelTestcase):

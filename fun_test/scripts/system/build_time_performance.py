@@ -233,7 +233,7 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
             self.result = fun_test.FAILED
             self.timer1 = None
             self.timer2 = None
-            test_bed_type = "fs-118"
+            test_bed_type = ["fs-118"]
             time_zone = "PST"
             build_parameters = {"RELEASE_BUILD": True,
                                 "SKIP_DASM_C": True,
