@@ -714,6 +714,7 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
                 if ip_match:
                     ip_assigned = True
                 break
+            host_handle.disconnect()
         fun_test.simple_assert(interface_up, "Interface {} is up and running on host {}".format(interface,
                                                                                                 host_handle.host_ip))
         fun_test.simple_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".
@@ -729,6 +730,7 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
             host_handle.command("arp -n")
             host_handle.command("route -n")
             host_handle.command("ifconfig")
+        host_handle.disconnect()
 
         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                              format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
