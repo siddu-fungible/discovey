@@ -10,6 +10,9 @@ class MultipleF1Reset(PlatformGeneralTestCase):
                               steps="""""")
 
     def setup(self):
+        self.iterations = 10
+        self.initialize_job_inputs()
+
         topology_helper = TopologyHelper()
         topology_helper.set_dut_parameters(fs_parameters={"already_deployed": False})
         self.topology = topology_helper.deploy()
@@ -22,9 +25,9 @@ class MultipleF1Reset(PlatformGeneralTestCase):
         self.bmc_handle = self.fs_obj.get_bmc()
 
     def run(self):
-        iterations = 2
-        for iteration in range(iterations):
-            fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, iterations))
+
+        for iteration in range(self.iterations):
+            fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
 
             self.stop_cc_linux_n_health()
             self.run_fpc_stress_test()
@@ -36,12 +39,19 @@ class MultipleF1Reset(PlatformGeneralTestCase):
 
             self.check_i2c_error_in_funos_logs()
             self.come_handle.reboot()
-            if iteration != (iterations - 1):
+            if iteration != (self.iterations - 1):
                 self.fs_obj.re_initialize()
                 self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
                 self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
                 self.come_handle = self.fs_obj.get_come()
                 self.bmc_handle = self.fs_obj.get_bmc()
+
+    def initialize_job_inputs(self):
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Input: {}".format(job_inputs))
+        if job_inputs:
+            for k, v in job_inputs.iteritems():
+                setattr(self, k, v)
 
     def stop_cc_linux_n_health(self):
         try:
