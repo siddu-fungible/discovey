@@ -958,6 +958,7 @@ class BootupWorker(Thread):
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
+                    come.setup_workspace()
                     # come.initialize()
                     # try:
                     #    fs_health = self.fs.health()
