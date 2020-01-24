@@ -35,17 +35,28 @@
     "api_server_up_timeout": 300
   },
   "DurVolSingleDriveFailRebuild": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -70,7 +81,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
@@ -78,17 +89,28 @@
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "DurVolmDriveFailRebuild": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -113,7 +135,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
@@ -121,17 +143,28 @@
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "DurVolmPlusOneDriveFailRebuild": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -156,7 +189,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
@@ -164,17 +197,28 @@
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "DurVolSingleDriveFailReSync": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -199,7 +243,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
@@ -207,17 +251,28 @@
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "DurVolmDriveFailReSync": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -242,7 +297,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
@@ -250,17 +305,28 @@
     "fio_job_name": "inspur_8k_random_read_write"
   },
   "DurVolmPlusOneDriveFailReSync": {
-    "create_pool": false,
     "ec_info": {
-      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
-      "volume_name": "ec_vol",
-      "stripe_count" : 0,
-      "encrypt" : false,
-      "allow_expansion" : false,
-      "data_protection":{"num_failed_disks": 2, "num_redundant_dpus": 0},
-      "compression_effort" : 0,
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
       "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -285,7 +351,7 @@
     "transport_port": 1099,
     "huid": 7,
     "ctlid": 0,
-    //"nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},

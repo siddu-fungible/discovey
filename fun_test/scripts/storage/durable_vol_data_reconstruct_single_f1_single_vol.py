@@ -215,8 +215,6 @@ class DurableVolumeTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-            if self.test_file_size > int(self.ec_info["capacity"] / 2):
-                self.test_file_size = int(self.ec_info["capacity"] / 2)
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -442,12 +440,14 @@ class DurableVolumeTestcase(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
+        '''
         table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
                               "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
                               "Plex Rebuild Time (sec)", "Job Name"]
         table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_plex_fail",
                            "copy_time_during_rebuild", "plex_rebuild_time", "fio_job_name"]
         table_data_rows = []
+        '''
 
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
@@ -538,10 +538,6 @@ class DurableVolumeTestcase(FunTestCase):
                                                                       func=fio_parser,
                                                                       arg1=host_clone[host_name],
                                                                       host_index=index,
-                                                                      iodepth=self.fio_write_cmd_args[
-                                                                          "iodepth"],
-                                                                      rw=self.fio_write_cmd_args["rw"],
-                                                                      bs=self.fio_write_cmd_args["bs"],
                                                                       name="{}_{}".format(
                                                                           host_name,
                                                                           self.fio_write_cmd_args["rw"]),
@@ -632,10 +628,6 @@ class DurableVolumeTestcase(FunTestCase):
                                                                   func=fio_parser,
                                                                   arg1=host_clone[host_name],
                                                                   host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args[
-                                                                      "iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
                                                                   name="{}_{}".format(host_name,
                                                                                       self.fio_verify_cmd_args[
                                                                                           "rw"]),
@@ -676,10 +668,6 @@ class DurableVolumeTestcase(FunTestCase):
                                                                   func=fio_parser,
                                                                   arg1=host_clone[host_name],
                                                                   host_index=index,
-                                                                  iodepth=self.fio_write_cmd_args[
-                                                                      "iodepth"],
-                                                                  rw=self.fio_write_cmd_args["rw"],
-                                                                  bs=self.fio_write_cmd_args["bs"],
                                                                   name="{}_{}".format(host_name,
                                                                                       self.fio_write_cmd_args[
                                                                                           "rw"]),
@@ -770,9 +758,6 @@ class DurableVolumeTestcase(FunTestCase):
                                                                   func=fio_parser,
                                                                   arg1=host_clone[host_name],
                                                                   host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args["iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
                                                                   name="{}_{}".format(host_name,
                                                                                       self.fio_verify_cmd_args[
                                                                                           "rw"]),
@@ -858,9 +843,6 @@ class DurableVolumeTestcase(FunTestCase):
                                                                   func=fio_parser,
                                                                   arg1=host_clone[host_name],
                                                                   host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args["iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
                                                                   name="{}_{}".format(host_name,
                                                                                       self.fio_verify_cmd_args[
                                                                                           "rw"]),
@@ -882,6 +864,7 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        '''
         # Building the table raw for this variation
         row_data_list = []
         for i in table_data_cols:
@@ -894,6 +877,7 @@ class DurableVolumeTestcase(FunTestCase):
         table_data = {"headers": table_data_headers, "rows": table_data_rows}
         fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
                            table_data=table_data)
+        '''
 
         '''
         # Datetime required for daily Dashboard data filter
@@ -1115,9 +1099,9 @@ class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
 if __name__ == "__main__":
     ecscript = DurableVolScript()
     ecscript.add_test_case(DurVolSingleDriveFailRebuild())
-    ecscript.add_test_case(DurVolmDriveFailRebuild())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
-    ecscript.add_test_case(DurVolSingleDriveFailReSync())
-    ecscript.add_test_case(DurVolmDriveFailReSync())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
+    #ecscript.add_test_case(DurVolmDriveFailRebuild())
+    #ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
+    #ecscript.add_test_case(DurVolSingleDriveFailReSync())
+    #ecscript.add_test_case(DurVolmDriveFailReSync())
+    #ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
     ecscript.run()
