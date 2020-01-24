@@ -172,14 +172,14 @@ export class ScriptDetailComponent implements OnInit {
 
     this.tree = new TreeNode({name: "Stats", leaf: false, id: 0});
     let systemNode = this.tree.addChild(new TreeNode({name: "system", leaf: false, id: 0}));
-    let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false, id: 1}));
+    // let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false, id: 1}));
     let bamNode = systemNode.addChild(new TreeNode({name: "BAM", leaf: false, id: 0}));
     let vpNode = systemNode.addChild(new TreeNode({name: "VP utilization", leaf: false, id: 1}));
     let defaultPool = bamNode.addChild(new TreeNode({name: "default_alloc_pool", leaf: false, id: 0}));
     defaultPool.addChild(new TreeNode({name: "usage_percent", leaf: true, id: 0}));
     vpNode.addChild(new TreeNode({name: "utilization_distribution", leaf: true, id: 0}));
     vpNode.addChild(new TreeNode({name: "utilization_by_cluster", leaf: true, id: 1}));
-    storageNode.addChild(new TreeNode({name: "SSD", leaf: true, id: 0}));
+    // storageNode.addChild(new TreeNode({name: "SSD", leaf: true, id: 0}));
 
   }
 
@@ -290,11 +290,16 @@ export class ScriptDetailComponent implements OnInit {
     console.log(flatNode.lineage);
     console.log(flatNode.treeNode.meta_data.checked);
     if (flatNode.treeNode.meta_data.checked) {
-      this.selectedStatsSet.add(flatNode.name);
+      this.selectedStatsSet.add(flatNode.treeNode);
     } else {
-      this.selectedStatsSet.delete(flatNode.name);
+      this.selectedStatsSet.delete(flatNode.treeNode);
     }
     // this.selectedStats = Array.from(this.selectedStatsSet);
+  }
+
+  deleteStats(stat): void {
+    stat.meta_data.checked = false;
+    this.selectedStatsSet.delete(stat);
   }
 
   setStatistics(): void {
@@ -307,8 +312,8 @@ export class ScriptDetailComponent implements OnInit {
       /*ssc.display_name = "BAM";
       ssc.name = "bam";
       this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
-      ssc.display_name = stats;
-      ssc.name = stats;
+      ssc.display_name = stats.name;
+      ssc.name = stats.name;
       this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
     });
     this.viewChartsClick();

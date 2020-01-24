@@ -20,6 +20,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   @Input() selectedAsset: RegisteredAsset = null;
   @Input() clusterLevel: boolean = null;
   @Input() title: string = null;
+  @Input() showTable: boolean = false;
   data: any = null;
   parsedData: any = {};
   driver: any = null;
@@ -30,7 +31,6 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   tableHeaders: any = null;
   tableData: any = null;
   showCharts: boolean = false;
-  showTable: boolean = false;
   funStatsSeries: FunTimeSeriesCollection[] = [];
 
   constructor(private regressionService: RegressionService, private loggerService: LoggerService, private commonService: CommonService) {

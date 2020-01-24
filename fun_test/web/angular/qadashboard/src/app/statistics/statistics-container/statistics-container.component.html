@@ -1,31 +1,39 @@
 <div style="padding: 10px">
   <ng-container *ngFor="let statistic of statistics">
-    <div style="padding: 10px">
-      <span>Filters:</span>
-      <span class="fun-attribute-label">Asset</span>
-      <select [(ngModel)]="selectedAsset">
-        <option *ngFor="let registeredAsset of scriptExecutionInfo.registered_assets" [ngValue]="registeredAsset">
-          {{ registeredAsset.asset_id }}
-        </option>
-      </select>
-    </div>
-    <ng-container *ngIf="selectedAsset && selectedAsset.asset_type === 'DUT'">
-      <ng-container *ngIf="statistic.statisticsCategory.name ==='system'"></ng-container>
-      <app-bam
-        [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
-        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo"
-        *ngIf="statistic.statisticsSubCategory.name ==='usage_percent'">
-      </app-bam>
-      <app-vp-utilization
-        [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
-        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="false"
-        *ngIf="statistic.statisticsSubCategory.name ==='utilization_distribution'">
-      </app-vp-utilization>
-      <app-vp-utilization
-        [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
-        [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="true"
-        *ngIf="statistic.statisticsSubCategory.name ==='utilization_by_cluster'">
-      </app-vp-utilization>
+    <ng-container *ngIf="statistic.statisticsCategory.name ==='system'">
+      <div style="padding: 10px">
+        <span>Filters:</span>
+        <span class="fun-attribute-label">Asset</span>
+        <select [(ngModel)]="selectedAsset">
+          <option *ngFor="let registeredAsset of scriptExecutionInfo.registered_assets" [ngValue]="registeredAsset">
+            {{ registeredAsset.asset_id }}
+          </option>
+        </select>
+      </div>
+      <span>
+        <span style="font-size: 1.5rem; font-weight: 500;">
+        {{ statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name }}
+      </span>
+        <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showTable}"
+                (click)="showTables()"><i class="fa fa-table"></i> Show raw tables
+        </button></span>
+      <ng-container *ngIf="selectedAsset && selectedAsset.asset_type === 'DUT'">
+        <app-bam
+          [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
+          [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [showTable]="showTable"
+          *ngIf="statistic.statisticsSubCategory.name ==='usage_percent'">
+        </app-bam>
+        <app-vp-utilization
+          [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
+          [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="false" [showTable]="showTable"
+          *ngIf="statistic.statisticsSubCategory.name ==='utilization_distribution'">
+        </app-vp-utilization>
+        <app-vp-utilization
+          [title]="statistic.statisticsCategory.display_name + ' -- ' + statistic.statisticsSubCategory.display_name"
+          [selectedAsset]="selectedAsset" [scriptExecutionInfo]="scriptExecutionInfo" [clusterLevel]="true" [showTable]="showTable"
+          *ngIf="statistic.statisticsSubCategory.name ==='utilization_by_cluster'">
+        </app-vp-utilization>
+      </ng-container>
     </ng-container>
   </ng-container>
 </div>

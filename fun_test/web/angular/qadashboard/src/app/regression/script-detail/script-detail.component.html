@@ -83,19 +83,25 @@
 </div>
 
 <div class="side-panel" [ngClass]="{'side-panel-open': sidePanelOpen}">
-  <div style="display: flex; align-items: flex-end; flex-direction: column">
+  <div style="margin: 10px">
+    <div style="display: flex; align-items: flex-end; flex-direction: column">
     <div class="fun-cancel-link" (click)="viewChartsClick()">Close</div>
   </div>
   <div class="fun-flex-container">
-    <app-tree class="fun-flex-item" [tree]="tree" (clickedNode)="clicked($event)"></app-tree>
     <div class="fun-flex-item">
-      <div class="selectedOption" *ngFor="let stat of selectedStatsSet">
-      {{stat}}
-      </div>
+      <label style="font-weight: bold">Available charts:</label>
+      <app-tree [tree]="tree" (clickedNode)="clicked($event)"></app-tree>
+    </div>
+    <div class="fun-flex-item">
+      <label style="font-weight: bold">Selected charts:</label><br>
+      <span class="selectedOption" *ngFor="let stat of selectedStatsSet">
+      {{stat.name}}&nbsp;<span  style="cursor: pointer" (click)="deleteStats(stat)">x</span>
+      </span>
     </div>
   </div>
   <br>
-  <span class="fun-button-add" (click)="setStatistics()">Submit</span>
+  <span class="fun-button-add" (click)="setStatistics()">Apply</span>
+  </div>
 </div>
 <!--app-timeline-control *ngIf="showLogsPanel" [domainMin]="minRelativeTime" [domainMax]="maxRelativeTime" [title]="'Show logs starting from'" [unit]="'s'" (valueChanged)="onTimeLineChanged($event)"></app-timeline-control-->
 <div class="" style="overflow: auto; height: 100%; width: 100%;">

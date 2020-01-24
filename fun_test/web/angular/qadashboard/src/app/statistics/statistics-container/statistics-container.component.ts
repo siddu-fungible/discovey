@@ -10,6 +10,7 @@ export class StatisticsContainerComponent implements OnInit, OnChanges {
   @Input() statistics: any [];  // {statisticsCategory: , statisticsSubCategory:}
   @Input() scriptExecutionInfo: any = null;
   selectedAsset: RegisteredAsset = null;
+  showTable: boolean = false;
   constructor() { }
 
   ngOnInit() {
@@ -28,6 +29,10 @@ export class StatisticsContainerComponent implements OnInit, OnChanges {
         }
       }
     }
+  }
+
+  showTables(): void {
+    this.showTable = !this.showTable;
   }
 
 }
