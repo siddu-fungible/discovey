@@ -854,6 +854,7 @@ class Bmc(Linux):
             regex = ""
             if self.fs.get_revision() in ["2"]:
                 ERROR_REGEXES.append('i2c write error.*')
+                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
             for error_regex in ERROR_REGEXES:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
@@ -956,11 +957,11 @@ class BootupWorker(Thread):
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
-                    come.initialize()
-                    try:
-                        fs_health = self.fs.health()
-                    except:
-                        pass
+                    # come.initialize()
+                    # try:
+                    #    fs_health = self.fs.health()
+                    # except:
+                    #    pass
 
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
