@@ -2,16 +2,13 @@ from lib.system.fun_test import *
 from lib.system import utils
 from lib.host.linux import Linux
 from lib.host.swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
-from lib.host.swagger_client.models.body_volume_attach import BodyVolumeAttach
-from lib.host.swagger_client.models.body_node_update import BodyNodeUpdate
 from lib.topology.topology_helper import TopologyHelper
-from lib.host.storage_controller import StorageController
 from lib.templates.storage.review.storage_template import BltVolumeTemplate
 from lib.host.swagger_client.models.volume_types import VolumeTypes
 
 
 class BringupSetup(FunTestScript):
-
+    topology = None
     testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
     def describe(self):
@@ -25,9 +22,7 @@ class BringupSetup(FunTestScript):
 
         topology_helper = TopologyHelper()
 
-        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": already_deployed})
-
-        self.topology = topology_helper.deploy()
+        self.topology = topology_helper.deploy(already_deployed=already_deployed)
 
         fun_test.test_assert(self.topology, "Topology deployed")
 
@@ -39,6 +34,7 @@ class BringupSetup(FunTestScript):
 
 class RunStorageApiCommands(FunTestCase):
     topology = None
+    storage_controller_template = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -57,7 +53,7 @@ class RunStorageApiCommands(FunTestCase):
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
-        compression_effort = False,
+        compression_effort = False
         encrypt = False
         attach_volume_map = {}
         # ask only for fs objects | fs_obj and host_obj variables consistency
@@ -65,39 +61,34 @@ class RunStorageApiCommands(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         # raise exception for deploy
-        storage_controller_template = BltVolumeTemplate(topology=self.topology,
-                                                        attach_volume_map=attach_volume_map)
-        vol_uuid = storage_controller_template.create_volume(fs_obj)
-        storage_controller_template.attach_volume(vol_uuid, fs_obj)
+        self.storage_controller_template = BltVolumeTemplate(topology=self.topology)
+        self.storage_controller_template.initialize()
 
+        fs_obj_list = []
         for index in self.topology.get_duts().keys():
-            fs = self.topology.get_dut_instance(index=index)
-            attach_volume_map[fs] = []
+            fs_obj = self.topology.get_dut_instance(index=index)
+            fs_obj_list.append(fs_obj)
 
-            hosts = self.topology.get_hosts()
-            host_instance_list = []
-            for host in hosts:
+        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
+                                                                       body_volume_intent_create=body_volume_intent_create)
 
-                host_instance = hosts[host].get_instance()
-                host_instance_list.append(host_instance)
-            count += 0
-            body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                               compression_effort=compression_effort,
-                                                               encrypt=encrypt, data_protection={})
+        hosts = self.topology.get_hosts()
+        for fs_obj in vol_uuid_dict:
+            for host_id in hosts:
+                host_obj = hosts[host_id]
+                attach_vol_res = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
+                                                                                volume_uuid=vol_uuid_dict[fs_obj])
 
-            attach_volume_map[fs].append({'host_list': host_instance_list,
-                                          'body_volume_intent_create': body_volume_intent_create})
-
-        storage_controller_template = BltVolumeTemplate(topology=self.topology,
-                                                        attach_volume_map=attach_volume_map)
-        storage_controller_template.deploy()
+                self.storage_controller_template.nvme_connect_from_host(host_obj=host_obj,
+                                                                        subsys_nqn=attach_vol_res.subsys_nqn,
+                                                                        host_nqn=attach_vol_res.host_nqn,
+                                                                        dataplane_ip=attach_vol_res.ip)
 
     def run(self):
         pass
-        Linux.nvme_connect()
 
     def cleanup(self):
-        pass
+        self.storage_controller_template.cleanup()
 
 
 if __name__ == "__main__":
