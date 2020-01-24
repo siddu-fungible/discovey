@@ -294,7 +294,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
-        fun_test.shared_variables['benchmark_dict'] = benchmark_dict
 
         if testcase not in benchmark_dict or not benchmark_dict[testcase]:
             benchmark_parsing = False
@@ -1054,7 +1053,24 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
     def setup(self):
         # super(MultiHostFioRandReadAfterReboot, self).setup()
-        self.testcase = self.__class__.__name__
+        testcase = self.__class__.__name__
+
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
 
     def run(self):
         fun_test.log("Rebooting COMe")
@@ -1084,9 +1100,8 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(containers_status, "All containers up")
 
         # Ensure API server is up
-        api_server_timeout = fun_test.shared_variables['benchmark_dict'][self.testcase]["api_server_up_timeout"]
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=api_server_timeout),
+        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout),
                              "Ensure API server is up")
 
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
@@ -1101,16 +1116,6 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
 
-        fun_test.log("Checking for routes on host and docker containers")
-        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-        docker_f1_handle.command("arp -n")
-        docker_f1_handle.command("route -n")
-        docker_f1_handle.command("ifconfig")
-        fun_test.log("\nRoutes from host {}".format(host_handle))
-        host_handle.command("arp -n")
-        host_handle.command("route -n")
-        host_handle.command("ifconfig")
-
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
@@ -1124,16 +1129,15 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                 if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
                     nvme_list_found = True
                     break
-            else:
-                fun_test.log("Checking for routes on host and docker containers")
-                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-                docker_f1_handle.command("arp -n")
-                docker_f1_handle.command("route -n")
-                docker_f1_handle.command("ifconfig")
-                fun_test.log("\nRoutes from host {}".format(host_handle))
-                host_handle.command("arp -n")
-                host_handle.command("route -n")
-                host_handle.command("ifconfig")
+            fun_test.log("Checking for routes on host and docker containers")
+            fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+            docker_f1_handle.command("arp -n")
+            docker_f1_handle.command("route -n")
+            docker_f1_handle.command("ifconfig")
+            fun_test.log("\nRoutes from host {}".format(host_handle))
+            host_handle.command("arp -n")
+            host_handle.command("route -n")
+            host_handle.command("ifconfig")
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
         if not nvme_list_found:
@@ -1160,13 +1164,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                                    format(host_handle.host_ip, ip))
 
         # Run fio
-        benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
-        cmd_args = benchmark_dict["fio_cmd_args"]
 
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.cmd_args)
         fun_test.test_assert(fio_output, "Ensure fio reads are successful")
 
-        write_cmd_args = copy.deepcopy(cmd_args)
+        write_cmd_args = copy.deepcopy(self.cmd_args)
         write_cmd_args.update({"rw": "randwrite"})
         write_cmd_args.update({"do_verify": 0})
 
@@ -1174,7 +1176,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(fio_output, "Ensure fio writes are successful reboot")
 
         # Reading the written output
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.cmd_args)
         fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):
