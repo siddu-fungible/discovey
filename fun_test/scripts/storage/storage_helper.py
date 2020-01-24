@@ -327,7 +327,6 @@ def single_fs_setup(obj):
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
         fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         for node_index, node in enumerate(nodes):
-            # Commenting out the code as it's causing issue in dataplane assignment
             if node_index >= obj.num_f1_per_fs:
                 continue
             # Extracting the DUT's bond interface details
