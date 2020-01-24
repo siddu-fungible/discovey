@@ -95,6 +95,8 @@ class DurableVolScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
