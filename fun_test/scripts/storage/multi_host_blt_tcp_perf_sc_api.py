@@ -271,9 +271,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
+        # fun_test.log("FS cleanup")  #Infra cleans'up the topology
+        # for fs in fun_test.shared_variables["fs_objs"]:
+        #    fs.cleanup()
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
@@ -1065,7 +1065,9 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.f1_ips = fun_test.shared_variables["f1_ips"]
 
-        reboot_timer = FunTimer(max_time=600)
+        total_reconnect_time = 600
+        add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time) #WORKAROUND, why do we need so much time
 
         # Reset COMe
         reset = self.fs[0].reset(hard=False)
@@ -1122,7 +1124,17 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                 if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
                     nvme_list_found = True
                     break
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
+            else:
+                fun_test.log("Checking for routes on host and docker containers")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                docker_f1_handle.command("arp -n")
+                docker_f1_handle.command("route -n")
+                docker_f1_handle.command("ifconfig")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
+                host_handle.command("arp -n")
+                host_handle.command("route -n")
+                host_handle.command("ifconfig")
+            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
         if not nvme_list_found:
             fun_test.log("Printing dmesg from host {}".format(host_handle))

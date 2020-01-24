@@ -88,7 +88,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -151,7 +152,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"CEFAEDFE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -210,7 +212,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"CAFEBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -268,7 +271,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -331,7 +335,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"CEFAEDFE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -390,7 +395,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"CAFEBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -448,7 +454,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"FBADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -508,7 +515,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"BAADA555\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -567,7 +575,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"0000000FF1CE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -600,8 +609,6 @@
     "csi_perf_iodepth": [128]
   },
   "WrongKey": {
-    // Volume count from here should have been 25 till CreateDelete512 test case. Reduced due to SWOS-3925.
-    // Change once fix is pushed for the bug.
     "drive_margin": 0,
     "num_ssd": 1,
     "blt_count": 1,
@@ -860,7 +867,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"1CEB00DA\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -920,7 +928,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"E011CFD0\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -979,7 +988,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"ABADBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -1012,8 +1022,6 @@
     "csi_perf_iodepth": [128]
   },
   "MultipleBLT384": {
-    // Volume count from here should have been 10 till BLTFioDetach test case. Reduced due to SWOS-3925.
-    // Change once fix is pushed for the bug.
     "drive_margin": 0,
     "num_ssd": 2,
     "blt_count": 12,
@@ -1039,7 +1047,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"1CEB00DA\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1099,7 +1108,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"E011CFD0\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -1158,7 +1168,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"ABADBABE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -1216,7 +1227,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"BBADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1276,7 +1288,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"FEEEFEEE\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "rw"
@@ -1335,7 +1348,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"FACEFEED\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "randrw"
@@ -1439,7 +1453,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1499,7 +1514,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1559,7 +1575,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1621,7 +1638,8 @@
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0x000000000",
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1680,7 +1698,8 @@
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1739,7 +1758,8 @@
       "verify": "pattern",
       "verify_fatal": 1,
       "verify_pattern": "0xff%o\\\"DEADBEEF\\\"-12",
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1799,7 +1819,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -1859,7 +1880,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",

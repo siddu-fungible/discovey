@@ -1,5 +1,6 @@
 {
   "GlobalSetup": {
+    "already_deployed": false,
     "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g",
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
     "dut_start_index": 2,

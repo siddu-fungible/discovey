@@ -707,8 +707,7 @@ class Bmc(Linux):
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-        self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
-
+        output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
         return True
 
     def reset_come(self):
@@ -853,6 +852,8 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
+            if self.fs.get_revision() in ["2"]:
+                ERROR_REGEXES.append('i2c write error.*')
             for error_regex in ERROR_REGEXES:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
@@ -949,17 +950,6 @@ class BootupWorker(Thread):
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
-                # try:
-                #    come_initialized = come.initialize()
-                #    try:
-                #        fs_health = self.fs.health()
-                #        expected_containers_running = come.ensure_expected_containers_running()
-                #    except Exception as ex:
-                #        fun_test.critical(str(ex))
-                # except Exception as ex:
-                #    fun_test.critical(str(ex))
-
-                # if not come_initialized or not fs_health or not expected_containers_running:
                 if True:
                     come.fs_reset()
                     fs.come = None
@@ -1162,6 +1152,7 @@ class ComEInitializationWorker(Thread):
 
             if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
                 self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                come = self.fs.get_come(clone=True)
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
@@ -1424,24 +1415,30 @@ class ComE(Linux):
         self.disable_f1_index = disable_f1_index
         self.dpc_ready = None
         self.get_build_properties()
-        fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup", context=self.context)
-        fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
-        for f1_index in range(self.NUM_F1S):
-            self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
-
-        fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
-        fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
-        fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
-        if self.fs.statistics_enabled:
-            fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
-            self.fs.dpc_for_statistics_ready = True
-        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
-        if self.hbm_dump_enabled:
-            fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
-
         if not self.fs.already_deployed:
-            self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+            fun_test.simple_assert(expression=self.setup_workspace(), message="ComE workspace setup",
+                                   context=self.context)
 
+            fun_test.simple_assert(expression=self.cleanup_dpc(), message="Cleanup dpc", context=self.context)
+            for f1_index in range(self.NUM_F1S):
+                self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
+
+            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
+            fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
+
+            if self.fs.statistics_enabled:
+                fun_test.test_assert(expression=self.setup_dpc(statistics=True), message="Setup DPC for statistics", context=self.context)
+                self.fs.dpc_for_statistics_ready = True
+
+            self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
+            if self.hbm_dump_enabled:
+                fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
+            self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+        else:
+            self.fs.dpc_for_statistics_ready = True
+            self.dpc_ready = True
+        self.hbm_dump_enabled = fun_test.get_job_environment_variable("hbm_dump")
 
         return True
 
@@ -1607,7 +1604,7 @@ class ComE(Linux):
         self.command("cd {}".format(working_directory))
         self.command("mkdir -p workspace; cd workspace")
         self.command("export WORKSPACE=$PWD")
-        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")
+        self.command("wget http://10.1.20.99/doc/jenkins/funsdk/latest/Linux/dpcsh.tgz")   #TODO
         fun_test.test_assert(expression=self.list_files("dpcsh.tgz"),
                              message="dpcsh.tgz downloaded",
                              context=self.context)
@@ -2504,7 +2501,8 @@ class Fs(object, ToDictMixin):
         self.get_come()
         self.set_f1s()
         self.come.initialize(disable_f1_index=self.disable_f1_index)
-        self.come.setup_dpc()
+        if not self.already_deployed:
+            self.come.setup_dpc()
 
 
         self.come.detect_pfs()
@@ -2786,15 +2784,21 @@ class Fs(object, ToDictMixin):
         #    fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
         come = self.get_come().clone()
-        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=(180 * 2) + 60,  # WORKAROUND
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
             if come.uptime() > worst_case_uptime:
                 come.command("ps -ef | grep Reset")
+                come.command("lsmod")
+                come.command("dmesg")
             fun_test.simple_assert(come.uptime() < worst_case_uptime, "ComE uptime is less than 10 minutes")
 
 
         return True
+
+    def get_storage_controller(self, f1_index=0):
+        f1 = self.get_f1(index=f1_index)
+        return f1.get_dpc_storage_controller()
 
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
