@@ -11,7 +11,7 @@ class MultipleF1Reset(PlatformGeneralTestCase):
 
     def setup(self):
         topology_helper = TopologyHelper()
-        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": True})
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": False})
         self.topology = topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
 
