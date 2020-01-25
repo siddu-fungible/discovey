@@ -1227,6 +1227,8 @@ class ComE(Linux):
     REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
+    FS_RESET_BACKUP_COMMAND = "/opt/fungible.bak/etc/ResetFs1600.sh"
+
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
     CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
@@ -1335,18 +1337,27 @@ class ComE(Linux):
                 pass
 
     def fs_reset(self, clone=False, fast=False):
+        result = False
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
         if clone:
             handle = self.clone()
         try:
-            reset_command = "{}".format(self.FS_RESET_COMMAND)
-            if fast:
-                reset_command += " -f"
+            the_command = None
+            if not self.list_files(the_command):
+                if self.list_files(self.FS_RESET_BACKUP_COMMAND):
+                    the_command = self.FS_RESET_BACKUP_COMMAND
+            else:
+                the_command = self.FS_RESET_COMMAND
+            if the_command:
+                reset_command = "{}".format(the_command)
+                if fast:
+                    reset_command += " -f"
 
-            handle.sudo_command(reset_command, timeout=120)
+                handle.sudo_command(reset_command, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
+        return result
 
     def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
@@ -2766,10 +2777,7 @@ class Fs(object, ToDictMixin):
             self.reset_device_handles()
         else:
             come = self.get_come()
-            if come.list_files(come.FS_RESET_COMMAND):
-                come.fs_reset()
-            else:
-                self.reboot_bmc()
+            come.fs_reset()
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
