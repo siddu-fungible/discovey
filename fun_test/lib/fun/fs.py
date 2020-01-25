@@ -953,7 +953,7 @@ class BootupWorker(Thread):
                 fs_health = False
                 expected_containers_running = False
                 if True:
-                    come.fs_reset()
+                    fs.reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
@@ -2547,7 +2547,8 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files,
-                           fs=self)
+                           fs=self,
+                           connect_retry_timeout_max=30)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
@@ -2765,7 +2766,10 @@ class Fs(object, ToDictMixin):
             self.reset_device_handles()
         else:
             come = self.get_come()
-            come.fs_reset()
+            if come.list_files(come.FS_RESET_COMMAND):
+                come.fs_reset()
+            else:
+                self.reboot_bmc()
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True

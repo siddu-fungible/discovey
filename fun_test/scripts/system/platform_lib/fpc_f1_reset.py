@@ -40,7 +40,11 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             self.check_i2c_error_in_funos_logs()
             self.come_handle.reboot()
             if iteration != (self.iterations - 1):
-                self.fs_obj.re_initialize()
+                come = self.fs_obj.get_come()
+                come.initialize()
+                come.setup_dpc()
+                fun_test.test_assert(expression=come.ensure_dpc_running(),
+                                     message="Ensure dpc is running")
                 self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
                 self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
                 self.come_handle = self.fs_obj.get_come()
