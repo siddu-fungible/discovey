@@ -534,8 +534,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.critical(str(ex))
 
             # Continuous pings from host to F1 IP
-            ping_check_filename = {}
             if getattr(self, "ping_during_warmup", False):
+                ping_check_filename = {}
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
                     ping_cmd = "sudo ping {} -i 1 -s 56".format(self.f1_ips)
