@@ -1041,6 +1041,7 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
 
 
 class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
+    api_server_timeout = 240
     def describe(self):
         self.set_test_details(id=4,
                               summary="Bundle sanity. Run fio random read after COMe reboot on the same BLT attached",
