@@ -330,6 +330,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "ping_during_warmup" in job_inputs:
+            self.ping_during_warmup = job_inputs["ping_during_warmup"]
 
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.fs = fun_test.shared_variables["fs_obj"]
@@ -531,6 +533,24 @@ class ECVolumeLevelTestcase(FunTestCase):
             except Exception as ex:
                 fun_test.critical(str(ex))
 
+            # Continuous pings from host to F1 IP
+            ping_check_filename = {}
+            if getattr(self, "ping_during_warmup", False):
+                for index, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
+                    ping_cmd = "sudo ping {} -i 1 -s 56".format(self.f1_ips)
+                    self.ping_status_outfile = "/tmp/{}_ping_status_during_warmup.txt".format(host_name)
+                    if host_handle.check_file_directory_exists(path=self.ping_status_outfile):
+                        rm_file = host_handle.remove_file(file_name=self.ping_status_outfile)
+                        fun_test.log("{} File removal status: {}".format(self.ping_status_outfile, rm_file))
+                    self.ping_artifact_file = "{}_ping_status_during_warmup.txt".format(host_name)
+                    ping_check_filename[host_name] = fun_test.get_test_case_artifact_file_name(
+                        post_fix_name=self.ping_artifact_file)
+                    ping_pid = host_handle.start_bg_process(command=ping_cmd, output_file=self.ping_status_outfile,
+                                                            timeout=self.fio_cmd_args["timeout"])
+                    self.host_info[host_name]["warmup_ping_pid"] = ping_pid
+                    fun_test.log("Ping started from {} to {}".format(host_name, self.f1_ips))
+
             if self.parallel_warm_up:
                 host_clone = {}
                 warmup_thread_id = {}
@@ -571,6 +591,25 @@ class ECVolumeLevelTestcase(FunTestCase):
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Volume warmup on host {}".format(host_name))
                     server_written_total_bytes += fio_output["write"]["io_bytes"]
+
+            # Stopping ping status check on hosts
+            if getattr(self, "ping_during_warmup", False):
+                for index, host_name in enumerate(self.host_info):
+                    host_handle = self.host_info[host_name]["handle"]
+                    host_handle.sudo_command(
+                        "kill -SIGQUIT {}".format(self.host_info[host_name]["warmup_ping_pid"]))
+                    fun_test.log("Going to try -SIGQUIT with lib....")
+                    host_handle.kill_process(process_id=self.host_info[host_name]["warmup_ping_pid"],
+                                             signal="SIGQUIT")
+                    host_handle.kill_process(process_id=self.host_info[host_name]["warmup_ping_pid"])
+                    # Saving the ping status output to file
+                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                                 source_file_path=self.ping_status_outfile,
+                                 target_file_path=ping_check_filename[host_name])
+                    fun_test.add_auxillary_file(description="Ping_status_{}_to_{}".
+                                                format(host_name, self.f1_ips),
+                                                filename=ping_check_filename[host_name])
 
             fun_test.sleep("before actual test", self.iter_interval)
             fun_test.shared_variables["ec"]["warmup_io_completed"] = True
