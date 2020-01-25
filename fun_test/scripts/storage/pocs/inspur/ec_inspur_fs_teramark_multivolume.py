@@ -596,11 +596,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             if getattr(self, "ping_during_warmup", False):
                 for index, host_name in enumerate(self.host_info):
                     host_handle = self.host_info[host_name]["handle"]
-                    host_handle.sudo_command(
-                        "kill -SIGQUIT {}".format(self.host_info[host_name]["warmup_ping_pid"]))
-                    fun_test.log("Going to try -SIGQUIT with lib....")
+                    # Killing with "SIGQUIT" to print the aggregated ping status
                     host_handle.kill_process(process_id=self.host_info[host_name]["warmup_ping_pid"],
                                              signal="SIGQUIT")
+                    # Killing the process forcefully
                     host_handle.kill_process(process_id=self.host_info[host_name]["warmup_ping_pid"])
                     # Saving the ping status output to file
                     fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
