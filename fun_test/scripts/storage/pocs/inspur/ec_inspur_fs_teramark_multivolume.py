@@ -255,6 +255,13 @@ class ECVolumeLevelScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 come_reboot = True
+            finally:
+                # Cleaning up host
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    host_cleanup = cleanup_host(host_obj=host_handle)
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup,
+                                                  message="Host {} cleanup".format(host_name))
 
 
 class ECVolumeLevelTestcase(FunTestCase):
