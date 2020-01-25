@@ -1344,7 +1344,7 @@ class ComE(Linux):
             handle = self.clone()
         try:
             the_command = None
-            if not self.list_files(self.FS_RESET_COMMAND):
+            if not self.list_files(self.FS_RESET_COMMAND):  #WORKAROUND
                 if self.list_files(self.FS_RESET_BACKUP_COMMAND):
                     the_command = self.FS_RESET_BACKUP_COMMAND
             else:
