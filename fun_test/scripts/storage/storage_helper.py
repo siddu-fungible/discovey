@@ -193,7 +193,8 @@ def single_fs_setup(obj):
             cpu_range = cpu_group.split("-")
             obj.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
         fun_test.log("Rebooting host: {}".format(host_name))
-        host_handle.reboot(non_blocking=True)
+        if getattr(obj,"reboot_hosts", True):          #Added for avoiding the reboot of hosts
+            host_handle.reboot(non_blocking=True)
     fun_test.log("Hosts info: {}".format(obj.host_info))
 
     # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs

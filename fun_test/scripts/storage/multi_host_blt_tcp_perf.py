@@ -148,6 +148,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
 
+        if "reboot_hosts" in job_inputs:
+            self.reboot_hosts = job_inputs["reboot_hosts"]
+
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
 
