@@ -739,6 +739,74 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
     return result
 
 
+def get_all_nvme_devices(output_string):
+    return re.findall(r'/dev/nvme\w*n\w*[^\s]', output_string)
+
+
+def get_all_subnqn(output_string):
+    return re.findall(r'NQN=.*[^\s]', output_string)
+
+
+def umount_all_nvme_devices(host_obj):
+    result = True
+    try:
+        mount_output = host_obj.sudo_command("mount")
+        if mount_output:
+            output_list = get_all_nvme_devices(output_string=mount_output)
+            if output_list:
+                for device in output_list:
+                    res = host_obj.unmount_volume(volume=device)
+                    fun_test.critical("Umount {} failed on {}".format(device, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def disconnect_all_nqn(host_obj):
+    result = True
+    try:
+        subnqn_output = host_obj.sudo_command("nvme list-subsys")
+        if subnqn_output:
+            output_list = get_all_subnqn(subnqn_output)
+            if output_list:
+                for nqn in output_list:
+                    res = host_obj.nvme_disconnect(nvme_subsystem=nqn[4:])
+                    fun_test.critical("Disconnect {} failed on {}".format(nqn, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def cleanup_host(host_obj):
+    result = {}
+    nvme_modules = ['nvme_tcp', 'nvme_fabrics', 'nvme', 'nvme_core']
+    try:
+        fun_test.log("Performing cleanup on host {}".format(host_obj))
+        result["umount"] = umount_all_nvme_devices(host_obj)
+        result["nvme_disconnect"] = disconnect_all_nqn(host_obj)
+        result["nvme_list"] = True
+        nvme_list_output = host_obj.sudo_command("nvme list")
+        if nvme_list_output:
+            output_list = get_all_nvme_devices(output_string=nvme_list_output)
+            if output_list:
+                result["nvme_list"] = False
+                fun_test.critical("Devices still found {}".format(output_list))
+        result["unload_nvme_modules"] = True
+        for module in nvme_modules:
+            if host_obj.lsmod(module=module):
+                if host_obj.rmmod(module=module):
+                    result["unload_nvme_modules"] = result["unload_nvme_modules"] and False
+        result["load_nvme_modules"] = True
+        nvme_modules.reverse()
+        for module in nvme_modules:
+            if host_obj.modprobe(module=module):
+                result["load_nvme_modules"] = result["load_nvme_modules"] and False
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
 def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
     result = False
     try:
