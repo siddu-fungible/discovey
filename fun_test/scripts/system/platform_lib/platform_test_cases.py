@@ -672,13 +672,50 @@ class FanSpeedVariations(PlatformGeneralTestCase):
             return 0
 
 
+class MultipleF1Reset(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="multiple times F1 reset test ",
+                              test_rail_case_ids=["T24815"],
+                              steps="""""")
 
+    def setup(self):
+        self.iterations = 10
+        self.initialize_job_inputs()
 
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": False})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        for iteration in range(self.iterations):
+            fun_test.log("Iteration : {} of {}".format(iteration+1, self.iterations))
+            fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
+
+            self.bmc_handle.reset_f1(0)
+            self.bmc_handle.reset_f1(1)
+            fun_test.sleep("F1's to reset", seconds=50)
+
+            self.come_handle.reboot()
+            if iteration != (self.iterations - 1):
+                self.fs_obj.re_initialize()
+                self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+                self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+                self.come_handle = self.fs_obj.get_come()
+                self.bmc_handle = self.fs_obj.get_bmc()
 
 
 class General(PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=24,
+        self.set_test_details(id=27,
                               summary="",
                               steps="""""")
 
@@ -717,7 +754,8 @@ if __name__ == "__main__":
         ComeVolumeCreation,
         SnakeTest,
         PortSplitTestCase,
-        FanSpeedVariations
+        FanSpeedVariations,
+        MultipleF1Reset
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
