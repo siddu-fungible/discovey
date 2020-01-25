@@ -658,6 +658,10 @@ class FanSpeedVariations(PlatformGeneralTestCase):
             result = False
         fun_test.test_assert(result, "Fan speed normalized")
 
+    def cleanup(self):
+        self.pwmtt.set_pwm_dutycycle(0, 80)
+        PlatformGeneralTestCase.cleanup(self)
+
     @staticmethod
     def get_change(current, previous):
         if current == previous:
