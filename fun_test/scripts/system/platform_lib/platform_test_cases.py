@@ -637,7 +637,7 @@ class FanSpeedVariations(PlatformGeneralTestCase):
         result = True
         fan = 0
         set_to_duty_cycle = 20
-        sleep_for_sec = 3
+        sleep_for_sec = 300
         threshold_percentage = 20
         intial_rpm = 10000
 
