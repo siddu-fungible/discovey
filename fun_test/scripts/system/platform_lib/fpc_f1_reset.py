@@ -93,7 +93,7 @@ class MultipleF1Reset(PlatformGeneralTestCase):
         with open(uart_log, "r") as f:
             lines = f.readlines()
             for line in lines:
-                match_i2c = re.search(r"smbus read cmd write failed\(-\w+\)! master:\s?2", line)
+                match_i2c = re.search(r"smbus read cmd write failed\(-\w+\)! master:\s?[1,2]", line)
                 if match_i2c:
                     result = False
                     break
