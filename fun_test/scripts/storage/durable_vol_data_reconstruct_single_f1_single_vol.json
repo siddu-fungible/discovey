@@ -84,9 +84,10 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   },
   "DurVolmDriveFailRebuild": {
     "ec_info": {
@@ -138,9 +139,10 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   },
   "DurVolmPlusOneDriveFailRebuild": {
     "ec_info": {
@@ -192,9 +194,10 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   },
   "DurVolSingleDriveFailReSync": {
     "ec_info": {
@@ -246,9 +249,10 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   },
   "DurVolmDriveFailReSync": {
     "ec_info": {
@@ -300,9 +304,10 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   },
   "DurVolmPlusOneDriveFailReSync": {
     "ec_info": {
@@ -354,8 +359,9 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
-    "fio_job_name": "inspur_8k_random_read_write"
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 3600},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 8, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 3600},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   }
 }

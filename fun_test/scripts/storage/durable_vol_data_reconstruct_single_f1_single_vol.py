@@ -489,6 +489,7 @@ class DurableVolumeTestcase(FunTestCase):
         iostat_pid = {}
         iostat_artifact_file = {}
         start_stats = True
+        fun_test.shared_variables["fio"] = {}
         row_data_dict = {}
         row_data_dict["num_hosts"] = self.num_hosts
 
