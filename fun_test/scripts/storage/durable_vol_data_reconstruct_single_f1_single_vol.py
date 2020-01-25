@@ -923,6 +923,7 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C16363"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -952,6 +953,7 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C19529"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -981,6 +983,7 @@ class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C19169"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1010,6 +1013,7 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C16364"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1040,6 +1044,7 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C19238"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1070,6 +1075,7 @@ class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              test_rail_case_ids=["C19454"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
