@@ -742,7 +742,7 @@ class BundleInstallWithDisable(PlatformGeneralTestCase):
                               steps="""""")
 
     def setup(self):
-        self.already_deployed = True
+        self.already_deployed = False
         self.initialize_job_inputs()
 
         topology_helper = TopologyHelper()
