@@ -1343,18 +1343,12 @@ class ComE(Linux):
         if clone:
             handle = self.clone()
         try:
-            the_command = None
-            if not self.list_files(self.FS_RESET_COMMAND):  #WORKAROUND
-                if self.list_files(self.FS_RESET_BACKUP_COMMAND):
-                    the_command = self.FS_RESET_BACKUP_COMMAND
-            else:
-                the_command = self.FS_RESET_COMMAND
-            if the_command:
-                reset_command = "{}".format(the_command)
+            if self.list_files(self.FS_RESET_COMMAND):
+                reset_command = "{}".format(self.FS_RESET_COMMAND)
                 if fast:
                     reset_command += " -f"
-
                 handle.sudo_command(reset_command, timeout=120)
+
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -2777,7 +2771,10 @@ class Fs(object, ToDictMixin):
             self.reset_device_handles()
         else:
             come = self.get_come()
-            come.fs_reset()
+            if come.list_files(come.FS_RESET_COMMAND):
+                come.fs_reset()
+            else:
+                self.reboot_bmc()
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
