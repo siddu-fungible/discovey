@@ -2775,6 +2775,9 @@ class Fs(object, ToDictMixin):
                 come.fs_reset()
             else:
                 self.reboot_bmc()
+                self.reset_device_handles()
+                bmc = self.get_bmc()
+                bmc.ensure_come_is_up(max_wait_time=20, come=self.get_come(), power_cycle=True)
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
