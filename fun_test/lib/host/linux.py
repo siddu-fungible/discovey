@@ -2503,7 +2503,8 @@ class Linux(object, ToDictMixin):
             c.buffer = None
             c.context = self.context
             c.logger = self.logger
-            c.prompt_terminator = c.saved_prompt_terminator
+            c.prompt_terminator = self.prompt_terminator
+            c.saved_prompt_terminator = self.saved_prompt_terminator
         except:
             pass
         return c
