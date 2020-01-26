@@ -258,8 +258,17 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
                     host_cleanup = cleanup_host(host_obj=host_handle)
-                    fun_test.test_assert_expected(expected=True, actual=host_cleanup,
-                                                  message="Host {} cleanup".format(host_name))
+                    host_cleanup = cleanup_host(host_obj=host_handle)
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_list"],
+                                                  message="Host {} cleanup: Fetch NVMe list".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_disconnect"],
+                                                  message="Host {} cleanup: NVMe disconnect".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["load_nvme_modules"],
+                                                  message="Host {} cleanup: Load NVMe modules".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["umount"],
+                                                  message="Host {} cleanup: Umount".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["unload_nvme_modules"],
+                                                  message="Host {} cleanup: Unload NVMe modules".format(host_name))
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
