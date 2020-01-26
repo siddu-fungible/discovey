@@ -885,7 +885,7 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, command_duration=10):
         split_cmd = cmd.split(" ", 1)
         verb = split_cmd[0]
         data = split_cmd[1]
@@ -893,9 +893,9 @@ class Platform(RedFishTool, IpmiTool):
             self.load_new_image = True
             self.initialize_dpcsh()
         if f1 == 0:
-            output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_0.json_execute(verb=verb, data=data, command_duration=command_duration)
         elif f1 == 1:
-            output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_1.json_execute(verb=verb, data=data, command_duration=command_duration)
         result = output["data"]
         return result
 

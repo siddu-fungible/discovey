@@ -735,9 +735,36 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             fun_test.critical(ex)
 
 
-class General(PlatformGeneralTestCase):
+class BundleInstallWithDisable(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=27,
+                              summary="Boot bundle image with all the links down and NO SSD's",
+                              steps="""""")
+
+    def setup(self):
+        self.already_deployed = True
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        self.get_dpcsh_data_for_cmds("port disableall", f1=0, command_duration=60)
+        self.get_dpcsh_data_for_cmds("port disableall", f1=1, command_duration=60)
+
+
+class General(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=28,
                               summary="",
                               steps="""""")
 
@@ -777,7 +804,8 @@ if __name__ == "__main__":
         SnakeTest,
         PortSplitTestCase,
         FanSpeedVariations,
-        MultipleF1Reset
+        MultipleF1Reset,
+        BundleInstallWithDisable
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
