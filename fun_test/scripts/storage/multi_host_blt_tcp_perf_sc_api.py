@@ -1166,10 +1166,10 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         # Run fio
 
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
         fun_test.test_assert(fio_output, "Ensure fio reads are successful")
 
-        write_cmd_args = copy.deepcopy(self.cmd_args)
+        write_cmd_args = copy.deepcopy(self.fio_cmd_args)
         write_cmd_args.update({"rw": "randwrite"})
         write_cmd_args.update({"do_verify": 0})
 
@@ -1177,7 +1177,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(fio_output, "Ensure fio writes are successful reboot")
 
         # Reading the written output
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
         fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):
