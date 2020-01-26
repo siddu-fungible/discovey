@@ -678,6 +678,7 @@ class MultipleF1Reset(PlatformGeneralTestCase):
                               summary="multiple times F1 reset test ",
                               test_rail_case_ids=["T24815"],
                               steps="""""")
+        # "http://integration.fungible.local/regression/submit_job_page?saved_job_config=463441"
 
     def setup(self):
         self.iterations = 10
@@ -701,10 +702,13 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
 
             self.bmc_handle.reset_f1(0)
+            fun_test.add_checkpoint("Reset F1-0")
             self.bmc_handle.reset_f1(1)
+            fun_test.add_checkpoint("Reset F1-1")
             fun_test.sleep("F1's to reset", seconds=50)
 
             self.come_handle.reboot()
+            fun_test.add_checkpoint("Reboot COMe")
             if iteration != (self.iterations - 1):
                 self.fs_obj.re_initialize()
                 self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
