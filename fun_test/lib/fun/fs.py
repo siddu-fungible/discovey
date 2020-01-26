@@ -2790,7 +2790,7 @@ class Fs(object, ToDictMixin):
                 fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
         """
         bmc = self.get_bmc()
-        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
+        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=240), #WORKAROUND
                              context=self.context, message="BMC reachable after reset")
         # if validate_uptime:
         #    fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
