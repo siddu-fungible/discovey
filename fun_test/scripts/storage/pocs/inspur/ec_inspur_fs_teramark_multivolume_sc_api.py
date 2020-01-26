@@ -1111,8 +1111,9 @@ class RandReadWrite8kBlocksAfterReboot(RandReadWrite8kBlocks):
             vols = self.sc_api.get_volumes()
             if (vols['status'] and vols['data']) and not volume_found:
                 if vol_uuid in vols['data'].keys():
-                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
-                                         "BLT Volume {} is persistent".format(vol_uuid))
+                    fun_test.log(vols)
+                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "durable volume",
+                                         "EC/LSV Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
                 nvme_list_output = host_handle.sudo_command("nvme list")
