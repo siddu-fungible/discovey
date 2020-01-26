@@ -72,7 +72,7 @@ class CatalogExecutionStateMachine:
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
                             tags=["release", catalog_execution.release_train],
-                            test_bed_type=suite_execution["test_bed_name"],
+                            test_bed_type=[suite_execution["test_bed_name"]],
                             environment=environment)
         logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
         time.sleep(15) # Prevent flooding as this code is not tested properly
