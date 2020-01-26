@@ -171,6 +171,7 @@ class CatalogExecutionStateMachine:
                     s = SuiteExecution.objects.get(execution_id=job_id)
                     if JobStatusType.is_completed(s.state):
                         completed_job_ids += 1
+                        time.sleep(60) # TODO: Result may not be available for a while
                         job_results.append(s.result)
                 if len(job_ids) == completed_job_ids:
                     catalog_execution.state = JobStatusType.COMPLETED
