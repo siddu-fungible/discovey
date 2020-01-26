@@ -702,6 +702,8 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             fun_test.log("Iteration : {} of {}".format(iteration+1, self.iterations))
             fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
 
+            self.stop_cc_linux_n_health()
+
             self.bmc_handle.reset_f1(0)
             fun_test.add_checkpoint("Reset F1-0")
             self.bmc_handle.reset_f1(1)
@@ -711,11 +713,26 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             self.come_handle.reboot()
             fun_test.add_checkpoint("Reboot COMe")
             if iteration != (self.iterations - 1):
+                self.fs_obj.already_deployed = False
                 self.fs_obj.re_initialize()
                 self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
                 self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
                 self.come_handle = self.fs_obj.get_come()
                 self.bmc_handle = self.fs_obj.get_bmc()
+
+    def stop_cc_linux_n_health(self):
+        try:
+            self.come_handle.stop_health_monitors()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cc_health_check()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cclinux_service()
+        except Exception as ex:
+            fun_test.critical(ex)
 
 
 class General(PlatformGeneralTestCase):
