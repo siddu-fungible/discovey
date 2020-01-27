@@ -248,9 +248,9 @@
       }
     }
   },
-    "C19274": {
+  "C19274": {
     "drive_margin": 0,
-      "snap_count": 1,
+    "snap_count": 1,
     "num_ssd": 1,
     "blt_count": 1,
     "controllers": 1,
@@ -282,7 +282,7 @@
       "randread"
     ],
     "fio_bs_iodepth": [
-      "(4096, 1)"
+      "(4096, 4)"
     ],
     "expected_volume_stats": {
       "write": {
