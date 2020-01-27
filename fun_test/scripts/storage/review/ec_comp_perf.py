@@ -157,7 +157,6 @@ class ECVolumeLevelScript(FunTestScript):
         fun_test.shared_variables["host_info"] = self.host_info
         fun_test.shared_variables["csi_perf_enabled"] = self.csi_perf_enabled
         fun_test.shared_variables["csi_cache_miss_enabled"] = self.csi_cache_miss_enabled
-        fun_test.shared_variables["effort_level"] = self.effort_level
         if self.csi_perf_enabled or self.csi_cache_miss_enabled:
             fun_test.shared_variables["perf_listener_host_name"] = self.perf_listener_host_name
             fun_test.shared_variables["perf_listener_ip"] = self.perf_listener_ip
