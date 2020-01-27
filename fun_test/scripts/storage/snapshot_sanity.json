@@ -208,7 +208,6 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
@@ -268,7 +267,6 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
