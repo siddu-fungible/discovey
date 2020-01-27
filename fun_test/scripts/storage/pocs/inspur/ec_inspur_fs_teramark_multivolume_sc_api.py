@@ -362,6 +362,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(attach_volume["status"], "Attaching EC volume {} to the host {}".
                                      format(response["data"]["uuid"], host_ips[num]))
                 count += 1
+            fun_test.shared_variables["ec"]["setup_created"] = True
             # Starting packet capture in all the hosts
             fun_test.shared_variables["volume_uuid_list"] = self.volume_uuid_list
             fun_test.shared_variables["fio"] = {}
