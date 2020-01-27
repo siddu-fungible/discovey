@@ -193,7 +193,8 @@ def single_fs_setup(obj):
             cpu_range = cpu_group.split("-")
             obj.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
         fun_test.log("Rebooting host: {}".format(host_name))
-        host_handle.reboot(non_blocking=True)
+        if getattr(obj,"reboot_hosts", True):          #Added for avoiding the reboot of hosts
+            host_handle.reboot(non_blocking=True)
     fun_test.log("Hosts info: {}".format(obj.host_info))
 
     # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
@@ -326,25 +327,23 @@ def single_fs_setup(obj):
             fun_test.sleep("Checking DPU IDs", seconds=20)
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
         fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
-        if not already_deployed:
-            for node_index, node in enumerate(nodes):
-                if node_index >= obj.num_f1_per_fs:
-                    continue
-                # Extracting the DUT's bond interface details
-                ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
-                ip = ip.split('/')[0]
-                subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
-                    str(node_index % 2)][str(0)]["subnet_mask"]
-                route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                    str(0)]["route"][0]
-                next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                obj.f1_ips.append(ip)
-
+        for node_index, node in enumerate(nodes):
+            if node_index >= obj.num_f1_per_fs:
+                continue
+            # Extracting the DUT's bond interface details
+            ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
+            ip = ip.split('/')[0]
+            subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
+                str(node_index % 2)][str(0)]["subnet_mask"]
+            route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                str(0)]["route"][0]
+            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+            obj.f1_ips.append(ip)
+            if not already_deployed:
+                # Configuring Dataplane IP
                 fun_test.log(
                     "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
                     "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-
-                # Configuring Dataplane IP
                 dataplane_configuration_success = False
                 num_tries = 3
 
@@ -371,19 +370,41 @@ def single_fs_setup(obj):
                             fun_test.log("Just for debugging End")
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start:  On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp -n")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     else:
-                        fun_test.log("Just for debugging Start")
-                        container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                        container_handle.ping(ip[:- 1] + "1")
-                        container_handle.command("arp")
-                        container_handle.command("route -n")
-                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                        container_handle.command("ifconfig")
-                        fun_test.log("Just for debugging End")
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-0")
+                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
 
-                    # fun_test.test_assert(
-                    #    result["status"],
-                    #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
                                      format(node, ip))
                 fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
@@ -720,6 +741,7 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
                 if ip_match:
                     ip_assigned = True
                 break
+            host_handle.disconnect()
         fun_test.simple_assert(interface_up, "Interface {} is up and running on host {}".format(interface,
                                                                                                 host_handle.host_ip))
         fun_test.simple_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".
@@ -735,11 +757,80 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
             host_handle.command("arp -n")
             host_handle.command("route -n")
             host_handle.command("ifconfig")
+        host_handle.disconnect()
 
         fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
                              format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
     result = True
 
+    return result
+
+
+def get_all_nvme_devices(output_string):
+    return re.findall(r'/dev/nvme\w*n\w*[^\s]', output_string)
+
+
+def get_all_subnqn(output_string):
+    return re.findall(r'NQN=.*[^\s]', output_string)
+
+
+def umount_all_nvme_devices(host_obj):
+    result = True
+    try:
+        mount_output = host_obj.sudo_command("mount")
+        if mount_output:
+            output_list = get_all_nvme_devices(output_string=mount_output)
+            if output_list:
+                for device in output_list:
+                    res = host_obj.unmount_volume(volume=device)
+                    fun_test.critical("Umount {} failed on {}".format(device, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def disconnect_all_nqn(host_obj):
+    result = True
+    try:
+        subnqn_output = host_obj.sudo_command("nvme list-subsys")
+        if subnqn_output:
+            output_list = get_all_subnqn(subnqn_output)
+            if output_list:
+                for nqn in output_list:
+                    res = host_obj.nvme_disconnect(nvme_subsystem=nqn[4:])
+                    fun_test.critical("Disconnect {} failed on {}".format(nqn, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def cleanup_host(host_obj):
+    result = {}
+    nvme_modules = ['nvme_tcp', 'nvme_fabrics', 'nvme', 'nvme_core']
+    try:
+        fun_test.log("Performing cleanup on host {}".format(host_obj))
+        result["umount"] = umount_all_nvme_devices(host_obj)
+        result["nvme_disconnect"] = disconnect_all_nqn(host_obj)
+        result["nvme_list"] = True
+        nvme_list_output = host_obj.sudo_command("nvme list")
+        if nvme_list_output:
+            output_list = get_all_nvme_devices(output_string=nvme_list_output)
+            if output_list:
+                result["nvme_list"] = False
+                fun_test.critical("Devices still found {}".format(output_list))
+        result["unload_nvme_modules"] = True
+        for module in nvme_modules:
+            if host_obj.lsmod(module=module):
+                if host_obj.rmmod(module=module):
+                    result["unload_nvme_modules"] = result["unload_nvme_modules"] and False
+        result["load_nvme_modules"] = True
+        nvme_modules.reverse()
+        for module in nvme_modules:
+            if host_obj.modprobe(module=module):
+                result["load_nvme_modules"] = result["load_nvme_modules"] and False
+    except Exception as ex:
+        fun_test.critical(str(ex))
     return result
 
 

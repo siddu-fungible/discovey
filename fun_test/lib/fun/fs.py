@@ -854,6 +854,7 @@ class Bmc(Linux):
             regex = ""
             if self.fs.get_revision() in ["2"]:
                 ERROR_REGEXES.append('i2c write error.*')
+                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
             for error_regex in ERROR_REGEXES:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
@@ -947,20 +948,22 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
+                come.get_build_properties()
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
                 if True:
-                    come.fs_reset()
+                    fs.reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
-                    come.initialize()
-                    try:
-                        fs_health = self.fs.health()
-                    except:
-                        pass
+                    come.setup_workspace()
+                    # come.initialize()
+                    # try:
+                    #    fs_health = self.fs.health()
+                    # except:
+                    #    pass
 
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
@@ -1224,6 +1227,8 @@ class ComE(Linux):
     REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
+    FS_RESET_BACKUP_COMMAND = "/opt/fungible.bak/etc/ResetFs1600.sh"
+
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
     CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
@@ -1332,18 +1337,21 @@ class ComE(Linux):
                 pass
 
     def fs_reset(self, clone=False, fast=False):
+        result = False
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
         if clone:
             handle = self.clone()
         try:
-            reset_command = "{}".format(self.FS_RESET_COMMAND)
-            if fast:
-                reset_command += " -f"
+            if self.list_files(self.FS_RESET_COMMAND):
+                reset_command = "{}".format(self.FS_RESET_COMMAND)
+                if fast:
+                    reset_command += " -f"
+                handle.sudo_command(reset_command, timeout=120)
 
-            handle.sudo_command(reset_command, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
+        return result
 
     def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
@@ -2544,7 +2552,8 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files,
-                           fs=self)
+                           fs=self,
+                           connect_retry_timeout_max=30)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
@@ -2762,7 +2771,13 @@ class Fs(object, ToDictMixin):
             self.reset_device_handles()
         else:
             come = self.get_come()
-            come.fs_reset()
+            if come.list_files(come.FS_RESET_COMMAND):
+                come.fs_reset()
+            else:
+                self.reboot_bmc()
+                self.reset_device_handles()
+                bmc = self.get_bmc()
+                bmc.ensure_come_is_up(max_wait_time=20, come=self.get_come(), power_cycle=True)
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
@@ -2778,7 +2793,7 @@ class Fs(object, ToDictMixin):
                 fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
         """
         bmc = self.get_bmc()
-        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
+        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=240), #WORKAROUND
                              context=self.context, message="BMC reachable after reset")
         # if validate_uptime:
         #    fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")

@@ -148,6 +148,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
 
+        if "reboot_hosts" in job_inputs:
+            self.reboot_hosts = job_inputs["reboot_hosts"]
+
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
 
@@ -250,6 +253,22 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             except Exception as ex:
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
+            finally:
+                # Cleaning up host
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    host_cleanup = cleanup_host(host_obj=host_handle)
+                    host_cleanup = cleanup_host(host_obj=host_handle)
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_list"],
+                                                  message="Host {} cleanup: Fetch NVMe list".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_disconnect"],
+                                                  message="Host {} cleanup: NVMe disconnect".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["load_nvme_modules"],
+                                                  message="Host {} cleanup: Load NVMe modules".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["umount"],
+                                                  message="Host {} cleanup: Umount".format(host_name))
+                    fun_test.test_assert_expected(expected=True, actual=host_cleanup["unload_nvme_modules"],
+                                                  message="Host {} cleanup: Unload NVMe modules".format(host_name))
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
