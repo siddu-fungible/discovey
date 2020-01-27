@@ -2405,8 +2405,8 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
         command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {}".format(ec_uuid, plex_count, log_file)
     # Retrieve the rebuild start time
     if get_completion_time:
-        command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {}".format(
-            plex_number, log_file)
+        command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
+            format(plex_number, log_file)
     if (get_start_time and get_completion_time) or (not get_start_time and not get_completion_time):
         fun_test.log("Only single fetch operation is allowed")
     else:
