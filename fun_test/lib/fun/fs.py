@@ -1669,9 +1669,17 @@ class ComE(Linux):
 
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
-        self.sudo_command("pkill dpc")
-        self.sudo_command("pkill dpcsh")
-        # self.sudo_command("build/posix/bin/funq-setup unbind")
+        # self.sudo_command("pkill dpc")
+        # self.sudo_command("pkill dpcsh")
+        # self.get_process_id_by_pattern(multiple=True)
+        dpc_process_ids = self.get_process_id_by_pattern(
+            "dpcsh.*{}\|{}\|{}\|{}".format(self.DEFAULT_DPC_PORT[0], self.DEFAULT_DPC_PORT[1],
+                                           self.DEFAULT_STATISTICS_DPC_PORT[0], self.DEFAULT_STATISTICS_DPC_PORT[1]),
+            multiple=True)
+        for dpc_process_id in dpc_process_ids:
+            self.kill_process(signal=9, process_id=dpc_process_id, kill_seconds=2)
+
+        self.get_process_id_by_pattern("dpcsh")
         return True
 
     def setup_dpc(self, statistics=None, csi_perf=None):
@@ -1986,7 +1994,8 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_ip=None,
                  fpga_telnet_port=None,
                  fpga_telnet_username=None,
-                 fpga_telnet_password=None):
+                 fpga_telnet_password=None,
+                 check_expected_containers_running=True):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2074,9 +2083,12 @@ class Fs(object, ToDictMixin):
         self.dpc_statistics_lock = Lock()
         self.statistics_enabled = True
 
+        self.check_expected_containers_running = check_expected_containers_running
         if self.fs_parameters:
             if "statistics_enabled" in self.fs_parameters:
                 self.statistics_enabled = self.fs_parameters["statistics_enabled"]
+            if "check_expected_containers_running" in self.fs_parameters:
+                self.check_expected_containers_running = self.fs_parameters["check_expected_containers_running"]
         self.register_all_statistics()
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
@@ -2848,7 +2860,7 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
     come = fs.get_come()
     come.cleanup_redis()
@@ -2871,9 +2883,7 @@ if __name__ == "__main__":
     # i = fs.bam()
 
 
-if __name__ == "__main2__":
-    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
-    output = come.pre_reboot_cleanup()
-    i = 0
-    #come.setup_hbm_tools()
-    #print come.setup_tools()
+if __name__ == "__main__":
+    come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
+    o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
+    come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
