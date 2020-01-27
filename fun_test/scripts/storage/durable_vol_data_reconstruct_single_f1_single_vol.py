@@ -793,35 +793,26 @@ class DurableVolumeTestcase(FunTestCase):
             bmc_handle = self.fs_obj[0].get_bmc()
             uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
             fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
-            search_pattern = "'under rebuild total failed'"
-            output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
-                                                               timeout=self.command_timeout))
-            fun_test.test_assert_expected(expected=1, actual=int(output.rstrip()),
-                                          message="Rebuild operation is started")
-            rebuild_start_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".format(
-                search_pattern, uart_log_file, timeout=self.command_timeout))
-            rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
-            fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                # with lib
+                ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
+                rebuild_start_time = get_plex_operation_time(
+                    bmc_linux_handle=bmc_handle, log_file=uart_log_file,
+                    ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True,
+                    status_interval=self.status_interval * 5)
+                fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
+                fun_test.simple_assert(rebuild_start_time["status"], "EC UUID: {} started".format(ec_uuid))
+                rebuild_completion_time = get_plex_operation_time(
+                    bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
+                    get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
+                    status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
+                fun_test.log("Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
+                fun_test.simple_assert(rebuild_completion_time["status"], "EC UUID: {} completed".format(ec_uuid))
 
-            timer = FunTimer(max_time=self.rebuild_timeout)
-            while not timer.is_expired():
-                search_pattern = "'Rebuild operation complete for plex'"
-                fun_test.sleep("Waiting for plex rebuild to complete", seconds=(self.status_interval * 5))
-                output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
-                                                                   timeout=self.command_timeout))
-                if int(output.rstrip()) == 1:
-                    rebuild_stop_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".
-                                                           format(search_pattern, uart_log_file,
-                                                                  timeout=self.command_timeout))
-                    rebuild_stop_time = int(round(float(rebuild_stop_time.rstrip())))
-                    fun_test.log("Rebuild operation completed at: {}".format(rebuild_stop_time))
-                    fun_test.log("Rebuild operation on plex {} is completed".format(spare_uuid))
-                    break
-            else:
-                fun_test.test_assert(False, "Rebuild operation on plex {} completed".format(spare_uuid))
-            plex_rebuild_time = rebuild_stop_time - rebuild_start_time
-            fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
-            row_data_dict["plex_rebuild_time"] = plex_rebuild_time
+                plex_rebuild_time = rebuild_completion_time["time"] - rebuild_start_time["time"]
+                fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
+                row_data_dict["plex_rebuild_time"] = plex_rebuild_time
+
         except Exception as ex:
             fun_test.critical(str(ex))
 
