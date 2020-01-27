@@ -48,6 +48,48 @@ def get_nvme_device(host_obj):
     return fio_filename
 
 
+def nvme_connect(host_info, nqn_list, transport_type, test_network, transport_port, nvme_io_queues=None):
+    result = {"status": False}
+    for index, host_name in enumerate(host_info):
+        host_handle = host_info[host_name]["handle"]
+        fun_test.shared_variables["host_handle"] = host_handle
+        host_ip = host_info[host_name]["ip"]
+        nqn = nqn_list[index]
+
+        host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
+        host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+
+        fun_test.log("transport is {}, test_network is {}, tranport_port is {}, nqn is {}, "
+                     "nvme_io_q is {}, host_ip is {}".format(unicode.lower(transport_type), test_network,
+                                                             transport_port, nqn, nvme_io_queues, host_ip))
+
+        if nvme_io_queues is not None:
+            command_result = host_handle.nvme_connect(target_ip=test_network, nvme_subsystem=nqn,
+                                                      port=transport_port, hostnqn=host_ip)
+            fun_test.test_assert(command_result["status"], "NVMe connect from host")
+        else:
+            command_result = host_handle.nvme_connect(target_ip=test_network, nvme_subsystem=nqn,
+                                                      port=transport_port, hostnqn=host_ip,
+                                                      nvme_io_queues=nvme_io_queues)
+            fun_test.test_assert(command_result["status"], "NVMe connect from host")
+
+        fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
+        host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
+        host_handle.sudo_command("dmesg")
+        fun_test.shared_variables["host_handle"] = host_handle
+        device_details = get_nvme_device(host_handle)
+        host_handle.disconnect()
+        if not device_details:
+            host_handle.command("dmesg")
+            fun_test.shared_variables["nvme_discovery"] = False
+            fun_test.simple_assert(False, "NVMe device not found")
+        else:
+            fun_test.shared_variables["nvme_discovery"] = True
+            result = {"status": True, "device_details": device_details, "host_handle": host_handle}
+
+    return result
+
+
 def fio_parser(arg1, **kwargs):
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"] = fio_output
@@ -315,44 +357,13 @@ class SnapVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Attach base volume to controller")
                 self.bv_attach = True
 
-                for index, host_name in enumerate(self.host_info):
-                    host_handle = self.host_info[host_name]["handle"]
-                    fun_test.shared_variables["host_handle"] = host_handle
-                    host_ip = self.host_info[host_name]["ip"]
-                    nqn = self.nqn_list[index]
-                    # Stop udev services on host
-                    service_list = ["systemd-udevd-control.socket", "systemd-udevd-kernel.socket", "systemd-udevd"]
-                    for service in service_list:
-                        service_status = host_handle.systemctl(service_name=service, action="stop")
-                        fun_test.simple_assert(service_status, "Stopping {} service on {}".format(service,
-                                                                                                  self.host_info[host_name]))
-                    host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-                    host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
-                    if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
-                        command_result = host_handle.sudo_command(
-                            "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                      self.test_network["f1_loopback_ip"],
-                                                                                      self.transport_port, nqn,
-                                                                                      self.nvme_io_queues, host_ip))
-                        fun_test.log(command_result)
-                    else:
-                        command_result = host_handle.sudo_command(
-                            "nvme connect -t {} -a {} -s {} -n {} -q {}".format(unicode.lower(self.transport_type),
-                                                                                self.test_network["f1_loopback_ip"],
-                                                                                self.transport_port, nqn, host_ip))
-                        fun_test.log(command_result)
-                    fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
-                    host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-                    host_handle.sudo_command("dmesg")
-                    fun_test.shared_variables["host_handle"] = host_handle
-                    self.device_details = get_nvme_device(host_handle)
-                    host_handle.disconnect()
-                    if not self.device_details:
-                        host_handle.command("dmesg")
-                        fun_test.shared_variables["nvme_discovery"] = False
-                        fun_test.simple_assert(False, "NVMe device not found")
-                    else:
-                        fun_test.shared_variables["nvme_discovery"] = True
+                nvme_connect_result = nvme_connect(host_info=self.host_info, nqn_list=self.nqn_list,
+                                                   transport_port=self.transport_port,
+                                                   test_network=self.test_network["f1_loopback_ip"],
+                                                   transport_type=unicode.lower(self.transport_type))
+                fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host")
+                fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
+                self.device_details = nvme_connect_result["device_details"]
 
         # Create SNAP
         for x in range(1, self.snap_count + 1, 1):
@@ -393,6 +404,14 @@ class SnapVolumeTestCase(FunTestCase):
                                                                                          command_duration=self.command_timeout)
                     fun_test.test_assert(command_result["status"], "Attach Snap Volume to controller".
                                          format(self.snap_uuid[x], self.ctrlr_uuid))
+
+                    nvme_connect_result = nvme_connect(host_info=self.host_info, nqn_list=self.nqn_list,
+                                                       transport_port=self.transport_port,
+                                                       test_network=self.test_network["f1_loopback_ip"],
+                                                       transport_type=unicode.lower(self.transport_type))
+                    fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host")
+                    fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
+                    self.device_details = nvme_connect_result["device_details"]
 
     def run(self):
         testcase = self.__class__.__name__
@@ -498,14 +517,29 @@ class SnapVolumeTestCase(FunTestCase):
                     self.linux_host.command("for i in `pgrep fio`;do kill -9 $i;done")
                 self.linux_host.disconnect()
 
-                fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval),
-                               self.iter_interval)
-
                 # Get base volume stats after fio
                 final_base_vol_stats = self.storage_controller.peek("storage/volume/VOL_TYPE_BLK_LOCAL_THIN/{}".
                                                                     format(self.thin_uuid))
                 # Create SNAP vol
                 if not snap_vol_created:
+                    if hasattr(self, "detach_basevol") and self.detach_basevol:
+                        temp = self.device_details.split("/")[-1]
+                        temp1 = re.search('nvme(.[0-9]*)', temp)
+                        nvme_disconnect_device = temp1.group()
+                        if nvme_disconnect_device:
+                            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
+                            nvme_dev_output = get_nvme_device(self.linux_host)
+                            if nvme_dev_output:
+                                fun_test.critical(False, "NVMe disconnect failed")
+                                self.linux_host.disconnect()
+
+                        command_result = self.storage_controller.detach_volume_from_controller(
+                            ctrlr_uuid=self.ctrlr_uuid,
+                            ns_id=1,
+                            command_duration=self.command_timeout)
+                        fun_test.test_assert(command_result["status"], "Detach base volume from controller")
+                        self.bv_attach = False
+
                     x = 1
                     command_result = self.storage_controller.create_snap_volume(capacity=self.blt_details["capacity"],
                                                                                 block_size=self.blt_details["block_size"],
@@ -523,23 +557,6 @@ class SnapVolumeTestCase(FunTestCase):
                     if snap_vol_details["data"] is None:
                         fun_test.simple_assert(False, "Snap volume not created")
 
-                    if hasattr(self, "detach_basevol") and self.detach_basevol:
-                        temp = self.device_details.split("/")[-1]
-                        temp1 = re.search('nvme(.[0-9]*)', temp)
-                        nvme_disconnect_device = temp1.group()
-                        if nvme_disconnect_device:
-                            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
-                            nvme_dev_output = get_nvme_device(self.linux_host)
-                            if nvme_dev_output:
-                                fun_test.critical(False, "NVMe disconnect failed")
-                                self.linux_host.disconnect()
-
-                        command_result = self.storage_controller.detach_volume_from_controller(
-                            ctrlr_uuid=self.ctrlr_uuid,
-                            ns_id=1,
-                            command_duration=self.command_timeout)
-                        fun_test.test_assert(command_result["status"], "Detach base volume from controller")
-
                     # Attach snap vol to TCP controller
                     if self.snap_attach:
                         command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
@@ -547,42 +564,6 @@ class SnapVolumeTestCase(FunTestCase):
                                                                                              ns_id=x + 1,
                                                                                              command_duration=self.command_timeout)
                         fun_test.test_assert(command_result["status"], "Attach Snapvol to controller".format([x]))
-
-                        if hasattr(self, "detach_basevol") and self.detach_basevol:
-                            for index, host_name in enumerate(self.host_info):
-                                host_handle = self.host_info[host_name]["handle"]
-                                fun_test.shared_variables["host_handle"] = host_handle
-                                host_ip = self.host_info[host_name]["ip"]
-                                nqn = self.nqn_list[index]
-
-                                if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
-                                    command_result = host_handle.sudo_command(
-                                        "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(
-                                            unicode.lower(self.transport_type),
-                                            self.test_network["f1_loopback_ip"],
-                                            self.transport_port, nqn,
-                                            self.nvme_io_queues, host_ip))
-                                    fun_test.log(command_result)
-                                else:
-                                    command_result = host_handle.sudo_command(
-                                        "nvme connect -t {} -a {} -s {} -n {} -q {}".format(
-                                            unicode.lower(self.transport_type),
-                                            self.test_network["f1_loopback_ip"],
-                                            self.transport_port, nqn, host_ip))
-                                    fun_test.log(command_result)
-                                fun_test.sleep("Wait for couple of seconds for the snap volume to be accessible to "
-                                               "the host")
-                                host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
-                                host_handle.sudo_command("dmesg")
-                                fun_test.shared_variables["host_handle"] = host_handle
-                                self.device_details = get_nvme_device(host_handle)
-                                host_handle.disconnect()
-                                if not self.device_details:
-                                    host_handle.command("dmesg")
-                                    fun_test.shared_variables["nvme_discovery"] = False
-                                    fun_test.simple_assert(False, "NVMe device not found")
-                                else:
-                                    fun_test.shared_variables["nvme_discovery"] = True
 
     def cleanup(self):
         self.linux_host = fun_test.shared_variables["host_handle"]

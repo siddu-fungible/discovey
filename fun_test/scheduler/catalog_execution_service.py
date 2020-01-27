@@ -72,7 +72,7 @@ class CatalogExecutionStateMachine:
                             emails=[TEAM_REGRESSION_EMAIL],
                             submitter_email=catalog_execution.owner,
                             tags=["release", catalog_execution.release_train],
-                            test_bed_type=suite_execution["test_bed_name"],
+                            test_bed_type=[suite_execution["test_bed_name"]],
                             environment=environment)
         logger.info("Queued job: {}: ID: {} SuID: {}".format(catalog_execution, job_id, suite_execution["suite_id"]))
         time.sleep(15) # Prevent flooding as this code is not tested properly
@@ -171,6 +171,8 @@ class CatalogExecutionStateMachine:
                     s = SuiteExecution.objects.get(execution_id=job_id)
                     if JobStatusType.is_completed(s.state):
                         completed_job_ids += 1
+                        time.sleep(60) # TODO: Result may not be available for a while
+                        s = SuiteExecution.objects.get(execution_id=job_id)
                         job_results.append(s.result)
                 if len(job_ids) == completed_job_ids:
                     catalog_execution.state = JobStatusType.COMPLETED

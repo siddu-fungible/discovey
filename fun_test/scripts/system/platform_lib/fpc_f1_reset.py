@@ -27,6 +27,7 @@ class MultipleF1Reset(PlatformGeneralTestCase):
     def run(self):
 
         for iteration in range(self.iterations):
+            fun_test.log("Iteration : {} of {}".format(iteration+1, self.iterations))
             fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
 
             self.stop_cc_linux_n_health()
@@ -40,15 +41,14 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             self.check_i2c_error_in_funos_logs()
             self.come_handle.reboot()
             if iteration != (self.iterations - 1):
-                come = self.fs_obj.get_come()
-                come.initialize()
-                come.setup_dpc()
-                fun_test.test_assert(expression=come.ensure_dpc_running(),
-                                     message="Ensure dpc is running")
-                self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
-                self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
-                self.come_handle = self.fs_obj.get_come()
-                self.bmc_handle = self.fs_obj.get_bmc()
+                try:
+                    self.fs_obj.re_initialize()
+                    self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+                    self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+                    self.come_handle = self.fs_obj.get_come()
+                    self.bmc_handle = self.fs_obj.get_bmc()
+                except Exception as ex:
+                    fun_test.critical(ex)
 
     def initialize_job_inputs(self):
         job_inputs = fun_test.get_job_inputs()
@@ -60,21 +60,24 @@ class MultipleF1Reset(PlatformGeneralTestCase):
     def stop_cc_linux_n_health(self):
         try:
             self.come_handle.stop_health_monitors()
-        except Exception as e:
-            fun_test.critical(e)
+        except Exception as ex:
+            fun_test.critical(ex)
         try:
             self.come_handle.stop_cc_health_check()
-        except Exception as e:
-            fun_test.critical(e)
+        except Exception as ex:
+            fun_test.critical(ex)
         try:
             self.come_handle.stop_cclinux_service()
-        except Exception as e:
-            fun_test.critical(e)
+        except Exception as ex:
+            fun_test.critical(ex)
 
     def run_fpc_stress_test(self):
-        self.get_dpcsh_data_for_cmds("async fpc_stresstest", f1=0)
-        self.get_dpcsh_data_for_cmds("async fpc_stresstest", f1=1)
-        fun_test.sleep("For tests to run")
+        try:
+            self.get_dpcsh_data_for_cmds("async fpc_stresstest", f1=0)
+            self.get_dpcsh_data_for_cmds("async fpc_stresstest", f1=1)
+            fun_test.sleep("For tests to run")
+        except Exception as ex:
+            fun_test.critical(ex)
 
     def check_i2c_error_in_funos_logs(self):
         f1_0_log = self.fs_obj.get_uart_log_file(0)
@@ -90,7 +93,7 @@ class MultipleF1Reset(PlatformGeneralTestCase):
         with open(uart_log, "r") as f:
             lines = f.readlines()
             for line in lines:
-                match_i2c = re.search(r"smbus read cmd write failed\(-\w+\)! master:\s?2", line)
+                match_i2c = re.search(r"smbus read cmd write failed\(-\w+\)! master:\s?[1,2]", line)
                 if match_i2c:
                     result = False
                     break
