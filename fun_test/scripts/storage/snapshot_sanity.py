@@ -459,10 +459,10 @@ class SnapVolumeTestCase(FunTestCase):
                 # Get base & COW volume stats before fio
                 initial_cow_vol_stats = {}
                 initial_base_vol_stats = None
-                initial_base_vol_stats = self.storage_controller.peek("storage/volume/VOL_TYPE_BLK_LOCAL_THIN/{}".
+                initial_base_vol_stats = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
                                                                       format(self.thin_uuid))
                 for x in range(1, self.snap_count + 1, 1):
-                    initial_cow_vol_stats[x] = self.storage_controller.peek("storage/volume/VOL_TYPE_BLK_LOCAL_THIN/{}".
+                    initial_cow_vol_stats[x] = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
                                                                             format(self.cow_uuid[x]))
 
                 thread_id = {}
@@ -519,7 +519,7 @@ class SnapVolumeTestCase(FunTestCase):
                 self.linux_host.disconnect()
 
                 # Get base volume stats after fio
-                final_base_vol_stats = self.storage_controller.peek("storage/volume/VOL_TYPE_BLK_LOCAL_THIN/{}".
+                final_base_vol_stats = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
                                                                     format(self.thin_uuid))
                 # Create SNAP vol
                 if not snap_vol_created:
