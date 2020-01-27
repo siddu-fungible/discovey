@@ -21,8 +21,6 @@ from threading import Thread
 from inspect import getargspec
 from lib.utilities.send_mail import send_mail
 from fun_global import Codes, TimeSeriesTypes
-# Workaround for import error of swagger_client
-sys.path.append('{}/lib/host'.format(FUN_TEST_DIR))
 
 
 class TestException(Exception):
