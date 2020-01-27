@@ -2453,6 +2453,8 @@ class Linux(object, ToDictMixin):
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(volume)
+                if directory:
+                    pattern = r'.*{}.*'.format(directory)
                 mnt_out = self.command("mount")
                 match = re.search(pattern, mnt_out, re.M)
                 if match:
@@ -2501,7 +2503,8 @@ class Linux(object, ToDictMixin):
             c.buffer = None
             c.context = self.context
             c.logger = self.logger
-            c.prompt_terminator = c.saved_prompt_terminator
+            c.prompt_terminator = self.prompt_terminator
+            c.saved_prompt_terminator = self.saved_prompt_terminator
         except:
             pass
         return c
@@ -2849,6 +2852,24 @@ class Linux(object, ToDictMixin):
                     fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
 
         return result
+
+    def nvme_disconnect(self, nvme_subsystem=None, device=None):
+        result = False
+        cmd = "nvme disconnect"
+        try:
+            if nvme_subsystem:
+                cmd += " -n {}".format(nvme_subsystem)
+            if device:
+                cmd += " -d {}".format(device)
+            output = self.sudo_command(cmd)
+            if output:
+                if "disconnect" in output:
+                    result = True
+        except Exception as ex:
+            fun_test.critical(ex)
+        return result
+
+
 
     @fun_test.safe
     def curl(self, url, output_file=None, timeout=60):

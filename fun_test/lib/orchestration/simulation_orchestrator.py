@@ -95,7 +95,7 @@ class DockerContainerOrchestrator(Linux, Orchestrator):
         return self.container_asset["pool1_ports"]
 
     @fun_test.safe
-    def launch_dut_instance(self, dut_index, dut_obj):
+    def launch_dut_instance(self, dut_index, dut_obj, already_deployed=False):
         if not self.container_asset:
             self.container_asset = self.setup_storage_container(dut_index=dut_index, dut_obj=dut_obj)
         external_dpcsh_port = self.container_asset["pool2_ports"][0]["external"]
