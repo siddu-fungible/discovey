@@ -1,10 +1,10 @@
 from lib.system.fun_test import *
 from lib.topology.topology_helper import TopologyHelper
-from lib.host.swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
-from lib.host.swagger_client.models.body_volume_attach import BodyVolumeAttach
-from lib.host.swagger_client.models.body_node_update import BodyNodeUpdate
-from lib.host.swagger_client.models.volume_types import VolumeTypes
-from lib.host.swagger_client.models.transport import Transport
+from fungible_client.models.body_volume_intent_create import BodyVolumeIntentCreate
+from fungible_client.models.body_volume_attach import BodyVolumeAttach
+from fungible_client.models.body_node_update import BodyNodeUpdate
+from fungible_client.models.volume_types import VolumeTypes
+from fungible_client.models.transport import Transport
 import ipaddress
 
 

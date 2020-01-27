@@ -2,12 +2,12 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
-from lib.host.swagger_client.api.storage_api import StorageApi
-from lib.host.swagger_client.api.topology_api import TopologyApi
-from lib.host.swagger_client.api.controller_api import ControllerApi
-from lib.host.swagger_client.api.network_api import NetworkApi
-from lib.host.swagger_client.api_client import ApiClient
-from lib.host.swagger_client.configuration import Configuration
+from fungible_client.api.storage_api import StorageApi
+from fungible_client.api.topology_api import TopologyApi
+from fungible_client.api.controller_api import ControllerApi
+from fungible_client.api.network_api import NetworkApi
+from fungible_client.api_client import ApiClient
+from fungible_client.configuration import Configuration
 
 
 class StorageController(NetworkController, DpcshClient):
