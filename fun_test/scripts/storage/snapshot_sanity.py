@@ -318,7 +318,8 @@ class SnapVolumeTestCase(FunTestCase):
         if not hasattr(self, "snap_attach"):
             self.snap_attach = False
 
-        self.ctrlr_uuid = utils.generate_uuid()
+        self.bv_ctrlr = utils.generate_uuid()
+        self.ctrlr_uuid = self.bv_ctrlr
         nqn = "nqn"
         self.nqn_list.append(nqn)
         command_result = self.storage_controller.create_controller(ctrlr_id=1,
@@ -336,13 +337,35 @@ class SnapVolumeTestCase(FunTestCase):
 
         # Create Base volume
         self.thin_uuid = utils.generate_uuid()
-        command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                               capacity=self.blt_details["capacity"],
-                                                               block_size=self.blt_details["block_size"],
-                                                               name="thin_block_1",
-                                                               uuid=self.thin_uuid,
-                                                               command_duration=self.command_timeout)
-        fun_test.test_assert(command_result["status"], "Creation of base volume")
+        if hasattr(self, "encrypt") and self.encrypt == "enable":
+            if hasattr(self, "key_len"):
+                self.xts_key = utils.generate_key(length=self.key_len)
+            else:
+                self.xts_key = utils.generate_key(length=32)
+            if hasattr(self, "xtweak_len"):
+                self.xts_tweak = utils.generate_key(length=self.xtweak_len)
+            else:
+                self.xts_tweak = utils.generate_key(length=8)
+            self.encrypt = True
+
+            command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                   capacity=self.blt_details["capacity"],
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   name="enc_thin_block_1",
+                                                                   uuid=self.thin_uuid,
+                                                                   key=self.xts_key,
+                                                                   xtweak=self.xts_tweak,
+                                                                   encrypt=self.encrypt,
+                                                                   command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"], "Creation of encrypted base volume")
+        else:
+            command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                   capacity=self.blt_details["capacity"],
+                                                                   block_size=self.blt_details["block_size"],
+                                                                   name="thin_block_1",
+                                                                   uuid=self.thin_uuid,
+                                                                   command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"], "Creation of base volume")
 
         # Check if BV is there
         # command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
@@ -372,13 +395,35 @@ class SnapVolumeTestCase(FunTestCase):
             self.snap_uuid[x] = utils.generate_uuid()
 
             # Create COW volume
-            command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                   capacity=self.blt_details["capacity"],
-                                                                   block_size=self.blt_details["block_size"],
-                                                                   name="cow_vol_" + str(x),
-                                                                   uuid=self.cow_uuid[x],
-                                                                   command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Creation of COW volume")
+            if hasattr(self, "encrypt") and self.encrypt:
+                if hasattr(self, "key_len"):
+                    self.xts_key = utils.generate_key(length=self.key_len)
+                else:
+                    self.xts_key = utils.generate_key(length=32)
+                if hasattr(self, "xtweak_len"):
+                    self.xts_tweak = utils.generate_key(length=self.xtweak_len)
+                else:
+                    self.xts_tweak = utils.generate_key(length=8)
+                self.encrypt = True
+
+                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                       capacity=self.blt_details["capacity"],
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="enc_cow_vol_" + str(x),
+                                                                       uuid=self.cow_uuid[x],
+                                                                       key=self.xts_key,
+                                                                       xtweak=self.xts_tweak,
+                                                                       encrypt=self.encrypt,
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Creation of encrypted COW volume")
+            else:
+                command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
+                                                                       capacity=self.blt_details["capacity"],
+                                                                       block_size=self.blt_details["block_size"],
+                                                                       name="cow_vol_" + str(x),
+                                                                       uuid=self.cow_uuid[x],
+                                                                       command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Creation of COW volume")
 
             # Create SNAP vol
             if hasattr(self, "skip_fio") and self.skip_fio:
@@ -395,7 +440,7 @@ class SnapVolumeTestCase(FunTestCase):
                     base_uuid=self.thin_uuid,
                     command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creation of Snap Volume")
-                fun_test.sleep("Snap vol created")
+                fun_test.sleep("Snap volume created")
 
                 if self.snap_attach:
                     # Attach snapvolume to controller
@@ -406,13 +451,14 @@ class SnapVolumeTestCase(FunTestCase):
                     fun_test.test_assert(command_result["status"], "Attach Snap Volume to controller".
                                          format(self.snap_uuid[x], self.ctrlr_uuid))
 
-                    nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
-                                                              transport_port=self.transport_port,
-                                                              test_network=self.test_network["f1_loopback_ip"],
-                                                              transport_type=unicode.lower(self.transport_type))
-                    fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host to Snap Volume")
-                    fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
-                    self.device_details = nvme_connect_result["device_details"]
+                    if hasattr(self, "attach_basevol") and not self.attach_basevol:
+                        nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
+                                                                  transport_port=self.transport_port,
+                                                                  test_network=self.test_network["f1_loopback_ip"],
+                                                                  transport_type=unicode.lower(self.transport_type))
+                        fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host to Snap Volume")
+                        fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
+                        self.device_details = nvme_connect_result["device_details"]
 
     def run(self):
         testcase = self.__class__.__name__
@@ -429,7 +475,7 @@ class SnapVolumeTestCase(FunTestCase):
         initial_volume_stats = {}
         final_volume_stats = {}
 
-        self.storage_controller.peek("storage")
+        self.storage_controller.peek("storage/volumes")
 
         for combo in self.fio_bs_iodepth:
             fio_output[combo] = {}
@@ -443,10 +489,12 @@ class SnapVolumeTestCase(FunTestCase):
             else:
                 expected_volume_stats = self.expected_volume_stats
 
+            self.original_fio_cmd_args = self.fio_cmd_args
             for mode in self.fio_modes:
                 if mode in check_test_mode and mode == "write":
-                    self.fio_cmd_args["verify_pattern"] = "\\\"DEADCAFE\\\""
+                    self.fio_cmd_args = self.fio_2nd_args
                 else:
+                    self.fio_cmd_args = self.original_fio_cmd_args
                     if mode not in check_test_mode:
                         check_test_mode.append(mode)
                 tmp = combo.split(',')
@@ -553,6 +601,7 @@ class SnapVolumeTestCase(FunTestCase):
                                          format(self.snap_uuid[x], self.thin_uuid, self.cow_uuid[x]))
                     snap_vol_created = True
                     fun_test.sleep("Snap vol created")
+                    self.snap_vol_created = True
                     snap_vol_details = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_SNAP/{}".
                                                                     format(self.snap_uuid[x]))
                     if snap_vol_details["data"] is None:
@@ -560,12 +609,35 @@ class SnapVolumeTestCase(FunTestCase):
 
                     # Attach snap vol to TCP controller
                     if self.snap_attach:
+
+                        # Create a TCP controller for snap volume
+                        if hasattr(self, "snap_controller") and self.snap_controller:
+                            self.snap_ctrlr = utils.generate_uuid()
+                            self.ctrlr_uuid = self.snap_ctrlr
+                            self.nqn_list = []
+                            nqn = "snap_nqn"
+                            self.nqn_list.append(nqn)
+
+                            command_result = self.storage_controller.create_controller(ctrlr_id=2,
+                                                                                       ctrlr_uuid=self.ctrlr_uuid,
+                                                                                       ctrlr_type="BLOCK",
+                                                                                       transport=self.transport_type.upper(),
+                                                                                       remote_ip=self.remote_ip,
+                                                                                       subsys_nqn=nqn,
+                                                                                       host_nqn=self.remote_ip,
+                                                                                       port=self.transport_port,
+                                                                                       command_duration=self.command_timeout)
+                            fun_test.log(command_result)
+                            fun_test.test_assert(command_result["status"], "Creating TCP controller for snap volume")
+
                         command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                              vol_uuid=self.snap_uuid[x],
                                                                                              ns_id=x + 1,
                                                                                              command_duration=self.command_timeout)
                         fun_test.test_assert(command_result["status"], "Attach Snapvol to controller".format([x]))
-                        if hasattr(self, "detach_basevol") and self.detach_basevol:
+
+                        if (hasattr(self, "detach_basevol") and self.detach_basevol) or \
+                                hasattr(self, "snap_controller") and self.snap_controller:
                             nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
                                                                       transport_port=self.transport_port,
                                                                       test_network=self.test_network["f1_loopback_ip"],
@@ -592,30 +664,40 @@ class SnapVolumeTestCase(FunTestCase):
 
         # Detach BV from controller
         if self.bv_attach:
+            if hasattr(self, "snap_controller") and self.snap_controller:
+                self.ctrlr_uuid = self.bv_ctrlr
             command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                    ns_id=1,
                                                                                    command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Detach base volume from controller")
 
+            if hasattr(self, "snap_controller") and self.snap_controller:
+                self.ctrlr_uuid = self.bv_ctrlr
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                           command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Delete TCP controller to snap volume")
+                self.ctrlr_uuid = self.bv_ctrlr
+
         for x in range(1, self.snap_count + 1, 1):
             if self.snap_attach:
-                command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
-                                                                                       ns_id=x + 1,
-                                                                                       command_duration=self.command_timeout)
+                if hasattr(self, "snap_controller") and self.snap_controller:
+                    self.ctrlr_uuid = self.snap_ctrlr
+                    command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                                           ns_id=x + 1,
+                                                                                           command_duration=self.command_timeout)
+
                 fun_test.log(command_result)
                 if command_result["status"]:
                     self.blt_detach_count += 1
                 else:
                     fun_test.test_assert(command_result["status"], "Detach Snapvolume with nsid {} from ctrlr".format(x))
-
             # Delete SNAP volume
-            command_result = self.storage_controller.delete_volume(uuid=self.snap_uuid[x],
-                                                                   type="VOL_TYPE_BLK_SNAP",
-                                                                   command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Delete Snapvolume {}".format(x))
-            command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+            if self.snap_vol_created:
+
+                command_result = self.storage_controller.delete_volume(uuid=self.snap_uuid[x],
+                                                                       type="VOL_TYPE_BLK_SNAP",
                                                                        command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Delete TCP controller")
+                fun_test.test_assert(command_result["status"], "Delete Snapvolume {}".format(x))
 
             # Delete COW volume
             command_result = self.storage_controller.delete_volume(uuid=self.cow_uuid[x],
@@ -626,6 +708,10 @@ class SnapVolumeTestCase(FunTestCase):
                 self.blt_delete_count += 1
             else:
                 fun_test.test_assert(not command_result["status"], "Delete COW vol {}".format(x))
+
+        command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
+                                                                   command_duration=self.command_timeout)
+        fun_test.test_assert(command_result["status"], "Delete TCP controller")
 
         # Delete Base volume
         command_result = self.storage_controller.delete_volume(uuid=self.thin_uuid,
@@ -727,6 +813,54 @@ class C19274(SnapVolumeTestCase):
         ''')
 
 
+class C35455(SnapVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              test_rail_case_ids=["C35455"],
+                              summary="Create BLT Snapshot for BLT base volume, create a TCP "
+                                      "controller for each of the snapshot & base volume",
+                              steps='''
+                              1. Create a BLT for base volume & then a BLT for COW volume.
+                              2. Attach the BV to controller
+                              3. Connect from host to BV
+                              4. Create a SNAP volume
+        ''')
+
+
+class C13067(SnapVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              test_rail_case_ids=["C13067"],
+                              summary="Create,Attach,Detach & Delete BLT-Encrypted Snapshot "
+                                      "for BLT-Encrypted Base volume ",
+                              steps='''
+                              1. Create a BLT for base volume & then a BLT for COW volume.
+                              2. Attach the BV to controller
+                              3. Connect from host to BV
+                              4. Create a SNAP volume
+        ''')
+
+    def run(self):
+        pass
+
+
+class C13026(SnapVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              test_rail_case_ids=["C13026"],
+                              summary="Verify data integrity by sequential read from BLT Snapshot"
+                                      " for BLT Base volume after overwriting contents in BV",
+                              steps='''
+                              1. Create a BLT for base volume & then a BLT for COW volume.
+                              2. Attach the BV to controller
+                              3. Connect from host to BV
+                              4. Create a SNAP volume
+        ''')
+
+
 if __name__ == "__main__":
     bltscript = Singledpu()
     bltscript.add_test_case(C12991())
@@ -734,4 +868,7 @@ if __name__ == "__main__":
     bltscript.add_test_case(C17750())
     bltscript.add_test_case(C35290())
     bltscript.add_test_case(C19274())
+    bltscript.add_test_case(C35455())
+    bltscript.add_test_case(C13067())
+    bltscript.add_test_case(C13026())
     bltscript.run()
