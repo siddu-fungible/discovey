@@ -407,7 +407,7 @@ def single_fs_setup(obj):
 
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
                                      format(node, ip))
-                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
+                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index, obj=obj, dataplane_ip=ip), "Ensure DPU's are online")
     else:
         # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
         pass
@@ -853,7 +853,7 @@ def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
     return result
 
 
-def ensure_dpu_online(sc_api, dpu_index, timeout=120):
+def ensure_dpu_online(sc_api, dpu_index, timeout=120, obj=None, dataplane_ip=None):
     result = False
     try:
         # Polling for API Server status
@@ -866,6 +866,19 @@ def ensure_dpu_online(sc_api, dpu_index, timeout=120):
                     fun_test.log("DPU {} is online".format(dpu_index))
                     result = True
                     break
+                else:
+                    try:
+                        fun_test.log("Just for debugging Start: On F1-{}".format(dpu_index))
+                        container_handle = obj.funcp_obj[0].container_info["F1-{}".format(dpu_index)]
+                        container_handle.ping(dataplane_ip[:- 1] + "1")
+                        container_handle.command("arp")
+                        container_handle.command("route -n")
+                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                        container_handle.command("ifconfig")
+                        fun_test.log("Just for debugging End")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
             else:
                 fun_test.sleep("Waiting for DPU {} to be online".format(dpu_index), 10)
     except Exception as ex:
