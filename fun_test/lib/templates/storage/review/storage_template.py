@@ -50,7 +50,7 @@ class StorageControllerTemplate():
                     dpu_id=dpu_id, body_node_update=body_node_update)
 
                 fun_test.test_assert(expression=assign_dataplane_ip.status,
-                                     checkpoint="Dataplane IP assignment on %s" % dpu_id)
+                                     message="Dataplane IP assignment on %s" % dpu_id)
         result = True
         return result
 
@@ -150,6 +150,14 @@ class BltVolumeOperationsTemplate(StorageControllerTemplate, object):
         :return: output of nvme connect command
         """
         host_linux_handle = host_obj.get_instance()
+        if not host_linux_handle.lsmod(module="nvme"):
+            host_linux_handle.modprobe("nvme")
+            host_linux_handle.modprobe("nvme_core")
+        if not host_linux_handle.lsmod(module="nvme_tcp"):
+            host_linux_handle.modprobe("nvme_tcp")
+            host_linux_handle.modprobe("nvme_fabrics")
+
+        fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
                                                               port=transport_port, transport=transport_type,
                                                               nvme_io_queues=nvme_io_queues, hostnqn=host_nqn)
@@ -169,11 +177,13 @@ class BltVolumeOperationsTemplate(StorageControllerTemplate, object):
                 result = volume_name
         return result
 
-    def traffic_from_host(self, host_obj, nvme_device_name, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                          rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct="1"):
+    def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
+                          rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct="1",
+                          time_based=True, norandommap=True):
         host_linux_handle = host_obj.get_instance()
-        fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, filename=nvme_device_name,
-                                           rw=rw, runtime=runtime, bs=bs, ioengine=ioengine, direct=direct)
+        fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
+                                           filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
+                                           timeout=runtime+15, time_based=time_based, norandommap=norandommap)
         return fio_result
 
     def deploy(self):
@@ -184,10 +194,13 @@ class BltVolumeOperationsTemplate(StorageControllerTemplate, object):
 
     def cleanup(self):
         """
+
+        Detach volumes from FS
         Delete created volumes
 
         :return:
         """
+        # TODO: Disconnect from Host
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
