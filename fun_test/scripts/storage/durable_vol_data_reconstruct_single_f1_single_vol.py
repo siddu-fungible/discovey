@@ -203,6 +203,11 @@ class DurableVolumeTestcase(FunTestCase):
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         # End of benchmarking json file parsing
 
+        # As ec_info is being modified with new key additions, retaining the pervious case info
+        if "ec" in fun_test.shared_variables:
+            fun_test.log("Overriding EC info from existing shared variables")
+            self.ec_info = fun_test.shared_variables["ec_info"]
+
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
