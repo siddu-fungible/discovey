@@ -193,7 +193,8 @@ def single_fs_setup(obj):
             cpu_range = cpu_group.split("-")
             obj.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
         fun_test.log("Rebooting host: {}".format(host_name))
-        host_handle.reboot(non_blocking=True)
+        if getattr(obj,"reboot_hosts", True):          #Added for avoiding the reboot of hosts
+            host_handle.reboot(non_blocking=True)
     fun_test.log("Hosts info: {}".format(obj.host_info))
 
     # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
@@ -369,15 +370,41 @@ def single_fs_setup(obj):
                             fun_test.log("Just for debugging End")
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start:  On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp -n")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     else:
-                        fun_test.log("Just for debugging Start")
-                        container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                        container_handle.ping(ip[:- 1] + "1")
-                        container_handle.command("arp")
-                        container_handle.command("route -n")
-                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                        container_handle.command("ifconfig")
-                        fun_test.log("Just for debugging End")
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-0")
+                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
                                      format(node, ip))
                 fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
@@ -736,6 +763,74 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
                              format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
     result = True
 
+    return result
+
+
+def get_all_nvme_devices(output_string):
+    return re.findall(r'/dev/nvme\w*n\w*[^\s]', output_string)
+
+
+def get_all_subnqn(output_string):
+    return re.findall(r'NQN=.*[^\s]', output_string)
+
+
+def umount_all_nvme_devices(host_obj):
+    result = True
+    try:
+        mount_output = host_obj.sudo_command("mount")
+        if mount_output:
+            output_list = get_all_nvme_devices(output_string=mount_output)
+            if output_list:
+                for device in output_list:
+                    res = host_obj.unmount_volume(volume=device)
+                    fun_test.critical("Umount {} failed on {}".format(device, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def disconnect_all_nqn(host_obj):
+    result = True
+    try:
+        subnqn_output = host_obj.sudo_command("nvme list-subsys")
+        if subnqn_output:
+            output_list = get_all_subnqn(subnqn_output)
+            if output_list:
+                for nqn in output_list:
+                    res = host_obj.nvme_disconnect(nvme_subsystem=nqn[4:])
+                    fun_test.critical("Disconnect {} failed on {}".format(nqn, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def cleanup_host(host_obj):
+    result = {}
+    nvme_modules = ['nvme_tcp', 'nvme_fabrics', 'nvme', 'nvme_core']
+    try:
+        fun_test.log("Performing cleanup on host {}".format(host_obj))
+        result["umount"] = umount_all_nvme_devices(host_obj)
+        result["nvme_disconnect"] = disconnect_all_nqn(host_obj)
+        result["nvme_list"] = True
+        nvme_list_output = host_obj.sudo_command("nvme list")
+        if nvme_list_output:
+            output_list = get_all_nvme_devices(output_string=nvme_list_output)
+            if output_list:
+                result["nvme_list"] = False
+                fun_test.critical("Devices still found {}".format(output_list))
+        result["unload_nvme_modules"] = True
+        for module in nvme_modules:
+            if host_obj.lsmod(module=module):
+                if host_obj.rmmod(module=module):
+                    result["unload_nvme_modules"] = result["unload_nvme_modules"] and False
+        result["load_nvme_modules"] = True
+        nvme_modules.reverse()
+        for module in nvme_modules:
+            if host_obj.modprobe(module=module):
+                result["load_nvme_modules"] = result["load_nvme_modules"] and False
+    except Exception as ex:
+        fun_test.critical(str(ex))
     return result
 
 
@@ -2278,5 +2373,55 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["drive_uuids"].append(id_uuid_mapping[drive_id])
     if len(result["drive_uuids"]) != 0:
         result["status"] = True
+
+    return result
+
+
+def extract_funos_log_time(log_string, get_plex_number=False):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Search for the log line
+    match = re.search(pattern=r'(\d+.\d+)', string=log_string)
+    if match:
+        result["time"] = float(match.group(0))
+        result["status"] = True
+        if get_plex_number:
+            # Check if plex number needs to be fetched
+            match1 = re.search(pattern=r'(plex:\s)(\d+)', string=log_string)
+            if match1:
+                result["plex_number"] = int(match1.group(2))
+            else:
+                result["status"] = False
+    return result
+
+
+def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, plex_number=None, get_start_time=None,
+                            get_completion_time=None, get_plex_number=False, rebuild_wait_time=60,
+                            status_interval=2, command_timeout=60):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Retrieve the rebuild start time
+    if get_start_time:
+        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {}".format(ec_uuid, plex_count, log_file)
+    # Retrieve the rebuild start time
+    if get_completion_time:
+        command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
+            format(plex_number, log_file)
+    if (get_start_time and get_completion_time) or (not get_start_time and not get_completion_time):
+        fun_test.log("Only single fetch operation is allowed")
+    else:
+        search_timer = FunTimer(max_time=rebuild_wait_time)
+        while not search_timer.is_expired():
+            command_output = bmc_linux_handle.sudo_command(command=command, timeout=command_timeout)
+            if command_output:
+                get_log_info = extract_funos_log_time(log_string=command_output, get_plex_number=get_plex_number)
+                if get_log_info["status"]:
+                    result["time"] = get_log_info["time"]
+                    result["status"] = True
+                    if get_plex_number:
+                        result["plex_number"] = get_log_info["plex_number"]
+                break
+            fun_test.sleep("Waiting for operation log", status_interval)
+            fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result

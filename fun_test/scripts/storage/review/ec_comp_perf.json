@@ -1,7 +1,5 @@
 {
   "GlobalSetup": {
-    "already_deployed": false,
-    "reboot_hosts" : true,
     "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g",
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
     "dut_start_index": 2,
@@ -24,6 +22,28 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "csi_perf_pdtrace_hbm_size_kb": 204800,
+    "csr_network": {
+      "0": {
+        "test_interface_ip": "20.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:30",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "20.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      },
+      "4": {
+        "test_interface_ip": "21.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:31",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "21.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      }
+    },
     "api_server_port": 50220,
     "api_server_username": "admin",
     "api_server_password": "password",
@@ -32,7 +52,7 @@
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 300
+    "api_server_up_timeout": 180
   },
   "RandReadWrite8kBlocks": {
     "ec_info": {
@@ -57,7 +77,10 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 4
+      "num_volumes": 4,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -72,8 +95,8 @@
     "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
-    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
-    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "buffer_compress_percentage": 50, "buffer_pattern": "0xdeadface", "timeout": 3600},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
     "fio_size_timeout": 3600,
@@ -110,7 +133,10 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 4
+      "num_volumes": 4,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -125,13 +151,13 @@
     "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
-    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
-    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randread --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "buffer_compress_percentage": 50, "buffer_pattern": "0xdeadface", "timeout": 3600},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randread --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
     "fio_size_timeout": 3600,
     "fio_modes": ["randread"],
-    "fio_iodepth": [1, 16, 32, 64, 96, 128, 256, 512],
+    "fio_iodepth": [32, 64, 96, 128],
     "full_run_iodepth": [96],
     "fio_job_name": "inspur_8k_random_read",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
@@ -163,7 +189,10 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 4
+      "num_volumes": 4,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE"
     },
     "num_ssd": 12,
     "command_timeout": 30,
@@ -178,13 +207,13 @@
     "nvme_io_queues": 16,
     "warm_up_traffic": 1,
     "parallel_warm_up": false,
-    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
-    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randwrite --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
+    "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "buffer_compress_percentage": 50, "buffer_pattern": "0xdeadface", "timeout": 3600},
+    "fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randwrite --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
     "fio_runtime": 120,
     "fio_run_timeout": 150,
-    "fio_size_timeout": 7200,
+    "fio_size_timeout": 3600,
     "fio_modes": ["randwrite"],
-    "fio_iodepth": [1, 8, 16, 32, 64, 96, 128],
+    "fio_iodepth": [8, 16, 32, 64, 96, 128],
     "full_run_iodepth": [8, 16],
     "fio_job_name": "inspur_8k_random_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},

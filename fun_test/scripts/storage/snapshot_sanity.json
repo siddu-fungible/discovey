@@ -208,7 +208,6 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
@@ -249,9 +248,9 @@
       }
     }
   },
-    "C19274": {
+  "C19274": {
     "drive_margin": 0,
-      "snap_count": 1,
+    "snap_count": 1,
     "num_ssd": 1,
     "blt_count": 1,
     "controllers": 1,
@@ -268,7 +267,6 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "iter_interval": 2,
     "fio_loop": 1,
     "detach_vol": false,
     "fio_cmd_args": {
@@ -284,7 +282,7 @@
       "randread"
     ],
     "fio_bs_iodepth": [
-      "(4096, 1)"
+      "(4096, 4)"
     ],
     "expected_volume_stats": {
       "write": {
