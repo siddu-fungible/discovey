@@ -545,7 +545,7 @@ class RecoveryWithFailures(FunTestCase):
                             **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(not(fio_output),
-                                             "After failing {} plexes with drive ids {}, \
+                                             "After failing {} plexes with drive ids {} concurrently, \
                                              unable to read from EC volume as expected".
                                              format(len(self.device_id_failed), self.device_id_failed))
 
