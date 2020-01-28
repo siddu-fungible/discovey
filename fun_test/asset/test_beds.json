@@ -3726,5 +3726,277 @@
         }
       }
     }
+  },
+  "fs-storage-test-cab04": {
+    "switch_info": {
+      "cab04-arista-100g": {
+        "interface_info": {
+          "Et17/1": {
+            "host_info": {
+              "name": "cab04-qa-01"
+            },
+            "ip": "15.1.41.1/24"
+          },
+          "Et18/1": {
+            "host_info": {
+              "name": "cab04-qa-02"
+            },
+            "ip": "15.1.42.1/24"
+          },
+          "Et19/1": {
+            "host_info": {
+              "name": "cab04-qa-03"
+            },
+            "ip": "15.1.43.1/24"
+          },
+          "Et20/1": {
+            "host_info": {
+              "name": "cab04-qa-04"
+            },
+            "ip": "15.1.44.1/24"
+          },
+          "Et21/1": {
+            "host_info": {
+              "name": "cab04-qa-05"
+            },
+            "ip": "15.1.45.1/24"
+          }
+        }
+      }
+    },
+    "host_info": [
+      "cab04-qa-01",
+      "cab04-qa-02",
+      "cab04-qa-03",
+      "cab04-qa-04",
+      "cab04-qa-05"
+    ],
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-139",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.139.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.139.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.139.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.139.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et31/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et32/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et1/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et2/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "1": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-140",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.140.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.140.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.140.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.140.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et29/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et30/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et3/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et4/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "2": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-141",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.141.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.141.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.141.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.141.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et27/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et28/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et5/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et6/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    }
   }
 }

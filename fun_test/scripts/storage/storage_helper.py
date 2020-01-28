@@ -322,11 +322,13 @@ def single_fs_setup(obj):
         # Getting all the DUTs of the setup
         dpu_id_ready_timer = FunTimer(max_time=9 * 60)
         nodes = obj.sc_api.get_dpu_ids()
-        while not nodes and not dpu_id_ready_timer.is_expired():
+        while not nodes and (len(nodes) < obj.num_f1_per_fs) and not dpu_id_ready_timer.is_expired():
             nodes = obj.sc_api.get_dpu_ids()
             fun_test.sleep("Checking DPU IDs", seconds=20)
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
-        fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
+        fun_test.log("DPU nodes: {}".format(nodes))
+        fun_test.test_assert(not dpu_id_ready_timer.is_expired(),
+                             "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         for node_index, node in enumerate(nodes):
             if node_index >= obj.num_f1_per_fs:
                 continue
@@ -1010,7 +1012,7 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     stats_diff = {}
     total_diff = {}
     stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
-                          "se_size"]
+                          "se_size", "vol_state"]
     aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
     try:
         # Forming a dictionary for provided vol_details
