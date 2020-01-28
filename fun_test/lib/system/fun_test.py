@@ -314,6 +314,10 @@ class FunTest:
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
         self.script_file_name = ""
+        self.storage_api_enabled = False  # Just for backward-compatibility while we switchover to swagger
+
+    def enable_storage_api(self):
+        self.storage_api_enabled = True
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
