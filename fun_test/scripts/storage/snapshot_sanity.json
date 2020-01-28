@@ -12,7 +12,7 @@
       "ep",
       "storage"
     ],
-    "num_f1_per_fs": 1,
+    "num_f1_per_fs": 2,
     "num_f1s": 1,
     "num_hosts": 1,
     "fpg_int_prefix": "fpg",
