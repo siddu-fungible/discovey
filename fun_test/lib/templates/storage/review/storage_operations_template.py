@@ -11,7 +11,7 @@ import ipaddress
 import re
 
 
-class StorageControllerTemplate():
+class StorageControllerOperationsTemplate():
     def __init__(self, topology):
         self.topology = topology
         self.node_ids = []
@@ -68,7 +68,7 @@ class StorageControllerTemplate():
         # check with storage team
 
 
-class BltVolumeOperationsTemplate(StorageControllerTemplate, object):
+class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
     vol_type = VolumeTypes()
 
     def __init__(self, topology):
