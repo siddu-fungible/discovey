@@ -215,7 +215,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
@@ -273,7 +274,8 @@
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200
+      "timeout": 1200,
+      "iodepth": 4
     },
     "fio_modes": [
       "write",
