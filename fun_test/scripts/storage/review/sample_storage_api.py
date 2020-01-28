@@ -18,7 +18,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -71,6 +71,7 @@ class RunStorageApiCommands(FunTestCase):
                 host_obj = hosts[host_id]
                 attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
                                                                                    volume_uuid=vol_uuid_dict[fs_obj],
+                                                                                   validate_nvme_connect=True,
                                                                                    raw_api_call=True)
                 fun_test.test_assert(expression=attach_vol_result, message="Attach Volume")
 
@@ -80,8 +81,9 @@ class RunStorageApiCommands(FunTestCase):
             host_obj = hosts[host_id]
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
-                                                                                nvme_device_name=nvme_device_name)
+                                                                                filename="/dev/"+nvme_device_name)
             fun_test.test_assert(expression=traffic_result, message="FIO traffic result")
+            fun_test.log(traffic_result)
 
     def cleanup(self):
         # self.storage_controller_template.cleanup()
