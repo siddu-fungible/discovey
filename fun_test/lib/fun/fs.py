@@ -1215,6 +1215,10 @@ class ComE(Linux):
     HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
+    HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
+    HBM_COLLECT_MAX_TIMER = 40 * 60
+
+    BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
@@ -1443,6 +1447,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+            if self.fs.bundle_compatible:
+                fun_test.log("Clearing out HBM dump directory")
+                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1890,6 +1897,35 @@ class ComE(Linux):
             pass
         else:
             self.sudo_command("rm {}".format(redis_target_path))
+
+        if self.fs.bundle_compatible:
+            if self.list_files(self.HBM_COLLECT_NOTIFY):
+                fun_test.log("HBM dumping going on")
+                hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
+                while not hbm_dump_timer.is_expired(print_remaining_time=True):
+                    fun_test.sleep("HBM Dump", seconds=60)
+                    if not self.list_files(self.HBM_COLLECT_NOTIFY):
+                        fun_test.log("HBM dump completed")
+                        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                        if not current_hbm_dump_files:
+                            fun_test.critical("No HBM dump files found")
+                        else:
+                            for hbm_dump_file in current_hbm_dump_files:
+                                file_name = hbm_dump_file["filename"]
+                                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
+                                                                             linux_obj=self,
+                                                                             source_file_path=hbm_dump_file["filename"],
+                                                                             display_name=os.path.basename(file_name),
+                                                                             asset_type=asset_type,
+                                                                             asset_id=asset_id,
+                                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                                             is_large_file=True,
+                                                                             timeout=60)
+                                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+
+                        break
+
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2232,8 +2268,9 @@ class Fs(object, ToDictMixin):
                         continue
                     fun_test.log("Errors were detected. Starting HBM dump")
                     f1.hbm_dump_complete = True
-                    self.get_come().setup_hbm_tools()
-                    self.get_come().hbm_dump(f1_index=f1_index)
+                    if not self.bundle_compatible:
+                        self.get_come().setup_hbm_tools()
+                        self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
         try:

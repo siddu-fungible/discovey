@@ -12,7 +12,7 @@
       "ep",
       "storage"
     ],
-    "num_f1_per_fs": 1,
+    "num_f1_per_fs": 2,
     "num_f1s": 1,
     "num_hosts": 1,
     "fpg_int_prefix": "fpg",
@@ -208,15 +208,12 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "fio_loop": 1,
-    "detach_vol": false,
     "fio_cmd_args": {
       "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200,
-      "iodepth": 4
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -267,15 +264,12 @@
       "block_size": 4096
     },
     "command_timeout": 5,
-    "fio_loop": 1,
-    "detach_vol": false,
     "fio_cmd_args": {
       "size": "100%",
       "verify": "pattern",
       "verify_pattern": "\\\"DEADBEEF\\\"",
       "verify_fatal": 1,
-      "timeout": 1200,
-      "iodepth": 4
+      "timeout": 1200
     },
     "fio_modes": [
       "write",
@@ -283,6 +277,170 @@
     ],
     "fio_bs_iodepth": [
       "(4096, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "C35455": {
+    "drive_margin": 0,
+    "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "attach_basevol": true,
+    "snap_attach": true,
+    "snap_controller": true,
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_modes": [
+      "write",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4096, 4)"
+    ],
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "C13067": {
+    "drive_margin": 0,
+    "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "skip_fio": true,
+    "snap_attach": true,
+    "attach_basevol": true,
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "encrypt": "enable",
+    "key_len": 32,
+    "xtweak_len" :8,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "expected_volume_stats": {
+      "write": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "read": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      },
+      "randwrite": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 1024
+      },
+      "randread": {
+        "fault_injection": 0,
+        "num_reads": 1024,
+        "num_writes": 0
+      }
+    }
+  },
+  "C13026": {
+    "drive_margin": 0,
+      "snap_count": 1,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "attach_basevol": true,
+    "snap_attach": false,
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "fio_cmd_args": {
+      "size": "100%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADBEEF\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200
+    },
+    "fio_2nd_args": {
+      "size": "50%",
+      "verify": "pattern",
+      "verify_pattern": "\\\"DEADCAAE\\\"",
+      "verify_fatal": 1,
+      "timeout": 1200},
+    "fio_modes": [
+      "write",
+      "randread",
+      "write",
+      "randread"
+    ],
+    "fio_bs_iodepth": [
+      "(4096, 1)"
     ],
     "expected_volume_stats": {
       "write": {

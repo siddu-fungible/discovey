@@ -203,6 +203,11 @@ class DurableVolumeTestcase(FunTestCase):
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         # End of benchmarking json file parsing
 
+        # As ec_info is being modified with new key additions, retaining the pervious case info
+        if "ec" in fun_test.shared_variables:
+            fun_test.log("Overriding EC info from existing shared variables")
+            self.ec_info = fun_test.shared_variables["ec_info"]
+
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
@@ -524,7 +529,6 @@ class DurableVolumeTestcase(FunTestCase):
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
-                fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
                 self.fio_write_cmd_args["offset"] = "0%"
@@ -606,36 +610,43 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][
                                                                            index]))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                     .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                             self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
+                                             self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        fun_test.sleep("before next iteration", 10)
         # Verifying data integrity after Write is complete
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                wait_time = self.num_hosts - index
+                # Verifying Data Integrity for 50% data written to the volume with --verify=md5
+                self.fio_verify_cmd_args["offset"] = "0%"
+                self.fio_verify_cmd_args["filename"] = nvme_block_device_list[num]
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                    self.fio_verify_cmd_args["iodepth"]))
 
-            # Verifying Data Integrity for 50% data written to the volume with --verify=md5
-            self.fio_verify_cmd_args["offset"] = "0%"
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
-
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_verify_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_verify_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -647,35 +658,43 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][
                                                                            index]))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
 
+        fun_test.sleep("before next iteration", 10)
         # Writing remaining 50% of volume with --verify=md5
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_write_cmd_args["offset"] = "50%"
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                self.fio_write_cmd_args["iodepth"]))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
+                self.fio_write_cmd_args["offset"] = "50%"
+                self.fio_write_cmd_args["filename"] = nvme_block_device_list[num]
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                    self.fio_write_cmd_args["iodepth"]))
 
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_write_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_write_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_write_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_write_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         fun_test.sleep(message="Sleeping for {} seconds before before bringing up the failed device(s) & "
                                "plex rebuild".format(wait_time), seconds=wait_time)
@@ -737,35 +756,44 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                     .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                             self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
+                                             self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                             host_name))
+
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        fun_test.sleep("before next iteration", 10)
         # Verifying data integrity after Write is complete
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_verify_cmd_args["offset"] = "50%"
-            # Writing 50% of volume with --verify=md5
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
+                self.fio_verify_cmd_args["offset"] = "50%"
+                self.fio_verify_cmd_args["filename"] = nvme_block_device_list[num]
+                # Writing 50% of volume with --verify=md5
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                    self.fio_verify_cmd_args["iodepth"]))
 
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_verify_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_verify_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -776,6 +804,12 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
@@ -789,60 +823,62 @@ class DurableVolumeTestcase(FunTestCase):
         Rebuild operation complete for plex:5"
         [2774.292149 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 marked active total failed:0"
         '''
-        try:
-            bmc_handle = self.fs_obj[0].get_bmc()
-            uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
-            fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
-            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
-                # with lib
-                ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
-                rebuild_start_time = get_plex_operation_time(
-                    bmc_linux_handle=bmc_handle, log_file=uart_log_file,
-                    ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True,
-                    status_interval=self.status_interval * 5)
-                fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
-                fun_test.simple_assert(rebuild_start_time["status"], "EC UUID: {} started".format(ec_uuid))
-                rebuild_completion_time = get_plex_operation_time(
-                    bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
-                    get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
-                    status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
-                fun_test.log("Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
-                fun_test.simple_assert(rebuild_completion_time["status"], "EC UUID: {} completed".format(ec_uuid))
+        bmc_handle = self.fs_obj[0].get_bmc()
+        uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
+        fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            # with lib
+            ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
+            rebuild_start_time = get_plex_operation_time(
+                bmc_linux_handle=bmc_handle, log_file=uart_log_file,
+                ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True, plex_count=self.plex_failure_count,
+                status_interval=self.status_interval * 5)
+            fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
+            fun_test.test_assert(rebuild_start_time["status"], "EC UUID: {} started at: {}".format(
+                ec_uuid, rebuild_start_time))
+            rebuild_completion_time = get_plex_operation_time(
+                bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
+                get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
+                status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
+            fun_test.log("Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
+            fun_test.test_assert(rebuild_completion_time["status"], "EC UUID: {} completed at: {}".format(
+                ec_uuid, rebuild_completion_time))
 
-                plex_rebuild_time = rebuild_completion_time["time"] - rebuild_start_time["time"]
-                fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
-                row_data_dict["plex_rebuild_time"] = plex_rebuild_time
-
-        except Exception as ex:
-            fun_test.critical(str(ex))
+            plex_rebuild_time = rebuild_completion_time["time"] - rebuild_start_time["time"]
+            fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
+            fun_test.test_assert(plex_rebuild_time, "EC UUID: {} Rebuild time: {}".format(
+                ec_uuid, plex_rebuild_time))
+            row_data_dict["plex_rebuild_time"] = plex_rebuild_time
 
         # After Data Reconstruction is completed, verifying 100% data integrity
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_verify_cmd_args["size"] = "100%"
-            self.fio_verify_cmd_args["offset"] = "0%"
-            # After Data Reconstruction is completed, verifying 100% data integrity
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
+                self.fio_verify_cmd_args["size"] = "100%"
+                self.fio_verify_cmd_args["offset"] = "0%"
+                self.fio_verify_cmd_args["filename"] = nvme_block_device_list[num]
+                # After Data Reconstruction is completed, verifying 100% data integrity
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                    self.fio_verify_cmd_args["iodepth"]))
 
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_verify_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_verify_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
+        fun_test.sleep("before next iteration", 10)
         # Waiting for all the FIO test threads to complete
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -852,6 +888,12 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
+                fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
