@@ -14,6 +14,7 @@ from threading import Lock
 from lib.templates.storage.storage_controller_api import *
 import itertools
 import random
+from copy import deepcopy
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -490,12 +491,21 @@ class RecoveryWithFailures(FunTestCase):
 
                     if (hasattr(self, "mplusfailure") and self.mplusfailure) or (hasattr(self, "m_plus_concurrent_failure") and self.m_plus_concurrent_failure) or (hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure):
                         plex_to_be_failed = []
+<<<<<<< HEAD
                         if not hasattr(self, "k_plus_m_concurrent_failure") and not self.k_plus_m_concurrent_failure:
                             # Fail one more plex other than the above ones
                             while True:
                                 plex_to_be_failed.append(random.choice(range(self.ec_info["ndata"] + self.ec_info["nparity"])))
                                 if plex_to_be_failed[0] not in plex_fail_pattern:
                                     break
+=======
+                        if not hasattr(self, "k_plus_m_concurrent_failure"):
+                            # Fail one more plex other than the above ones
+                            #while True:
+                            plex_to_be_failed.append(random.choice(list(set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))))
+                                #if plex_to_be_failed[0] not in plex_fail_pattern:
+                                    #break
+>>>>>>> added code changes to powering ON logic
                         elif hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure:
                             # Fail all the plexes, other than the ones failed already
                             plex_to_be_failed = list(set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))
@@ -544,12 +554,21 @@ class RecoveryWithFailures(FunTestCase):
                             **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(not(fio_output),
+<<<<<<< HEAD
                                              "After failing {} plexes with drive ids {} concurrently, \
+=======
+                                             "After failing {} plexes with drive ids {}, \
+>>>>>>> added code changes to powering ON logic
                                              unable to read from EC volume as expected".
                                              format(len(self.device_id_failed), self.device_id_failed))
 
                     # Power ON the devices that were powered OFF
+<<<<<<< HEAD
                     for plex in self.device_id_failed:
+=======
+                    self.device_id_clean_up = deepcopy(self.device_id_failed)
+                    for plex in self.device_id_clean_up:
+>>>>>>> added code changes to powering ON logic
                         if self.plex_fail_method == "ssd_power_off":
                             fun_test.log("Initiating power ON for drive {}".format(plex))
                             device_bringup_status = self.storage_controller.power_toggle_ssd("on",
@@ -580,6 +599,7 @@ class RecoveryWithFailures(FunTestCase):
                                                           message="Cleared fault on Device ID {}".format(
                                                               plex))
                             self.device_id_failed.remove(plex)
+                    self.device_id_clean_up = self.device_id_failed
                     # Executing NVMe disconnect from all the hosts
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
@@ -637,9 +657,9 @@ class RecoveryWithFailures(FunTestCase):
                                                                        command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
                                  format(self.ctrlr_uuid[index]))
-        self.storage_controller.disconnect()
-        self.stats_obj.stop(self.stats_collect_details)
-        self.storage_controller.verbose = True
+        #self.storage_controller.disconnect()
+        #self.stats_obj.stop(self.stats_collect_details)
+        #self.storage_controller.verbose = True
 
 class RecoveryWithMFailure(RecoveryWithFailures):
     def describe(self):
