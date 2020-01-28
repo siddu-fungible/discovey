@@ -2837,7 +2837,7 @@ class Linux(object, ToDictMixin):
             try:
                 nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
                 nvme_connect_exit_status = self.exit_status()
-                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                # fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
                 if not nvme_connect_exit_status:
                     result = True
                     break
