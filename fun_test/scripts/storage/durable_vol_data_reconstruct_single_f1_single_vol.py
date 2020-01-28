@@ -831,7 +831,7 @@ class DurableVolumeTestcase(FunTestCase):
             ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
             rebuild_start_time = get_plex_operation_time(
                 bmc_linux_handle=bmc_handle, log_file=uart_log_file,
-                ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True,
+                ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True, plex_count=self.plex_failure_count,
                 status_interval=self.status_interval * 5)
             fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
             fun_test.test_assert(rebuild_start_time["status"], "EC UUID: {} started at: {}".format(
