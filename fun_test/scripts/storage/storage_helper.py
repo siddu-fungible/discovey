@@ -327,7 +327,8 @@ def single_fs_setup(obj):
             fun_test.sleep("Checking DPU IDs", seconds=20)
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
         fun_test.log("DPU nodes: {}".format(nodes))
-        fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
+        fun_test.test_assert(not dpu_id_ready_timer.is_expired(),
+                             "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         for node_index, node in enumerate(nodes):
             if node_index >= obj.num_f1_per_fs:
                 continue
