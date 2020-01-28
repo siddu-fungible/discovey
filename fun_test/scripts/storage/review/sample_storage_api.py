@@ -5,6 +5,7 @@ from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCrea
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.review.storage_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
+fun_test.enable_storage_api()
 
 
 class BringupSetup(FunTestScript):

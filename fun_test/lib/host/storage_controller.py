@@ -2,12 +2,13 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
-from swagger_client.api.storage_api import StorageApi
-from swagger_client.api.topology_api import TopologyApi
-from swagger_client.api.controller_api import ControllerApi
-from swagger_client.api.network_api import NetworkApi
-from swagger_client.api_client import ApiClient
-from swagger_client.configuration import Configuration
+if fun_test.storage_api_enabled:
+    from swagger_client.api.storage_api import StorageApi
+    from swagger_client.api.topology_api import TopologyApi
+    from swagger_client.api.controller_api import ControllerApi
+    from swagger_client.api.network_api import NetworkApi
+    from swagger_client.api_client import ApiClient
+    from swagger_client.configuration import Configuration
 
 
 class StorageController(NetworkController, DpcshClient):
@@ -16,21 +17,21 @@ class StorageController(NetworkController, DpcshClient):
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
                  api_password="password", api_server_ip=None, api_server_port=9000):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
+        if fun_test.storage_api_enabled:
+            if not api_server_ip:
+                api_server_ip = target_ip
 
-        if not api_server_ip:
-            api_server_ip = target_ip
+            configuration = Configuration()
+            configuration.host = "https://%s:%s/FunCC/v1" % (api_server_ip, api_server_port)
+            configuration.username = api_username
+            configuration.password = api_password
+            configuration.verify_ssl = False
+            api_client = ApiClient(configuration)
 
-        configuration = Configuration()
-        configuration.host = "https://%s:%s/FunCC/v1" % (api_server_ip, api_server_port)
-        configuration.username = api_username
-        configuration.password = api_password
-        configuration.verify_ssl = False
-        api_client = ApiClient(configuration)
-
-        self.storage_api = StorageApi(api_client)
-        self.topology_api = TopologyApi(api_client)
-        self.controller_api = ControllerApi(api_client)
-        self.network_api = NetworkApi(api_client)
+            self.storage_api = StorageApi(api_client)
+            self.topology_api = TopologyApi(api_client)
+            self.controller_api = ControllerApi(api_client)
+            self.network_api = NetworkApi(api_client)
 
     def health(self):
         api_server_health = False
