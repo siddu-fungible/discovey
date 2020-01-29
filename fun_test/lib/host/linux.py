@@ -1975,7 +1975,7 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def fio(self, filename, timeout=65, ioengine="libaio", bs="4k", name="fio_job", numjobs=1, iodepth=1, rw="rw",
             runtime=60, direct=1, group_reporting=1, randrepeat=0, time_based=True, output_format="json",
-            norandommap=True):
+            norandommap=True, verify=None, do_verify=None):
 
         fio_command = "fio"
         fio_result = ""
@@ -1992,6 +1992,10 @@ class Linux(object, ToDictMixin):
         fio_command += " --direct=%s" % direct
         fio_command += " --group_reporting=%s" % group_reporting
         fio_command += " --randrepeat=%s" % randrepeat
+        if verify:
+            fio_command += " --verify=%s" % verify
+        if do_verify:
+            fio_command += " --do_verify=%s" % do_verify
         if time_based:
             fio_command += " --time_based"
         if norandommap:
