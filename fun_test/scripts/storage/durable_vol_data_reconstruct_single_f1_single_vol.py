@@ -120,6 +120,8 @@ class DurableVolScript(FunTestScript):
         fun_test.shared_variables["host_info"] = self.host_info
 
     def cleanup(self):
+        fun_test.log("Handled in Test case level cleanup section")
+        """
         if fun_test.shared_variables["ec"]["setup_created"]:
             self.fs = self.fs_objs[0]
             self.storage_controller = fun_test.shared_variables["sc_obj"][0]
@@ -170,6 +172,7 @@ class DurableVolScript(FunTestScript):
                 self.storage_controller.disconnect()
             except Exception as ex:
                 fun_test.critical(str(ex))
+        """
 
 
 class DurableVolumeTestcase(FunTestCase):
@@ -202,11 +205,12 @@ class DurableVolumeTestcase(FunTestCase):
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         # End of benchmarking json file parsing
-
+        '''
         # As ec_info is being modified with new key additions, retaining the pervious case info
         if "ec" in fun_test.shared_variables:
             fun_test.log("Overriding EC info from existing shared variables")
             self.ec_info = fun_test.shared_variables["ec_info"]
+        '''
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
@@ -441,7 +445,6 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
     def run(self):
-
         testcase = self.__class__.__name__
         test_method = testcase[4:]
 
@@ -491,9 +494,6 @@ class DurableVolumeTestcase(FunTestCase):
         fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
         fun_test.log("EC plex volumes device ID : {}".format(self.ec_info["device_id"][self.test_volume_start_index]))
 
-        iostat_pid = {}
-        iostat_artifact_file = {}
-        start_stats = True
         fun_test.shared_variables["fio"] = {}
         row_data_dict = {}
         row_data_dict["num_hosts"] = self.num_hosts
@@ -554,7 +554,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Triggering drive failure
         if hasattr(self, "trigger_failure") and self.trigger_failure:
             # Sleep for sometime before triggering the drive failure
-            wait_time = 2
+            wait_time = 10
             fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                            seconds=wait_time)
             # Check whether the drive index to be failed is given or not. If not pick a random one
@@ -571,7 +571,7 @@ class DurableVolumeTestcase(FunTestCase):
                     fail_device = self.ec_info["device_id"][num][
                         self.failure_drive_index[num - self.test_volume_start_index][i]]
                     if self.fail_drive:
-                        ''' Marking drive as failed '''
+                        # ## ''' Marking drive as failed ''' ## #
                         # Inducing failure in drive
                         fun_test.log("Initiating drive failure")
                         device_fail_status = self.storage_controller.disable_device(
@@ -584,9 +584,9 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is marked as Failed".format(fail_device))
-                        ''' Marking drive as failed '''
+                        # ## ''' Marking drive as failed ''' ## #
                     else:
-                        ''' Marking Plex as failed '''
+                        # ## ''' Marking plex as failed ''' ## #
                         # Inducing failure in one of the Plex of the volume
                         fun_test.log("Initiating Plex failure")
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
@@ -598,7 +598,7 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(
                             expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
                             message="Plex is marked as Failed")
-                        ''' Marking Plex as failed '''
+                        # ## ''' Marking plex as failed ''' ## #
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -622,7 +622,7 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
                                          self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
                                          host_name))
-        fun_test.sleep("before next iteration", 10)
+        fun_test.sleep("before starting read with data integrity", 15)
         # Verifying data integrity after Write is complete
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
@@ -672,7 +672,7 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
 
-        fun_test.sleep("before next iteration", 10)
+        fun_test.sleep("before starting write for remaining 50% size", 15)
         # Writing remaining 50% of volume with --verify=md5
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
@@ -700,7 +700,7 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         fun_test.sleep(message="Sleeping for {} seconds before before bringing up the failed device(s) & "
-                               "plex rebuild".format(wait_time), seconds=wait_time)
+                               "plex rebuild".format(wait_time), seconds=15)
         for i in xrange(self.plex_failure_count):
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 fail_uuid = self.ec_info["uuids"][num]["blt"][
@@ -710,7 +710,7 @@ class DurableVolumeTestcase(FunTestCase):
 
                 if not self.rebuild_on_spare_volume:
                     if self.fail_drive:
-                        ''' Marking drive as online '''
+                        # ## ''' Marking drive as online ''' ## #
                         device_up_status = self.storage_controller.enable_device(device_id=fail_device,
                                                                                  command_duration=self.command_timeout)
                         fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
@@ -721,9 +721,9 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected="DEV_ONLINE",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is Enabled again".format(fail_device))
-                        ''' Marking drive as online '''
+                        # ## ''' Marking drive as online ''' ## #
                     else:
-                        ''' Marking Plex as online '''
+                        # ## ''' Marking plex as online ''' ## #
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
                         fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".
                                              format(fail_uuid))
@@ -734,7 +734,7 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected=0,
                                                       actual=volume_stats["data"]["stats"]["fault_injection"],
                                                       message="Plex is marked as online")
-                        ''' Marking Plex as online '''
+                        # ## ''' Marking plex as online ''' ## #
 
                 # Rebuild failed plex
                 if self.rebuild_on_spare_volume:
@@ -771,7 +771,7 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
                                          host_name))
 
-        fun_test.sleep("before next iteration", 10)
+        fun_test.sleep("before starting read with data integrity for remaining 50% size", 15)
         # Verifying data integrity after Write is complete
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
@@ -819,7 +819,6 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
-
 
         # Parsing f1 uart log file to search rebuild start and finish time
         '''
@@ -884,7 +883,7 @@ class DurableVolumeTestcase(FunTestCase):
                 time_taken = end_time - start_time
                 fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
-        fun_test.sleep("before next iteration", 10)
+        fun_test.sleep("before starting read with data integrity for whole volume", 15)
         # Waiting for all the FIO test threads to complete
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -951,14 +950,85 @@ class DurableVolumeTestcase(FunTestCase):
                 if check_pid:
                     fun_test.log("Back pressure is still running, stopping it")
                     host_handle.pkill(process_name="fio")
-                    # fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
-                    #                               message="Back pressure is stopped")
                     fun_test.log("Back pressure is stopped")
         except Exception as ex:
             fun_test.critical(str(ex))
 
     def cleanup(self):
-        pass
+        if fun_test.shared_variables["ec"]["setup_created"]:
+            # Marking failure injected drive as online
+            for i in xrange(self.plex_failure_count):
+                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                    fail_uuid = self.ec_info["uuids"][num]["blt"][
+                        self.failure_drive_index[num - self.test_volume_start_index][i]]
+                    fail_device = self.ec_info["device_id"][num][
+                        self.failure_drive_index[num - self.test_volume_start_index][i]]
+                    if self.fail_drive:
+                        # ## ''' Marking drive as online ''' ## #
+                        device_up_status = self.storage_controller.enable_device(
+                            device_id=fail_device, command_duration=self.command_timeout)
+                        fun_test.test_assert(device_up_status["status"],
+                                             "Enabling Device ID {}".format(fail_device))
+
+                        device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds",
+                                                                    fail_device)
+                        device_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.simple_assert(device_stats["status"],
+                                               "Device {} stats command".format(fail_device))
+                        fun_test.test_assert_expected(expected="DEV_ONLINE",
+                                                      actual=device_stats["data"]["device state"],
+                                                      message="Device ID {} is Enabled again".format(fail_device))
+                        # ## ''' Marking drive as online ''' ## #
+
+            try:
+                self.ec_info = fun_test.shared_variables["ec_info"]
+                self.attach_transport = fun_test.shared_variables["attach_transport"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+
+                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
+                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                                 source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
+                                                filename=pcap_artifact_file)
+
+                # Executing NVMe disconnect from all the hosts
+                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+
+                # Detaching all the EC/LS volumes to the external server
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
+
+                # Unconfiguring all the LSV/EC and it's plex volumes
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
+
+                # Deleting all the storage controller
+                for index in xrange(len(self.host_info)):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
+                                         format(self.ctrlr_uuid[index]))
+
+                # Setting setup_created shared variable as False
+                fun_test.shared_variables["ec"]["setup_created"] = False
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 
 class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
