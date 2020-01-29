@@ -718,9 +718,36 @@ class MultipleF1Reset(PlatformGeneralTestCase):
                 self.bmc_handle = self.fs_obj.get_bmc()
 
 
-class General(PlatformGeneralTestCase):
+class BroadcomLoginVerification(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=27,
+                              summary="boot sequence - BRCM56041 1GE/10GE switch",
+                              test_rail_case_ids=["T23155"],
+                              steps="""""")
+
+
+    @run_decorator
+    def run(self):
+        result = False
+        self.fpga_handle.command("cd ~/apps")
+        self.fpga_handle.command("./hps_pca6408 -b 0 -s 0x20 -o 1 -r 0x1 -v 0x87")
+        self.fpga_handle.command("./hps_pca6408 -b 0 -s 0x20 -o 1 -r 0x3 -v 0x80")
+        bmc_handle_cloned = self.bmc_handle.clone()
+        bmc_handle_cloned.command("/mnt/sdmmc0p1/scripts/UART6_console.sh 1")
+        bmc_handle_cloned.sendline("microcom -s 9600 /dev/ttyS3")
+        bmc_handle_cloned.sendline(chr(0))
+        bmc_handle_cloned.prompt_terminator = "Fungible> "
+        bmc_handle_cloned.command("h", timeout=4)
+        output = bmc_handle_cloned.command("h", timeout=4)
+        if "List all commands" in output:
+            result = True
+        fun_test.test_assert(result, "BCM console running")
+        bmc_handle_cloned.disconnect()
+
+
+class General(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=28,
                               summary="",
                               steps="""""")
 
@@ -735,32 +762,33 @@ class General(PlatformGeneralTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     test_case_list = [
-        DiscoverStaticIp,
-        DiscoverDhcpIp,
-        AlternateCommunicationToBmc,
-        PlatformComponentVersioningDiscovery,
-        BootSequenceFpga,
-        BootSequenceBmc,
-        BootSequenceCome,
-        BmcLinkToggle,
-        BmcColdBoot,
-        BmcIpmiReset,
-        BmcTransportForCommunication,
-        TemperatureSensorBmcIpmi,
-        FanSensorBootupIpmi,
-        TemperatureFanMeasurement,
-        InletExhasutThreshold,
-        FanRedfishtool,
-        F1AsicTemperature,
-        BootComeUefiOrBios,
-        PcieDiscoverySsdViaRc,
-        PcieDeviceDetection,
-        HostConnectionViaPcieBus,
-        ComeVolumeCreation,
-        SnakeTest,
-        PortSplitTestCase,
-        FanSpeedVariations,
-        MultipleF1Reset
+        # DiscoverStaticIp,
+        # DiscoverDhcpIp,
+        # AlternateCommunicationToBmc,
+        # PlatformComponentVersioningDiscovery,
+        # BootSequenceFpga,
+        # BootSequenceBmc,
+        # BootSequenceCome,
+        # BmcLinkToggle,
+        # BmcColdBoot,
+        # BmcIpmiReset,
+        # BmcTransportForCommunication,
+        # TemperatureSensorBmcIpmi,
+        # FanSensorBootupIpmi,
+        # TemperatureFanMeasurement,
+        # InletExhasutThreshold,
+        # FanRedfishtool,
+        # F1AsicTemperature,
+        # BootComeUefiOrBios,
+        # PcieDiscoverySsdViaRc,
+        # PcieDeviceDetection,
+        # HostConnectionViaPcieBus,
+        # ComeVolumeCreation,
+        # SnakeTest,
+        # PortSplitTestCase,
+        # FanSpeedVariations,
+        # MultipleF1Reset,
+        BroadcomLoginVerification
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
