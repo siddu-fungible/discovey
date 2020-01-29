@@ -104,7 +104,7 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
         :param host_obj: host handle from topology to which the volume needs to be attached
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
-        :return:
+        :return: Attach volume result
         """
 
         fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
@@ -122,6 +122,8 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
 
         if validate_nvme_connect:
             if raw_api_call:
+                if not result["status"]:
+                    return False
                 subsys_nqn = result["data"]["subsys_nqn"]
                 host_nqn = result["data"]["host_nqn"]
                 dataplane_ip = result["data"]["ip"]
@@ -133,9 +135,11 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
             fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
                                                                         host_nqn=host_nqn, dataplane_ip=dataplane_ip),
                                  message="NVMe connect from host: {}".format(host_obj.name))
-            fun_test.test_assert(expression=self.get_host_nvme_device(host_obj=host_obj),
+            nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
+            fun_test.test_assert(expression=nvme_filename,
                                  message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-
+        if raw_api_call:
+            return result["status"]
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
@@ -163,27 +167,36 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                                                               nvme_io_queues=nvme_io_queues, hostnqn=host_nqn)
         return nvme_connect_command
 
-    def get_host_nvme_device(self, host_obj):
+    def get_host_nvme_device(self, host_obj, subsys_nqn=None):
         """
 
         :param host_obj: host handle from topology
+        :param subsys_nqn: subsys_nqn to find the correct nvme filename
         :return: NVMe device name on Host
         """
         result = None
         host_linux_handle = host_obj.get_instance()
         lsblk_output = host_linux_handle.lsblk(options="-b")
+        nvme_volumes = []
         for volume_name in lsblk_output:
             if re.search("nvme", volume_name):
                 result = volume_name
+                nvme_volumes.append(volume_name)
+        if subsys_nqn:
+            for namespace in nvme_volumes:
+                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(namespace))
+                if namespace_subsys_nqn == subsys_nqn:
+                    result = namespace
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
                           rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct="1",
-                          time_based=True, norandommap=True):
+                          time_based=True, norandommap=True, verify=None, do_verify=None):
         host_linux_handle = host_obj.get_instance()
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
                                            filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                           timeout=runtime+15, time_based=time_based, norandommap=norandommap)
+                                           timeout=runtime+15, time_based=time_based, norandommap=norandommap,
+                                           verify=verify, do_verify=do_verify)
         return fio_result
 
     def deploy(self):
