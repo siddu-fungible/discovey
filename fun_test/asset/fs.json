@@ -905,6 +905,10 @@
       "outlet_number": 1,
       "password": "Precious1*",
       "host_ip": "cab02-pdu1"
+    },
+    "num_ssds": {
+      "f1_0": 12,
+      "f1_1": 12
     }
   },
   {
