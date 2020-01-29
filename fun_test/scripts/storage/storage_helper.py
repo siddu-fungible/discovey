@@ -322,11 +322,13 @@ def single_fs_setup(obj):
         # Getting all the DUTs of the setup
         dpu_id_ready_timer = FunTimer(max_time=9 * 60)
         nodes = obj.sc_api.get_dpu_ids()
-        while not nodes and not dpu_id_ready_timer.is_expired():
+        while not nodes and (len(nodes) < obj.num_f1_per_fs) and not dpu_id_ready_timer.is_expired():
             nodes = obj.sc_api.get_dpu_ids()
             fun_test.sleep("Checking DPU IDs", seconds=20)
             fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
-        fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
+        fun_test.log("DPU nodes: {}".format(nodes))
+        fun_test.test_assert(not dpu_id_ready_timer.is_expired(),
+                             "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
         for node_index, node in enumerate(nodes):
             if node_index >= obj.num_f1_per_fs:
                 continue
@@ -370,18 +372,44 @@ def single_fs_setup(obj):
                             fun_test.log("Just for debugging End")
                         except Exception as ex:
                             fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start:  On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp -n")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     else:
-                        fun_test.log("Just for debugging Start")
-                        container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                        container_handle.ping(ip[:- 1] + "1")
-                        container_handle.command("arp")
-                        container_handle.command("route -n")
-                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                        container_handle.command("ifconfig")
-                        fun_test.log("Just for debugging End")
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-0")
+                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        try:
+                            fun_test.log("Just for debugging Start: On F1-1")
+                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                            container_handle.ping(ip[:- 1] + "1")
+                            container_handle.command("arp")
+                            container_handle.command("route -n")
+                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                            container_handle.command("ifconfig")
+                            fun_test.log("Just for debugging End")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
                 fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
                                      format(node, ip))
-                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
+                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index, obj=obj, dataplane_ip=ip), "Ensure DPU's are online")
     else:
         # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
         pass
@@ -827,7 +855,7 @@ def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
     return result
 
 
-def ensure_dpu_online(sc_api, dpu_index, timeout=120):
+def ensure_dpu_online(sc_api, dpu_index, timeout=120, obj=None, dataplane_ip=None):
     result = False
     try:
         # Polling for API Server status
@@ -840,6 +868,19 @@ def ensure_dpu_online(sc_api, dpu_index, timeout=120):
                     fun_test.log("DPU {} is online".format(dpu_index))
                     result = True
                     break
+                else:
+                    try:
+                        fun_test.log("Just for debugging Start: On F1-{}".format(dpu_index))
+                        container_handle = obj.funcp_obj[0].container_info["F1-{}".format(dpu_index)]
+                        container_handle.ping(dataplane_ip[:- 1] + "1")
+                        container_handle.command("arp")
+                        container_handle.command("route -n")
+                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                        container_handle.command("ifconfig")
+                        fun_test.log("Just for debugging End")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
             else:
                 fun_test.sleep("Waiting for DPU {} to be online".format(dpu_index), 10)
     except Exception as ex:
@@ -971,7 +1012,7 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     stats_diff = {}
     total_diff = {}
     stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
-                          "se_size"]
+                          "se_size", "vol_state"]
     aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
     try:
         # Forming a dictionary for provided vol_details
@@ -2347,5 +2388,55 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["drive_uuids"].append(id_uuid_mapping[drive_id])
     if len(result["drive_uuids"]) != 0:
         result["status"] = True
+
+    return result
+
+
+def extract_funos_log_time(log_string, get_plex_number=False):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Search for the log line
+    match = re.search(pattern=r'(\d+.\d+)', string=log_string)
+    if match:
+        result["time"] = float(match.group(0))
+        result["status"] = True
+        if get_plex_number:
+            # Check if plex number needs to be fetched
+            match1 = re.search(pattern=r'(plex:\s)(\d+)', string=log_string)
+            if match1:
+                result["plex_number"] = int(match1.group(2))
+            else:
+                result["status"] = False
+    return result
+
+
+def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, plex_number=None, get_start_time=None,
+                            get_completion_time=None, get_plex_number=False, rebuild_wait_time=60,
+                            status_interval=2, command_timeout=60):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Retrieve the rebuild start time
+    if get_start_time:
+        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {}".format(ec_uuid, plex_count, log_file)
+    # Retrieve the rebuild start time
+    if get_completion_time:
+        command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
+            format(plex_number, log_file)
+    if (get_start_time and get_completion_time) or (not get_start_time and not get_completion_time):
+        fun_test.log("Only single fetch operation is allowed")
+    else:
+        search_timer = FunTimer(max_time=rebuild_wait_time)
+        while not search_timer.is_expired():
+            command_output = bmc_linux_handle.sudo_command(command=command, timeout=command_timeout)
+            if command_output:
+                get_log_info = extract_funos_log_time(log_string=command_output, get_plex_number=get_plex_number)
+                if get_log_info["status"]:
+                    result["time"] = get_log_info["time"]
+                    result["status"] = True
+                    if get_plex_number:
+                        result["plex_number"] = get_log_info["plex_number"]
+                break
+            fun_test.sleep("Waiting for operation log", status_interval)
+            fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result

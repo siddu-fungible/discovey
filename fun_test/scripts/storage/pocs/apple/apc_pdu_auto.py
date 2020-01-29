@@ -19,16 +19,20 @@ class ApcPduScript(FunTestScript):
         self.set_test_details(steps="")
 
     def setup(self):
-        pass
+        self.already_deployed = True
+        self.initialize_job_inputs()
 
-    def wipe_out_cassandra_es_database(self):
-        self.come_handle.command("cd /var/opt/fungible")
-        self.come_handle.sudo_command("rm -r elasticsearch")
-        self.come_handle.sudo_command("rm -r cassandra")
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
 
-    def restart_fs1600(self):
-        self.come_handle.command("cd /opt/fungible/etc")
-        self.come_handle.command("bash ResetFs1600.sh")
+    def initialize_job_inputs(self):
+        job_inputs = fun_test.get_job_inputs()
+        fun_test.log("Input: {}".format(job_inputs))
+        if job_inputs:
+            for k, v in job_inputs.iteritems():
+                setattr(self, k, v)
 
     def cleanup(self):
         pass

@@ -702,6 +702,8 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             fun_test.log("Iteration : {} of {}".format(iteration+1, self.iterations))
             fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
 
+            self.stop_cc_linux_n_health()
+
             self.bmc_handle.reset_f1(0)
             fun_test.add_checkpoint("Reset F1-0")
             self.bmc_handle.reset_f1(1)
@@ -711,16 +713,58 @@ class MultipleF1Reset(PlatformGeneralTestCase):
             self.come_handle.reboot()
             fun_test.add_checkpoint("Reboot COMe")
             if iteration != (self.iterations - 1):
+                self.fs_obj.already_deployed = False
                 self.fs_obj.re_initialize()
                 self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
                 self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
                 self.come_handle = self.fs_obj.get_come()
                 self.bmc_handle = self.fs_obj.get_bmc()
 
+    def stop_cc_linux_n_health(self):
+        try:
+            self.come_handle.stop_health_monitors()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cc_health_check()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cclinux_service()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+
+class BundleInstallWithDisable(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="Boot bundle image with all the links down and NO SSD's",
+                              steps="""""")
+
+    def setup(self):
+        self.already_deployed = False
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        self.get_dpcsh_data_for_cmds("port disableall", f1=0, command_duration=60)
+        self.get_dpcsh_data_for_cmds("port disableall", f1=1, command_duration=60)
+
 
 class BroadcomLoginVerification(PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=27,
+        self.set_test_details(id=28,
                               summary="boot sequence - BRCM56041 1GE/10GE switch",
                               test_rail_case_ids=["T23155"],
                               steps="""""")
@@ -747,7 +791,7 @@ class BroadcomLoginVerification(PlatformGeneralTestCase):
 
 class General(PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=28,
+        self.set_test_details(id=29,
                               summary="",
                               steps="""""")
 
@@ -788,7 +832,8 @@ if __name__ == "__main__":
         PortSplitTestCase,
         FanSpeedVariations,
         MultipleF1Reset,
-        BroadcomLoginVerification
+        BroadcomLoginVerification,
+        BundleInstallWithDisable
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
