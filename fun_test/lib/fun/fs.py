@@ -2687,6 +2687,13 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                        if health_result and self.spec.get("num_ssds", False):
+                            try:
+                                expected_f1_0_ssds = self.spec["num_ssds"].get("f1_0", 0)
+                                expected_f1_1_ssds = self.spec["num_ssds"].get("f1_1", 0)
+                                health_result, health_error_message = self.check_ssd_status(expected_f1_0_ssds, expected_f1_1_ssds, with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                 result = health_result, health_error_message
 
             except Exception as ex:
@@ -2694,8 +2701,52 @@ class Fs(object, ToDictMixin):
             else:
                 bmc.disconnect()
 
+        return result
 
+    def check_ssd_status(self, expected_f1_0_ssds, expected_f1_1_ssds, with_error_details=False):
+        result = True
+        error_message = ""
+        fun_test.log("Checking if {} SSD's on F1_0, {} SSD's on F1_1 are present and online".format(expected_f1_0_ssds, expected_f1_1_ssds))
+        ssd_info = self.storage_devices_nvme_ssds()
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            if f1_index == 0:
+                expected_ssds = expected_f1_0_ssds
+            elif f1_index == 1:
+                expected_ssds = expected_f1_1_ssds
+            ssd_info_f1 = ssd_info["data"][f1_index]
+            all_ssd_present = True
+            for ssd in range(expected_ssds):
+                ssd_str = str(ssd)
+                if ssd_str in ssd_info_f1 and ssd_info_f1[ssd_str]["device state"] == "DEV_ONLINE":
+                    pass
+                else:
+                    if all_ssd_present:
+                        error_message += "F1_{}:".format(f1_index)
+                    all_ssd_present = False
+                    error_message += ssd_str + ","
+            if not all_ssd_present:
+                error_message += " SSD(s) not present "
+                result = False
+        if with_error_details:
+            result = result, error_message
+        return result
 
+    def storage_devices_nvme_ssds(self, command_duration=2):
+        result = {"status": False}
+        f1_level_result = {}
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
+            cmd = "storage/devices/nvme/ssds"
+            dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
+            if dpc_result["status"]:
+                f1_level_result[f1_index] = dpc_result["data"]
+        result["data"] = f1_level_result
+        if f1_level_result:
+            result["status"] = True
         return result
 
     def bam(self, command_duration=2):
