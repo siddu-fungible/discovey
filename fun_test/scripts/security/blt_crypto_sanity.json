@@ -1480,7 +1480,7 @@
     "nvme_io_queues": 16,
     "blt_details": {
       "capacity": "Auto",
-      "capacity_range": [10737418240, 26843545600, 536870912, 35433480192],
+      "capacity_range": [536870912, 20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -1778,7 +1778,7 @@
     "nvme_io_queues": 16,
     "blt_details": {
       "capacity": "Auto",
-      "capacity_range": [10737418240, 26843545600, 536870912, 35433480192],
+      "capacity_range": [536870912, 20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
       "encrypt": "enable"
     },
@@ -1838,7 +1838,7 @@
     "nvme_io_queues": 16,
     "blt_details": {
       "capacity": "Auto",
-      "capacity_range": [10737418240, 26843545600, 536870912, 35433480192],
+      "capacity_range": [536870912, 20971520, 67108864, 83886080, 134217728],
       "block_size": 4096,
       "encrypt": "enable"
     },
