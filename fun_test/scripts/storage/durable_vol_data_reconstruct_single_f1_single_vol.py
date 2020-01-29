@@ -610,16 +610,18 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][
                                                                            index]))
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                     .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                             self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
-                                             self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
-                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                         self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
+                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         host_name))
         fun_test.sleep("before next iteration", 10)
         # Verifying data integrity after Write is complete
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -658,16 +660,17 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][
                                                                            index]))
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
-                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
-                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         host_name))
 
         fun_test.sleep("before next iteration", 10)
         # Writing remaining 50% of volume with --verify=md5
@@ -756,17 +759,18 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                     .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                             self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
-                                             self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
-                                             host_name))
-
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                         self.fio_write_cmd_args["offset"], self.fio_write_cmd_args["iodepth"],
+                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         host_name))
+
         fun_test.sleep("before next iteration", 10)
         # Verifying data integrity after Write is complete
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -804,16 +808,18 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
-                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
-                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         host_name))
+
 
         # Parsing f1 uart log file to search rebuild start and finish time
         '''
@@ -888,16 +894,18 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
                 fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                        fun_test.shared_variables["fio"][index]))
-                fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                     "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                     .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                             self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
-                                             self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
-                                             host_name))
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["offset"], self.fio_verify_cmd_args["iodepth"],
+                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         host_name))
+
         '''
         # Building the table raw for this variation
         row_data_list = []
