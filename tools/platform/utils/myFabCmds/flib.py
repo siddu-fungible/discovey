@@ -387,8 +387,10 @@ def get_fs_rev():
 def resetF(index=0):
     revstring = execute(get_fs_rev)
     if 'REV1' in revstring.values()[0] :
+        env.FS1600REV = 1
         execute(fpgaresetF, index=index)
     elif 'REV2' in revstring.values()[0] :
+        env.FS1600REV = 2
         execute(bmcresetF, index=index)
     else:
         raise('Unknown platform revision ...')
@@ -533,7 +535,11 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
     """ flash image of chip[index] over type tftp with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
+    if env.FS1600REV == 2:
+        sku_string = "SKU_FS1600r2_{}".format(index)
+    else:
+        sku_string = "SKU_FS1600_{}".format(index)
+    bootargs = 'cc_huid={} sku={} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, sku_string)
     #print bootargs
 
     command = 'tftpboot'
@@ -544,7 +550,10 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
         if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
             sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
         elif type == 'eepr':
-            fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
+            if env.FS1600REV == 2:
+                fimage='funsdk-release/{}/eeprom_fs1600r2_{}_packed.bin'.format(version, index)
+            else:
+                fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
         elif type == 'host':
             fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
         elif type == 'emmc':
@@ -733,8 +742,12 @@ def argsF(index=0, bootargs=BOOTARGS):
     """ set bootargs of chip[index] with provided arguments """
     global child
     CCHUID = 3 - int(index)
+    if env.FS1600REV == 2:
+        sku_string = "SKU_FS1600r2_{}".format(index)
+    else:
+        sku_string = "SKU_FS1600_{}".format(index)
     bootargs = 'cc_huid={} '.format(CCHUID) + bootargs
-    bootargs = 'sku=SKU_FS1600_{} '.format(index) + bootargs
+    bootargs = 'sku={} '.format(sku_string) + bootargs
     child = connectF(index, reset=False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
