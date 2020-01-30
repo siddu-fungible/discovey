@@ -165,7 +165,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         pass
 
     def reset_and_health_check(self, fs_obj):
-        # fs_obj.reset()
+        fs_obj.reset()
         fun_test.test_assert(expression=self.storage_controller_template.get_health(
             storage_controller=fs_obj.get_storage_controller()),
                              message="{}: API server health".format(fs_obj))
