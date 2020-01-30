@@ -132,15 +132,15 @@
           </tr>
         </table>
       </div>
-      <div>
-        <i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span
-          (click)="editingDaysInPast = true">{{ daysInPast }}</span></i>
-        <i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number"
-                                                                                       style="width: 100px"
-                                                                                       [(ngModel)]="daysInPast">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>
-          <span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>
-      </div>
+      <!--<div>-->
+        <!--<i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span-->
+          <!--(click)="editingDaysInPast = true">{{ daysInPast }}</span></i>-->
+        <!--<i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number"-->
+                                                                                       <!--style="width: 100px"-->
+                                                                                       <!--[(ngModel)]="daysInPast">-->
+          <!--<span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>-->
+          <!--<span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>-->
+      <!--</div>-->
     </div>
     <br>
     <div class="closed-section"></div>
