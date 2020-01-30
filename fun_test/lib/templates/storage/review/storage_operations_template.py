@@ -63,11 +63,11 @@ class StorageControllerOperationsTemplate():
                 for f1_index in range(fs_obj.NUM_F1S):
                     dpu_id = node + "." + str(f1_index)
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-                    result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
-                    fun_test.test_assert(expression=result["status"], message="Fetch Dataplane IPs using Raw API")
+                    result_api = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
+                    fun_test.test_assert(expression=result_api["status"], message="Fetch Dataplane IPs using Raw API")
                     first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
                     dataplane_ip = str(first_bond_interface.ip).split('/')[0]
-                    result &= str(result["data"]["dataplane_ip"]) is dataplane_ip
+                    result &= (str(result_api["data"]["dataplane_ip"]) == str(dataplane_ip))
         return result
 
     def initialize(self):
