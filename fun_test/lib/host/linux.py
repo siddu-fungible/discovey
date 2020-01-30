@@ -1975,7 +1975,8 @@ class Linux(object, ToDictMixin):
     @fun_test.safe
     def fio(self, filename, timeout=65, ioengine="libaio", bs="4k", name="fio_job", numjobs=1, iodepth=1, rw="rw",
             runtime=60, direct=1, group_reporting=1, randrepeat=0, time_based=True, output_format="json",
-            norandommap=True, verify=None, do_verify=None):
+            norandommap=True, verify=None, do_verify=None, verify_fatal=None, offset=None, verify_state_save=None,
+            verify_state_load=None, verify_dump=None, output=None):
 
         fio_command = "fio"
         fio_result = ""
@@ -1994,12 +1995,24 @@ class Linux(object, ToDictMixin):
         fio_command += " --randrepeat=%s" % randrepeat
         if verify:
             fio_command += " --verify=%s" % verify
+        if offset:
+            fio_command += " --offset=%s" % offset
+        if verify_fatal:
+            fio_command += " --verify_fatal=%s" % verify_fatal
         if do_verify:
             fio_command += " --do_verify=%s" % do_verify
         if time_based:
             fio_command += " --time_based"
         if norandommap:
             fio_command += " --norandommap"
+        if verify_state_save:
+            fio_command += " --verify_state_save=%s" % verify_state_save
+        if verify_state_load:
+            fio_command += " --verify_state_load=%s" % verify_state_load
+        if verify_dump:
+            fio_command += " --verify_dump=%s" % verify_dump
+        if output:
+            fio_command += " --output=%s" % output
 
         # Building the fio command
         fun_test.debug(fio_command)
