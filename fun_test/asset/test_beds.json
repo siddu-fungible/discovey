@@ -3998,5 +3998,13 @@
     "workarounds": {
       "enable_funcp": true
     }
+  },
+  "fs-171": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-171"
+      }
+    }
   }
 }
