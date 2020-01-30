@@ -33,7 +33,7 @@ class FlatNode {
 
 export class TreeComponent implements OnInit {
   @Input() tree: any = null;
-  @Output() clickedNode: EventEmitter<any> = new EventEmitter();
+  @Output() clickedStatsTreeNode: EventEmitter<any> = new EventEmitter();
   users: any = null;
   flatNodes: FlatNode[] = [];
   currentFlatNode: FlatNode = null;
@@ -116,7 +116,7 @@ export class TreeComponent implements OnInit {
       //   flatNode.treeNode.meta_data["checked"] = true;
       // }
       flatNode.treeNode.checked = !flatNode.treeNode.checked;
-      this.clickedNode.emit(flatNode);
+      this.clickedStatsTreeNode.emit(flatNode);
     }
   }
 

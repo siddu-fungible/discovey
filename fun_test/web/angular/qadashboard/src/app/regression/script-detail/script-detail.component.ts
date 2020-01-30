@@ -265,7 +265,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  clickedNode(flatNode): void {
+  clickedStatsTreeNode(flatNode): void {
     console.log(flatNode.lineage);
     console.log(flatNode.treeNode.checked);
     if (flatNode.treeNode.checked) {
