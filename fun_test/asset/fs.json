@@ -908,7 +908,7 @@
     }
   },
   {
-    "name": "fs-57",
+    "name": "fs-168",
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
