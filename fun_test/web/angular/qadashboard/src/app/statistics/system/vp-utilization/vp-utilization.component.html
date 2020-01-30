@@ -7,7 +7,7 @@
         </button></span>
     </div>
     <div class="fun-panel-body">
-      <div *ngIf="!clusterLevel">
+      <div *ngIf="!showUtilizationByCluster">
         <span><span style="font-size: 1.5rem; font-weight: 500;">VP utilization distribution</span></span>
         <div *ngIf="showCharts" class="fun-flex-container">
           <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
@@ -19,7 +19,7 @@
         </div>
       </div>
       <app-section-horizontal-line></app-section-horizontal-line>
-      <div *ngIf="clusterLevel">
+      <div *ngIf="showUtilizationByCluster">
         <span style="font-size: 1.5rem; font-weight: 500;">VP utilization by cluster</span>
         <div *ngIf="showCharts">
           <ng-container *ngFor="let f1 of fs.f1s; let f1Index=index">
