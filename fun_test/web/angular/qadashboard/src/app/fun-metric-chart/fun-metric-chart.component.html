@@ -4,6 +4,13 @@
     <br>
     <!-- showing the units dropdown on the right-->
     <div *ngIf="!minimal">
+      <span style="float: left">
+        <span [ngClass]="{'highlight': !showingAll, 'fun-action-link': showingAll}"
+              (click)="setDaysInPast('2 months')">Show
+          last 60 days</span>&nbsp;|&nbsp;
+        <span [ngClass]="{'highlight': showingAll, 'fun-action-link': !showingAll}"
+              (click)="setDaysInPast('All')">Show all</span>
+      </span>
       <select *ngIf="leaf" [(ngModel)]="selectedUnit"
               (ngModelChange)="onUnitChange($event)" style="float: right">
         <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>

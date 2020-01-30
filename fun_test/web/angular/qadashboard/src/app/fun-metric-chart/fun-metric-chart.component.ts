@@ -44,6 +44,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   TIMEZONE: string = "America/Los_Angeles";
   daysInPast: number = 60;
   editingDaysInPast: boolean = false;
+  showingAll: boolean = false;
   allDataSets: any = null;
 
   status: string = null;
@@ -176,6 +177,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   submitDaysInPast(): void {
+    this.refreshCharts();
+  }
+
+  setDaysInPast(days): void {
+    if (days == "2 months") {
+      this.showingAll = false;
+      this.daysInPast = 60;
+    } else {
+      this.showingAll = true;
+      this.daysInPast = 120;
+    }
     this.refreshCharts();
   }
 
