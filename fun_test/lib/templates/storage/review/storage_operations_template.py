@@ -54,6 +54,22 @@ class StorageControllerOperationsTemplate():
         result = True
         return result
 
+    def verify_dataplane_ip(self, storage_controller, dut_index, raw_api_call=True):
+        result = True
+        if raw_api_call:
+            for node in self.node_ids:
+                dut = self.topology.get_dut(index=dut_index)
+                fs_obj = self.topology.get_dut_instance(index=dut_index)
+                for f1_index in range(fs_obj.NUM_F1S):
+                    dpu_id = node + "." + str(f1_index)
+                    raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                    result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
+                    fun_test.test_assert(expression=result["status"], message="Fetch Dataplane IPs using Raw API")
+                    first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
+                    dataplane_ip = str(first_bond_interface.ip).split('/')[0]
+                    result &= str(result["data"]["dataplane_ip"]) is dataplane_ip
+        return result
+
     def initialize(self):
         for dut_index in self.topology.get_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
