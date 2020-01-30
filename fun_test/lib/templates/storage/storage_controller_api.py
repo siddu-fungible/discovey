@@ -28,6 +28,11 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical("API Exception: {}".format(str(ex)))
 
+        try:
+            fun_test.log("API {} {}".format(method, url))
+            fun_test.log("Response: text: {}".format(response.text))
+        except Exception as ex:
+            fun_test.critical(str(ex))
         return response
 
     def get_auth_token(self):

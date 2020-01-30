@@ -116,8 +116,8 @@
 
   }
   },
-  "fs-57": {
-       "fs-name":"fs-57",
+  "fs-168": {
+       "fs-name":"fs-168",
     "hosts" : {
       "cab07-qa-02": "x16",
       "gpu-server-03": "x16"
@@ -145,12 +145,12 @@
          "cab07-qa-02":["13.1.1.1", "12.1.1.2", "14.1.1.2"]
        },
     "abstract_configs":{
-      "F1-0":"fs57_configs_f1_0.json",
-      "F1-1":"fs57_configs_f1_1.json"
+      "F1-0":"fs168_configs_f1_0.json",
+      "F1-1":"fs168_configs_f1_1.json"
     },
     "abstract_configs_bgp":{
-      "F1-0":"fs57_configs_bgp_f1_0.json",
-      "F1-1":"fs57_configs_bgp_f1_1.json"
+      "F1-0":"fs168_configs_bgp_f1_0.json",
+      "F1-1":"fs168_configs_bgp_f1_1.json"
     },
       "static_routes": {
         "F1-0": {

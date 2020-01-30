@@ -1,8 +1,10 @@
 {
   "GlobalSetup": {
+    "already_deployed": false,
+    "reboot_hosts" : true,
     "bootargs": [
-      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --memvol --dpc-uart --all_100g",
-      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --memvol --dpc-uart --all_100g"
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
     ],
     "dut_start_index": 0,
     "host_start_index": 0,
@@ -99,7 +101,7 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)"],
+    "fio_jobs_iodepth": ["(1, 1)", "(16, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)", "(32, 16)"],
     "full_run_iodepth": [128],
     "fio_full_run_time": 1200,
     "fio_full_run_timeout": 1230,
@@ -109,10 +111,12 @@
     "nvme_device": "/dev/nvme",
     "expected_fio_result": {
       "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(16, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
       "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 16)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
@@ -200,11 +204,11 @@
     "iter_interval": 2,
     "warm_up_traffic": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=write --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --time_based --runtime=60",
+      "multiple_jobs": "--rw=write --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --runtime=60",
       "timeout": 90
     },
     "fio_cmd_args": {
-      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0 --time_based",
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
       "runtime": 60,
       "timeout": 90
     },

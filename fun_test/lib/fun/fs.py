@@ -1215,6 +1215,10 @@ class ComE(Linux):
     HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
+    HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
+    HBM_COLLECT_MAX_TIMER = 40 * 60
+
+    BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
@@ -1443,6 +1447,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+            if self.fs.bundle_compatible:
+                fun_test.log("Clearing out HBM dump directory")
+                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1669,9 +1676,17 @@ class ComE(Linux):
 
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
-        self.sudo_command("pkill dpc")
-        self.sudo_command("pkill dpcsh")
-        # self.sudo_command("build/posix/bin/funq-setup unbind")
+        # self.sudo_command("pkill dpc")
+        # self.sudo_command("pkill dpcsh")
+        # self.get_process_id_by_pattern(multiple=True)
+        dpc_process_ids = self.get_process_id_by_pattern(
+            "dpcsh.*{}\|{}\|{}\|{}".format(self.DEFAULT_DPC_PORT[0], self.DEFAULT_DPC_PORT[1],
+                                           self.DEFAULT_STATISTICS_DPC_PORT[0], self.DEFAULT_STATISTICS_DPC_PORT[1]),
+            multiple=True)
+        for dpc_process_id in dpc_process_ids:
+            self.kill_process(signal=9, process_id=dpc_process_id, kill_seconds=2)
+
+        self.get_process_id_by_pattern("dpcsh")
         return True
 
     def setup_dpc(self, statistics=None, csi_perf=None):
@@ -1882,6 +1897,35 @@ class ComE(Linux):
             pass
         else:
             self.sudo_command("rm {}".format(redis_target_path))
+
+        if self.fs.bundle_compatible:
+            if self.list_files(self.HBM_COLLECT_NOTIFY):
+                fun_test.log("HBM dumping going on")
+                hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
+                while not hbm_dump_timer.is_expired(print_remaining_time=True):
+                    fun_test.sleep("HBM Dump", seconds=60)
+                    if not self.list_files(self.HBM_COLLECT_NOTIFY):
+                        fun_test.log("HBM dump completed")
+                        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                        if not current_hbm_dump_files:
+                            fun_test.critical("No HBM dump files found")
+                        else:
+                            for hbm_dump_file in current_hbm_dump_files:
+                                file_name = hbm_dump_file["filename"]
+                                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
+                                                                             linux_obj=self,
+                                                                             source_file_path=hbm_dump_file["filename"],
+                                                                             display_name=os.path.basename(file_name),
+                                                                             asset_type=asset_type,
+                                                                             asset_id=asset_id,
+                                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                                             is_large_file=True,
+                                                                             timeout=60)
+                                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+
+                        break
+
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -1986,7 +2030,8 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_ip=None,
                  fpga_telnet_port=None,
                  fpga_telnet_username=None,
-                 fpga_telnet_password=None):
+                 fpga_telnet_password=None,
+                 check_expected_containers_running=True):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2074,9 +2119,12 @@ class Fs(object, ToDictMixin):
         self.dpc_statistics_lock = Lock()
         self.statistics_enabled = True
 
+        self.check_expected_containers_running = check_expected_containers_running
         if self.fs_parameters:
             if "statistics_enabled" in self.fs_parameters:
                 self.statistics_enabled = self.fs_parameters["statistics_enabled"]
+            if "check_expected_containers_running" in self.fs_parameters:
+                self.check_expected_containers_running = self.fs_parameters["check_expected_containers_running"]
         self.register_all_statistics()
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
@@ -2220,8 +2268,9 @@ class Fs(object, ToDictMixin):
                         continue
                     fun_test.log("Errors were detected. Starting HBM dump")
                     f1.hbm_dump_complete = True
-                    self.get_come().setup_hbm_tools()
-                    self.get_come().hbm_dump(f1_index=f1_index)
+                    if not self.bundle_compatible:
+                        self.get_come().setup_hbm_tools()
+                        self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
         try:
@@ -2848,7 +2897,7 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
     come = fs.get_come()
     come.cleanup_redis()
@@ -2871,9 +2920,7 @@ if __name__ == "__main__":
     # i = fs.bam()
 
 
-if __name__ == "__main2__":
-    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
-    output = come.pre_reboot_cleanup()
-    i = 0
-    #come.setup_hbm_tools()
-    #print come.setup_tools()
+if __name__ == "__main__":
+    come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
+    o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
+    come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))

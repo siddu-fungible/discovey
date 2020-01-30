@@ -702,6 +702,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
+        if "test_bs" in job_inputs:
+            self.fio_bs = job_inputs["test_bs"]
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))

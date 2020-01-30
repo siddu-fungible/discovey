@@ -1,0 +1,206 @@
+{
+    "name": "nutest",
+    "routermac" : "00:de:ad:be:ef:00",
+    "hu0mac" : "00:f1:1d:ad:00:80",
+    "hu6mac" : "00:f1:1d:ad:00:00",
+    "f1_num" : 7,
+    "f1_ftep" : "180.0.0.1",
+    "fcp_cfg" : {
+            "fcp_hdr_udp_sport" : 1,
+            "fcp_hdr_udp_dport" : 7085,
+            "fcp_hdr_v4_etype": 2048,
+            "fcp_hdr_ipv4_id" : 0,
+            "fcp_hdr_ver" : 0,
+            "fcp_nq_per_tunnel_2power" : 3,
+            "fcp_blk_size_2power" : 7,
+        "fcp_req_dscp_ecn" : 252,
+        "fcp_gnt_dscp_ecn" : 248,
+        "fcp_data_dscp_ecn" : 244
+    },
+    "overlay_vtep_ips" : [
+    ],
+    "overlay_vif_table": [
+    ],
+    "fcp_policies": [
+    ],
+    "fcp_ea_keys": [
+    ],
+    "fcp_test_copp_t2n_prefix" : [
+    ],
+    "fcp_tunnels" : [
+    ],
+    "meters" : [
+    ],
+    "acl_ranges" : [
+    ],
+    "vlans":[
+    ],
+    "vlanmembers":[
+    ],
+    "intfs" : [
+    {
+        "id"        : "fpg0",
+        "description" : "Used as traffic input interface",
+        "logicport" : 0,
+        "intfindex" : 0,
+        "qos_label" : 3,
+        "eg_label" : 3,
+        "vrf" : 1,
+        "bandwidth" : 100,
+        "Interface_type": "default",
+        "ingress_qos_profile_id" : 1,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 1,
+        "trust_cos" : 0
+    },
+    {
+        "id"        : "fpg4",
+        "description" : "Used as spine interface, input or output",
+        "logicport" : 4,
+        "intfindex" : 4,
+        "vrf" : 1,
+        "bandwidth" : 100,
+        "Interface_type": "default",
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+        {
+            "id"        : "fpg8",
+            "description" : "CC/pSpirent-4",
+            "logicport" : 8,
+            "intfindex" : 8,
+            "vrf" : 2,
+            "bandwidth" : 100,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 0,
+            "egress_qos_profile_id" : 5,
+            "trust_dscp" : 0,
+            "trust_cos" : 0
+        },
+        {
+            "id"        : "fpg12",
+            "description" : "pSpirent-3",
+            "logicport" : 12,
+            "intfindex" : 12,
+            "vrf" : 2,
+            "bandwidth" : 100,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        },
+    {
+        "id"        : "fpg16",
+        "description" : "Used as spine interface, put it in down state to simulate local spine link fail",
+        "logicport" : 16,
+        "intfindex" : 16,
+        "vrf" : 3,
+        "bandwidth" : 100,
+        "Interface_type": "default",
+        "ingress_qos_profile_id" : 0,
+        "egress_qos_profile_id" : 5,
+        "trust_dscp" : 0,
+        "trust_cos" : 0
+    },
+        {
+            "id"        : "fpg20",
+            "description" : "pSpirent-3",
+            "logicport" : 20,
+            "intfindex" : 20,
+            "vrf" : 3,
+            "bandwidth" : 100,
+            "Interface_type": "default",
+            "ingress_qos_profile_id" : 2,
+            "egress_qos_profile_id" : 2,
+            "trust_dscp" : 1,
+            "trust_cos" : 0
+        }
+    ],
+    "host_intfs": [
+    ],
+    "nhs": [
+    {
+    "id" : "nh_fpg0",
+        "nhip": "99.1.1.0",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 0
+        },
+    {
+    "id" : "nh_fpg4",
+        "nhip": "99.1.1.4",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 4
+        },
+    {
+    "id" : "nh_fpg8",
+        "nhip": "99.1.1.8",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 8
+        },
+    {
+    "id" : "nh_fpg12",
+        "nhip": "99.1.1.12",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 12
+        },
+    {
+    "id" : "nh_fpg16",
+        "nhip": "99.1.1.16",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 16
+        },
+    {
+    "id" : "nh_fpg20",
+        "nhip": "99.1.1.20",
+        "mac": "00:de:ad:be:ef:00",
+        "outgoingif": 20
+        }
+    ],
+    "incomplete_nhs": [
+    ],
+    "ecmps" : [
+    ],
+    "pfxs" : [
+    {
+            "pfx": "9.1.2.1/32",
+            "vrf": 1,
+            "outgoingnh": "nh_fpg4"
+    },
+    {
+            "pfx": "9.2.2.1/32",
+            "vrf": 1,
+            "outgoingnh": "nh_fpg0"
+    },
+    {
+            "pfx": "9.1.2.1/32",
+            "vrf": 2,
+            "outgoingnh": "nh_fpg12"
+    },
+    {
+            "pfx": "9.2.2.1/32",
+            "vrf": 2,
+            "outgoingnh": "nh_fpg8"
+    },
+    {
+            "pfx": "9.1.2.1/32",
+            "vrf": 3,
+            "outgoingnh": "nh_fpg20"
+    },
+    {
+            "pfx": "9.2.2.1/32",
+            "vrf": 3,
+            "outgoingnh": "nh_fpg16"
+    }
+    ],
+    "ep_pfxs" : [
+    ],
+    "mac_addr_table": [
+    ],
+    "samplers":[
+    ],
+    "testcases" : {
+   }
+}

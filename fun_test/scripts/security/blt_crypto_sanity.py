@@ -611,7 +611,10 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     fun_test.log("Loading nvme_tcp")
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
-                host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+                filesuffix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                nvme_connect_filename = "nvme_connect_auto_" + str(filesuffix)
+                host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w {}.pcap".
+                                             format(nvme_connect_filename))
                 if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
