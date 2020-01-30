@@ -2687,11 +2687,9 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
-                        if health_result and self.spec.get("num_ssds", False):
+                        if self.spec.get("num_ssds", False):
                             try:
-                                expected_f1_0_ssds = self.spec["num_ssds"].get("f1_0", 0)
-                                expected_f1_1_ssds = self.spec["num_ssds"].get("f1_1", 0)
-                                health_result, health_error_message = self.check_ssd_status(expected_f1_0_ssds, expected_f1_1_ssds, with_error_details=True)
+                                health_result, health_error_message = self.check_ssd_status(with_error_details=True)
                             except Exception as ex:
                                 fun_test.critical(str(ex))
                 result = health_result, health_error_message
@@ -2703,18 +2701,15 @@ class Fs(object, ToDictMixin):
 
         return result
 
-    def check_ssd_status(self, expected_f1_0_ssds, expected_f1_1_ssds, with_error_details=False):
+    def check_ssd_status(self, with_error_details=False):
         result = True
         error_message = ""
-        fun_test.log("Checking if {} SSD's on F1_0, {} SSD's on F1_1 are present and online".format(expected_f1_0_ssds, expected_f1_1_ssds))
+        fun_test.log("Checking if SSD's are present and online")
         ssd_info = self.storage_devices_nvme_ssds()
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            if f1_index == 0:
-                expected_ssds = expected_f1_0_ssds
-            elif f1_index == 1:
-                expected_ssds = expected_f1_1_ssds
+            expected_ssds = self.spec["num_ssds"].get("f1_{}".format(f1_index), 0)
             ssd_info_f1 = ssd_info["data"][f1_index]
             all_ssd_present = True
             for ssd in range(expected_ssds):
@@ -2739,7 +2734,7 @@ class Fs(object, ToDictMixin):
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
-            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
+            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=False)
             cmd = "storage/devices/nvme/ssds"
             dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
             if dpc_result["status"]:
