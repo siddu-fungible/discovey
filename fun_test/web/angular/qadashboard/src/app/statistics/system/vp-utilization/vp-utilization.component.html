@@ -1,11 +1,11 @@
 <div class="fun-flex-container">
   <div class="fun-flex-item panel fun-panel" style="width: 100%;">
-    <!--<div class="fun-panel-header">-->
-      <!--<span><span style="font-size: 1.5rem; font-weight: 500;">{{ title }}&nbsp;</span>-->
-        <!--<button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showTable}"-->
-                <!--(click)="showTables()"><i class="fa fa-table"></i> Show raw tables-->
-        <!--</button></span>-->
-    <!--</div>-->
+    <div class="fun-panel-header">
+      <span><span style="font-size: 1.5rem; font-weight: 500;">{{ title }}&nbsp;</span>
+        <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showTable}"
+                (click)="showTables()"><i class="fa fa-table"></i> Show raw tables
+        </button></span>
+    </div>
     <div class="fun-panel-body">
       <div *ngIf="!clusterLevel">
         <span><span style="font-size: 1.5rem; font-weight: 500;">VP utilization distribution</span></span>

@@ -2,7 +2,7 @@
   <div *ngIf="!flatNode.hide">
     <span [innerHTML]="getIndentHtml(flatNode) | safeHtml"></span>
     <span style="cursor: pointer" (click)="clickNode(flatNode)">
-      <input *ngIf="flatNode.leaf" type="checkbox" [checked]="flatNode.treeNode.meta_data.checked"/>&nbsp;
+      <input *ngIf="flatNode.leaf" type="checkbox" [checked]="flatNode.treeNode.checked"/>&nbsp;
       <span [ngClass]="{highlight: flatNode.highlight}" class="fun-action-link">{{ flatNode.name }}</span>
       <span *ngIf="!flatNode.leaf">&nbsp;
         <span class="arrow-down" *ngIf="!flatNode.collapsed"></span>

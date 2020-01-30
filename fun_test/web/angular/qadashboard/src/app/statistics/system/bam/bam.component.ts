@@ -19,7 +19,7 @@ export class BamComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
   @Input() selectedAsset: RegisteredAsset = null;
   @Input() title: string = null;
-  @Input() showTable: boolean = false;
+  showTable: boolean = false;
   data: any = null;
   parsedData: any = {};
   suiteExecutionId: number = null;

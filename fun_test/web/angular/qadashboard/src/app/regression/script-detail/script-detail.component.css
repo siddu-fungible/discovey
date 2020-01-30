@@ -91,7 +91,7 @@ table {
   width: 50%;
 }
 
-.selectedOption {
+.selected-option {
   border: 1px solid #337ab7;
   margin: 4px;
   background: #337ab7;

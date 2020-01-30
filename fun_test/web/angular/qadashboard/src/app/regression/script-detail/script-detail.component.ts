@@ -10,6 +10,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
+import {TreeNode} from "../../ui-elements/tree/definitions";
 
 class DataModel {
   letter: string;
@@ -102,28 +103,6 @@ class ArtifactTree {
     this.root = {};
   }
 
-}
-
-class TreeNode {
-  id: number;
-  name: string;
-  leaf: boolean;
-  meta_data: any = {"checked": false};
-  children: TreeNode [] = null;
-
-  constructor(props) {
-    this.name = props.name;
-    this.leaf = props.leaf;
-    this.id = props.id;
-  }
-
-  addChild(node: TreeNode) {
-    if (!this.children) {
-      this.children = [];
-    }
-    this.children.push(node);
-    return node;
-  }
 }
 
 @Component({
@@ -286,10 +265,10 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  clicked(flatNode): void {
+  clickedNode(flatNode): void {
     console.log(flatNode.lineage);
-    console.log(flatNode.treeNode.meta_data.checked);
-    if (flatNode.treeNode.meta_data.checked) {
+    console.log(flatNode.treeNode.checked);
+    if (flatNode.treeNode.checked) {
       this.selectedStatsSet.add(flatNode.treeNode);
     } else {
       this.selectedStatsSet.delete(flatNode.treeNode);
@@ -297,8 +276,8 @@ export class ScriptDetailComponent implements OnInit {
     // this.selectedStats = Array.from(this.selectedStatsSet);
   }
 
-  deleteStats(stat): void {
-    stat.meta_data.checked = false;
+  deSelectStats(stat): void {
+    stat.checked = false;
     this.selectedStatsSet.delete(stat);
   }
 

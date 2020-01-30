@@ -20,7 +20,7 @@ export class VpUtilizationComponent implements OnInit, OnChanges {
   @Input() selectedAsset: RegisteredAsset = null;
   @Input() clusterLevel: boolean = null;
   @Input() title: string = null;
-  @Input() showTable: boolean = false;
+  showTable: boolean = false;
   data: any = null;
   parsedData: any = {};
   driver: any = null;

@@ -6,33 +6,13 @@ import {ApiResponse, ApiService} from "../../services/api/api.service";
 import {CommonService} from "../../services/common/common.service";
 import {UserService} from "../../services/user/user.service";
 import {LoggerService} from "../../services/logger/logger.service";
-
-class TreeNode {
-  id: number;
-  name: string;
-  leaf: boolean;
-  meta_data: any = null;
-  children: TreeNode [] = null;
-
-  constructor(props) {
-    this.name = props.name;
-    this.leaf = props.leaf;
-  }
-
-  addChild(node: TreeNode) {
-    if (!this.children) {
-      this.children = [];
-    }
-    this.children.push(node);
-    return node;
-  }
-}
+import {TreeNode} from "./definitions";
 
 class FlatNode {
   name: string = null;
   leaf: boolean = false;
   id: number;
-  lineage: any[] = [];
+  lineage: number[] = [];
   collapsed: boolean = true;
   hide: boolean = true;
   treeNode: TreeNode = null;
@@ -56,7 +36,6 @@ export class TreeComponent implements OnInit {
   @Output() clickedNode: EventEmitter<any> = new EventEmitter();
   users: any = null;
   flatNodes: FlatNode[] = [];
-  tree1: TreeNode = null;
   currentFlatNode: FlatNode = null;
 
   constructor(private regressionService: RegressionService,
@@ -136,7 +115,7 @@ export class TreeComponent implements OnInit {
       // } else {
       //   flatNode.treeNode.meta_data["checked"] = true;
       // }
-      flatNode.treeNode.meta_data.checked = !flatNode.treeNode.meta_data.checked;
+      flatNode.treeNode.checked = !flatNode.treeNode.checked;
       this.clickedNode.emit(flatNode);
     }
   }

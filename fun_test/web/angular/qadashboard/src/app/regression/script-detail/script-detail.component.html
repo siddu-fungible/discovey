@@ -90,12 +90,12 @@
   <div class="fun-flex-container">
     <div class="fun-flex-item">
       <label style="font-weight: bold">Available charts:</label>
-      <app-tree [tree]="tree" (clickedNode)="clicked($event)"></app-tree>
+      <app-tree [tree]="tree" (clickedNode)="clickedNode($event)"></app-tree>
     </div>
     <div class="fun-flex-item">
       <label style="font-weight: bold">Selected charts:</label><br>
-      <span class="selectedOption" *ngFor="let stat of selectedStatsSet">
-      {{stat.name}}&nbsp;<span  style="cursor: pointer" (click)="deleteStats(stat)">x</span>
+      <span class="selected-option" *ngFor="let stat of selectedStatsSet">
+      {{stat.name}}&nbsp;<span  style="cursor: pointer" (click)="deSelectStats(stat)">x</span>
       </span>
     </div>
   </div>
