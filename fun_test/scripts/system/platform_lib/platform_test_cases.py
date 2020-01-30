@@ -559,7 +559,19 @@ class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
 
     @run_decorator
     def run(self):
+        run_time = self.fio_read["runtime"]
+        # platform_stats = PlatformStat()
+        # time_in_seconds = 5
+        # stats_thread = fun_test.execute_thread_after(func=platform_stats.start_monitoring_fan_sensors,
+        #                                              time_in_seconds=time_in_seconds,
+        #                                              interval=self.stats_interval)
+        # fun_test.sleep("Wait for thread to start", seconds=time_in_seconds)
+        # asyncapp = DpcshAsyncApps()
+        # response = asyncapp.rcnvme(self.come_handle, duration=run_time + 20)
+        # fun_test.test_assert(response["status"], "Started the RCNVME app for duration: {}".format(run_time))
         self.create_volume_and_run_fio()
+        # platform_stats.stop_monitoring_fan_sensors()
+        # fun_test.join_thread(stats_thread)
 
     def cleanup(self):
         # PlatformGeneralTestCase.cleanup(self)
@@ -806,34 +818,34 @@ class General(PlatformGeneralTestCase):
 if __name__ == "__main__":
     myscript = MyScript()
     test_case_list = [
-        DiscoverStaticIp,
-        DiscoverDhcpIp,
-        AlternateCommunicationToBmc,
-        PlatformComponentVersioningDiscovery,
-        BootSequenceFpga,
-        BootSequenceBmc,
-        BootSequenceCome,
-        BmcLinkToggle,
-        BmcColdBoot,
-        BmcIpmiReset,
-        BmcTransportForCommunication,
-        TemperatureSensorBmcIpmi,
-        FanSensorBootupIpmi,
-        TemperatureFanMeasurement,
-        InletExhasutThreshold,
-        FanRedfishtool,
-        F1AsicTemperature,
-        BootComeUefiOrBios,
-        PcieDiscoverySsdViaRc,
-        PcieDeviceDetection,
-        HostConnectionViaPcieBus,
+        # DiscoverStaticIp,
+        # DiscoverDhcpIp,
+        # AlternateCommunicationToBmc,
+        # PlatformComponentVersioningDiscovery,
+        # BootSequenceFpga,
+        # BootSequenceBmc,
+        # BootSequenceCome,
+        # BmcLinkToggle,
+        # BmcColdBoot,
+        # BmcIpmiReset,
+        # BmcTransportForCommunication,
+        # TemperatureSensorBmcIpmi,
+        # FanSensorBootupIpmi,
+        # TemperatureFanMeasurement,
+        # InletExhasutThreshold,
+        # FanRedfishtool,
+        # F1AsicTemperature,
+        # BootComeUefiOrBios,
+        # PcieDiscoverySsdViaRc,
+        # PcieDeviceDetection,
+        # HostConnectionViaPcieBus,
         ComeVolumeCreation,
-        SnakeTest,
-        PortSplitTestCase,
-        FanSpeedVariations,
-        MultipleF1Reset,
-        BroadcomLoginVerification,
-        BundleInstallWithDisable
+        # SnakeTest,
+        # PortSplitTestCase,
+        # FanSpeedVariations,
+        # MultipleF1Reset,
+        # BroadcomLoginVerification,
+        # BundleInstallWithDisable
         ]
     for i in test_case_list:
         myscript.add_test_case(i())
