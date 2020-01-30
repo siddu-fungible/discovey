@@ -8,6 +8,33 @@ from lib.templates.storage.review.storage_operations_template import BltVolumeOp
 from swagger_client.models.volume_types import VolumeTypes
 
 
+def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
+                        runtime=60, bs="4k", ioengine="libaio", direct="1",
+                        time_based=True, norandommap=True, verify="md5", verify_fatal=1,
+                        offset="0kb", verify_state_save=1, verify_dump=1, output="test_integrity",
+                        verify_state_load=1, only_read=False):
+    host_linux_handle = host_obj.get_instance()
+    host_linux_handle.command("cd ~; rm -fr test_fio_with_integrity;"
+                              "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
+    if not only_read:
+        fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
+                                           filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
+                                           timeout=runtime + 15, time_based=time_based,
+                                           verify=verify, verify_fatal=verify_fatal, offset=offset,
+                                           verify_state_save=verify_state_save, verify_dump=verify_dump,
+                                           output=output + "write")
+        fun_test.test_assert(expression=fio_result, message="Write FIO test")
+
+    host_linux_handle.command("cd ~/test_fio_with_integrity;")
+    fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="read",
+                                       filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
+                                       timeout=runtime + 15, time_based=time_based, offset=offset,
+                                       verify=verify, do_verify=1, verify_fatal=verify_fatal,
+                                       verify_state_load=verify_state_load, verify_dump=verify_dump,
+                                       output=output + "read")
+    fun_test.test_assert(expression=fio_result, message="Read FIO result")
+
+
 class BringupSetup(FunTestScript):
     topology = None
     testbed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -83,21 +110,7 @@ class BltApiStorageTest(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj, rw="write",
-                                                                                filename="/dev/"+nvme_device_name,
-                                                                                verify="md5", do_verify=0,
-                                                                                numjobs=2, iodepth=32
-                                                                                )
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic write result")
-            fun_test.log(traffic_result)
-
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj, rw="read",
-                                                                                filename="/dev/" + nvme_device_name,
-                                                                                verify="md5", do_verify=1,
-                                                                                numjobs=2, iodepth=32
-                                                                                )
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic read result")
-            fun_test.log(traffic_result)
+            fio_integrity_check(host_obj=host_obj, filename="/dev/"+nvme_device_name, numjobs=1, iodepth=32)
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
@@ -144,21 +157,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
 
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj, rw="write",
-                                                                                filename="/dev/" + nvme_device_name,
-                                                                                verify="md5", do_verify=0,
-                                                                                numjobs=2, iodepth=32
-                                                                                )
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic write result after FS reboot")
-            fun_test.log(traffic_result)
-
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj, rw="read",
-                                                                                filename="/dev/" + nvme_device_name,
-                                                                                verify="md5", do_verify=1,
-                                                                                numjobs=2, iodepth=32
-                                                                                )
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic read result after FS reboot")
-            fun_test.log(traffic_result)
+            fio_integrity_check(host_obj=host_obj, filename="/dev/"+nvme_device_name, numjobs=1, iodepth=32,
+                                only_read=True)
 
     def cleanup(self):
         # self.storage_controller_template.cleanup()
@@ -169,6 +169,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         fun_test.test_assert(expression=self.storage_controller_template.get_health(
             storage_controller=fs_obj.get_storage_controller()),
                              message="{}: API server health".format(fs_obj))
+
 
 
 if __name__ == "__main__":
