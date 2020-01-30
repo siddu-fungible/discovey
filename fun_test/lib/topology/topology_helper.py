@@ -216,7 +216,7 @@ class TopologyHelper:
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
-        if not fun_test.is_simulation():
+        if not self.is_simulation():
             fun_test.test_assert(self.validate_topology(), "Validate topology")
         return self.expanded_topology
 
@@ -317,6 +317,17 @@ class TopologyHelper:
                         """
         return True
 
+    def is_simulation(self):
+        result = fun_test.is_simulation()
+        if hasattr(self, 'expanded_topology'):
+            if hasattr(self.expanded_topology, "duts"):
+                duts = self.expanded_topology.duts
+                for dut_index, dut_obj in duts.iteritems():
+                    if dut_obj.mode == Dut.MODE_REAL:
+                        result = False
+                        break
+        return result
+
     @fun_test.safe
     def allocate_topology(self, topology, already_deployed=False):
 
@@ -342,7 +353,8 @@ class TopologyHelper:
                     continue
                 fun_test.debug("Setting up DUT {}".format(dut_index))
 
-                orchestrator = asset_manager.get_orchestrator(is_simulation=fun_test.is_simulation(), dut_index=dut_index)
+                is_simulation = self.is_simulation()
+                orchestrator = asset_manager.get_orchestrator(is_simulation=is_simulation, dut_index=dut_index)
                 topology.add_active_orchestrator(orchestrator)
                 fun_test.simple_assert(orchestrator, "Topology retrieved container orchestrator")
 
@@ -542,7 +554,8 @@ class TopologyHelper:
 
     @fun_test.safe
     def allocate_traffic_generator(self, index, end_point):
-        orchestrator_obj = asset_manager.get_orchestrator(is_simulation=fun_test.is_simulation(), type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
+        is_simulation = self.is_simulation()
+        orchestrator_obj = asset_manager.get_orchestrator(is_simulation=is_simulation, type=OrchestratorType.ORCHESTRATOR_TYPE_DOCKER_HOST)
         self.expanded_topology.add_active_orchestrator(orchestrator_obj)
         if end_point.end_point_type == EndPoint.END_POINT_TYPE_FIO:
             instance = orchestrator_obj.launch_fio_instance(index)

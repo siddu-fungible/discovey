@@ -1435,7 +1435,11 @@ class ComE(Linux):
             for f1_index in range(self.NUM_F1S):
                 self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
-            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            if not self.detect_pfs():
+                self.diags()
+                fun_test.test_assert(False, message="Fungible PFs detected", context=self.context)
+            else:
+                fun_test.test_assert(True, message="Fungible PFs detected", context=self.context)
             fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
             fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
 
@@ -2131,6 +2135,8 @@ class Fs(object, ToDictMixin):
 
         self.errors_detected = []
         fun_test.register_fs(self)
+
+        # self.storage =
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2920,7 +2926,17 @@ if __name__ == "__main2__":
     # i = fs.bam()
 
 
-if __name__ == "__main__":
+if __name__ == "__main_2_":
     come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-118"))
+    topology = th.deploy(already_deployed=True)
+    fs_obj = topology.get_dut_instance(index=0)
+    fs_obj.get_come().command("date")
+    sc = fs_obj.get_storage_controller()
+    sc.json_execute(verb="peek", data="storage/devices/nvme/ssds")
