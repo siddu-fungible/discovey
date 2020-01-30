@@ -5,11 +5,19 @@
     <!-- showing the units dropdown on the right-->
     <div *ngIf="!minimal">
       <span style="float: left">
-        <span [ngClass]="{'highlight': !showingAll, 'fun-action-link': showingAll}"
-              (click)="setDaysInPast('2 months')">Show
-          last 60 days</span>&nbsp;|&nbsp;
-        <span [ngClass]="{'highlight': showingAll, 'fun-action-link': !showingAll}"
-              (click)="setDaysInPast('All')">Show all</span>
+        <span *ngIf="showingAll">
+          <span class="fun-action-link" (click)="setDaysInPast('2 months')">Show last 60 days</span>&nbsp;|&nbsp;
+          <span class="highlight">Show all</span>
+        </span>
+        <span *ngIf="!showingAll">
+          <span class="highlight">Show last 60 days</span>&nbsp;|&nbsp;
+          <span class="fun-action-link" (click)="setDaysInPast('All')">Show all</span>
+        </span>
+        <!--<span [ngClass]="{'highlight': !showingAll, 'fun-action-link': showingAll}"-->
+              <!--(click)="setDaysInPast('2 months')">Show-->
+          <!--last 60 days</span>&nbsp;|&nbsp;-->
+        <!--<span [ngClass]="{'highlight': showingAll, 'fun-action-link': !showingAll}"-->
+              <!--(click)="setDaysInPast('All')">Show all</span>-->
       </span>
       <select *ngIf="leaf" [(ngModel)]="selectedUnit"
               (ngModelChange)="onUnitChange($event)" style="float: right">
