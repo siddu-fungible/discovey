@@ -350,7 +350,7 @@ class TrialStateMachine:
                 integration_job_id = queue_job3(suite_id=build_parameters["suite_id"],
                                                 scheduling_type=SchedulingType.ASAP,
                                                 submitter_email=build_parameters["submitter_email"],
-                                                test_bed_type=build_parameters["test_bed_type"],
+                                                test_bed_type=build_parameters["test_bed_type"][0],
                                                 environment=build_parameters["environment"],
                                                 inputs=inputs,
                                                 tags=tags)
