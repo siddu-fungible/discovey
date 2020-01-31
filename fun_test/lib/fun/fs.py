@@ -2938,6 +2938,4 @@ if __name__ == "__main__":
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-118"))
     topology = th.deploy(already_deployed=True)
     fs_obj = topology.get_dut_instance(index=0)
-    fs_obj.get_come().command("date")
-    sc = fs_obj.get_storage_controller()
-    sc.json_execute(verb="peek", data="storage/devices/nvme/ssds")
+    fs_obj.storage.nvme_ssds(f1_index=0)
