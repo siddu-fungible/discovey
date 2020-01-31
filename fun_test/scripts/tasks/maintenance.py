@@ -178,6 +178,12 @@ class RemoveOldCollections(FunTestCase):
                                     collection.drop()
                     except Exception as ex:
                         pass
+        if collection_names > CheckMongoCollectionCount.MAX_COLLECTIONS:
+            collections_to_be_removed = collection_names[0: len(collection_names) - CheckMongoCollectionCount.MAX_COLLECTIONS]
+            for collection_to_be_removed in collections_to_be_removed:
+                collection = mongo.get_collection(collection_name=collection_to_be_removed)
+                if collection:
+                    collection.drop()
     def cleanup(self):
         pass
 
@@ -256,13 +262,18 @@ class CleanupLargeStoreDirectory(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MaintenanceScript()
+    """
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
     myscript.add_test_case(CleanupOldDirectories())
     myscript.add_test_case(DetectLargeFiles())
+    """
     myscript.add_test_case(CheckMongoCollectionCount())
+
     myscript.add_test_case(RemoveOldCollections())
+    """
     myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.add_test_case(BackupTestRail())
     myscript.add_test_case(CleanupLargeStoreDirectory())
+    """
     myscript.run()

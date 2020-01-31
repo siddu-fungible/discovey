@@ -44,6 +44,9 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   TIMEZONE: string = "America/Los_Angeles";
   daysInPast: number = 60;
   editingDaysInPast: boolean = false;
+  showingAll: boolean = false;
+  DEFAULT_DAYS_IN_PAST: number = 60;
+  MAX_DAYS_IN_PAST: number = 120;
   allDataSets: any = null;
 
   status: string = null;
@@ -147,7 +150,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
     this.status = "Updating";
     this.showingTable = false;
     this.showingConfigure = false;
-    this.daysInPast = 60;
+    this.daysInPast = this.DEFAULT_DAYS_IN_PAST;
     this.editingDaysInPast = false;
     this.headers = null;
     this.values = null;
@@ -165,7 +168,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges() {
-    this.daysInPast = 60;
+    this.daysInPast = this.DEFAULT_DAYS_IN_PAST;
     this.editingDaysInPast = false;
     this.refreshCharts();
   }
@@ -176,6 +179,17 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
   }
 
   submitDaysInPast(): void {
+    this.refreshCharts();
+  }
+
+  setDaysInPast(daysInPast): void {
+    if (daysInPast === this.DEFAULT_DAYS_IN_PAST) {
+      this.showingAll = false;
+      this.daysInPast = this.DEFAULT_DAYS_IN_PAST;
+    } else {
+      this.showingAll = true;
+      this.daysInPast = this.MAX_DAYS_IN_PAST;
+    }
     this.refreshCharts();
   }
 

@@ -12,6 +12,7 @@ from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
+from lib.fun.storage.fs_storage import FsStorage
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -353,6 +354,9 @@ class Bmc(Linux):
         s = boot_args
         if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
+        if self.fs.get_revision() in ["2"]:
+            s = re.sub(' cc_huid=\d+', "", s)
 
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
@@ -2110,6 +2114,10 @@ class Fs(object, ToDictMixin):
         if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
+
+        if ("bundle_compatible" in spec and not spec["bundle_compatible"]):
+            self.bundle_compatible = False
+
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
@@ -2136,7 +2144,7 @@ class Fs(object, ToDictMixin):
         self.errors_detected = []
         fun_test.register_fs(self)
 
-        # self.storage =
+        self.storage = FsStorage(fs_obj=self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2934,9 +2942,7 @@ if __name__ == "__main_2_":
 if __name__ == "__main__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-118"))
-    topology = th.deploy(already_deployed=True)
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
+    topology = th.deploy(already_deployed=False)
     fs_obj = topology.get_dut_instance(index=0)
-    fs_obj.get_come().command("date")
-    sc = fs_obj.get_storage_controller()
-    sc.json_execute(verb="peek", data="storage/devices/nvme/ssds")
+    fs_obj.storage.nvme_ssds(f1_index=0)
