@@ -79,6 +79,7 @@ class StorageControllerOperationsTemplate():
 
 class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
     vol_type = VolumeTypes()
+    host_nvme_device = {}
 
     def __init__(self, topology):
         super(BltVolumeOperationsTemplate, self).__init__(topology)
@@ -201,9 +202,11 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                 nvme_volumes.append(volume_name)
         if subsys_nqn:
             for namespace in nvme_volumes:
-                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(namespace))
+                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
+                    namespace[:-2]))
                 if namespace_subsys_nqn == subsys_nqn:
                     result = namespace
+                    self.host_nvme_device[host_obj] = namespace
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
@@ -224,18 +227,38 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
 
     def cleanup(self):
         """
-
+        Kill all FIO instances on Host
+        NVMe disconnect from Host
+        rmmod and modprobe nvme drivers
         Detach volumes from FS
         Delete created volumes
-
         :return:
         """
-        # TODO: Disconnect from Host
+        for host_obj in self.host_nvme_device:
+            host_handle = host_obj.get_instance()
+            host_handle.sudo_command("killall fio")
+            host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
+            host_handle.sudo_command("rmmod nvme.ko; rmmod nvme_tcp.ko; rmmod nvme_core.ko; rmmod nvme_fabrics.ko")
+            host_handle.modprobe("nvme")
+            host_handle.modprobe("nvme_core")
+            host_handle.modprobe("nvme_tcp")
+            host_handle.modprobe("nvme_fabrics")
+
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
-            volumes = storage_controller.storage_api.get_volumes()
-            for volume in volumes:
-                storage_controller.storage_api.delete_volume(volume_uuid=volumes[volume].uuid)
+            # volumes = storage_controller.storage_api.get_volumes()
+            # WORKAROUND : get_volumes errors out.
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            get_volume_result = raw_sc_api.get_volumes()
+            fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
+            for volume in get_volume_result["data"]:
+                for port in get_volume_result["data"][volume]['ports']:
+                    detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    fun_test.test_assert(expression=detach_volume.status,
+                                         message="Detach Volume {} from host with remote IP {}".format(
+                                             volume, get_volume_result["data"][volume]['ports'][port]['remote_ip']))
+                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
         super(BltVolumeOperationsTemplate, self).cleanup()
