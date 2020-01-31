@@ -59,7 +59,7 @@ class StorageControllerOperationsTemplate():
         return result
 
     def initialize(self):
-        for dut_index in self.topology.get_duts().keys():
+        for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
             fun_test.test_assert(self.get_health(storage_controller=storage_controller),
@@ -218,7 +218,7 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
         :return:
         """
         # TODO: Disconnect from Host
-        for dut_index in self.topology.get_duts().keys():
+        for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
             volumes = storage_controller.storage_api.get_volumes()
