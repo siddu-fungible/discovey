@@ -90,7 +90,7 @@ class BltApiStorageTest(FunTestCase):
 
         vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-
+        fun_test.test_assert(expression=vol_uuid_dict, message="Volume of capacity {} created".format(capacity))
         hosts = self.topology.get_hosts()
         for fs_obj in vol_uuid_dict:
             for host_id in hosts:
@@ -99,7 +99,7 @@ class BltApiStorageTest(FunTestCase):
                                                                                    volume_uuid=vol_uuid_dict[fs_obj],
                                                                                    validate_nvme_connect=True,
                                                                                    raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume")
+                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
     def run(self):
         hosts = self.topology.get_hosts()
@@ -141,7 +141,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-        fun_test.sleep(message="Waiting before firing Dataplane IP commands", seconds=60)
+        fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.storage_controller_template.verify_dataplane_ip(storage_controller=fs_obj.get_storage_controller(),
