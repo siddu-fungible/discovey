@@ -79,12 +79,15 @@ class StorageControllerOperationsTemplate():
         # check with storage team
 
 
-class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
-    vol_type = VolumeTypes()
+class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
+    """
+    This template abstracts the operations of BLT volume
+    """
+    vol_type = VolumeTypes().LOCAL_THIN
     host_nvme_device = {}
 
     def __init__(self, topology):
-        super(BltVolumeOperationsTemplate, self).__init__(topology)
+        super(GenericVolumeOperationsTemplate, self).__init__(topology)
         self.topology = topology
 
     def create_volume(self, fs_obj_list, body_volume_intent_create):
@@ -96,12 +99,11 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
         """
         result = {}
         for fs_index, fs_obj in enumerate(fs_obj_list):
-            vol_type = VolumeTypes()
 
             if len(fs_obj_list) > 1:
                 body_volume_intent_create.name = body_volume_intent_create.name + str(fs_index)
 
-            body_volume_intent_create.vol_type = vol_type.LOCAL_THIN
+            body_volume_intent_create.vol_type = self.vol_type
             storage_controller = fs_obj.get_storage_controller()
             try:
                 create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
@@ -225,8 +227,8 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self):
-        super(BltVolumeOperationsTemplate, self).initialize()
+    def initialize(self, already_deployed=False):
+        super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed)
 
     def cleanup(self):
         """
@@ -266,4 +268,11 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
-        super(BltVolumeOperationsTemplate, self).cleanup()
+        super(GenericVolumeOperationsTemplate, self).cleanup()
+
+
+class BltVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
+    """
+    This template abstracts the operations of BLT volume
+    """
+    vol_type = VolumeTypes().LOCAL_THIN
