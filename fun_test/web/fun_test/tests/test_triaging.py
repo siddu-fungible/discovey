@@ -350,7 +350,7 @@ class TrialStateMachine:
                 integration_job_id = queue_job3(suite_id=build_parameters["suite_id"],
                                                 scheduling_type=SchedulingType.ASAP,
                                                 submitter_email=build_parameters["submitter_email"],
-                                                test_bed_type=[build_parameters["test_bed_type"]],
+                                                test_bed_type=build_parameters["test_bed_type"],
                                                 environment=build_parameters["environment"],
                                                 inputs=inputs,
                                                 tags=tags)
@@ -596,6 +596,7 @@ if __name__ == "__main2__":
     original_t.save()
 
 if __name__ == "__main__":
+    # Triage3.objects.all().delete()
     while True:
         Daemon.get(name=DAEMON_NAME).beat()
         triages = Triage3.objects.filter(status__gt=TriagingStates.COMPLETED)
