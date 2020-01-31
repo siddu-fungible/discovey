@@ -42,7 +42,11 @@ class StorageControllerOperationsTemplate():
                 # TODO: Obtain next_hop from test_bed info
                 next_hop = str(ip_obj.hosts().next())
 
-                body_node_update = BodyNodeUpdate(op=NodeUpdateOp().DPU_DP_ID, ip_assignment_dhcp=False,
+                # body_node_update = BodyNodeUpdate(op=NodeUpdateOp().DPU_DP_ID, ip_assignment_dhcp=False,
+                #                                   next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
+
+                # WORKAROUND: SWOS-8586
+                body_node_update = BodyNodeUpdate(op="DPU_DP_IP", ip_assignment_dhcp=False,
                                                   next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
                 dpu_id = node + "." + str(f1_index)
 
