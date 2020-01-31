@@ -355,6 +355,9 @@ class Bmc(Linux):
         if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
 
+        if self.fs.get_revision() in ["2"]:
+            s = re.sub(' cc_huid=\d+', "", s)
+
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
                 huid = 3
