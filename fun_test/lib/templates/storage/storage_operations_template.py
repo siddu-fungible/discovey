@@ -63,15 +63,16 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self):
+    def initialize(self, already_deployed=False):
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
             fun_test.test_assert(self.get_health(storage_controller=storage_controller),
                                  message="DUT: {} Health of API server".format(dut_index))
-            fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
-            fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
-                                 message="DUT: {} Assign dataplane IP".format(dut_index))
+            if not already_deployed:
+                fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
+                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
+                                     message="DUT: {} Assign dataplane IP".format(dut_index))
 
     def cleanup(self):
         pass
