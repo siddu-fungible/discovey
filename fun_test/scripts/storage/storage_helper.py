@@ -2392,6 +2392,7 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
 
     return result
 
+<<<<<<< HEAD
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
 
@@ -2471,4 +2472,3 @@ def get_plex_device_id(ec_info, storage_controller):
                     fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
                                            format(blt_stats["data"]["drive_uuid"]))
     return ec_info
-
