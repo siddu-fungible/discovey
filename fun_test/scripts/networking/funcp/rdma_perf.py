@@ -220,8 +220,7 @@ class BringupSetup(FunTestCase):
                 linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
                 linux_obj.sudo_command("netplan apply")
                 if result == "2":
-                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
-                                            % servers_mode[server])
+                    fun_test.test_assert(False, "PCIE link did not come up in {} mode".format(servers_mode[server]))
 
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
