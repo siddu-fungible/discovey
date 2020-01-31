@@ -42,7 +42,7 @@ def login(request):
                 auth_user.save()
                 auth_user.set_password('fun123fun123')
                 auth_user.save()
-
+                result = True
             # raise Exception("User {} does not exist. Please contact john.abraham@fungible.com".format(email))
     if request.method == "GET":
         if request.user and request.user.is_authenticated():
