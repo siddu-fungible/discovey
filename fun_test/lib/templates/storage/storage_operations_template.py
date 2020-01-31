@@ -107,7 +107,7 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                 vol_uuid = create_vol_result.data.uuid
                 result[fs_obj] = vol_uuid
             except ApiException as e:
-                print("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
         return result
 
     def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False):
@@ -132,7 +132,7 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                 result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
                                                                       body_volume_attach=attach_fields)
             except ApiException as e:
-                print("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
                 result = None
                 return result
         else:
@@ -203,8 +203,9 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
                 nvme_volumes.append(volume_name)
         if subsys_nqn:
             for namespace in nvme_volumes:
+                nvme_device = namespace[:-2]
                 namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                    namespace[:-2]))
+                    nvme_device))
                 if namespace_subsys_nqn == subsys_nqn:
                     result = namespace
                     self.host_nvme_device[host_obj] = namespace
@@ -235,11 +236,13 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
         Delete created volumes
         :return:
         """
+        nvme_modules_list = ["nvme_tcp", "nvme_fabrics", "nvme_core", "nvme"]
         for host_obj in self.host_nvme_device:
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
-            host_handle.sudo_command("rmmod nvme.ko; rmmod nvme_tcp.ko; rmmod nvme_core.ko; rmmod nvme_fabrics.ko")
+            for driver in nvme_modules_list:
+                host_handle.sudo_command("rmmod {}".format(driver))
             host_handle.modprobe("nvme")
             host_handle.modprobe("nvme_core")
             host_handle.modprobe("nvme_tcp")
