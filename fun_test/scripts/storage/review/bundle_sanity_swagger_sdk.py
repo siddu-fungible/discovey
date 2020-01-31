@@ -141,7 +141,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-
+        fun_test.sleep(message="Waiting before firing Dataplane IP commands", seconds=60)
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.storage_controller_template.verify_dataplane_ip(storage_controller=fs_obj.get_storage_controller(),
@@ -164,10 +164,10 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
+        fs_obj.come.ensure_expected_containers_running()
         fun_test.test_assert(expression=self.storage_controller_template.get_health(
             storage_controller=fs_obj.get_storage_controller()),
                              message="{}: API server health".format(fs_obj))
-
 
 
 if __name__ == "__main__":
