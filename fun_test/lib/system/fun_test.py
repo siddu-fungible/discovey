@@ -22,6 +22,9 @@ from inspect import getargspec
 from lib.utilities.send_mail import send_mail
 from fun_global import Codes, TimeSeriesTypes
 
+for path in ADDITIONAL_PYTHON_PATHS:
+    sys.path.append(path)
+
 
 class TestException(Exception):
     def __str__(self):
