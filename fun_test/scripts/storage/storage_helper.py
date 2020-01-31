@@ -2392,7 +2392,6 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
 
     return result
 
-<<<<<<< HEAD
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
 
