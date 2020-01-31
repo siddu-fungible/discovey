@@ -17,7 +17,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
