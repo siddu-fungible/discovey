@@ -909,6 +909,7 @@
   },
   {
     "name": "fs-168",
+    "revision": "2",
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
