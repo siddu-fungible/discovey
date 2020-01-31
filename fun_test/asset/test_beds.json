@@ -3013,7 +3013,7 @@
       "enable_funcp": true
     }
   },
-  "fs-57": {
+  "fs-168": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
@@ -3057,7 +3057,7 @@
             "dual": 14
           }
         },
-        "dut": "fs-57"
+        "dut": "fs-168"
       }
     }
   },
@@ -3997,6 +3997,14 @@
     },
     "workarounds": {
       "enable_funcp": true
+    }
+  },
+  "fs-171": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-171"
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
+from lib.fun.storage.fs_storage import FsStorage
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -353,6 +354,9 @@ class Bmc(Linux):
         s = boot_args
         if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
+        if self.fs.get_revision() in ["2"]:
+            s = re.sub(' cc_huid=\d+', "", s)
 
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
@@ -1435,7 +1439,11 @@ class ComE(Linux):
             for f1_index in range(self.NUM_F1S):
                 self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
-            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            if not self.detect_pfs():
+                self.diags()
+                fun_test.test_assert(False, message="Fungible PFs detected", context=self.context)
+            else:
+                fun_test.test_assert(True, message="Fungible PFs detected", context=self.context)
             fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
             fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
 
@@ -2106,6 +2114,10 @@ class Fs(object, ToDictMixin):
         if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
+
+        if ("bundle_compatible" in spec and not spec["bundle_compatible"]):
+            self.bundle_compatible = False
+
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
@@ -2131,6 +2143,8 @@ class Fs(object, ToDictMixin):
 
         self.errors_detected = []
         fun_test.register_fs(self)
+
+        self.storage = FsStorage(fs_obj=self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2920,7 +2934,15 @@ if __name__ == "__main2__":
     # i = fs.bam()
 
 
-if __name__ == "__main__":
+if __name__ == "__main_2_":
     come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
+    topology = th.deploy(already_deployed=False)
+    fs_obj = topology.get_dut_instance(index=0)
+    fs_obj.storage.nvme_ssds(f1_index=0)

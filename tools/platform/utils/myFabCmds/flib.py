@@ -545,12 +545,15 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=None):
     child.expect ('\nf1 # ')
 
     CCHUID = 3 - int(index)
-    if env.FS1600REV == 2:
-        sku_string = "SKU_FS1600r2_{}".format(index)
+    if env.FS1600REV == 1:
+        sku_string = "sku=SKU_FS1600_{}".format(index)
+        cchuid_string = "cc_huid={}".format(CCHUID)
     else:
-        sku_string = "SKU_FS1600_{}".format(index)
-    bootargs = 'cc_huid={} sku={} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, sku_string)
-    #print bootargs
+        sku_string = ""
+        cchuid_string = ""
+
+    bootargs = '{} {} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(cchuid_string, sku_string)
+    print bootargs
 
     command = 'tftpboot'
     if image and version:
@@ -747,12 +750,10 @@ def argsF(index=0, bootargs=BOOTARGS):
     """ set bootargs of chip[index] with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    if env.FS1600REV == 2:
-        sku_string = "SKU_FS1600r2_{}".format(index)
-    else:
+    if env.FS1600REV == 1:
         sku_string = "SKU_FS1600_{}".format(index)
-    bootargs = 'cc_huid={} '.format(CCHUID) + bootargs
-    bootargs = 'sku={} '.format(sku_string) + bootargs
+        bootargs = 'cc_huid={} sku={} '.format(CCHUID, sku_string) + bootargs
+    print bootargs
     child = connectF(index, reset=False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
