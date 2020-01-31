@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 
 
-
 @csrf_exempt
 @api_safe_json_response
 def login(request):
@@ -31,7 +30,20 @@ def login(request):
             else:
                 raise Exception("Unable to authenticate user: {}. Please contact john.abraham@fungible.com".format(email))
         except ObjectDoesNotExist:
-            raise Exception("User {} does not exist. Please contact john.abraham@fungible.com".format(email))
+            username = email.strip()
+            email = email.strip()
+
+            name = email.split("@")[0]
+            first_name, last_name = name.split(".")
+            first_name = first_name.title()
+            last_name = last_name.title()
+            if not User.objects.filter(username=username).exists():
+                auth_user = User(username=username, first_name=first_name, last_name=last_name, email=username)
+                auth_user.save()
+                auth_user.set_password('fun123fun123')
+                auth_user.save()
+
+            # raise Exception("User {} does not exist. Please contact john.abraham@fungible.com".format(email))
     if request.method == "GET":
         if request.user and request.user.is_authenticated():
             result = request.user.username
