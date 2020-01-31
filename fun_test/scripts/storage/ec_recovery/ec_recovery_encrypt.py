@@ -14,6 +14,7 @@ from threading import Lock
 from lib.templates.storage.storage_controller_api import *
 import itertools
 import random
+from copy import deepcopy
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -260,6 +261,10 @@ class RecoveryWithFailures(FunTestCase):
             self.plex_fail_method = job_inputs["plex_fail_method"]
         if "plex_failure_combination" in job_inputs:
             self.plex_failure_combination = job_inputs["plex_failure_combination"]
+        if "write_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = str(job_inputs["write_bs"]) + "k"
+        if "read_bs" in job_inputs:
+            self.fio_read_cmd_args["bs"] = str(job_inputs["read_bs"]) + "k"
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
             if not isinstance(self.csi_perf_iodepth, list):
@@ -292,6 +297,20 @@ class RecoveryWithFailures(FunTestCase):
         command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
         fun_test.log(command_result)
         fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+
+        # Setting the required syslog level
+        if self.syslog != "default":
+            command_result = self.storage_controller.poke(props_tree=["params/syslog/level", self.syslog],
+                                                          legacy=False, command_duration=self.command_timeout)
+            fun_test.test_assert(command_result["status"],
+                                 "Setting syslog level to {}".format(self.syslog))
+
+            command_result = self.storage_controller.peek(props_tree="params/syslog/level", legacy=False,
+                                                          command_duration=self.command_timeout)
+            fun_test.test_assert_expected(expected=self.syslog, actual=command_result["data"],
+                                          message="Checking syslog level")
+        else:
+            fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
     def run(self):
 
@@ -331,7 +350,7 @@ class RecoveryWithFailures(FunTestCase):
                 (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,self.command_timeout)
                 fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
-                fun_test.log("EC details after configuring EC Volume:")
+                fun_test.log("EC details after configuring EC Volume with encryption enabled:")
                 for k, v in self.ec_info.items():
                     fun_test.log("{}: {}".format(k, v))
 
@@ -371,12 +390,13 @@ class RecoveryWithFailures(FunTestCase):
                             hostnqn=self.host_info[host_name]["ip"])
 
                     fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
-
+                    """
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
-
+                    """
                     # Checking if the EC volume is visible to the end host
-                    self.host_info[host_name]["nvme_block_device_list"] = []
+                    self.host_info[host_name]["nvme_block_device_list"] = host_handle.get_nvme_device_list()
+                    """
                     volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
                     for volume_name in lsblk_output:
                         match = re.search(volume_pattern, volume_name)
@@ -390,6 +410,7 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
+                    """
                     self.host_info[host_name]["nvme_block_device_list"].sort()
                     self.host_info[host_name]["fio_filename"] = \
                         ":".join(self.host_info[host_name]["nvme_block_device_list"])
@@ -397,122 +418,102 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
                     # Perform write
-                    self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
-                    self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
+                    #self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+                    #self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
                     fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
                                                       cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
                                                       **self.fio_write_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Write completed on EC volume from host")
+                    write_initial_vol_stats = self.storage_controller.peek(
+                        props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.log("EC Volume stats:\n{}".format(write_initial_vol_stats))
+                    fun_test.test_assert(write_initial_vol_stats, "EC Volume stats after WRITE")
+                    fun_test.log("EC volume recovery read count:\n{}".format(write_initial_vol_stats["data"]["recovery_read_count"]))
+                    # Perform read
+                    fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
+                                                      cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                                                      **self.fio_read_cmd_args)
+                    fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                    fun_test.test_assert(fio_output,
+                                         "READ with verify completed before failing any plex")
+                    read_initial_vol_stats = self.storage_controller.peek(
+                        props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.log("EC Volume stats:\n{}".format(read_initial_vol_stats))
+                    fun_test.test_assert(read_initial_vol_stats, "EC Volume stats after WRITE")
+                    fun_test.log("EC volume recovery read count:\n{}".format(read_initial_vol_stats["data"]["recovery_read_count"]))
 
                     # Power OFF device
                     self.device_id_failed = []
                     for index, plex in enumerate(plex_fail_pattern):
-                        if hasattr(self, "mfailure") and self.mfailure:
-                            if self.plex_fail_method == "ssd_power_off":
-                                fun_test.log("Initiating drive failure for device id {} by powering off ssd".format(plex))
-                                device_fail_status = self.storage_controller.power_toggle_device("off",
-                                    device_id=plex, command_duration=self.command_timeout)
-                                fun_test.test_assert(device_fail_status["status"],
-                                                     "Powering OFF Device ID {}".format(plex))
-                                # Validate if Device is marked Failed
-                                device_stats = self.storage_controller.get_ssd_power_status(plex, command_duration=self.command_timeout)
-                                fun_test.simple_assert(device_stats["status"],
-                                                       "Device {} stats command".format(plex))
-                                fun_test.test_assert_expected(expected=1,
-                                                              actual=device_stats["data"]["input"],
-                                                              message="Device ID {} is powered OFF".format(
-                                                                  plex))
-                                self.device_id_failed.append(plex)
+                        if self.plex_fail_method == "ssd_power_off":
+                            fun_test.log("Initiating drive failure for device id {} by powering off ssd".format(self.ec_info["device_id"][num][plex]))
+                            device_fail_status = self.storage_controller.power_toggle_ssd("off",
+                                device_id=self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
+                            fun_test.test_assert(device_fail_status["status"],
+                                                 "Powering OFF Device ID {}".format(self.ec_info["device_id"][num][plex]))
+                            # Validate if Device is marked Failed
+                            device_stats = self.storage_controller.get_ssd_power_status(self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
+                            fun_test.simple_assert(device_stats["status"],
+                                                   "Device {} stats command".format(self.ec_info["device_id"][num][plex]))
+                            fun_test.test_assert_expected(expected=1,
+                                                          actual=device_stats["data"]["input"],
+                                                          message="Device ID {} is powered OFF".format(
+                                                              self.ec_info["device_id"][num][plex]))
+                            self.device_id_failed.append(self.ec_info["device_id"][num][plex])
+                        elif self.plex_fail_method == "drive_pull":
+                            fun_test.log("Initiating drive failure for device id {} by injecting fault".format(self.ec_info["device_id"][num][plex]))
+                            device_fail_status = self.storage_controller.disable_device(device_id=self.ec_info["device_id"][num][plex],
+                                                                                             command_duration=self.command_timeout)
+                            fun_test.test_assert(device_fail_status["status"],
+                                                 "Injecting fault on Device ID {}".format(self.ec_info["device_id"][num][plex]))
+                            # Validate if Device is marked Failed
+                            device_stats = self.storage_controller.get_device_status(device_id=self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
+                            fun_test.simple_assert(device_stats["status"],
+                                                   "Device {} stats command".format(self.ec_info["device_id"][num][plex]))
+                            fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
+                                                          actual=device_stats["data"]["device state"],
+                                                          message="Device ID {} is marked as Failed".format(
+                                                              self.ec_info["device_id"][num][plex]))
+                            self.device_id_failed.append(self.ec_info["device_id"][num][plex])
 
-                                # Perform read
-                                fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
-                                                                  cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
-                                                                  **self.fio_read_cmd_args)
-                                fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                                fun_test.test_assert(fio_output, "Reading from EC volume with {} plex({}) failed".
-                                                     format(index + 1, plex_fail_pattern[:index+1]))
+                        # Perform read if concurrent plex failure is not set
+                        if (not hasattr(self, "m_concurrent_failure")) and (not hasattr(self, "m_plus_concurrent_failure")):
+                            fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
+                                                              cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                                                              **self.fio_read_cmd_args)
+                            fun_test.log("FIO Command Output:\n{}".format(fio_output))
+                            fun_test.test_assert(fio_output, "Reading from EC volume with {} plex {} failed".
+                                                 format(index + 1, self.device_id_failed))
 
-                            elif self.plex_fail_method == "inject_fault":
-                                fun_test.log("Initiating drive failure for device id {} by injecting fault".format(plex))
-                                device_fail_status = self.storage_controller.disable_device(device_id=plex,
-                                                                                                 command_duration=self.command_timeout)
-                                fun_test.test_assert(device_fail_status["status"],
-                                                     "Injecting fault on Device ID {}".format(plex))
-                                # Validate if Device is marked Failed
-                                device_stats = self.storage_controller.get_device_status(device_id=plex, command_duration=self.command_timeout)
-                                fun_test.simple_assert(device_stats["status"],
-                                                       "Device {} stats command".format(plex))
-                                fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
-                                                              actual=device_stats["data"]["device state"],
-                                                              message="Device ID {} is marked as Failed".format(
-                                                                  plex))
-                                self.device_id_failed.append(plex)
-
-                                # Perform read
-                                fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
-                                                                  cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
-                                                                  **self.fio_read_cmd_args)
-                                fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                                fun_test.test_assert(fio_output, "Reading from EC volume with {} plex({}) failed".
-                                                     format(index + 1, plex_fail_pattern[:index + 1]))
-
-                    if hasattr(self, "mplusfailure") and self.mplusfailure:
-                        # Fail one more plex other than the above ones
-                        for one_more_plex in range(self.ec_info["ndata"] + self.ec_info["parity"]):
-                            if one_more_plex not in plex_fail_pattern:
-                                if self.plex_fail_method == "ssd_power_off":
-
-                                    fun_test.log("After failing {} drives, initiating one more drive failure on drive {}".format(self.ec_info["parity"], one_more_plex))
-                                    device_fail_status = self.storage_controller.power_toggle_device("off",
-                                                                                                     device_id=one_more_plex,
-                                                                                                     command_duration=self.command_timeout)
-                                    fun_test.test_assert(device_fail_status["status"],
-                                                         "Powering OFF Device ID {}".format(one_more_plex))
-                                    # Validate if Device is marked Failed
-                                    device_stats = self.storage_controller.get_ssd_power_status(one_more_plex,
-                                                                                                command_duration=self.command_timeout)
-                                    fun_test.simple_assert(device_stats["status"],
-                                                           "Device {} stats command".format(one_more_plex))
-                                    fun_test.test_assert_expected(expected=1,
-                                                                  actual=device_stats["data"]["input"],
-                                                                  message="Device ID {} is powered OFF".format(
-                                                                      one_more_plex))
-                                    self.device_id_failed.append(one_more_plex)
-                                    break
-                                elif self.plex_fail_method == "inject_fault":
-                                    fun_test.log(
-                                        "Initiating drive failure for drive id {} by injecting fault".format(one_more_plex))
-                                    device_fail_status = self.storage_controller.disable_device(device_id=one_more_plex,
-                                                                                                command_duration=self.command_timeout)
-                                    fun_test.test_assert(device_fail_status["status"],
-                                                         "Injecting fault on Device ID {}".format(one_more_plex))
-                                    # Validate if Device is marked Failed
-                                    device_stats = self.storage_controller.get_device_status(device_id=one_more_plex, command_duration=self.command_timeout)
-                                    fun_test.simple_assert(device_stats["status"],
-                                                           "Device {} stats command".format(one_more_plex))
-                                    fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
-                                                                  actual=device_stats["data"]["device state"],
-                                                                  message="Device ID {} is marked as Failed".format(
-                                                                      one_more_plex))
-                                    self.device_id_failed.append(one_more_plex)
-                                    break
-                        # Perform read
+                    # Perform read if concurrent plex failure is set
+                    if (hasattr(self, "m_concurrent_failure") and self.m_concurrent_failure) and (not hasattr(self, "m_plus_concurrent_failure")):
                         fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
                                                           cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
                                                           **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                        fun_test.test_assert(fio_output, "After failing {} plex, failed drive {} and reading from EC volume".
-                                             format(self.ec_info["parity"], self.device_id_failed[-1]))
+                        fun_test.test_assert(fio_output, "Reading from EC volume with {} plex {} failed".
+                                             format(index + 1, self.device_id_failed))
 
-                    if hasattr(self, "m_concurrent_failure") and self.m_concurrent_failure:
-                        # Fail M plexes at once and then READ and check for data integrity
-                        for index, plex in enumerate(plex_fail_pattern):
+                    if (hasattr(self, "mplusfailure") and self.mplusfailure) or (hasattr(self, "m_plus_concurrent_failure") and self.m_plus_concurrent_failure) or (hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure):
+                        plex_to_be_failed = []
+                        if not hasattr(self, "k_plus_m_concurrent_failure"):
+                            # Fail one more plex other than the above ones
+                            #while True:
+                            plex_to_be_failed.append(random.choice(list(set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))))
+                                #if plex_to_be_failed[0] not in plex_fail_pattern:
+                                    #break
+                        elif hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure:
+                            # Fail all the plexes, other than the ones failed already
+                            plex_to_be_failed = list(set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))
+                        for plex in plex_to_be_failed:
                             if self.plex_fail_method == "ssd_power_off":
-                                fun_test.log("Initiating drive failure for drive {}".format(plex))
-                                device_fail_status = self.storage_controller.power_toggle_device("off",
-                                                                                                 device_id=plex,
-                                                                                                 command_duration=self.command_timeout)
+                                fun_test.log(
+                                    "After failing {} drives, initiating drive failure on drive {}".format(
+                                        self.device_id_failed, plex))
+                                device_fail_status = self.storage_controller.power_toggle_ssd("off",
+                                                                                              device_id=plex,
+                                                                                              command_duration=self.command_timeout)
                                 fun_test.test_assert(device_fail_status["status"],
                                                      "Powering OFF Device ID {}".format(plex))
                                 # Validate if Device is marked Failed
@@ -525,14 +526,17 @@ class RecoveryWithFailures(FunTestCase):
                                                               message="Device ID {} is powered OFF".format(
                                                                   plex))
                                 self.device_id_failed.append(plex)
-                            elif self.plex_fail_method == "inject_fault":
-                                fun_test.log("Initiating drive failure for drive {} by injecting fault".format(plex))
+                            elif self.plex_fail_method == "drive_pull":
+                                fun_test.log(
+                                    "Initiating drive failure for drive id {} by injecting fault".format(
+                                        plex))
                                 device_fail_status = self.storage_controller.disable_device(device_id=plex,
                                                                                             command_duration=self.command_timeout)
                                 fun_test.test_assert(device_fail_status["status"],
                                                      "Injecting fault on Device ID {}".format(plex))
                                 # Validate if Device is marked Failed
-                                device_stats = self.storage_controller.get_device_status(device_id=plex, command_duration=self.command_timeout)
+                                device_stats = self.storage_controller.get_device_status(device_id=plex,
+                                                                                         command_duration=self.command_timeout)
                                 fun_test.simple_assert(device_stats["status"],
                                                        "Device {} stats command".format(plex))
                                 fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
@@ -541,18 +545,22 @@ class RecoveryWithFailures(FunTestCase):
                                                                   plex))
                                 self.device_id_failed.append(plex)
                         # Perform read
-                        fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
-                                                          cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
-                                                          **self.fio_read_cmd_args)
+                        fio_output = host_handle.pcie_fio(
+                            filename=self.host_info[host_name]["fio_filename"],
+                            cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
+                            **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                        fun_test.test_assert(fio_output, "Reading from EC volume with plexes {} and {} failed simultaneously".
-                                             format(plex_fail_pattern[0], plex_fail_pattern[1]))
+                        fun_test.test_assert(not(fio_output),
+                                             "After failing {} plexes with drive ids {} concurrently, \
+                                             unable to read from EC volume as expected".
+                                             format(len(self.device_id_failed), self.device_id_failed))
 
                     # Power ON the devices that were powered OFF
-                    for plex in plex_fail_pattern:
+                    self.device_id_clean_up = deepcopy(self.device_id_failed)
+                    for plex in self.device_id_clean_up:
                         if self.plex_fail_method == "ssd_power_off":
                             fun_test.log("Initiating power ON for drive {}".format(plex))
-                            device_bringup_status = self.storage_controller.power_toggle_device("on",
+                            device_bringup_status = self.storage_controller.power_toggle_ssd("on",
                                 device_id=plex, command_duration=self.command_timeout)
                             fun_test.simple_assert(device_bringup_status["status"],
                                                  "Powering ON Device ID {}".format(plex))
@@ -564,8 +572,8 @@ class RecoveryWithFailures(FunTestCase):
                                                           actual=device_stats["data"]["input"],
                                                           message="Device ID {} is powered ON".format(
                                                               plex))
-                            self.device_id_failed.remove[plex]
-                        elif self.plex_fail_method == "inject_fault":
+                            self.device_id_failed.remove(plex)
+                        elif self.plex_fail_method == "drive_pull":
                             fun_test.log("Clearing the injected fault for device id {}".format(plex))
                             device_bringup_status = self.storage_controller.enable_device(device_id=plex,
                                                                                         command_duration=self.command_timeout)
@@ -579,7 +587,8 @@ class RecoveryWithFailures(FunTestCase):
                                                           actual=device_stats["data"]["device state"],
                                                           message="Cleared fault on Device ID {}".format(
                                                               plex))
-                            self.device_id_failed.remove[plex]
+                            self.device_id_failed.remove(plex)
+                    self.device_id_clean_up = self.device_id_failed
                     # Executing NVMe disconnect from all the hosts
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
@@ -603,7 +612,7 @@ class RecoveryWithFailures(FunTestCase):
         for plex in self.device_id_failed:
             if self.plex_fail_method == "ssd_power_off":
                 fun_test.log("After READ failure, initiating power ON for drive {}".format(plex))
-                device_bringup_status = self.storage_controller.power_toggle_device("on",
+                device_bringup_status = self.storage_controller.power_toggle_ssd("on",
                                                                                     device_id=plex,
                                                                                     command_duration=self.command_timeout)
                 fun_test.simple_assert(device_bringup_status["status"],
@@ -616,7 +625,7 @@ class RecoveryWithFailures(FunTestCase):
                                               actual=device_stats["data"]["input"],
                                               message="Device ID {} is powered ON".format(
                                                   plex))
-            elif self.plex_fail_method == "inject_fault":
+            elif self.plex_fail_method == "drive_pull":
                 fun_test.log("After READ failure, clearing fault for device id {}".format(plex))
                 device_bringup_status = self.storage_controller.enable_device(device_id=plex,
                                                                                     command_duration=self.command_timeout)
@@ -630,33 +639,13 @@ class RecoveryWithFailures(FunTestCase):
                                               actual=device_stats["data"]["device state"],
                                               message="Cleared fault on Device ID {}".format(
                                                   plex))
-        # Executing NVMe disconnect from all the hosts
-        nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-        nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-        nvme_disconnect_exit_status = host_handle.exit_status()
-        fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                      message="{} - NVME Disconnect Status".format(host_name))
 
-        # Detaching all the EC/LS volumes from the external server
-        command_result = self.storage_controller.detach_volume_from_controller(
-            ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
-        fun_test.log(command_result)
-        fun_test.test_assert(command_result["status"],
-                             "Detaching {} EC/LS volume from DUT".format(num))
-
-        # Unconfiguring all the LSV/EC and it's plex volumes
-        self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
-                                                      command_timeout=self.command_timeout)
         # Deleting all the storage controller
         for index in xrange(len(self.host_info)):
             command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
                                                                        command_duration=self.command_timeout)
             fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
                                  format(self.ctrlr_uuid[index]))
-
-        self.storage_controller.disconnect()
-        self.stats_obj.stop(self.stats_collect_details)
-        self.storage_controller.verbose = True
 
 class RecoveryWithMFailure(RecoveryWithFailures):
     def describe(self):
@@ -732,9 +721,61 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
     def cleanup(self):
         super(RecoveryWithMConcurrentFailure, self).cleanup()
 
+class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="EC recovery with M plus concurrent plex failure",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(RecoveryWithMplusConcurrentFailure, self).setup()
+
+    def run(self):
+        super(RecoveryWithMplusConcurrentFailure, self).run()
+
+    def cleanup(self):
+        super(RecoveryWithMplusConcurrentFailure, self).cleanup()
+
+class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="EC recovery with K plus M plus concurrent plex failure",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Bring up and configure Remote Host
+        3. Create 6 BLT volumes on dut instance.
+        4. Create a 4:2 EC volume on top of the 6 BLT volumes.
+        5. Create a LS volume on top of the EC volume based on use_lsv config along with its associative journal volume.
+        6. Export (Attach) the above EC or LS volume based on use_lsv config to the Remote Host 
+        7. Run warm-up traffic using FIO
+        8. Run the Performance for 8k transfer size Random read/write IOPS
+        """)
+
+    def setup(self):
+        super(RecoveryWithKplusMConcurrentFailure, self).setup()
+
+    def run(self):
+        super(RecoveryWithKplusMConcurrentFailure, self).run()
+
+    def cleanup(self):
+        super(RecoveryWithKplusMConcurrentFailure, self).cleanup()
+
 if __name__ == "__main__":
     ecrecovery = ECBlockRecoveryScript()
-    #ecrecovery.add_test_case(RecoveryWithMFailure())
-    #ecrecovery.add_test_case(RecoveryWithMplus1Failure())
+    ecrecovery.add_test_case(RecoveryWithMFailure())
+    ecrecovery.add_test_case(RecoveryWithMplus1Failure())
     ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
     ecrecovery.run()

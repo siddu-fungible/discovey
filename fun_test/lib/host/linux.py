@@ -1586,6 +1586,22 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def get_nvme_device_list(self):
+        result = []
+        cmd = "sudo nvme list"
+        output = self.command(cmd)
+        lines = output.split("\n")
+        if len(lines) > 2:
+            for i in lines[2:]:
+                if i.split()[2] == "FS1600":
+                    match = re.search("(/dev/nvme)(\d+)n(\d+)", i.split()[0])
+                    if match:
+                        result.append(i.split()[0])
+                else:
+                    continue
+        return result
+
+    @fun_test.safe
     def get_ip_route(self, netns=None):
         """Do 'ip -n <netns> route' to get kernel FIB info
 
