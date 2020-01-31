@@ -12,6 +12,7 @@ from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
+from lib.fun.storage.fs_storage import FsStorage
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -2136,7 +2137,7 @@ class Fs(object, ToDictMixin):
         self.errors_detected = []
         fun_test.register_fs(self)
 
-        # self.storage =
+        self.storage = FsStorage(fs_obj=self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
