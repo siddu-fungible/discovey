@@ -9,25 +9,25 @@ from swagger_client.models.volume_types import VolumeTypes
 
 
 def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                        runtime=60, bs="4k", ioengine="libaio", direct="1",
-                        time_based=True, norandommap=True, verify="md5", verify_fatal=1,
-                        offset="0kb", verify_state_save=1, verify_dump=1, output="test_integrity",
+                        runtime=600, bs="4k", ioengine="libaio", direct="1",
+                        time_based=False, norandommap=True, verify="md5", verify_fatal=1,
+                        offset="0kb", verify_state_save=1, verify_dump=1,
                         verify_state_load=1, only_read=False):
     host_linux_handle = host_obj.get_instance()
     host_linux_handle.command("cd ~; rm -fr test_fio_with_integrity;"
                               "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
     if not only_read:
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
-                                           filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                           timeout=runtime + 15, time_based=time_based,
+                                           filename=filename, ioengine=ioengine, direct=direct,
+                                           timeout=600, fill_device=1,
                                            verify=verify, verify_fatal=verify_fatal, offset=offset,
                                            verify_state_save=verify_state_save, verify_dump=verify_dump)
         fun_test.test_assert(expression=fio_result, message="Write FIO test")
 
-    host_linux_handle.command("cd ~/test_fio_with_integrity;")
+    host_linux_handle.command("cd ~/test_fio_with_integrity; ls")
     fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="read",
-                                       filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                       timeout=runtime + 15, time_based=time_based, offset=offset,
+                                       filename=filename, ioengine=ioengine, direct=direct,
+                                       timeout=600,  offset=offset, fill_device=1,
                                        verify=verify, do_verify=1, verify_fatal=verify_fatal,
                                        verify_state_load=verify_state_load, verify_dump=verify_dump)
     fun_test.test_assert(expression=fio_result, message="Read FIO result")
