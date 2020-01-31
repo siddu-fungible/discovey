@@ -5,6 +5,7 @@ from swagger_client.models.body_volume_attach import BodyVolumeAttach
 from swagger_client.models.body_node_update import BodyNodeUpdate
 from swagger_client.models.volume_types import VolumeTypes
 from swagger_client.models.transport import Transport
+from swagger_client.rest import ApiException
 from swagger_client.models.node_update_op import NodeUpdateOp
 from lib.templates.storage.storage_controller_api import *
 import ipaddress
@@ -43,19 +44,23 @@ class StorageControllerOperationsTemplate():
                 next_hop = str(ip_obj.hosts().next())
 
                 # body_node_update = BodyNodeUpdate(op=NodeUpdateOp().DPU_DP_ID, ip_assignment_dhcp=False,
-                #                                   next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
+                #                                 next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
 
                 # WORKAROUND: SWOS-8586
                 body_node_update = BodyNodeUpdate(op="DPU_DP_IP", ip_assignment_dhcp=False,
                                                   next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
                 dpu_id = node + "." + str(f1_index)
+                try:
+                    assign_dataplane_ip = storage_controller.topology_api.update_dpu(
+                        dpu_id=dpu_id, body_node_update=body_node_update)
 
-                assign_dataplane_ip = storage_controller.topology_api.update_dpu(
-                    dpu_id=dpu_id, body_node_update=body_node_update)
+                    fun_test.test_assert(expression=assign_dataplane_ip.status,
+                                         message="Dataplane IP assignment on %s" % dpu_id)
+                    result = assign_dataplane_ip.status
+                except ApiException as e:
+                    fun_test.critical("Exception while updating Dataplane IP %s\n" % e)
+                    result = False
 
-                fun_test.test_assert(expression=assign_dataplane_ip.status,
-                                     message="Dataplane IP assignment on %s" % dpu_id)
-        result = True
         return result
 
     def initialize(self):
@@ -95,9 +100,12 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
 
             body_volume_intent_create.vol_type = vol_type.LOCAL_THIN
             storage_controller = fs_obj.get_storage_controller()
-            create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
-            vol_uuid = create_vol_result.data.uuid
-            result[fs_obj] = vol_uuid
+            try:
+                create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
+                vol_uuid = create_vol_result.data.uuid
+                result[fs_obj] = vol_uuid
+            except ApiException as e:
+                print("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
         return result
 
     def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False):
@@ -118,8 +126,13 @@ class BltVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
             transport = Transport()
             attach_fields = BodyVolumeAttach(transport=transport.TCP_TRANSPORT, remote_ip=host_data_ip)
 
-            result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
-                                                                  body_volume_attach=attach_fields)
+            try:
+                result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
+                                                                      body_volume_attach=attach_fields)
+            except ApiException as e:
+                print("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                result = None
+                return result
         else:
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
