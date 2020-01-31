@@ -212,15 +212,19 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["hosts_obj"] = host_dict
 
             # Check PICe Link on host
+            self.host_pcie_info = {}
             servers_mode = self.server_key["fs"][fs_name]["hosts"]
             for server in servers_mode:
                 result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
                 fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                          % server)
+                self.host_pcie_info[server] = result
                 linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
                 linux_obj.sudo_command("netplan apply")
                 if result == "2":
-                    fun_test.test_assert(False, "PCIE link did not come up in {} mode".format(servers_mode[server]))
+                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                                            % servers_mode[server])
+            fun_test.shared_variables["host_pcie_info"] = self.host_pcie_info
 
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
@@ -264,6 +268,21 @@ class BringupSetup(FunTestCase):
                         temp_host_list1.append(host_info["name"])
             fun_test.shared_variables["hosts_obj"] = host_dict
 
+            # Check PICe Link on host
+            self.host_pcie_info = {}
+            servers_mode = self.server_key["fs"][fs_name]["hosts"]
+            for server in servers_mode:
+                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+                fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
+                                                                         % server)
+                self.host_pcie_info[server] = result
+                linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
+                linux_obj.sudo_command("netplan apply")
+                if result == "2":
+                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                                            % servers_mode[server])
+            fun_test.shared_variables["host_pcie_info"] = self.host_pcie_info
+
         fun_test.shared_variables["host_len_f10"] = len(host_dict["f1_0"])
         fun_test.shared_variables["host_len_f11"] = len(host_dict["f1_1"])
 
@@ -298,6 +317,7 @@ class NicEmulation(FunTestCase):
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
         enable_fcp = fun_test.shared_variables["enable_fcp"]
+        self.host_pcie_info = fun_test.shared_variables["host_pcie_info"]
         abstract_key = ""
         if enable_fcp:
             abstract_key = "abstract_configs_bgp"
@@ -365,27 +385,32 @@ class NicEmulation(FunTestCase):
                 handle.sudo_command("rm -rf /tmp/*bw* && rm -rf /tmp/*rping* /tmp/*lat*")
                 handle.sudo_command("dmesg -c > /dev/null")
                 hostname = handle.command("hostname").strip()
-                if handle.lsmod("funeth"):
-                    iface_name = handle.command(
-                        "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
-                        strip()
-                    iface_addr = handle.command(
-                        "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
-                            iface_name)).strip()
-                else:
-                    fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
-                if objs == "f1_0":
-                    f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
-                                     "handle": handle, "roce_handle": Rocetools(handle)}
-                    f10_hosts.append(f10_host_dict)
-                elif objs == "f1_1":
-                    f11_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
-                                     "handle": handle, "roce_handle": Rocetools(handle)}
-                    f11_hosts.append(f11_host_dict)
+                if hostname in self.host_pcie_info and self.host_pcie_info[hostname] == "1":
+                    if handle.lsmod("funeth"):
+                        iface_name = handle.command(
+                            "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
+                            strip()
+                        iface_addr = handle.command(
+                            "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
+                                iface_name)).strip()
+                    else:
+                        fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
+                    if objs == "f1_0":
+                        f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
+                                         "handle": handle, "roce_handle": Rocetools(handle)}
+                        f10_hosts.append(f10_host_dict)
+                    elif objs == "f1_1":
+                        f11_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
+                                         "handle": handle, "roce_handle": Rocetools(handle)}
+                        f11_hosts.append(f11_host_dict)
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
 
-        for x in range(0, fun_test.shared_variables["host_len_f10"]):
+        if (len(f10_hosts) == 0 or len(f11_hosts) == 0):
+            fun_test.test_assert(False, "Not enough x16 servers for test")
+        min_host = min(len(f10_hosts), len(f11_hosts))
+
+        for x in range(0, min_host):
             f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                                                         rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
                                                         perftest_branch=fun_test.shared_variables["perftest_branch"],
@@ -432,7 +457,7 @@ class BwTest(FunTestCase):
 
         # Using hosts based on minimum host length
         if not roce_speed:
-            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+            total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
             total_link_bw = 1
         if total_link_bw > 1:
@@ -639,7 +664,7 @@ class LatencyTest(FunTestCase):
 
         # Using hosts based on minimum host length
         if not roce_speed:
-            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+            total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
             total_link_bw = 1
         if total_link_bw > 1:
