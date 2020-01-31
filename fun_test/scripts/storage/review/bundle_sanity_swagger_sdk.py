@@ -21,8 +21,7 @@ def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=
                                            filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
                                            timeout=runtime + 15, time_based=time_based,
                                            verify=verify, verify_fatal=verify_fatal, offset=offset,
-                                           verify_state_save=verify_state_save, verify_dump=verify_dump,
-                                           output=output + "write")
+                                           verify_state_save=verify_state_save, verify_dump=verify_dump)
         fun_test.test_assert(expression=fio_result, message="Write FIO test")
 
     host_linux_handle.command("cd ~/test_fio_with_integrity;")
@@ -30,8 +29,7 @@ def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=
                                        filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
                                        timeout=runtime + 15, time_based=time_based, offset=offset,
                                        verify=verify, do_verify=1, verify_fatal=verify_fatal,
-                                       verify_state_load=verify_state_load, verify_dump=verify_dump,
-                                       output=output + "read")
+                                       verify_state_load=verify_state_load, verify_dump=verify_dump)
     fun_test.test_assert(expression=fio_result, message="Read FIO result")
 
 
