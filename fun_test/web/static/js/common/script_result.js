@@ -92,8 +92,10 @@ jQuery(function($){
             var aId = this_href;
             //location.href = this_href;
 
-            $('html, body').animate({
-                    scrollTop: $("#" + aId).offset().top}, 200);
+            setTimeout(function(){
+                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 200);
+
+            },1);
             if (!$(parent).hasClass("in")) {
                 $(parent).collapse('show');
             }
