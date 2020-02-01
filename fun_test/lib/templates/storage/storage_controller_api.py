@@ -1,6 +1,7 @@
 from lib.system.fun_test import FunTestLibException, fun_test
 import requests
 import json
+import re
 
 class StorageControllerApi(object):
     def __init__(self, api_server_ip, api_server_port=50220, username="admin", password="password"):
@@ -274,6 +275,85 @@ class StorageControllerApi(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return res
+
+    def is_raw_vol_in_db(self, vol_uuid, come_handle, capacity, stripe_count, vol_type, encrypt, *args):
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if not output:
+            fun_test.test_assert(False, "Volume :{} not present in Cassandra Database".format(vol_uuid))
+            return False
+        volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
+        if not volume_db_uuid:
+            fun_test.test_assert(False, "Volume :{} not present in Cassandra Database".format(vol_uuid))
+            return False
+        if volume_db_uuid['capacity'] != capacity:
+            fun_test.test_assert(False, "Requested capacity and created capacity are different")
+        if volume_db_uuid['stripe_count'] != stripe_count:
+            fun_test.test_assert(False, "Stripe count doesn't match")
+        if volume_db_uuid['volume_type'] != vol_type:
+            fun_test.test_assert(False, "Create volume type doesn't match")
+        if volume_db_uuid['encrypt'] != encrypt:
+            fun_test.test_assert(False, "Encryption state doesn't match")
+
+    def is_attach_in_db(self, port_uuid, come_handle, remote_ip, subsys_nqn, transport):
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        port_db_uuid = self.get_uuid_from_db(output, port_uuid)
+        if not port_db_uuid:
+            fun_test.test_assert(False, "Port details not present in Cassandra Database")
+            return False
+        if port_db_uuid['remote_ip'] != remote_ip:
+            fun_test.test_assert(False, "remote_ip doesn't match")
+        if port_db_uuid['subsys_nqn'] != subsys_nqn:
+            fun_test.test_assert(False, "subsys_nqn doesn't match")
+        if port_db_uuid['transport'] != transport:
+            fun_test.test_assert(False, "transport doesn't match")
+
+    def is_detach_in_db(self, come_handle, port_uuid):
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if output:
+            port_db_uuid = self.get_uuid_from_db(output, port_uuid)
+            if port_db_uuid:
+                fun_test.test_assert(False, "Detached volume still present in Cassandra Database")
+                return False
+            else:
+                return True
+        else:
+            return True
+
+    def is_delete_in_db(self, come_handle, vol_uuid):
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if output:
+            volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
+            if volume_db_uuid:
+                fun_test.test_assert(False, "Deleted volume still present in Cassandra Database")
+                return False
+            else:
+                return True
+        else:
+            return True
+
+    def execute_cqlsh_command(self, come_handle, command):
+        result = []
+        output = come_handle.command(command)
+        lines = output.split("\n")
+        for line in lines:
+            match_dictionary = re.search(r'{.*}', line)
+            if match_dictionary:
+                json_data = json.loads(match_dictionary.group())
+                result.append(json_data.copy())
+        return result
+
+    # Check if a particular volume uuid or port uuid is in cassandra DB
+    def get_uuid_from_db(self, db_data, uuid):
+        result = False
+        for vol in db_data:
+            if vol["uuid"] == uuid:
+                result = vol
+                break
+        return result
 
 
 if __name__ == "__main__":
