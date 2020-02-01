@@ -274,5 +274,5 @@ if __name__ == "__main__":
     myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.add_test_case(BackupTestRail())
     myscript.add_test_case(CleanupLargeStoreDirectory())
-    
+
     myscript.run()

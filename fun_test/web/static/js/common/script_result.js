@@ -86,17 +86,34 @@ jQuery(function($){
         //$('.navbar').width(40);
         var parent_id = $(this).attr("parent-id");
         var parent = $("#" + parent_id);
-        if ($(parent).hasClass("in")) {
-            //$(parent).removeClass("in")
-        } else {
-            //$(parent).addClass("in")
-            $(parent).collapse('show');
+
+        if ($(this).is("div")) {
             var this_href = $(this).attr("href").replace("#", '');
-            var aTag = $("a[name='"+ this_href +"']");
+            var aId = this_href;
             //location.href = this_href;
 
-                $('html, body').animate({scrollTop: aTag.offset().top}, 500);
+            $('html, body').animate({
+                    scrollTop: $("#" + aId).offset().top}, 200);
+            if (!$(parent).hasClass("in")) {
+                $(parent).collapse('show');
+            }
+
+        } else {
+            if ($(parent).hasClass("in")) {
+                //$(parent).removeClass("in")
+            } else {
+                //$(parent).addClass("in")
+                $(parent).collapse('show');
+                var this_href = $(this).attr("href").replace("#", '');
+                var aTag = $("a[name='"+ this_href +"']");
+                //location.href = this_href;
+
+                    $('html, body').animate({scrollTop: aTag.offset().top}, 500);
+            }
         }
+
+
+
         //$('#test_suite').hide();
     });
 
