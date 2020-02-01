@@ -92,12 +92,13 @@ jQuery(function($){
             var aId = this_href;
             //location.href = this_href;
 
-            setTimeout(function(){
-                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 1);
 
-            },200);
             if (!$(parent).hasClass("in")) {
                 $(parent).collapse('show');
+                setTimeout(function(){
+                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 1);
+
+                },200);
             }
 
         } else {
