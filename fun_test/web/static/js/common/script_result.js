@@ -93,9 +93,9 @@ jQuery(function($){
             //location.href = this_href;
 
             setTimeout(function(){
-                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 200);
+                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 1);
 
-            },1);
+            },200);
             if (!$(parent).hasClass("in")) {
                 $(parent).collapse('show');
             }
