@@ -85,6 +85,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     """
     vol_type = VolumeTypes().LOCAL_THIN
     host_nvme_device = {}
+    NVME_HOST_MODULES = ["nvme_core", "nvme", "nvme_fabrics", "nvme_tcp"]
 
     def __init__(self, topology):
         super(GenericVolumeOperationsTemplate, self).__init__(topology)
@@ -239,17 +240,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         Delete created volumes
         :return:
         """
-        nvme_modules_list = ["nvme_tcp", "nvme_fabrics", "nvme_core", "nvme"]
         for host_obj in self.host_nvme_device:
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
-            for driver in nvme_modules_list:
+            for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))
-            host_handle.modprobe("nvme")
-            host_handle.modprobe("nvme_core")
-            host_handle.modprobe("nvme_tcp")
-            host_handle.modprobe("nvme_fabrics")
+            for driver in self.NVME_HOST_MODULES:
+                host_handle.modprobe(driver)
 
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -260,7 +258,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             get_volume_result = raw_sc_api.get_volumes()
             fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
-                for port in get_volume_result["data"][volume]['ports']:
+                for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
                     fun_test.test_assert(expression=detach_volume.status,
                                          message="Detach Volume {} from host with remote IP {}".format(

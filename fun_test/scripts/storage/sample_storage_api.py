@@ -63,7 +63,7 @@ class RunStorageApiCommands(FunTestCase):
 
         vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-
+        fun_test.test_assert(expression=vol_uuid_dict, message="Create Volume Successful")
         hosts = self.topology.get_available_hosts()
         for fs_obj in vol_uuid_dict:
             for host_id in hosts:
@@ -72,7 +72,7 @@ class RunStorageApiCommands(FunTestCase):
                                                                                    volume_uuid=vol_uuid_dict[fs_obj],
                                                                                    validate_nvme_connect=True,
                                                                                    raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume")
+                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
     def run(self):
         hosts = self.topology.get_available_hosts()
@@ -85,8 +85,7 @@ class RunStorageApiCommands(FunTestCase):
             fun_test.log(traffic_result)
 
     def cleanup(self):
-        # self.storage_controller_template.cleanup()
-        pass
+        self.storage_controller_template.cleanup()
 
 
 if __name__ == "__main__":
