@@ -96,9 +96,9 @@ jQuery(function($){
             if (!$(parent).hasClass("in")) {
                 $(parent).collapse('show');
                 setTimeout(function(){
-                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 1);
+                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 200);
 
-                },200);
+                },20);
             }
 
         } else {
