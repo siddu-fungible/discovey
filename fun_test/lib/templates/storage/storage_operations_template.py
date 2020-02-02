@@ -211,7 +211,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result = namespace
                     self.host_nvme_device[host_obj] = namespace
         else:
-            result = nvme_volumes[-1:]
+            result = nvme_volumes[-1:][0]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
