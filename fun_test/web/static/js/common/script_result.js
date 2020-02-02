@@ -97,8 +97,10 @@ jQuery(function($){
                 $(parent).collapse('show');
 
             }
-            $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 200);
+            setTimeout(function(){
+                $('html, body').animate({scrollTop: $("#" + aId).offset().top}, 200);
 
+                },1000);
 
         } else {
             if ($(parent).hasClass("in")) {
