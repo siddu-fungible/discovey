@@ -207,7 +207,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 nvme_device = namespace[:-2]
                 namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
                     nvme_device))
-                if namespace_subsys_nqn == subsys_nqn:
+                if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
                     result = namespace
                     self.host_nvme_device[host_obj] = namespace
         else:
