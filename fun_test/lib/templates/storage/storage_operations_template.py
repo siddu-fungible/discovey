@@ -13,6 +13,9 @@ import re
 
 
 class StorageControllerOperationsTemplate():
+    """
+    Do basic API operations
+    """
     def __init__(self, topology):
         self.topology = topology
         self.node_ids = []
@@ -81,7 +84,8 @@ class StorageControllerOperationsTemplate():
 
 class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, object):
     """
-    This template abstracts the operations of BLT volume
+    This template abstracts the operations of all kinds of volumes.
+    Extend this to define new volume templates
     """
     vol_type = VolumeTypes().LOCAL_THIN
     host_nvme_device = {}
@@ -124,29 +128,28 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
         :return: Attach volume result
         """
-
+        result = None
         fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
         storage_controller = fs_obj.get_storage_controller()
         host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
         if not raw_api_call:
-            transport = Transport()
-            attach_fields = BodyVolumeAttach(transport=transport.TCP_TRANSPORT, remote_ip=host_data_ip)
+            attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
 
             try:
                 result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
                                                                       body_volume_attach=attach_fields)
+
             except ApiException as e:
-                fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                fun_test.test_assert(expression=False,
+                                     message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
                 result = None
-                return result
         else:
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
 
         if validate_nvme_connect:
             if raw_api_call:
-                if not result["status"]:
-                    return False
+                fun_test.test_assert(expression=result["status"], message="Attach volume result")
                 subsys_nqn = result["data"]["subsys_nqn"]
                 host_nqn = result["data"]["host_nqn"]
                 dataplane_ip = result["data"]["ip"]
@@ -161,12 +164,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
             fun_test.test_assert(expression=nvme_filename,
                                  message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-        if raw_api_call:
-            return result["status"]
+
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
-                               transport_type='tcp', transport_port=1099, nvme_io_queues=None):
+                               transport_type='tcp', transport_port=4420, nvme_io_queues=None):
         """
 
         :param host_obj: host handle from topology
@@ -174,15 +176,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :param host_nqn: returned after volume attach
         :param dataplane_ip: IP of FS1600 reachable from host returned after volume attach
         :param nvme_io_queues: no of queues for nvme connect
+        :param transport_type: NVMe connect transport
+        :param transport_port: Port no to connect for NVMe TCP
         :return: output of nvme connect command
         """
         host_linux_handle = host_obj.get_instance()
-        if not host_linux_handle.lsmod(module="nvme"):
-            host_linux_handle.modprobe("nvme")
-            host_linux_handle.modprobe("nvme_core")
-        if not host_linux_handle.lsmod(module="nvme_tcp"):
-            host_linux_handle.modprobe("nvme_tcp")
-            host_linux_handle.modprobe("nvme_fabrics")
+        for driver in self.NVME_HOST_MODULES:
+            if not host_linux_handle.lsmod(module=driver):
+                host_linux_handle.modprobe(driver)
 
         fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
@@ -199,12 +200,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = None
         host_linux_handle = host_obj.get_instance()
-        lsblk_output = host_linux_handle.lsblk(options="-b")
-        nvme_volumes = []
-        for volume_name in lsblk_output:
-            if re.search("nvme", volume_name):
-                result = volume_name
-                nvme_volumes.append(volume_name)
+        nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
+
         if subsys_nqn:
             for namespace in nvme_volumes:
                 nvme_device = namespace[:-2]
@@ -213,10 +210,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 if namespace_subsys_nqn == subsys_nqn:
                     result = namespace
                     self.host_nvme_device[host_obj] = namespace
+        else:
+            result = nvme_volumes[-1:]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                          rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct="1",
+                          rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct=1,
                           time_based=True, norandommap=True, verify=None, do_verify=None):
         host_linux_handle = host_obj.get_instance()
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
@@ -224,6 +223,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                            timeout=runtime+15, time_based=time_based, norandommap=norandommap,
                                            verify=verify, do_verify=do_verify)
         return fio_result
+
+    def get_nvme_namespaces(self, host_handle):
+        lsblk_output = host_handle.lsblk(options="-b")
+        nvme_volumes = []
+        for volume_name in lsblk_output:
+            if re.search("nvme", volume_name):
+                nvme_volumes.append(volume_name)
+        return nvme_volumes
 
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
@@ -243,11 +250,18 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         for host_obj in self.host_nvme_device:
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
+            fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
+
             host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
+            fun_test.add_checkpoint(checkpoint="Disconnect NVMe device")
+
             for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))
+            fun_test.add_checkpoint(checkpoint="Unload all NVMe drivers")
+
             for driver in self.NVME_HOST_MODULES:
                 host_handle.modprobe(driver)
+            fun_test.add_checkpoint(checkpoint="Reload all NVMe drivers")
 
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -274,3 +288,10 @@ class BltVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
     This template abstracts the operations of BLT volume
     """
     vol_type = VolumeTypes().LOCAL_THIN
+
+
+class EcVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
+    """
+    This template abstracts the operations of BLT volume
+    """
+    vol_type = VolumeTypes().EC
