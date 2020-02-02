@@ -1,10 +1,8 @@
 from lib.system.fun_test import *
 fun_test.enable_storage_api()
-from lib.system import utils
-from lib.host.linux import Linux
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
-from lib.templates.storage.review.storage_operations_template import BltVolumeOperationsTemplate
+from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 
 
@@ -59,14 +57,14 @@ class RunStorageApiCommands(FunTestCase):
         self.storage_controller_template.initialize()
 
         fs_obj_list = []
-        for dut_index in self.topology.get_duts().keys():
+        for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
         vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-
-        hosts = self.topology.get_hosts()
+        fun_test.test_assert(expression=vol_uuid_dict, message="Create Volume Successful")
+        hosts = self.topology.get_available_hosts()
         for fs_obj in vol_uuid_dict:
             for host_id in hosts:
                 host_obj = hosts[host_id]
@@ -74,10 +72,10 @@ class RunStorageApiCommands(FunTestCase):
                                                                                    volume_uuid=vol_uuid_dict[fs_obj],
                                                                                    validate_nvme_connect=True,
                                                                                    raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume")
+                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
     def run(self):
-        hosts = self.topology.get_hosts()
+        hosts = self.topology.get_available_hosts()
         for host_id in hosts:
             host_obj = hosts[host_id]
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
@@ -87,8 +85,7 @@ class RunStorageApiCommands(FunTestCase):
             fun_test.log(traffic_result)
 
     def cleanup(self):
-        # self.storage_controller_template.cleanup()
-        pass
+        self.storage_controller_template.cleanup()
 
 
 if __name__ == "__main__":
