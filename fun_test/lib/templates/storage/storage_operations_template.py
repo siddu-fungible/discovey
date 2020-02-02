@@ -292,6 +292,6 @@ class BltVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
 
 class EcVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
     """
-    This template abstracts the operations of BLT volume
+    This template abstracts the operations of EC volume
     """
     vol_type = VolumeTypes().EC
