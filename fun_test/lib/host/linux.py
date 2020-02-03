@@ -1992,7 +1992,7 @@ class Linux(object, ToDictMixin):
         if runtime:
             fio_command += " --runtime=%s" % runtime
         if fill_device:
-            fio_command += " --runtime=%s" % fill_device
+            fio_command += " --fill_device=%s" % fill_device
         fio_command += " --direct=%s" % direct
         fio_command += " --group_reporting=%s" % group_reporting
         fio_command += " --randrepeat=%s" % randrepeat
