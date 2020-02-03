@@ -74,7 +74,7 @@ class BltApiStorageTest(FunTestCase):
         name = "blt_vol"
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
+        capacity = 107374182400
         compression_effort = False
         encrypt = False
         body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
@@ -90,7 +90,7 @@ class BltApiStorageTest(FunTestCase):
 
         vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_dict, message="Volume of capacity {} created".format(capacity))
+        fun_test.test_assert(expression=vol_uuid_dict, message="Volume of capacity 100GB created")
         hosts = self.topology.get_hosts()
         for fs_obj in vol_uuid_dict:
             for host_id in hosts:
