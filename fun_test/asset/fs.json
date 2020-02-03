@@ -1331,12 +1331,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.21.115"
+      "mgmt_ip": "10.1.21.20"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.21.116"
+      "mgmt_ip": "10.1.21.21"
     },
     "name": "fs-171",
     "workarounds": {
