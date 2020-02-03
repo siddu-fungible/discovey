@@ -626,6 +626,15 @@
           },
           {
             "metric_model_name": "MetricContainer",
+            "name": "storage_durable",
+            "label": "Durable",
+            "extensible_references": [
+              "teramarks_customer_inspur"
+            ],
+            "children": []
+          },
+          {
+            "metric_model_name": "MetricContainer",
             "name": "Voltest",
             "label": "Voltest",
             "children": [
@@ -7901,10 +7910,9 @@
     "children": [
       {
         "metric_model_name": "MetricContainer",
-        "name": "fs1600_durable",
+        "name": "storage_durable",
         "label": "Durable",
-        "extensible_references": ["teramarks_customer_inspur"],
-        "children": []
+        "reference": true
       },
       {
         "metric_model_name": "MetricContainer",
