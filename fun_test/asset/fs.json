@@ -1353,8 +1353,9 @@
       "telnet_username": "root",
       "telnet_password": "fun123"
     },
+    "pdu_type": "dli",
     "apc_info": {
-      "username": "localadmin",
+      "username": "admin",
       "outlet_number": 7,
       "password": "Precious1*",
       "host_ip": "r9-pdu3"
