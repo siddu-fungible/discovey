@@ -1184,6 +1184,8 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         # Reading the written output
         fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
+        if not fio_output:
+            host_handle.command("dmesg")
         fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):
