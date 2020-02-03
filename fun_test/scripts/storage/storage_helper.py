@@ -2417,7 +2417,8 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
 
     # Retrieve the rebuild start time
     if get_start_time:
-        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {}".format(ec_uuid, plex_count, log_file)
+        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {} | tail -1".\
+            format(ec_uuid, plex_count, log_file)
     # Retrieve the rebuild start time
     if get_completion_time:
         command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
