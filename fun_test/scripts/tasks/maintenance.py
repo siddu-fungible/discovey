@@ -149,6 +149,20 @@ class CheckMongoCollectionCount(FunTestCase):
         pass
 
 
+def compare_job_names(a, b):
+    result = 0
+    ma = re.search('s_(\d+)', a)
+    mb = re.search('s_(\d+)', b)
+
+    if ma and mb:
+        ma_n = int(ma.group(1))
+        mb_n = int(mb.group(1))
+        if ma_n > mb_n:
+            result = 1
+        elif ma_n < mb_n:
+            result = -1
+    return result
+
 class RemoveOldCollections(FunTestCase):
     MAX_DAYS_IN_PAST = 30
 
@@ -178,7 +192,8 @@ class RemoveOldCollections(FunTestCase):
                                     collection.drop()
                     except Exception as ex:
                         pass
-        """
+
+        collection_names = sorted(collection_names, cmp=compare_job_names)
         if collection_names > CheckMongoCollectionCount.MAX_COLLECTIONS:
             collections_to_be_removed = collection_names[0: len(collection_names) - CheckMongoCollectionCount.MAX_COLLECTIONS]
             for collection_to_be_removed in collections_to_be_removed:
@@ -186,7 +201,7 @@ class RemoveOldCollections(FunTestCase):
                     collection = mongo.get_collection(collection_name=collection_to_be_removed)
                     if collection:
                         collection.drop()
-        """
+
     def cleanup(self):
         pass
 
