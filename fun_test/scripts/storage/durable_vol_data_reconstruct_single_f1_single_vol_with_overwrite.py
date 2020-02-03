@@ -1084,7 +1084,7 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C16363"],
+                              test_rail_case_ids=["C19529"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1114,7 +1114,7 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19529"],
+                              test_rail_case_ids=["C19532"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1174,7 +1174,7 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C16364"],
+                              test_rail_case_ids=["C19530"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1205,7 +1205,7 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19238"],
+                              test_rail_case_ids=["C19531"],
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1267,8 +1267,8 @@ if __name__ == "__main__":
     ecscript = DurableVolScript()
     ecscript.add_test_case(DurVolSingleDriveFailRebuild())
     ecscript.add_test_case(DurVolmDriveFailRebuild())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
+    # ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
     ecscript.add_test_case(DurVolSingleDriveFailReSync())
     ecscript.add_test_case(DurVolmDriveFailReSync())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
+    # ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
     ecscript.run()
