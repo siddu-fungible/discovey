@@ -19,7 +19,7 @@ def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=
     if not only_read:
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
                                            filename=filename, ioengine=ioengine, direct=direct,
-                                           timeout=600, fill_device=1,
+                                           timeout=1500, fill_device=1,
                                            verify=verify, verify_fatal=verify_fatal, offset=offset,
                                            verify_state_save=verify_state_save, verify_dump=verify_dump)
         fun_test.test_assert(expression=fio_result, message="Write FIO test")
@@ -27,7 +27,7 @@ def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=
     host_linux_handle.command("cd ~/test_fio_with_integrity; ls")
     fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="read",
                                        filename=filename, ioengine=ioengine, direct=direct,
-                                       timeout=600,  offset=offset, fill_device=1,
+                                       timeout=1500,  offset=offset, fill_device=1,
                                        verify=verify, do_verify=1, verify_fatal=verify_fatal,
                                        verify_state_load=verify_state_load, verify_dump=verify_dump)
     fun_test.test_assert(expression=fio_result, message="Read FIO result")
