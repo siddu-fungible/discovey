@@ -27,7 +27,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "platform_halt: exit status 1",
                  "Assertion failed",
                  "Trap exception",
-                 "CSR:FEP_.*_FATAL_INTR"]
+                 r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
@@ -776,6 +776,10 @@ class Bmc(Linux):
                 continue
 
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
+            if self.fs.bundle_compatible:
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    self._get_context_prefix("funos_f1_{}.log".format(f1_index)))
+
             fun_test.scp(source_ip=self.host_ip,
                          source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
                          source_username=self.ssh_username,

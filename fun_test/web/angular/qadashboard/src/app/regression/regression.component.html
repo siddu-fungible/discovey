@@ -180,7 +180,7 @@
                   {{ suiteExecution.fields.execution_id }}
                 </a>
                 <div *ngIf="suiteExecution.fields.auto_scheduled_execution_id > -1">
-                  <small>Auto: {{ suiteExecution.fields.auto_scheduled_execution_id }}</small>
+                  <small>Auto: <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.auto_scheduled_execution_id">{{ suiteExecution.fields.auto_scheduled_execution_id }}</a></small>
                 </div>
               </td>
               <td>
