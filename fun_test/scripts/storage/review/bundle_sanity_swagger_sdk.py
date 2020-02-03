@@ -14,12 +14,13 @@ def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=
                         offset="0kb", verify_state_save=1, verify_dump=1,
                         verify_state_load=1, only_read=False):
     host_linux_handle = host_obj.get_instance()
-    host_linux_handle.command("cd ~; rm -fr test_fio_with_integrity;"
-                              "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
+
     if not only_read:
+        host_linux_handle.command("cd ~; rm -fr test_fio_with_integrity;"
+                                  "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
                                            filename=filename, ioengine=ioengine, direct=direct,
-                                           timeout=1500, fill_device=1,
+                                           timeout=1500, fill_device=1, do_verify=0,
                                            verify=verify, verify_fatal=verify_fatal, offset=offset,
                                            verify_state_save=verify_state_save, verify_dump=verify_dump)
         fun_test.test_assert(expression=fio_result, message="Write FIO test")
