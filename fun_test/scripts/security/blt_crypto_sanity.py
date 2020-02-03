@@ -1085,7 +1085,7 @@ class CreateDelete256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="Create, attach & delete 25 BLT's with encryption using 256 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 256 size key",
                               steps='''
                               1. Create BLT's with encryption with 256 size key.
                               2. Attach it to external linux/container.
@@ -1100,7 +1100,7 @@ class CreateDelete384(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="Create, attach & delete 25 BLT's with encryption using 384 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 384 size key",
                               steps='''
                               1. Create BLT's with encryption with 384 size key.
                               2. Attach it to external linux/container.
@@ -1115,7 +1115,7 @@ class CreateDelete512(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="Create, attach & delete 25 BLT's with encryption using 512 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 512 size key",
                               steps='''
                               1. Create BLT's with encryption with 512 size key.
                               2. Attach it to external linux/container.
