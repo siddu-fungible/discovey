@@ -262,18 +262,17 @@ class CleanupLargeStoreDirectory(FunTestCase):
 
 if __name__ == "__main__":
     myscript = MaintenanceScript()
-    """
+
     myscript.add_test_case(ManageSsh())
     myscript.add_test_case(WebBackup())
     myscript.add_test_case(CleanupOldDirectories())
     myscript.add_test_case(DetectLargeFiles())
-    """
-    myscript.add_test_case(CheckMongoCollectionCount())
 
+    myscript.add_test_case(CheckMongoCollectionCount())
     myscript.add_test_case(RemoveOldCollections())
-    """
+
     myscript.add_test_case(RemoveOldImagesOnTftpServer())
     myscript.add_test_case(BackupTestRail())
     myscript.add_test_case(CleanupLargeStoreDirectory())
-    """
+
     myscript.run()

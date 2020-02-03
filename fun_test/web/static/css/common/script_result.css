@@ -226,3 +226,12 @@ th {
 a {
     display: block;
 }
+
+.pseudo-anchor {
+  /*color: #1f7ed1 !important;*/
+  font-weight: 400 !important;
+}
+.pseudo-anchor:hover {
+  cursor: pointer !important;
+  color: black !important;
+}
