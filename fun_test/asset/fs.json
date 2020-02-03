@@ -1354,7 +1354,7 @@
       "telnet_password": "fun123"
     },
     "pdu_type": "dli",
-    "apc_info": {
+    "dli_info": {
       "username": "admin",
       "outlet_number": 7,
       "password": "Precious1*",
