@@ -4469,7 +4469,7 @@
                 ]
               },
               {
-                "metric_model_name": "MetricConatiner",
+                "metric_model_name": "MetricContainer",
                 "name": "inspur_rand_wr_6f1",
                 "label": "RAND_WR, F1(s)=6",
                 "children": [
