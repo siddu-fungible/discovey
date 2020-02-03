@@ -178,6 +178,7 @@ class RemoveOldCollections(FunTestCase):
                                     collection.drop()
                     except Exception as ex:
                         pass
+        """
         if collection_names > CheckMongoCollectionCount.MAX_COLLECTIONS:
             collections_to_be_removed = collection_names[0: len(collection_names) - CheckMongoCollectionCount.MAX_COLLECTIONS]
             for collection_to_be_removed in collections_to_be_removed:
@@ -185,6 +186,7 @@ class RemoveOldCollections(FunTestCase):
                     collection = mongo.get_collection(collection_name=collection_to_be_removed)
                     if collection:
                         collection.drop()
+        """
     def cleanup(self):
         pass
 
