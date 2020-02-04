@@ -25,11 +25,14 @@ class StorageControllerOperationsTemplate():
 
     def set_dataplane_ips(self, storage_controller, dut_index):
         result = False
-        topology_result = storage_controller.topology_api.get_hierarchical_topology()
-        print topology_result
+        topology_result = None
+        try:
+            topology_result = storage_controller.topology_api.get_hierarchical_topology()
+            fun_test.log(topology_result)
+        except ApiException as e:
+            fun_test.critical("Exception while getting topology%s\n" % e)
 
-        for k in topology_result.data:
-            self.node_ids.append(topology_result.data[k].uuid)
+        self.node_ids = [x.uuid for x in topology_result.data.values()]
 
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
@@ -66,7 +69,58 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self, already_deployed=False):
+    def ensure_dpu_online(self, storage_controller, dpu_id, raw_api_call=False, max_wait_time=120):
+        result = False
+        timer = FunTimer(max_time=max_wait_time)
+        while not timer.is_expired():
+            if not raw_api_call:
+                try:
+                    dpu_result = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
+                    if dpu_result.status:
+                        result = True
+                        break
+                except ApiException as e:
+                    fun_test.critical("Exception while getting DPU state%s\n" % e)
+            else:
+                raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
+                if result['status']:
+                    if result['data']['state'] == "Online" and result['data']['available']:
+                        result = True
+                        break
+            fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
+        return result
+
+    def get_online_dpus(self):
+        """
+        Find the number of DPUs online using API
+        :return: Returns the number of DPUs online
+        """
+        result = 0
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs_obj.get_storage_controller()
+            topology_result = None
+            try:
+                topology_result = storage_controller.topology_api.get_hierarchical_topology()
+            except ApiException as e:
+                fun_test.critical("Exception while getting topology%s\n" % e)
+            self.node_ids = [x.uuid for x in topology_result.data.values()]
+
+            for node in self.node_ids:
+
+                for f1_index in range(fs_obj.NUM_F1S):
+                    dpu_id = node + "." + str(f1_index)
+                    dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
+                                                        dpu_id=dpu_id, raw_api_call=True)
+                    fun_test.add_checkpoint(expected=True, actual=dpu_status,
+                                            checkpoint="DPU {} is online".format(dpu_id))
+                    if dpu_status:
+                        result += 1
+
+        return result
+
+    def initialize(self, already_deployed=False, online_dpu_count=2):
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
@@ -76,6 +130,8 @@ class StorageControllerOperationsTemplate():
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
+            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
+                                          message="Make sure {} DPUs are online".format(online_dpu_count))
 
     def cleanup(self):
         pass
@@ -95,14 +151,19 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         super(GenericVolumeOperationsTemplate, self).__init__(topology)
         self.topology = topology
 
-    def create_volume(self, fs_obj_list, body_volume_intent_create):
+    def create_volume(self, fs_obj, body_volume_intent_create):
         """
         Create a volume for each fs_obj in fs_obj_list
-        :param fs_obj_list: List of fs objects
+        :param fs_obj: List of fs objects
         :param body_volume_intent_create: object of class BodyVolumeIntentCreate with volume details
-        :return: dict with format {fs_obj: volume_uuid}
+        :return: List of vol_uuids in same order as fs_obj
         """
-        result = {}
+        result = []
+        fs_obj_list = []
+        if not isinstance(fs_obj, list):
+            fs_obj_list.append(fs_obj)
+        else:
+            fs_obj_list = fs_obj
         for fs_index, fs_obj in enumerate(fs_obj_list):
 
             if len(fs_obj_list) > 1:
@@ -113,7 +174,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             try:
                 create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
                 vol_uuid = create_vol_result.data.uuid
-                result[fs_obj] = vol_uuid
+                result.append(vol_uuid)
             except ApiException as e:
                 fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
         return result
@@ -123,48 +184,61 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         :param fs_obj: fs_object from topology
         :param volume_uuid: uuid of volume returned after creating volume
-        :param host_obj: host handle from topology to which the volume needs to be attached
+        :param host_obj: host handle or list of host handles from topology to which the volume needs to be attached
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
-        :return: Attach volume result
+        :return: Attach volume result in case of 1 host_obj
+                 If multiple host_obj are provided, the result is a list of attach operation results,
+                 in the same order of host_obj
         """
-        result = None
-        fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
-        storage_controller = fs_obj.get_storage_controller()
-        host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
-        if not raw_api_call:
-            attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
-
-            try:
-                result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
-                                                                      body_volume_attach=attach_fields)
-
-            except ApiException as e:
-                fun_test.test_assert(expression=False,
-                                     message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
-                result = None
+        result_list = []
+        host_obj_list = []
+        if not isinstance(host_obj, list):
+            host_obj_list.append(host_obj)
         else:
-            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-            result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+            host_obj_list = host_obj
+        for host_obj in host_obj_list:
+            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
+            storage_controller = fs_obj.get_storage_controller()
+            host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
+            if not raw_api_call:
+                attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
 
-        if validate_nvme_connect:
-            if raw_api_call:
-                fun_test.test_assert(expression=result["status"], message="Attach volume result")
-                subsys_nqn = result["data"]["subsys_nqn"]
-                host_nqn = result["data"]["host_nqn"]
-                dataplane_ip = result["data"]["ip"]
+                try:
+                    result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
+                                                                          body_volume_attach=attach_fields)
+                    result_list.append(result)
+                except ApiException as e:
+                    fun_test.test_assert(expression=False,
+                                         message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                    result = None
             else:
-                subsys_nqn = result.subsys_nqn
-                host_nqn = result.host_nqn
-                dataplane_ip = result.ip
+                raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+                result_list.append(result)
+            if validate_nvme_connect:
+                if raw_api_call:
+                    fun_test.test_assert(expression=result["status"], message="Attach volume result")
+                    subsys_nqn = result["data"]["subsys_nqn"]
+                    host_nqn = result["data"]["host_nqn"]
+                    dataplane_ip = result["data"]["ip"]
+                else:
+                    subsys_nqn = result.subsys_nqn
+                    host_nqn = result.host_nqn
+                    dataplane_ip = result.ip
 
-            fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
-                                                                        host_nqn=host_nqn, dataplane_ip=dataplane_ip),
-                                 message="NVMe connect from host: {}".format(host_obj.name))
-            nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
-            fun_test.test_assert(expression=nvme_filename,
-                                 message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-
+                fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
+                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip),
+                                     message="NVMe connect from host: {}".format(host_obj.name))
+                if host_obj not in self.host_nvme_device:
+                    self.host_nvme_device[host_obj] = []
+                nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
+                fun_test.test_assert(expression=nvme_filename,
+                                     message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
+        if isinstance(host_obj, list):
+            result = result_list[0]
+        else:
+            result = result_list
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
@@ -201,17 +275,17 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         result = None
         host_linux_handle = host_obj.get_instance()
         nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
-
-        if subsys_nqn:
-            for namespace in nvme_volumes:
-                nvme_device = namespace[:-2]
-                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                    nvme_device))
-                if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                    result = namespace
-                    self.host_nvme_device[host_obj] = namespace
-        else:
-            result = nvme_volumes[-1:][0]
+        if len(nvme_volumes) > 0:
+            if subsys_nqn:
+                for namespace in nvme_volumes:
+                    nvme_device = namespace[:-2]
+                    namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
+                        nvme_device))
+                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                        result = namespace
+                        self.host_nvme_device[host_obj].append(namespace)
+            else:
+                result = nvme_volumes[-1:][0]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
@@ -251,9 +325,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
-
-            host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
-            fun_test.add_checkpoint(checkpoint="Disconnect NVMe device")
+            for nvme_namespace in self.host_nvme_device[host_obj]:
+                nvme_device = nvme_namespace[:-2]
+                if nvme_device:
+                    host_handle.nvme_disconnect(device=nvme_device)
+                    fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
+                                            format(nvme_device, host_obj.name))
 
             for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))
