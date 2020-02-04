@@ -25,8 +25,12 @@ class StorageControllerOperationsTemplate():
 
     def set_dataplane_ips(self, storage_controller, dut_index):
         result = False
-        topology_result = storage_controller.topology_api.get_hierarchical_topology()
-        print topology_result
+        topology_result = None
+        try:
+            topology_result = storage_controller.topology_api.get_hierarchical_topology()
+            fun_test.log(topology_result)
+        except ApiException as e:
+            fun_test.critical("Exception while getting topology%s\n" % e)
 
         for k in topology_result.data:
             self.node_ids.append(topology_result.data[k].uuid)
@@ -66,21 +70,56 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def count_online_dpus(self):
+    def ensure_dpu_online(self, storage_controller, dpu_id, raw_api_call=False):
+        result = False
+        timer = FunTimer(max_time=120)
+        while not timer.is_expired():
+            if not raw_api_call:
+                try:
+                    dpu_result = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
+                    if dpu_result.status:
+                        result = True
+                        break
+                except ApiException as e:
+                    fun_test.critical("Exception while getting DPU state%s\n" % e)
+            else:
+                raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
+                if result['status']:
+                    if result['data']['state'] == "Online" and result['data']['available']:
+                        result = True
+                        break
+            fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
+        return result
+
+    def get_online_dpus(self):
         """
         Find the number of DPUs online using API
         :return: Returns the number of DPUs online
         """
         result = 0
         for dut_index in self.topology.get_available_duts().keys():
-            fs = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs.get_storage_controller()
-            all_pools = storage_controller.storage_api.get_all_pools()
-            for pool_id in all_pools.data:
-                dpu_list = all_pools.data[pool_id].dpus
-                result += len(dpu_list)
-                for dpu in dpu_list:
-                    fun_test.test_assert(expression=dpu, message="DPU : {} is online".format(dpu))
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs_obj.get_storage_controller()
+            topology_result = None
+            try:
+                topology_result = storage_controller.topology_api.get_hierarchical_topology()
+            except ApiException as e:
+                fun_test.critical("Exception while getting topology%s\n" % e)
+            for k in topology_result.data:
+                self.node_ids.append(topology_result.data[k].uuid)
+
+            for node in self.node_ids:
+
+                for f1_index in range(fs_obj.NUM_F1S):
+                    dpu_id = node + "." + str(f1_index)
+                    dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
+                                                        dpu_id=dpu_id, raw_api_call=True)
+                    fun_test.add_checkpoint(expected=True, actual=dpu_status,
+                                            checkpoint="DPU {} is online".format(dpu_id))
+                    if dpu_status:
+                        result += 1
+
         return result
 
     def initialize(self, already_deployed=False, online_dpu_count=2):
@@ -93,7 +132,7 @@ class StorageControllerOperationsTemplate():
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
-            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.count_online_dpus(),
+            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
                                           message="Make sure {} DPUs are online".format(online_dpu_count))
 
     def cleanup(self):
@@ -161,7 +200,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         else:
             host_obj_list = host_obj
         for host_obj in host_obj_list:
-            result = None
             fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
