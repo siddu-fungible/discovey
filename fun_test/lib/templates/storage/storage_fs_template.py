@@ -199,8 +199,9 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 ec_info[sc][remote_ip][transport]["nqn"] = "nqn" + str(nqn)
 
                 command_result = sc.create_controller(ctrlr_uuid=ctrlr_uuid, transport=transport, remote_ip=remote_ip,
-                                                      port=1099, subsys_nqn="nqn" + str(nqn), host_nqn=remote_ip,
-                                                      ctrlr_id=0, ctrlr_type="BLOCK", command_duration=command_timeout)
+                                                      port=ec_info["transport_port"], subsys_nqn="nqn" + str(nqn),
+                                                      host_nqn=remote_ip, ctrlr_id=0, ctrlr_type="BLOCK",
+                                                      command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"],
                                      "Configuring {} transport Storage Controller for {} remote IP on DUT {}".
                                      format(transport, remote_ip, index))
