@@ -3117,7 +3117,7 @@ class IntegrationJobBuildTimePerformance(FunModel):
             s += "{}:{} ".format(key, value)
         return s
 
-class RawVolumeNvmeTcpMultiHostPerformance(models.Model):
+class RawVolumeNvmeTcpMultiHostPerformance(FunModel):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_num_hosts = models.IntegerField(verbose_name="Number of hosts")
     input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
