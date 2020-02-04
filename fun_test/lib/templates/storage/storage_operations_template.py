@@ -32,8 +32,7 @@ class StorageControllerOperationsTemplate():
         except ApiException as e:
             fun_test.critical("Exception while getting topology%s\n" % e)
 
-        for k in topology_result.data:
-            self.node_ids.append(topology_result.data[k].uuid)
+        self.node_ids = [x.uuid for x in topology_result.data.values()]
 
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
@@ -70,9 +69,9 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def ensure_dpu_online(self, storage_controller, dpu_id, raw_api_call=False):
+    def ensure_dpu_online(self, storage_controller, dpu_id, raw_api_call=False, max_wait_time=120):
         result = False
-        timer = FunTimer(max_time=120)
+        timer = FunTimer(max_time=max_wait_time)
         while not timer.is_expired():
             if not raw_api_call:
                 try:
@@ -106,8 +105,7 @@ class StorageControllerOperationsTemplate():
                 topology_result = storage_controller.topology_api.get_hierarchical_topology()
             except ApiException as e:
                 fun_test.critical("Exception while getting topology%s\n" % e)
-            for k in topology_result.data:
-                self.node_ids.append(topology_result.data[k].uuid)
+            self.node_ids = [x.uuid for x in topology_result.data.values()]
 
             for node in self.node_ids:
 
