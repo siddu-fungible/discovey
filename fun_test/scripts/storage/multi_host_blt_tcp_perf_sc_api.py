@@ -1147,7 +1147,28 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
             host_handle.command("ifconfig")
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
+
+
         if not nvme_list_found:
+            try:
+                # Check host F1 connectivity
+                fun_test.log("Checking host F1 connectivity")
+                for ip in self.f1_ips:
+                    ping_status = host_handle.ping(dst=ip)
+                    if not ping_status:
+                        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                        docker_f1_handle.command("arp -n")
+                        docker_f1_handle.command("route -n")
+                        docker_f1_handle.command("ifconfig")
+                        fun_test.log("\nRoutes from host {}".format(host_handle))
+                        host_handle.command("arp -n")
+                        host_handle.command("route -n")
+                        host_handle.command("ifconfig")
+
+                    fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+                                           format(host_handle.host_ip, ip))
+            except Exception as ex:
+                fun_test.critical(str(ex))
             fun_test.log("Printing dmesg from host {}".format(host_handle))
             host_handle.command("dmesg")
         fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
