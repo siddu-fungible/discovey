@@ -917,7 +917,7 @@ if __name__ == "__main__":
         "encryption": False,
         "compression_effort": 1,
         "key_size": 128,
-        "xtweak": "128",
+        "xtweak": 128,
         "io_size": "128GB",
         "platform": FunPlatform.F1,
 
