@@ -102,6 +102,7 @@ class DurableVolScript(FunTestScript):
         fun_test.shared_variables["syslog"] = self.syslog
         fun_test.shared_variables["db_log_time"] = self.db_log_time
         fun_test.shared_variables["host_info"] = self.host_info
+        fun_test.shared_variables["ip_cfg"] = False
 
     def cleanup(self):
         fun_test.log("Handled in Test case level cleanup section")
@@ -185,9 +186,11 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.shared_variables["ec_info"] = self.ec_info
             fun_test.shared_variables["num_volumes"] = self.ec_info["num_volumes"]
 
-            command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
-            fun_test.log(command_result)
-            fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+            if not fun_test.shared_variables["ip_cfg"]:
+                command_result = self.storage_controller.ip_cfg(ip=self.test_network["f1_loopback_ip"])
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"], "ip_cfg configured on DUT instance")
+                fun_test.shared_variables["ip_cfg"] = True
 
             # Checking if test case is with back-pressure; if so creating additional volume for back-pressure
             if hasattr(self, "back_pressure") and self.back_pressure:
@@ -428,6 +431,17 @@ class DurableVolumeTestcase(FunTestCase):
         test_thread_id = {}
         host_clone = {}
 
+        initial_vol_stats = {}
+        for blt_uuid in self.ec_info["uuids"][num]["blt"]:
+            initial_vol_stats["blt"] = {}
+            blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid, "stats")
+            initial_vol_stats["blt"][blt_uuid] = self.storage_controller.peek(blt_props_tree)
+        initial_vol_stats["ec"] = {}
+        ec_uuid = self.ec_info["uuids"][num]["ec"]
+        ec_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_EC",
+                                                self.ec_info["uuids"][num]["ec"], "stats")
+        initial_vol_stats["ec"][ec_uuid] = self.storage_controller.peek(ec_props_tree)
+
         # Writing the disk with a pattern from a file and use same for read operation
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
@@ -479,7 +493,24 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_write_cmd_args["iodepth"],
                                          self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
                                          host_name))
-        fun_test.sleep("Before starting read with data integrity", 15)
+        fun_test.sleep("Before starting read with data integrity")
+
+        initial_write_blt_vol_stats = {}
+        for blt_uuid in self.ec_info["uuids"][num]["blt"]:
+            initial_write_blt_vol_stats[blt_uuid] = self.storage_controller.peek(blt_props_tree)
+        initial_write_ec_vol_stats = self.storage_controller.peek(ec_props_tree)
+
+        # Diff after initial write
+        for blt_uuid in self.ec_info["uuids"][num]["blt"]:
+            diff_write_stats = initial_write_blt_vol_stats[blt_uuid]["data"]["num_writes"] - initial_vol_stats["blt"][blt_uuid]["data"]["num_writes"]
+            diff_read_stats = initial_write_blt_vol_stats[blt_uuid]["data"]["num_reads"] - initial_vol_stats["blt"][blt_uuid]["data"]["num_reads"]
+            fun_test.log("BLT {} write diff : {}".format(blt_uuid, diff_write_stats))
+            fun_test.log("BLT {} read diff : {}".format(blt_uuid, diff_read_stats))
+
+        diff_write_stats = initial_write_ec_vol_stats["data"]["num_writes"] - initial_vol_stats["ec"][ec_uuid]["data"]["num_writes"]
+        diff_read_stats = initial_write_ec_vol_stats["data"]["num_reads"] - initial_vol_stats["ec"][ec_uuid]["data"]["num_reads"]
+        fun_test.log("EC {} write diff : {}".format(ec_uuid, diff_write_stats))
+        fun_test.log("EC {} read diff : {}".format(ec_uuid, diff_read_stats))
 
         # Read once write is complete
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -530,6 +561,11 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["iodepth"],
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
+
+        initial_read_blt_vol_stats = {}
+        for blt_uuid in self.ec_info["uuids"][num]["blt"]:
+            blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid, "stats")
+            initial_read_blt_vol_stats[blt_uuid] = self.storage_controller.peek(blt_props_tree)
 
         if hasattr(self, "trigger_failure") and self.trigger_failure:
             wait_time = 10
@@ -807,9 +843,47 @@ class C18748(DurableVolumeTestcase):
         """)
 
 
+class C18749(DurableVolumeTestcase):
+    def describe(self):
+        self.set_test_details(id=4,
+                              summary="m+1 concurrent plex failures in k+m - data at rest",
+                              test_rail_case_ids=["C18749"],
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1        
+        3. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test        
+        4. Export (Attach) the above volume to the Remote Host
+        5. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        6. Create a 1MB data file and write the entire volume with the data file as input
+        7. After Write is completed.
+        8. Fail m+1 concurrent plexes.
+        9. Perform read operation now using the data file for pattern match        
+        """)
+
+
+class C18750(DurableVolumeTestcase):
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="k+m concurrent failures in k+m - data at rest",
+                              test_rail_case_ids=["C18750"],
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1        
+        3. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test        
+        4. Export (Attach) the above volume to the Remote Host
+        5. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        6. Create a 1MB data file and write the entire volume with the data file as input
+        7. After Write is completed.
+        8. Fail k+m concurrent plexes.
+        9. Perform read operation now using the data file for pattern match        
+        """)
+
+
 if __name__ == "__main__":
     ecscript = DurableVolScript()
     ecscript.add_test_case(C16229())
-    ecscript.add_test_case(C16230())
-    ecscript.add_test_case(C18748())
+    # ecscript.add_test_case(C16230())
+    # ecscript.add_test_case(C18748())
+    # ecscript.add_test_case(C18749())
+    # ecscript.add_test_case(C18750())
     ecscript.run()
