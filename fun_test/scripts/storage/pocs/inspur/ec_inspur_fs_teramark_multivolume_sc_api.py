@@ -1271,109 +1271,109 @@ class RandReadWrite8kBlocksAfterReboot(RandReadWrite8kBlocks):
         fun_test.log("Running fio reads on EC/LSV before COMe reboot")
         super(RandReadWrite8kBlocksAfterReboot, self).run()
 
-        fun_test.log("Rebooting COMe")
-        self.post_results = False
-        self.fs = fun_test.shared_variables["fs_objs"]
-        self.come_obj = fun_test.shared_variables["come_obj"]
-        self.host_info = fun_test.shared_variables["host_info"]
-        self.f1_ips = fun_test.shared_variables["f1_ips"]
-
-        total_reconnect_time = 600
-        add_on_time = 180
-        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)
-
-        # Reset COMe
-        reset = self.fs[0].reset(hard=False)
-        fun_test.test_assert(reset, "COMe reset successfully done")
-
-        # Ensure COMe is up
-        ensure_up = self.fs[0].ensure_is_up()
-        fun_test.test_assert(ensure_up, "Ensure COMe is up")
-
-        # Ensure all containers are up
-        fs_obj = self.fs[0]
-        come = fs_obj.get_come()
-        containers_status = come.ensure_expected_containers_running()
-        fun_test.test_assert(containers_status, "All containers up")
-
-        # Ensure API server is up
-        self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout),
-                             "Ensure API server is up")
-
-        fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
-
-        volume_found = False
-        nvme_list_found = False
-        vol_uuid = fun_test.shared_variables["volume_uuid_list"][0]
-        host_handle = self.host_info[self.host_info.keys()[0]]['handle']
-        nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
-        fun_test.log("Nvme device name is {}".format(nvme_device))
-        nvme_device_name = nvme_device.split("/")[-1]
-        docker_f1_handle = come.get_funcp_container(f1_index=0)
-        fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
-
-        while not reboot_timer.is_expired():
-            # Check whether EC vol is listed in storage/volumes
-            vols = self.sc_api.get_volumes()
-            if (vols['status'] and vols['data']) and not volume_found:
-                if vol_uuid in vols['data'].keys():
-                    fun_test.log(vols)
-                    fun_test.test_assert(vols['data'][vol_uuid]['type'] == "durable volume",
-                                         "EC/LSV Volume {} is persistent".format(vol_uuid))
-                    volume_found = True
-            if volume_found:
-                nvme_list_output = host_handle.sudo_command("nvme list")
-                if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
-                    nvme_list_found = True
-                    break
-            fun_test.log("Checking for routes on host and docker containers")
-            fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-            docker_f1_handle.command("arp -n")
-            docker_f1_handle.command("route -n")
-            docker_f1_handle.command("ifconfig")
-            fun_test.log("\nRoutes from host {}".format(host_handle))
-            host_handle.command("arp -n")
-            host_handle.command("route -n")
-            host_handle.command("ifconfig")
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
-
-        if not nvme_list_found:
-            fun_test.log("Printing dmesg from host {}".format(host_handle))
-            host_handle.command("dmesg")
-        fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
-                                                                                                host_handle))
-
-        # Check host F1 connectivity
-        fun_test.log("Checking host F1 connectivity")
-        for ip in self.f1_ips:
-            ping_status = host_handle.ping(dst=ip)
-            if not ping_status:
-                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
-                docker_f1_handle.command("arp -n")
-                docker_f1_handle.command("route -n")
-                docker_f1_handle.command("ifconfig")
-                fun_test.log("\nRoutes from host {}".format(host_handle))
-                host_handle.command("arp -n")
-                host_handle.command("route -n")
-                host_handle.command("ifconfig")
-
-            fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
-                                   format(host_handle.host_ip, ip))
-
-        # Run fio
-        fun_test.log("Running fio reads on EC/LSV after COMe reboot")
-        super(RandReadWrite8kBlocksAfterReboot, self).run()
-
-        self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--rw=read", "--rw=write")
-        self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--do_verify=1", "--do_verify=0")
-        fun_test.log("Running fio writes on EC/LSV after COMe reboot")
-        super(RandReadWrite8kBlocksAfterReboot, self).run()
-
-        self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--rw=write", "--rw=read")
-        self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--do_verify=0", "--do_verify=1")
-        fun_test.log("Running fio reads on EC/LSV after COMe reboot")
-        super(RandReadWrite8kBlocksAfterReboot, self).run()
+        # fun_test.log("Rebooting COMe")
+        # self.post_results = False
+        # self.fs = fun_test.shared_variables["fs_objs"]
+        # self.come_obj = fun_test.shared_variables["come_obj"]
+        # self.host_info = fun_test.shared_variables["host_info"]
+        # self.f1_ips = fun_test.shared_variables["f1_ips"]
+        #
+        # total_reconnect_time = 600
+        # add_on_time = 180
+        # reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)
+        #
+        # # Reset COMe
+        # reset = self.fs[0].reset(hard=False)
+        # fun_test.test_assert(reset, "COMe reset successfully done")
+        #
+        # # Ensure COMe is up
+        # ensure_up = self.fs[0].ensure_is_up()
+        # fun_test.test_assert(ensure_up, "Ensure COMe is up")
+        #
+        # # Ensure all containers are up
+        # fs_obj = self.fs[0]
+        # come = fs_obj.get_come()
+        # containers_status = come.ensure_expected_containers_running()
+        # fun_test.test_assert(containers_status, "All containers up")
+        #
+        # # Ensure API server is up
+        # self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
+        # fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout),
+        #                      "Ensure API server is up")
+        #
+        # fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
+        #
+        # volume_found = False
+        # nvme_list_found = False
+        # vol_uuid = fun_test.shared_variables["volume_uuid_list"][0]
+        # host_handle = self.host_info[self.host_info.keys()[0]]['handle']
+        # nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
+        # fun_test.log("Nvme device name is {}".format(nvme_device))
+        # nvme_device_name = nvme_device.split("/")[-1]
+        # docker_f1_handle = come.get_funcp_container(f1_index=0)
+        # fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
+        #
+        # while not reboot_timer.is_expired():
+        #     # Check whether EC vol is listed in storage/volumes
+        #     vols = self.sc_api.get_volumes()
+        #     if (vols['status'] and vols['data']) and not volume_found:
+        #         if vol_uuid in vols['data'].keys():
+        #             fun_test.log(vols)
+        #             fun_test.test_assert(vols['data'][vol_uuid]['type'] == "durable volume",
+        #                                  "EC/LSV Volume {} is persistent".format(vol_uuid))
+        #             volume_found = True
+        #     if volume_found:
+        #         nvme_list_output = host_handle.sudo_command("nvme list")
+        #         if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
+        #             nvme_list_found = True
+        #             break
+        #     fun_test.log("Checking for routes on host and docker containers")
+        #     fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+        #     docker_f1_handle.command("arp -n")
+        #     docker_f1_handle.command("route -n")
+        #     docker_f1_handle.command("ifconfig")
+        #     fun_test.log("\nRoutes from host {}".format(host_handle))
+        #     host_handle.command("arp -n")
+        #     host_handle.command("route -n")
+        #     host_handle.command("ifconfig")
+        #     fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
+        #
+        # if not nvme_list_found:
+        #     fun_test.log("Printing dmesg from host {}".format(host_handle))
+        #     host_handle.command("dmesg")
+        # fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
+        #                                                                                         host_handle))
+        #
+        # # Check host F1 connectivity
+        # fun_test.log("Checking host F1 connectivity")
+        # for ip in self.f1_ips:
+        #     ping_status = host_handle.ping(dst=ip)
+        #     if not ping_status:
+        #         fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+        #         docker_f1_handle.command("arp -n")
+        #         docker_f1_handle.command("route -n")
+        #         docker_f1_handle.command("ifconfig")
+        #         fun_test.log("\nRoutes from host {}".format(host_handle))
+        #         host_handle.command("arp -n")
+        #         host_handle.command("route -n")
+        #         host_handle.command("ifconfig")
+        #
+        #     fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+        #                            format(host_handle.host_ip, ip))
+        #
+        # # Run fio
+        # fun_test.log("Running fio reads on EC/LSV after COMe reboot")
+        # super(RandReadWrite8kBlocksAfterReboot, self).run()
+        #
+        # self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--rw=read", "--rw=write")
+        # self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--do_verify=1", "--do_verify=0")
+        # fun_test.log("Running fio writes on EC/LSV after COMe reboot")
+        # super(RandReadWrite8kBlocksAfterReboot, self).run()
+        #
+        # self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--rw=write", "--rw=read")
+        # self.fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"].replace("--do_verify=0", "--do_verify=1")
+        # fun_test.log("Running fio reads on EC/LSV after COMe reboot")
+        # super(RandReadWrite8kBlocksAfterReboot, self).run()
 
 
     def cleanup(self):
