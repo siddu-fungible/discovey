@@ -237,7 +237,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
                 fun_test.test_assert(expression=nvme_filename,
                                      message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-        if len(result_list) == 1:
+        if isinstance(host_obj, list):
             result = result_list[0]
         else:
             result = result_list
