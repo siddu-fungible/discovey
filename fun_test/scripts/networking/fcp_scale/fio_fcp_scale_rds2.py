@@ -295,8 +295,8 @@ def TestbedSetup():
 
                 f11_bootarg += " rdstype=fcp"
 
-            #f10_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
-            #f11_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+            f10_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+            f11_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
             topology_helper.set_dut_parameters(dut_index=index,
                                                f1_parameters={0: {"boot_args": f10_bootarg},
                                                               1: {"boot_args": f11_bootarg}},
@@ -658,7 +658,7 @@ class RDSVolumePerformanceScript(FunTestScript):
                                                                               name=rds_vol_name,
                                                                               uuid=rds_vol_uuid,
                                                                               remote_nsid=int(volume_index),
-                                                                              connections=1,
+                                                                              connections=4,
                                                                               host_nqn=params[rds_fs_name][
                                                                                              rds_f1_index + '_ip'],
                                                                               subsys_nqn=rds_ctrl_name,
