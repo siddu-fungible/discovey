@@ -882,8 +882,8 @@ class C18750(DurableVolumeTestcase):
 if __name__ == "__main__":
     ecscript = DurableVolScript()
     ecscript.add_test_case(C16229())
-    # ecscript.add_test_case(C16230())
-    # ecscript.add_test_case(C18748())
-    # ecscript.add_test_case(C18749())
-    # ecscript.add_test_case(C18750())
+    ecscript.add_test_case(C16230())
+    ecscript.add_test_case(C18748())
+    ecscript.add_test_case(C18749())
+    ecscript.add_test_case(C18750())
     ecscript.run()
