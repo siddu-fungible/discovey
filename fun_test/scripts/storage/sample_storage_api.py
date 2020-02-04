@@ -61,13 +61,13 @@ class RunStorageApiCommands(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
+        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_dict, message="Create Volume Successful")
+        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
-        for fs_obj in vol_uuid_dict:
+        for index, fs_obj in enumerate(fs_obj_list):
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_dict[fs_obj],
+                                                                               volume_uuid=vol_uuid_list[index],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")

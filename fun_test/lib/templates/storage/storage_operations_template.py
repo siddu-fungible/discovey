@@ -156,9 +156,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         Create a volume for each fs_obj in fs_obj_list
         :param fs_obj: List of fs objects
         :param body_volume_intent_create: object of class BodyVolumeIntentCreate with volume details
-        :return: dict with format {fs_obj: volume_uuid}
+        :return: List of vol_uuids in same order as fs_obj
         """
-        result = {}
+        result = []
         fs_obj_list = []
         if not isinstance(fs_obj, list):
             fs_obj_list.append(fs_obj)
@@ -174,7 +174,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             try:
                 create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
                 vol_uuid = create_vol_result.data.uuid
-                result[fs_obj] = vol_uuid
+                result.append(vol_uuid)
             except ApiException as e:
                 fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
         return result
