@@ -348,13 +348,12 @@ class RecoveryWithFailures(FunTestCase):
                             hostnqn=self.host_info[host_name]["ip"])
 
                     fun_test.test_assert(nvme_connect_status, message="{} - NVME Connect Status".format(host_name))
-                    """
+
                     lsblk_output = host_handle.lsblk("-b")
                     fun_test.simple_assert(lsblk_output, "Listing available volumes")
-                    """
+
                     # Checking if the EC volume is visible to the end host
-                    self.host_info[host_name]["nvme_block_device_list"] = host_handle.get_nvme_device_list()
-                    """
+                    #self.host_info[host_name]["nvme_block_device_list"] = host_handle.get_nvme_device_list()
                     volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
                     for volume_name in lsblk_output:
                         match = re.search(volume_pattern, volume_name)
@@ -368,7 +367,7 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
-                    """
+
                     self.host_info[host_name]["nvme_block_device_list"].sort()
                     self.host_info[host_name]["fio_filename"] = \
                         ":".join(self.host_info[host_name]["nvme_block_device_list"])
@@ -802,9 +801,9 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
 if __name__ == "__main__":
     ecrecovery = ECBlockRecoveryScript()
-    ecrecovery.add_test_case(RecoveryWithMFailure())
-    ecrecovery.add_test_case(RecoveryWithMplus1Failure())
+    #ecrecovery.add_test_case(RecoveryWithMFailure())
+    #ecrecovery.add_test_case(RecoveryWithMplus1Failure())
     ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
-    ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
-    ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
+    #ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
+    #ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
     ecrecovery.run()
