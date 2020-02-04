@@ -1,6 +1,7 @@
 {
   "GlobalSetup": {
     "already_deployed": false,
+    "reboot_hosts" : true,
     "bootargs": [
       "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
@@ -78,7 +79,7 @@
     "syslog": "default",
     "nqn": "nqn1",
     "transport_type": "tcp",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
@@ -134,7 +135,7 @@
     "syslog": "default",
     "nqn": "nqn1",
     "transport_type": "tcp",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,
@@ -191,7 +192,7 @@
     "syslog": "default",
     "nqn": "nqn1",
     "transport_type": "tcp",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "nvme_io_queues": 16,
     "command_timeout": 30,
     "iter_interval": 2,

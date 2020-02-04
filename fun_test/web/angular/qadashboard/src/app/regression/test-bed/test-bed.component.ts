@@ -440,7 +440,7 @@ export class TestBedComponent implements OnInit {
       this.assetLockInfo.clear();
       this.refreshAll();
     }, error => {
-      this.loggerService.error("Unable to lock " + this.assetLockInfo.asset.name);
+      this.loggerService.error("Unable to lock " + this.assetLockInfo.asset.name, error);
     })
   }
 

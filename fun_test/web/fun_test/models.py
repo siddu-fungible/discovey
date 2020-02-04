@@ -123,6 +123,9 @@ class TestBed(models.Model):
             # if status == AssetHealthStates.UNHEALTHY:
             #     self.disabled = True
             self.save()
+        if message != self.health_check_message:
+            self.health_check_message = message
+            self.save()
 
 
 class CatalogSuite(models.Model):

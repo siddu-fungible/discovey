@@ -12,7 +12,7 @@ import threading
 from fun_global import RESULTS, get_current_time, determine_version, get_localized_time, get_current_epoch_time
 from scheduler.scheduler_helper import *
 import signal
-from web.fun_test.web_interface import get_homepage_url
+from web.fun_test.web_interface import get_homepage_url, get_regression_server_url
 import pexpect
 from uuid import getnode as get_mac
 from uuid import uuid4
@@ -21,6 +21,9 @@ from threading import Thread
 from inspect import getargspec
 from lib.utilities.send_mail import send_mail
 from fun_global import Codes, TimeSeriesTypes
+
+for path in ADDITIONAL_PYTHON_PATHS:
+    sys.path.append(path)
 
 
 class TestException(Exception):
@@ -314,6 +317,22 @@ class FunTest:
         self.time_series_buffer = {0: ""}
         self.checkpoints = {}
         self.script_file_name = ""
+        self.storage_api_enabled = False  # Just for backward-compatibility while we switchover to swagger
+
+    def enable_storage_api(self):   # Only needed for transition
+        from lib.utilities.http import fetch_binary_file
+        self.storage_api_enabled = True
+        api_path = STASH_DIR + "/swagger_client"
+        if not os.path.exists(api_path):
+            fun_test.log("Swagger client does not exist. Fetching ...")
+            tar_ball_name = "swagger_client.tgz"
+            swagger_client_url = get_regression_server_url() + "/static/{}".format(tar_ball_name)
+            target_file_path = STASH_DIR + "/{}".format(tar_ball_name)
+            self.simple_assert(fetch_binary_file(url=swagger_client_url, target_file_path=target_file_path), "Unable to fetch swagger client")
+            import tarfile
+            tar = tarfile.open(target_file_path)
+            tar.extractall(path=STASH_DIR)
+            tar.close()
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id

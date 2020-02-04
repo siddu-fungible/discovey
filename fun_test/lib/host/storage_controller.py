@@ -2,13 +2,50 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+if fun_test.storage_api_enabled:
+    from swagger_client.api.storage_api import StorageApi
+    from swagger_client.api.topology_api import TopologyApi
+    from swagger_client.api.controller_api import ControllerApi
+    from swagger_client.api.network_api import NetworkApi
+    from swagger_client.api_client import ApiClient
+    from swagger_client.configuration import Configuration
 
 
 class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
-    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
+                 api_password="password", api_server_ip=None, api_server_port=9000):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
+        if fun_test.storage_api_enabled:
+            if not api_server_ip:
+                api_server_ip = target_ip
+
+            configuration = Configuration()
+            configuration.host = "https://%s:%s/FunCC/v1" % (api_server_ip, api_server_port)
+            configuration.username = api_username
+            configuration.password = api_password
+            configuration.verify_ssl = False
+            api_client = ApiClient(configuration)
+
+            self.storage_api = StorageApi(api_client)
+            self.topology_api = TopologyApi(api_client)
+            self.controller_api = ControllerApi(api_client)
+            self.network_api = NetworkApi(api_client)
+
+    def health(self):
+        api_server_health = False
+        timer = FunTimer(max_time=120)
+        while not timer.is_expired():
+            try:
+                if self.controller_api.get_sc_health().status:
+                    fun_test.log("Api Server is Healthy")
+                    api_server_health = True
+                    break
+            except:
+                fun_test.critical("API server not up yet")
+            fun_test.sleep("Waiting for API server, remaining time: %s" % timer.remaining_time(), seconds=15)
+        return api_server_health
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -543,6 +580,9 @@ class StorageController(NetworkController, DpcshClient):
 
 
 if __name__ == "__main__":
-    sc = StorageController(target_ip="10.1.20.67", target_port=42220)
-    output = sc.command("peek stats")
-    sc.print_result(output)
+    sc = StorageController(target_ip="fs53-come", target_port=42220)
+    # output = sc.command("peek stats")
+    # sc.print_result(output)
+    result1 = sc.controller_api.get_sc_health()
+    result2 = sc.storage_api.get_all_pools()
+    result3 = sc.topology_api.get_hierarchical_topology()

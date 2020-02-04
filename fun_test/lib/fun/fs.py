@@ -12,6 +12,7 @@ from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
+from lib.fun.storage.fs_storage import FsStorage
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -26,7 +27,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "platform_halt: exit status 1",
                  "Assertion failed",
                  "Trap exception",
-                 "CSR:FEP_.*_FATAL_INTR"]
+                 r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
@@ -353,6 +354,9 @@ class Bmc(Linux):
         s = boot_args
         if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
+
+        if self.fs.get_revision() in ["2"]:
+            s = re.sub(' cc_huid=\d+', "", s)
 
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
@@ -707,8 +711,7 @@ class Bmc(Linux):
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-        self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
-
+        output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
         return True
 
     def reset_come(self):
@@ -773,6 +776,10 @@ class Bmc(Linux):
                 continue
 
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
+            if self.fs.bundle_compatible:
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    self._get_context_prefix("funos_f1_{}.log".format(f1_index)))
+
             fun_test.scp(source_ip=self.host_ip,
                          source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
                          source_username=self.ssh_username,
@@ -853,6 +860,9 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
+            if self.fs.get_revision() in ["2"]:
+                ERROR_REGEXES.append('i2c write error.*')
+                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
             for error_regex in ERROR_REGEXES:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
@@ -946,20 +956,22 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
+                come.get_build_properties()
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
                 if True:
-                    come.fs_reset()
+                    fs.reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
-                    come.initialize()
-                    try:
-                        fs_health = self.fs.health()
-                    except:
-                        pass
+                    come.setup_workspace()
+                    # come.initialize()
+                    # try:
+                    #    fs_health = self.fs.health()
+                    # except:
+                    #    pass
 
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
@@ -1151,6 +1163,7 @@ class ComEInitializationWorker(Thread):
 
             if not self.fs.get_boot_phase() == BootPhases.FS_BRING_UP_ERROR:
                 self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZE)
+                come = self.fs.get_come(clone=True)
                 fun_test.test_assert(expression=come.initialize(disable_f1_index=self.fs.disable_f1_index),
                                      message="ComE initialized",
                                      context=self.fs.context)
@@ -1210,6 +1223,10 @@ class ComE(Linux):
     HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
+    HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
+    HBM_COLLECT_MAX_TIMER = 40 * 60
+
+    BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
     MAX_HBM_DUMPS = 200
     BUILD_SCRIPT_DOWNLOAD_DIRECTORY = "/tmp/remove_me_build_script"
@@ -1222,6 +1239,8 @@ class ComE(Linux):
     REDIS_LOG_PATH = "/var/log/redis"
 
     FS_RESET_COMMAND = "/opt/fungible/etc/ResetFs1600.sh"
+    FS_RESET_BACKUP_COMMAND = "/opt/fungible.bak/etc/ResetFs1600.sh"
+
     EXPECTED_CONTAINERS = ["run_sc"]# , "F1-1", "F1-0"]
     CONTAINERS_BRING_UP_TIME_MAX = 3 * 60
 
@@ -1330,18 +1349,21 @@ class ComE(Linux):
                 pass
 
     def fs_reset(self, clone=False, fast=False):
+        result = False
         fun_test.add_checkpoint(checkpoint="Resetting FS")
         handle = self
         if clone:
             handle = self.clone()
         try:
-            reset_command = "{}".format(self.FS_RESET_COMMAND)
-            if fast:
-                reset_command += " -f"
+            if self.list_files(self.FS_RESET_COMMAND):
+                reset_command = "{}".format(self.FS_RESET_COMMAND)
+                if fast:
+                    reset_command += " -f"
+                handle.sudo_command(reset_command, timeout=120)
 
-            handle.sudo_command(reset_command, timeout=120)
         except Exception as ex:
             fun_test.critical(str(ex))
+        return result
 
     def stop_health_monitors(self):
         health_monitor_processes = self.get_process_id_by_pattern(self.HEALTH_MONITOR, multiple=True)
@@ -1421,7 +1443,11 @@ class ComE(Linux):
             for f1_index in range(self.NUM_F1S):
                 self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
-            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            if not self.detect_pfs():
+                self.diags()
+                fun_test.test_assert(False, message="Fungible PFs detected", context=self.context)
+            else:
+                fun_test.test_assert(True, message="Fungible PFs detected", context=self.context)
             fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
             fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
 
@@ -1433,6 +1459,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
+            if self.fs.bundle_compatible:
+                fun_test.log("Clearing out HBM dump directory")
+                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1659,9 +1688,17 @@ class ComE(Linux):
 
     def cleanup_dpc(self):
         # self.command("cd $WORKSPACE/FunControlPlane")
-        self.sudo_command("pkill dpc")
-        self.sudo_command("pkill dpcsh")
-        # self.sudo_command("build/posix/bin/funq-setup unbind")
+        # self.sudo_command("pkill dpc")
+        # self.sudo_command("pkill dpcsh")
+        # self.get_process_id_by_pattern(multiple=True)
+        dpc_process_ids = self.get_process_id_by_pattern(
+            "dpcsh.*{}\|{}\|{}\|{}".format(self.DEFAULT_DPC_PORT[0], self.DEFAULT_DPC_PORT[1],
+                                           self.DEFAULT_STATISTICS_DPC_PORT[0], self.DEFAULT_STATISTICS_DPC_PORT[1]),
+            multiple=True)
+        for dpc_process_id in dpc_process_ids:
+            self.kill_process(signal=9, process_id=dpc_process_id, kill_seconds=2)
+
+        self.get_process_id_by_pattern("dpcsh")
         return True
 
     def setup_dpc(self, statistics=None, csi_perf=None):
@@ -1872,6 +1909,35 @@ class ComE(Linux):
             pass
         else:
             self.sudo_command("rm {}".format(redis_target_path))
+
+        if self.fs.bundle_compatible:
+            if self.list_files(self.HBM_COLLECT_NOTIFY):
+                fun_test.log("HBM dumping going on")
+                hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
+                while not hbm_dump_timer.is_expired(print_remaining_time=True):
+                    fun_test.sleep("HBM Dump", seconds=60)
+                    if not self.list_files(self.HBM_COLLECT_NOTIFY):
+                        fun_test.log("HBM dump completed")
+                        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                        if not current_hbm_dump_files:
+                            fun_test.critical("No HBM dump files found")
+                        else:
+                            for hbm_dump_file in current_hbm_dump_files:
+                                file_name = hbm_dump_file["filename"]
+                                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
+                                                                             linux_obj=self,
+                                                                             source_file_path=hbm_dump_file["filename"],
+                                                                             display_name=os.path.basename(file_name),
+                                                                             asset_type=asset_type,
+                                                                             asset_id=asset_id,
+                                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                                             is_large_file=True,
+                                                                             timeout=60)
+                                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+
+                        break
+
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -1976,7 +2042,8 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_ip=None,
                  fpga_telnet_port=None,
                  fpga_telnet_username=None,
-                 fpga_telnet_password=None):
+                 fpga_telnet_password=None,
+                 check_expected_containers_running=True):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2051,6 +2118,10 @@ class Fs(object, ToDictMixin):
         if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
+
+        if ("bundle_compatible" in spec and not spec["bundle_compatible"]):
+            self.bundle_compatible = False
+
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
@@ -2064,15 +2135,20 @@ class Fs(object, ToDictMixin):
         self.dpc_statistics_lock = Lock()
         self.statistics_enabled = True
 
+        self.check_expected_containers_running = check_expected_containers_running
         if self.fs_parameters:
             if "statistics_enabled" in self.fs_parameters:
                 self.statistics_enabled = self.fs_parameters["statistics_enabled"]
+            if "check_expected_containers_running" in self.fs_parameters:
+                self.check_expected_containers_running = self.fs_parameters["check_expected_containers_running"]
         self.register_all_statistics()
         self.dpc_for_statistics_ready = False
         self.dpc_for_csi_perf_ready = False
 
         self.errors_detected = []
         fun_test.register_fs(self)
+
+        self.storage = FsStorage(fs_obj=self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2210,8 +2286,9 @@ class Fs(object, ToDictMixin):
                         continue
                     fun_test.log("Errors were detected. Starting HBM dump")
                     f1.hbm_dump_complete = True
-                    self.get_come().setup_hbm_tools()
-                    self.get_come().hbm_dump(f1_index=f1_index)
+                    if not self.bundle_compatible:
+                        self.get_come().setup_hbm_tools()
+                        self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
                     fun_test.critical(str(ex))
         try:
@@ -2542,7 +2619,8 @@ class Fs(object, ToDictMixin):
                            disable_uart_logger=self.disable_uart_logger,
                            context=self.context,
                            setup_support_files=self.setup_bmc_support_files,
-                           fs=self)
+                           fs=self,
+                           connect_retry_timeout_max=30)
         if self.bundle_upgraded:
             self.bmc.bundle_upgraded = self.bundle_upgraded
         self.bmc.bundle_compatible = self.bundle_compatible
@@ -2760,7 +2838,13 @@ class Fs(object, ToDictMixin):
             self.reset_device_handles()
         else:
             come = self.get_come()
-            come.fs_reset()
+            if come.list_files(come.FS_RESET_COMMAND):
+                come.fs_reset()
+            else:
+                self.reboot_bmc()
+                self.reset_device_handles()
+                bmc = self.get_bmc()
+                bmc.ensure_come_is_up(max_wait_time=20, come=self.get_come(), power_cycle=True)
             self.reset_device_handles()
         fun_test.test_assert(self.ensure_is_up(validate_uptime=True), "Validate FS components are up")
         return True
@@ -2776,13 +2860,13 @@ class Fs(object, ToDictMixin):
                 fun_test.simple_assert(fpga.uptime() < worst_case_uptime, "FPGA uptime is less than 10 minutes")
         """
         bmc = self.get_bmc()
-        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=120),
+        fun_test.test_assert(expression=bmc.ensure_host_is_up(max_wait_time=240), #WORKAROUND
                              context=self.context, message="BMC reachable after reset")
         # if validate_uptime:
         #    fun_test.simple_assert(bmc.uptime() < worst_case_uptime, "BMC uptime is less than 10 minutes")
 
         come = self.get_come().clone()
-        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=180 * 2,
+        fun_test.test_assert(expression=come.ensure_host_is_up(max_wait_time=(180 * 2) + 60,  # WORKAROUND
                                                                power_cycle=False), message="ComE reachable after reset")
         if validate_uptime:
             if come.uptime() > worst_case_uptime:
@@ -2831,7 +2915,7 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
     come = fs.get_come()
     come.cleanup_redis()
@@ -2854,9 +2938,15 @@ if __name__ == "__main__":
     # i = fs.bam()
 
 
-if __name__ == "__main2__":
-    come = ComE(host_ip="fs118-come.fungible.local", ssh_username="fun", ssh_password="123")
-    output = come.pre_reboot_cleanup()
-    i = 0
-    #come.setup_hbm_tools()
-    #print come.setup_tools()
+if __name__ == "__main_2_":
+    come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
+    o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
+    come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
+    topology = th.deploy(already_deployed=False)
+    fs_obj = topology.get_dut_instance(index=0)
+    fs_obj.storage.nvme_ssds(f1_index=0)

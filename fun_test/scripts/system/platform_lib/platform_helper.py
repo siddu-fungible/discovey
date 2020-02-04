@@ -885,7 +885,7 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, command_duration=10):
         split_cmd = cmd.split(" ", 1)
         verb = split_cmd[0]
         data = split_cmd[1]
@@ -893,9 +893,9 @@ class Platform(RedFishTool, IpmiTool):
             self.load_new_image = True
             self.initialize_dpcsh()
         if f1 == 0:
-            output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_0.json_execute(verb=verb, data=data, command_duration=command_duration)
         elif f1 == 1:
-            output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_1.json_execute(verb=verb, data=data, command_duration=command_duration)
         result = output["data"]
         return result
 
@@ -1448,3 +1448,43 @@ class DliPower:
     def get_outlet_name(self, outlet):
         name = self.switch.get_outlet_name(outlet)
         return name
+
+class PwmTachtool:
+    DEVICE_ID = 0
+
+    def __init__(self, bmc_handle=None):
+        if bmc_handle:
+            self.bmc_handle = bmc_handle
+        else:
+            if not getattr(self, "fs", False):
+                self.initialise_fs()
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+
+    def initialise_fs(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_spec(fs_name)
+
+    def pwmtachtool(self, cmd):
+        pwm_cmd = "pwmtachtool 0 " + cmd
+        result = self.bmc_handle.command(pwm_cmd)
+        return result
+
+    def set_pwm_dutycycle(self, fan, speed):
+        cmd = "--set-pwm-dutycycle %s %s" % (fan, speed)
+        result = self.pwmtachtool(cmd)
+        fun_test.sleep("To set fan speed", seconds=3)
+        fun_test.log("Fan {} speed set to dutycycle: {}".format(fan, speed))
+        return result
+
+    def get_fan_speed(self, fan):
+        speed = False
+        cmd = "--get-fan-speed {}".format(fan)
+        result = self.pwmtachtool(cmd)
+        match_speed = re.search(r"speed\s+is\s+(?P<speed>\d+)", result)
+        if match_speed:
+            speed = int(match_speed.group("speed"))
+            fun_test.log("Fan {} speed: {}".format(fan, speed))
+        return speed
+
