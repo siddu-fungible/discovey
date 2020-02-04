@@ -27,48 +27,6 @@ def fio_parser(arg1, host_index, **kwargs):
     fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
     arg1.disconnect()
 
-
-def post_results(volume, test, num_host, block_size, io_depth, size, operation, write_iops, read_iops, write_bw,
-                 read_bw,
-                 write_latency, write_90_latency, write_95_latency, write_99_latency, write_99_99_latency, read_latency,
-                 read_90_latency, read_95_latency, read_99_latency, read_99_99_latency, fio_job_name,
-                 write_amp_vol_stats, read_amp_vol_stats, aggr_amp_vol_stats, write_amp_app_stats, read_amp_app_stats,
-                 aggr_amp_app_stats, write_amp_rcnvme_stats, read_amp_rcnvme_stats, aggr_amp_rcnvme_stats):
-    for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
-              "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
-              "read_99_latency", "read_99_99_latency", "fio_job_name", "write_amp_vol_stats", "read_amp_vol_stats",
-              "aggr_amp_vol_stats", "write_amp_app_stats", "read_amp_app_stats", "aggr_amp_app_stats",
-              "write_amp_rcnvme_stats", "read_amp_rcnvme_stats", "aggr_amp_rcnvme_stats"]:
-        if eval("type({}) is tuple".format(i)):
-            exec ("{0} = {0}[0]".format(i))
-
-    db_log_time = fun_test.shared_variables["db_log_time"]
-    num_ssd = fun_test.shared_variables["num_ssd"]
-    num_volumes = fun_test.shared_variables["num_volumes"]
-
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=db_log_time, volume=volume, test=test, block_size=block_size, io_depth=int(io_depth),
-                  size=size, operation=operation, num_ssd=num_ssd, num_volume=num_volumes, fio_job_name=fio_job_name,
-                  write_iops=write_iops, read_iops=read_iops, write_throughput=write_bw, read_throughput=read_bw,
-                  write_avg_latency=write_latency, read_avg_latency=read_latency, write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
-
-    result = []
-    arg_list = post_results.func_code.co_varnames[:12]
-    for arg in arg_list:
-        result.append(str(eval(arg)))
-    result = ",".join(result)
-    fun_test.log("Result: {}".format(result))
-
-
 class ECBlockRecoveryScript(FunTestScript):
 
     def describe(self):
@@ -417,6 +375,7 @@ class RecoveryWithFailures(FunTestCase):
                     #fun_test.shared_variables["host_info"] = self.host_info
                     fun_test.log("Hosts info: {}".format(self.host_info))
 
+                    self.vol_stats = collections.OrderedDict()
                     # Perform write
                     #self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
                     #self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
@@ -425,11 +384,9 @@ class RecoveryWithFailures(FunTestCase):
                                                       **self.fio_write_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Write completed on EC volume from host")
-                    write_initial_vol_stats = self.storage_controller.peek(
-                        props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192, command_duration=self.command_timeout)
-                    fun_test.log("EC Volume stats:\n{}".format(write_initial_vol_stats))
-                    fun_test.test_assert(write_initial_vol_stats, "EC Volume stats after WRITE")
-                    fun_test.log("EC volume recovery read count:\n{}".format(write_initial_vol_stats["data"]["recovery_read_count"]))
+                    self.vol_stats["vol_stats_initial_write"] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+
                     # Perform read
                     fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
                                                       cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
@@ -437,11 +394,15 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output,
                                          "READ with verify completed before failing any plex")
-                    read_initial_vol_stats = self.storage_controller.peek(
-                        props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192, command_duration=self.command_timeout)
-                    fun_test.log("EC Volume stats:\n{}".format(read_initial_vol_stats))
-                    fun_test.test_assert(read_initial_vol_stats, "EC Volume stats after WRITE")
-                    fun_test.log("EC volume recovery read count:\n{}".format(read_initial_vol_stats["data"]["recovery_read_count"]))
+                    self.vol_stats["vol_stats_initial_read"] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    EC_volume_stats = self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_EC"][self.ec_info["uuids"][num]["ec"][0]]
+                    fun_test.log("EC Volume stats:\n{}".format(EC_volume_stats))
+                    fun_test.test_assert(EC_volume_stats, "EC Volume stats after initial READ")
+                    fun_test.log("EC volume recovery_read_count: {} and plex_read_fail_count: {}".format(EC_volume_stats["stats"]["recovery_read_count"], EC_volume_stats["stats"]["plex_read_fail_count"]))
+                    fun_test.test_assert_expected(expected=(0,0),
+                                                          actual=(EC_volume_stats["stats"]["recovery_read_count"], EC_volume_stats["stats"]["plex_read_fail_count"]),
+                                                          message="Before plex failure, recovery_read_count and plex_read_fail_count of EC volume is 0")
 
                     # Power OFF device
                     self.device_id_failed = []
@@ -485,7 +446,41 @@ class RecoveryWithFailures(FunTestCase):
                             fun_test.log("FIO Command Output:\n{}".format(fio_output))
                             fun_test.test_assert(fio_output, "Reading from EC volume with {} plex {} failed".
                                                  format(index + 1, self.device_id_failed))
+                            # Volume stats validation after 1 plex failure
+                            if len(self.device_id_failed) == 1:
+                                self.vol_stats["vol_stats_after_1_plex_failure"] = self.storage_controller.peek(
+                                    props_tree="storage/volumes", legacy=False, chunk=8192,
+                                    command_duration=self.command_timeout)
+                                EC_vol_stats_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
+                                    self.ec_info["uuids"][num]["ec"][0]]
+                                device_failed = self.device_id_failed[0]
+                                EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_1_plex_failure = EC_vol_stats_1_plex_failure ["stats"]["plex_read_fail_count"], EC_vol_stats_1_plex_failure ["stats"]["recovery_read_count"]
+                                num_reads_diff_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed]]["stats"]["num_reads"] - self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed]]["stats"]["num_reads"]
+                                fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_1_plex_failure),
+                                                              actual= (num_reads_diff_1_plex_failure, num_reads_diff_1_plex_failure),
+                                                              message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
+                                                                 num_reads_diff_1_plex_failure, EC_recovery_read_count_1_plex_failure))
+                            # Volume stats validation after 2 plex failure
+                            elif len(self.device_id_failed) == 2:
+                                device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
+                                self.vol_stats["vol_stats_after_2_plex_failure"] = self.storage_controller.peek(
+                                    props_tree="storage/volumes", legacy=False, chunk=8192,
+                                    command_duration=self.command_timeout)
+                                EC_vol_stats_2_plex_failure = \
+                                self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
+                                    self.ec_info["uuids"][num]["ec"][0]]
+                                EC_plex_read_fail_count_2_plex_failure, EC_recovery_read_count_2_plex_failure = EC_vol_stats_2_plex_failure["stats"][
+                                                                                      "plex_read_fail_count"], \
+                                                                                  EC_vol_stats_2_plex_failure["stats"][
+                                                                                      "recovery_read_count"]
+                                num_reads_diff_2_plex_failure = (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"]) + \
+                                                 (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"])
 
+                                fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_2_plex_failure - EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_2_plex_failure),
+                                                              actual=(num_reads_diff_2_plex_failure,
+                                                                      num_reads_diff_1_plex_failure + num_reads_diff_2_plex_failure),
+                                                              message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
+                                                                  num_reads_diff_2_plex_failure, EC_recovery_read_count_2_plex_failure - EC_recovery_read_count_1_plex_failure))
                     # Perform read if concurrent plex failure is set
                     if (hasattr(self, "m_concurrent_failure") and self.m_concurrent_failure) and (not hasattr(self, "m_plus_concurrent_failure")):
                         fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
@@ -494,7 +489,41 @@ class RecoveryWithFailures(FunTestCase):
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Reading from EC volume with {} plex {} failed".
                                              format(index + 1, self.device_id_failed))
-
+                        # Volume stats validation after concurrent plex failure
+                        self.vol_stats["vol_stats_concurrent_plex_failure"] = self.storage_controller.peek(
+                            props_tree="storage/volumes", legacy=False, chunk=8192,
+                            command_duration=self.command_timeout)
+                        EC_vol_stats_concurrent_plex_failure = \
+                        self.vol_stats["vol_stats_concurrent_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
+                            self.ec_info["uuids"][num]["ec"][0]]
+                        EC_plex_read_fail_count_concurrent_plex_failure, EC_recovery_read_count_concurrent_plex_failure = \
+                        EC_vol_stats_concurrent_plex_failure["stats"]["plex_read_fail_count"], \
+                        EC_vol_stats_concurrent_plex_failure["stats"]["recovery_read_count"]
+                        device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
+                        num_reads_diff_concurrent_plex_failure = (self.vol_stats["vol_stats_concurrent_plex_failure"]["data"][
+                                                             "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                             self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"][
+                                                             "num_reads"] -
+                                                         self.vol_stats["vol_stats_initial_read"]["data"][
+                                                             "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                             self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"][
+                                                             "num_reads"]) + \
+                                                        (self.vol_stats["vol_stats_concurrent_plex_failure"]["data"][
+                                                             "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                             self.ec_info["uuids"][num]["blt"][device_failed_0]][
+                                                             "stats"]["num_reads"] -
+                                                         self.vol_stats["vol_stats_initial_read"]["data"][
+                                                             "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                             self.ec_info["uuids"][num]["blt"][device_failed_0]][
+                                                             "stats"]["num_reads"])
+                        fun_test.test_assert_expected(expected=(
+                        EC_plex_read_fail_count_concurrent_plex_failure,
+                        EC_recovery_read_count_concurrent_plex_failure),
+                                                      actual=(num_reads_diff_concurrent_plex_failure,
+                                                              num_reads_diff_concurrent_plex_failure),
+                                                      message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
+                                                          EC_plex_read_fail_count_concurrent_plex_failure,
+                                                          EC_recovery_read_count_concurrent_plex_failure))
                     if (hasattr(self, "mplusfailure") and self.mplusfailure) or (hasattr(self, "m_plus_concurrent_failure") and self.m_plus_concurrent_failure) or (hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure):
                         plex_to_be_failed = []
                         if not hasattr(self, "k_plus_m_concurrent_failure"):
