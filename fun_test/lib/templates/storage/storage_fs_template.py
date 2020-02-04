@@ -47,7 +47,10 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
         ec_info["num_volumes"] = 1
 
     if "transport_port" not in ec_info:
-        ec_info["transport_port"] = 1099
+        ec_info["transport_port"] = 4420
+
+    if "rds_port" not in ec_info:
+        ec_info["rds_port"] = 1099
 
     if "remote_transport" not in ec_info:
         ec_info["remote_transport"] = "RDS"
@@ -178,9 +181,11 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 ec_info[sc] = {}
             if index == cur_vol_host_f1:
                 transport = "TCP"
+                port = ec_info["transport_port"]
                 remote_ip = ec_info["host_ips"][num]
             else:
                 transport = ec_info["remote_transport"]
+                port = ec_info["rds_port"]
                 remote_ip = ec_info["f1_ips"][cur_vol_host_f1]
 
             # Check whether the controller for the given remote IP and transport is already created in this current
@@ -199,8 +204,9 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
                 ec_info[sc][remote_ip][transport]["nqn"] = "nqn" + str(nqn)
 
                 command_result = sc.create_controller(ctrlr_uuid=ctrlr_uuid, transport=transport, remote_ip=remote_ip,
-                                                      port=1099, subsys_nqn="nqn" + str(nqn), host_nqn=remote_ip,
-                                                      ctrlr_id=0, ctrlr_type="BLOCK", command_duration=command_timeout)
+                                                      port=port, subsys_nqn="nqn" + str(nqn),
+                                                      host_nqn=remote_ip, ctrlr_id=0, ctrlr_type="BLOCK",
+                                                      command_duration=command_timeout)
                 fun_test.test_assert(command_result["status"],
                                      "Configuring {} transport Storage Controller for {} remote IP on DUT {}".
                                      format(transport, remote_ip, index))
