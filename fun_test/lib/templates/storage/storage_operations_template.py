@@ -175,6 +175,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
                                                                             host_nqn=host_nqn, dataplane_ip=dataplane_ip),
                                      message="NVMe connect from host: {}".format(host_obj.name))
+                if host_obj not in self.host_nvme_device:
+                    self.host_nvme_device[host_obj] = []
                 nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
                 fun_test.test_assert(expression=nvme_filename,
                                      message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
@@ -218,17 +220,17 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         result = None
         host_linux_handle = host_obj.get_instance()
         nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
-
-        if subsys_nqn:
-            for namespace in nvme_volumes:
-                nvme_device = namespace[:-2]
-                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                    nvme_device))
-                if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                    result = namespace
-                    self.host_nvme_device[host_obj] = namespace
-        else:
-            result = nvme_volumes[-1:][0]
+        if len(nvme_volumes) > 0:
+            if subsys_nqn:
+                for namespace in nvme_volumes:
+                    nvme_device = namespace[:-2]
+                    namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
+                        nvme_device))
+                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                        result = namespace
+                        self.host_nvme_device[host_obj].append(namespace)
+            else:
+                result = nvme_volumes[-1:][0]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
@@ -268,9 +270,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
-
-            host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
-            fun_test.add_checkpoint(checkpoint="Disconnect NVMe device")
+            for nvme_namespace in self.host_nvme_device[host_obj]:
+                nvme_device = nvme_namespace[:-2]
+                if nvme_device:
+                    host_handle.nvme_disconnect(device=nvme_device)
+                    fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
+                                            format(nvme_device, host_obj.name))
 
             for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))

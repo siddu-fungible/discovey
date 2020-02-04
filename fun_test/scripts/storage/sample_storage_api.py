@@ -79,7 +79,7 @@ class RunStorageApiCommands(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
                                                                                 filename="/dev/"+nvme_device_name)
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic result")
+            fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
     def cleanup(self):
