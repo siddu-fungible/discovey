@@ -77,9 +77,7 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "fio_write_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
     "fio_verify_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
-    "fio_job_name": "inspur_8k_random_read_write",
-    "status_interval": 10,
-    "fio_combo": ["read", "read"]
+    "status_interval": 10
   },
   "C16230": {
     "ec_info": {
@@ -124,9 +122,7 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "fio_write_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
     "fio_verify_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
-    "fio_job_name": "inspur_8k_random_read_write",
-    "status_interval": 10,
-    "fio_combo": ["read", "read"]
+    "status_interval": 10
   },
   "C18748": {
     "ec_info": {
@@ -172,8 +168,97 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "fio_write_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
     "fio_verify_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
-    "fio_job_name": "inspur_8k_random_read_write",
-    "status_interval": 10,
-    "fio_combo": ["read", "read"]
+    "status_interval": 10
+  },
+  "C18749": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 1073741824,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    // timeout used for the storage controller
+    "command_timeout": 10,
+    "ns_id": 1,
+    "nvme_io_queues": 1,
+    "nvme_device": "/dev/nvme",
+    "trigger_failure": true,
+    "failure_mode": "random",
+    // If 'fail_drive' is true, initiate drive failure else initiate plex failure
+    "fail_drive": true,
+    "plex_failure_count": 3,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+  "C18750": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 1073741824,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    // timeout used for the storage controller
+    "command_timeout": 10,
+    "ns_id": 1,
+    "nvme_io_queues": 1,
+    "nvme_device": "/dev/nvme",
+    "trigger_failure": true,
+    "failure_mode": "random",
+    // If 'fail_drive' is true, initiate drive failure else initiate plex failure
+    "fail_drive": true,
+    "plex_failure_count": 6,
+    "fail_all": true,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 4, "numjobs": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
   }
 }
