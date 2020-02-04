@@ -3129,7 +3129,7 @@ class RawVolumeNvmeTcpMultiHostPerformance(FunModel):
     input_encryption = models.BooleanField(verbose_name="Encryption enabled")
     input_compression_effort = models.IntegerField(verbose_name="Compression effort")
     input_key_size = models.IntegerField(verbose_name="Key size")
-    input_xtweak = models.TextField(verbose_name="Xtweak")
+    input_xtweak = models.IntegerField(verbose_name="Xtweak")
     input_io_size = models.TextField(verbose_name="IO size")
     input_platform = models.TextField(default=FunPlatform.F1)
     run_time_id = models.IntegerField(default=None, null=True)
