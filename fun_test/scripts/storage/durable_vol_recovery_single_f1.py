@@ -526,9 +526,9 @@ class DurableVolumeTestcase(FunTestCase):
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
                                  "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
-                                 .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                         self.fio_write_cmd_args["iodepth"],
-                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["iodepth"],
+                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
 
         if hasattr(self, "trigger_failure") and self.trigger_failure:
@@ -549,11 +549,13 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.log("Initiating drive power off")
                         device_fail_status = self.storage_controller.power_toggle_ssd(
                             device_id=fail_device, action="off", command_duration=self.command_timeout)
-                        fun_test.test_assert(device_fail_status["status"], "Disabling Device ID {}".format(fail_device))
+                        fun_test.test_assert(device_fail_status["status"], "PowerOff drive on slot {}".
+                                             format(fail_device))
                         # Validate if Device is marked as Failed
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
-                        fun_test.simple_assert(device_stats["status"], "Device {} stats command".format(fail_device))
+                        fun_test.simple_assert(not device_stats["status"], "Drive on slot {} not offline".
+                                               format(fail_device))
                         # ## ''' Marking drive as off ''' ## #
 
                 # Verifying data integrity after drive power off
@@ -617,7 +619,8 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.log("Initiating drive power off")
                         device_fail_status = self.storage_controller.power_toggle_ssd(
                             device_id=fail_device, action="off", command_duration=self.command_timeout)
-                        fun_test.test_assert(device_fail_status["status"], "PowerOff Device ID {}".format(fail_device))
+                        fun_test.test_assert(device_fail_status["status"], "PowerOff drive on slot {}".
+                                             format(fail_device))
                         # Validate if Device is marked as Failed
                         device_power_status = self.storage_controller.get_ssd_power_status(device_id=fail_device,
                                                                                            command_duration=self.command_timeout)
@@ -625,7 +628,8 @@ class DurableVolumeTestcase(FunTestCase):
                                                format(fail_device))
                         device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", fail_device)
                         device_stats = self.storage_controller.peek(device_props_tree)
-                        fun_test.simple_assert(not device_stats["status"], "Device {} not offline".format(fail_device))
+                        fun_test.simple_assert(not device_stats["status"], "Drive on slot {} not offline".
+                                               format(fail_device))
 
                         # Verifying data integrity after each drive is powered off
                         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
