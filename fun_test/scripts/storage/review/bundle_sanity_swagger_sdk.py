@@ -89,7 +89,7 @@ class BltApiStorageTest(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
+        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
         fun_test.test_assert(expression=vol_uuid_dict, message="Volume of capacity 100GB created")
         hosts = self.topology.get_hosts()
