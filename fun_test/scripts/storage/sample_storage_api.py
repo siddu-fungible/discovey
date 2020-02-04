@@ -54,25 +54,23 @@ class RunStorageApiCommands(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize()
+        self.storage_controller_template.initialize(already_deployed=False)
 
         fs_obj_list = []
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
+        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
         fun_test.test_assert(expression=vol_uuid_dict, message="Create Volume Successful")
-        hosts = self.topology.get_available_hosts()
+        hosts = self.topology.get_available_host_instances()
         for fs_obj in vol_uuid_dict:
-            for host_id in hosts:
-                host_obj = hosts[host_id]
-                attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
-                                                                                   volume_uuid=vol_uuid_dict[fs_obj],
-                                                                                   validate_nvme_connect=True,
-                                                                                   raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+                                                                               volume_uuid=vol_uuid_dict[fs_obj],
+                                                                               validate_nvme_connect=True,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
     def run(self):
         hosts = self.topology.get_available_hosts()
@@ -81,7 +79,7 @@ class RunStorageApiCommands(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
                                                                                 filename="/dev/"+nvme_device_name)
-            fun_test.test_assert(expression=traffic_result, message="FIO traffic result")
+            fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
     def cleanup(self):

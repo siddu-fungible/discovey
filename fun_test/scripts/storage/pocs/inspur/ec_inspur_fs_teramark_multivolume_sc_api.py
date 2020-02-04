@@ -422,7 +422,8 @@ class ECVolumeLevelTestcase(FunTestCase):
                                                                             nvme_connect_ip,
                                                                             self.transport_port, nqn, host_nqn_val))
                     fun_test.log(nvme_connect_cmd_res)
-                fun_test.test_assert(expression="error" not in nvme_connect_cmd_res,
+                fun_test.test_assert(expression="error" not in nvme_connect_cmd_res.lower()
+                                     or 'failed' in nvme_connect_cmd_res.lower(),
                                      message="nvme connect command succesful")
                 fun_test.sleep("Wait for couple of seconds for the volume to be accessible to the host", 5)
                 host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")

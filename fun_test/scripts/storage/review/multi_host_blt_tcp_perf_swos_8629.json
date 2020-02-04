@@ -71,12 +71,8 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096,
-      "stripe_count": 0
+      "block_size": 4096
     },
-    "create_pool": false,
-    "default_pool":"global",
-    "pool_name": "pool1",
     "drive_margin": 0,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
@@ -88,8 +84,9 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
+    "warm_up_count": 1,
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200
     },
     "fio_cmd_args": {
@@ -101,7 +98,7 @@
       "randread"
     ],
     "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(16, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)", "(32, 16)"],
+    "fio_jobs_iodepth": ["(32, 8)"],
     "full_run_iodepth": [128],
     "fio_full_run_time": 1200,
     "fio_full_run_timeout": 1230,
@@ -110,13 +107,7 @@
     },
     "nvme_device": "/dev/nvme",
     "expected_fio_result": {
-      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(16, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 16)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
     },
     "host_count": 1,
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
@@ -130,12 +121,8 @@
       "ns_id": 1,
       "type": "VOL_TYPE_BLK_LOCAL_THIN",
       "capacity": 1600277970944,
-      "block_size": 4096,
-      "stripe_count": 0
+      "block_size": 4096
     },
-    "create_pool": false,
-    "default_pool":"global",
-    "pool_name": "pool1",
     "drive_margin": 0,
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
     "controllers": 1,
@@ -147,6 +134,7 @@
     "command_timeout": 30,
     "iter_interval": 2,
     "warm_up_traffic": 1,
+    "warm_up_count": 1,
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
       "timeout": 7200
@@ -231,59 +219,5 @@
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "collect_network_stats": false,
     "csi_perf_iodepth": [128]
-  },
-  "MultiHostFioRandReadAfterReboot": {
-    "num_ssd": 12,
-    "blt_count": 12,
-    "blt_details": {
-      "ns_id": 1,
-      "type": "VOL_TYPE_BLK_LOCAL_THIN",
-      "capacity": 1600277970944,
-      "block_size": 4096,
-      "stripe_count": 0
-    },
-    "create_pool": false,
-    "default_pool":"global",
-    "pool_name": "pool1",
-    "drive_margin": 0,
-    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
-    "controllers": 1,
-    "syslog": "default",
-    "nqn": "nqn1",
-    "transport_type": "tcp",
-    "transport_port": 4420,
-    "nvme_io_queues": 16,
-    "command_timeout": 30,
-    "iter_interval": 2,
-    "warm_up_traffic": 1,
-    "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
-      "timeout": 7200
-    },
-    "fio_cmd_args": {"bs": "4k", "rw": "randread", "size": "100%", "direct": 1, "prio": 0,  "cpus_allowed_policy": "split", "norandommap": "NO_VALUE", "randrepeat": 0, "numjobs":32, "iodepth": 4, "verify": "md5", "do_verify": 1, "timeout": 180},
-    "fio_modes": [
-      "randread"
-    ],
-    "fio_bs": "4k",
-    "fio_jobs_iodepth": ["(1, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)"],
-    "full_run_iodepth": [128],
-    "fio_full_run_time": 1200,
-    "fio_full_run_timeout": 1230,
-    "fio_job_name": {
-      "randread": "nhosts"
-    },
-    "nvme_device": "/dev/nvme",
-    "expected_fio_result": {
-      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
-      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
-    },
-    "host_count": 1,
-    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
-    "collect_network_stats": false,
-    "csi_perf_iodepth": [128],
-    "api_server_up_timeout": 300
   }
 }

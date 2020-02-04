@@ -218,9 +218,12 @@ class BringupSetup(FunTestCase):
                 result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
                 fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
                                                                          % server)
-                self.host_pcie_info[server] = result
                 linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
                 linux_obj.sudo_command("netplan apply")
+                server_hostname = linux_obj.sudo_command("hostname").strip()
+                linux_obj.disconnect()
+                self.host_pcie_info[server_hostname] = result
+
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])

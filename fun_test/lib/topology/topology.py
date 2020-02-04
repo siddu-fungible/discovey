@@ -190,3 +190,11 @@ class ExpandedTopology(ToDictMixin):
     @fun_test.safe
     def get_available_hosts(self):
         return self.get_hosts()
+
+    @fun_test.safe
+    def get_available_host_instances(self):
+        result = None
+        available_hosts = self.get_hosts()
+        if available_hosts:
+            result = available_hosts.values()
+        return result

@@ -115,6 +115,7 @@ export class RegressionComponent implements OnInit {
   filterButtons: FilterButton [] = [];
   userMap: any = null;
   showingTestBeds: boolean = false;
+  showingQueues: boolean = false;
   searchForm: FormGroup;
   selectedItems = [];
   dropDownSettings = {};

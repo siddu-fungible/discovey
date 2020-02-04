@@ -111,14 +111,19 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         super(GenericVolumeOperationsTemplate, self).__init__(topology)
         self.topology = topology
 
-    def create_volume(self, fs_obj_list, body_volume_intent_create):
+    def create_volume(self, fs_obj, body_volume_intent_create):
         """
         Create a volume for each fs_obj in fs_obj_list
-        :param fs_obj_list: List of fs objects
+        :param fs_obj: List of fs objects
         :param body_volume_intent_create: object of class BodyVolumeIntentCreate with volume details
         :return: dict with format {fs_obj: volume_uuid}
         """
         result = {}
+        fs_obj_list = []
+        if not isinstance(fs_obj, list):
+            fs_obj_list.append(fs_obj)
+        else:
+            fs_obj_list = fs_obj
         for fs_index, fs_obj in enumerate(fs_obj_list):
             vol_type = VolumeTypes()
 
@@ -140,48 +145,62 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         :param fs_obj: fs_object from topology
         :param volume_uuid: uuid of volume returned after creating volume
-        :param host_obj: host handle from topology to which the volume needs to be attached
+        :param host_obj: host handle or list of host handles from topology to which the volume needs to be attached
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
-        :return: Attach volume result
+        :return: Attach volume result in case of 1 host_obj
+                 If multiple host_obj are provided, the result is a list of attach operation results,
+                 in the same order of host_obj
         """
-        result = None
-        fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
-        storage_controller = fs_obj.get_storage_controller()
-        host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
-        if not raw_api_call:
-            attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
-
-            try:
-                result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
-                                                                      body_volume_attach=attach_fields)
-
-            except ApiException as e:
-                fun_test.test_assert(expression=False,
-                                     message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
-                result = None
+        result_list = []
+        host_obj_list = []
+        if not isinstance(host_obj, list):
+            host_obj_list.append(host_obj)
         else:
-            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-            result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+            host_obj_list = host_obj
+        for host_obj in host_obj_list:
+            result = None
+            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
+            storage_controller = fs_obj.get_storage_controller()
+            host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
+            if not raw_api_call:
+                attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
 
-        if validate_nvme_connect:
-            if raw_api_call:
-                fun_test.test_assert(expression=result["status"], message="Attach volume result")
-                subsys_nqn = result["data"]["subsys_nqn"]
-                host_nqn = result["data"]["host_nqn"]
-                dataplane_ip = result["data"]["ip"]
+                try:
+                    result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
+                                                                          body_volume_attach=attach_fields)
+                    result_list.append(result)
+                except ApiException as e:
+                    fun_test.test_assert(expression=False,
+                                         message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                    result = None
             else:
-                subsys_nqn = result.subsys_nqn
-                host_nqn = result.host_nqn
-                dataplane_ip = result.ip
+                raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+                result_list.append(result)
+            if validate_nvme_connect:
+                if raw_api_call:
+                    fun_test.test_assert(expression=result["status"], message="Attach volume result")
+                    subsys_nqn = result["data"]["subsys_nqn"]
+                    host_nqn = result["data"]["host_nqn"]
+                    dataplane_ip = result["data"]["ip"]
+                else:
+                    subsys_nqn = result.subsys_nqn
+                    host_nqn = result.host_nqn
+                    dataplane_ip = result.ip
 
-            fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
-                                                                        host_nqn=host_nqn, dataplane_ip=dataplane_ip),
-                                 message="NVMe connect from host: {}".format(host_obj.name))
-            nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
-            fun_test.test_assert(expression=nvme_filename,
-                                 message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-
+                fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
+                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip),
+                                     message="NVMe connect from host: {}".format(host_obj.name))
+                if host_obj not in self.host_nvme_device:
+                    self.host_nvme_device[host_obj] = []
+                nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
+                fun_test.test_assert(expression=nvme_filename,
+                                     message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
+        if len(result_list) == 1:
+            result = result_list[0]
+        else:
+            result = result_list
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
@@ -218,17 +237,17 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         result = None
         host_linux_handle = host_obj.get_instance()
         nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
-
-        if subsys_nqn:
-            for namespace in nvme_volumes:
-                nvme_device = namespace[:-2]
-                namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                    nvme_device))
-                if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                    result = namespace
-                    self.host_nvme_device[host_obj] = namespace
-        else:
-            result = nvme_volumes[-1:][0]
+        if len(nvme_volumes) > 0:
+            if subsys_nqn:
+                for namespace in nvme_volumes:
+                    nvme_device = namespace[:-2]
+                    namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
+                        nvme_device))
+                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                        result = namespace
+                        self.host_nvme_device[host_obj].append(namespace)
+            else:
+                result = nvme_volumes[-1:][0]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
@@ -269,9 +288,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
-
-            host_handle.nvme_disconnect(nvme_subsystem=self.host_nvme_device[host_obj])
-            fun_test.add_checkpoint(checkpoint="Disconnect NVMe device")
+            for nvme_namespace in self.host_nvme_device[host_obj]:
+                nvme_device = nvme_namespace[:-2]
+                if nvme_device:
+                    host_handle.nvme_disconnect(device=nvme_device)
+                    fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
+                                            format(nvme_device, host_obj.name))
 
             for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))
