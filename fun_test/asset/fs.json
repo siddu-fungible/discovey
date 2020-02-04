@@ -1211,8 +1211,8 @@
     "revision": "2",
     "bundle_compatible": true,
     "fpga": {
-      "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "",
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
       "mgmt_ip": "fs174-fpga",
       "telnet_ip": "fs-terminal.fungible.local",
       "telnet_port": 2037,
