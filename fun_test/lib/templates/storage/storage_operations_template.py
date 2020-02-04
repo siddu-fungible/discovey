@@ -66,7 +66,24 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self, already_deployed=False):
+    def count_online_dpus(self):
+        """
+        Find the number of DPUs online using API
+        :return: Returns the number of DPUs online
+        """
+        result = 0
+        for dut_index in self.topology.get_available_duts().keys():
+            fs = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs.get_storage_controller()
+            all_pools = storage_controller.storage_api.get_all_pools()
+            for pool_id in all_pools.data:
+                dpu_list = all_pools.data[pool_id].dpus
+                result += len(dpu_list)
+                for dpu in dpu_list:
+                    fun_test.test_assert(expression=dpu, message="DPU : {} is online".format(dpu))
+        return result
+
+    def initialize(self, already_deployed=False, online_dpu_count=2):
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
@@ -76,6 +93,8 @@ class StorageControllerOperationsTemplate():
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
+            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.count_online_dpus(),
+                                          message="Make sure {} DPUs are online".format(online_dpu_count))
 
     def cleanup(self):
         pass
