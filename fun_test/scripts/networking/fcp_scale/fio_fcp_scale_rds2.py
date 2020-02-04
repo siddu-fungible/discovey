@@ -243,6 +243,8 @@ def TestbedSetup():
             enable_fcp_rds = False
             fun_test.shared_variables["enable_fcp_rds"] = enable_fcp_rds
 
+
+
         # Removing any funeth driver from COMe and and all the connected server
         threads_list = []
         single_f1 = False
@@ -295,8 +297,13 @@ def TestbedSetup():
 
                 f11_bootarg += " rdstype=fcp"
 
-            f10_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
-            f11_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+            if "debug_enable" in job_inputs:
+
+                if job_inputs["debug_enable"]:
+
+                    f10_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+                    f11_bootarg += " module_log=tcp:DEBUG,rdsock_fun_tcp:DEBUG,fabrics_host:DEBUG"
+
             topology_helper.set_dut_parameters(dut_index=index,
                                                f1_parameters={0: {"boot_args": f10_bootarg},
                                                               1: {"boot_args": f11_bootarg}},
@@ -351,6 +358,10 @@ class RDSVolumePerformanceScript(FunTestScript):
             fun_test.shared_variables["num_vols"] = job_inputs["num_vols"]
         else:
             fun_test.shared_variables["num_vols"] = 1
+        if "rds_conn" in job_inputs:
+            fun_test.shared_variables["rds_conn"] = job_inputs["rds_conn"]
+        else:
+            fun_test.shared_variables["rds_conn"] = 1
         if "fpg_mtu" in job_inputs:
             fun_test.shared_variables["fpg_mtu"] = job_inputs["fpg_mtu"]
         else:
@@ -658,7 +669,7 @@ class RDSVolumePerformanceScript(FunTestScript):
                                                                               name=rds_vol_name,
                                                                               uuid=rds_vol_uuid,
                                                                               remote_nsid=int(volume_index),
-                                                                              connections=4,
+                                                                              connections=int(fun_test.shared_variables["rds_conn"]),
                                                                               host_nqn=params[rds_fs_name][
                                                                                              rds_f1_index + '_ip'],
                                                                               subsys_nqn=rds_ctrl_name,
