@@ -1523,8 +1523,8 @@ class ComE(Linux):
     def diags(self):
         fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
         clone = self.clone()
-        clone.command("dmesg")
-        clone.command("cat /var/log/syslog")
+        clone.command("dmesg", timeout=120)
+        clone.command("cat /var/log/syslog", timeout=60)
 
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
