@@ -257,7 +257,7 @@ class RecoveryWithFailures(FunTestCase):
             fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
         # TODO: Format for now considering already_deployed=true
-        format_all_drives(self.storage_controller)
+        # format_all_drives(self.storage_controller)
 
     def run(self):
 
@@ -789,9 +789,9 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
 if __name__ == "__main__":
     ecrecovery = ECBlockRecoveryScript()
-    #ecrecovery.add_test_case(RecoveryWithMFailure())
-    #ecrecovery.add_test_case(RecoveryWithMplus1Failure())
+    ecrecovery.add_test_case(RecoveryWithMFailure())
+    ecrecovery.add_test_case(RecoveryWithMplus1Failure())
     ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
-    #ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
-    #ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
     ecrecovery.run()
