@@ -2,7 +2,7 @@ router_mac:
   00:de:ad:be:ef:00
 
 # NU host - the keyword must start with "nu"
- nu:
+nu:
    hostname: poc-server-06
    username: localadmin
    password: Precious1*
@@ -25,7 +25,7 @@ router_mac:
          - prefix: 2001::53:1:1:0/112
            nexthop: 2001::20:1:1:2
 
- nu2:
+nu2:
    hostname: poc-server-07
    username: localadmin
    password: Precious1*
