@@ -334,6 +334,7 @@ class ECVolumeLevelTestcase(FunTestCase):
             count = 0
             for host_name in self.host_info:
                 host_ips.append(self.host_info[host_name]["ip"])
+                self.host_info[host_name]["num_volumes"] = 0
 
             for num in xrange(self.ec_info["num_volumes"]):
 
@@ -361,6 +362,9 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching EC volume {} to the host {}".
                                      format(response["data"]["uuid"], host_ips[num]))
+                for host_name in self.host_info:
+                    if self.host_info[host_name]["ip"] == host_ips[num]:
+                        self.host_info[host_name]["num_volumes"] += 1
                 count += 1
             fun_test.shared_variables["ec"]["setup_created"] = True
             fun_test.shared_variables["ec_info"] = self.ec_info
