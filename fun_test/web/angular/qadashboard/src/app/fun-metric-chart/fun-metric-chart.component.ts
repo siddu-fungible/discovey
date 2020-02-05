@@ -234,7 +234,7 @@ export class FunMetricChartComponent implements OnInit, OnChanges {
         self.pointInfo["Suite log directory"] = props.suite_execution_id;
       }
       if (props.version) {
-        self.pointInfo["Version"] = "bld_" + props.version;
+        self.pointInfo["Version"] = props.version;
       }
       if (props.associated_suites) {
         self.pointInfo["Associated suites"] = props.associated_suites;
