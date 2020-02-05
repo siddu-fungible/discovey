@@ -79,8 +79,8 @@ table {
   width: 0;
   position: fixed;
   z-index: 1;
-  height: 250px;
-  background-color: rgb(227, 234, 242);
+  height: 300px;
+  background-color: whitesmoke;
 
   box-shadow: 0 0 10px;
   overflow-x: hidden;
@@ -89,4 +89,14 @@ table {
 
 .side-panel-open {
   width: 50%;
+}
+
+.selected-option {
+  border: 1px solid #337ab7;
+  margin: 4px;
+  background: #337ab7;
+  padding: 0 5px;
+  color: #fff;
+  border-radius: 2px;
+  float: left;
 }

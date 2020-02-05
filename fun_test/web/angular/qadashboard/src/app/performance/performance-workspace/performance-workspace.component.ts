@@ -10,6 +10,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import {Title} from "@angular/platform-browser";
 import {PerformanceService} from "../performance.service";
 import {SelectMode} from "../performance.service";
+import {UserProfile} from "../../login/definitions";
 
 @Component({
   selector: 'performance-workspace',
@@ -32,6 +33,7 @@ export class PerformanceWorkspaceComponent implements OnInit {
   description: string = null;
   subscribeToAlerts: boolean = false;
   alertEmails: string = "";
+  userProfile: UserProfile = null;
 
   constructor(private loggerService: LoggerService, private  apiService: ApiService, private router: Router,
               private route: ActivatedRoute, private commonService: CommonService, private modalService: NgbModal,
@@ -40,25 +42,18 @@ export class PerformanceWorkspaceComponent implements OnInit {
 
   ngOnInit() {
     this.title.setTitle('Workspace');
+    this.userProfile = this.commonService.getUserProfile();
+    if (!this.userProfile) {
+      this.loggerService.error("Unable to fetch user profile");
+      return;
+    }
     this.route.params.subscribe(params => {
       if (params['emailId']) {
         let user = {};
         user["email"] = params["emailId"];
         this.fetchUsersWorkspaces(user);
       } else {
-        new Observable(observer => {
-          observer.next(true);
-          observer.complete();
-          return () => {
-          }
-        }).pipe(
-          switchMap(response => {
-            return this.fetchUsers();
-          })).subscribe(response => {
-          console.log("fetched users");
-        }, error => {
-          this.loggerService.error("Unable to fetch users");
-        });
+        this.onUserChange(this.userProfile.user);
       }
     });
   }

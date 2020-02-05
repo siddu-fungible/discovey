@@ -341,12 +341,24 @@ def assets(request, name, asset_type):
         request_json = json.loads(request.body)
         try:
             asset = Asset.objects.get(name=name, type=asset_type)
+
+
             original_manual_lock_user = asset.manual_lock_user
             if "manual_lock_user" in request_json:
+                associated_test_beds = asset.test_beds
+                if request_json.get("manual_lock_user", None) and associated_test_beds:
+                    for associated_test_bed in associated_test_beds:
+                        try:
+                            associated_test_bed_object = TestBed.objects.get(name=associated_test_bed)
+                            if associated_test_bed_object.manual_lock and associated_test_bed_object.manual_lock_submitter:
+                                raise Exception("Asset: {} is already locked at the Test-bed: {} level".format(asset.name, associated_test_bed_object.name))
+                        except ObjectDoesNotExist:
+                            pass
+
                 asset.manual_lock_user = request_json.get("manual_lock_user")
                 lock_or_unlock = "lock" if asset.manual_lock_user else "un-lock"
                 to_addresses = [TEAM_REGRESSION_EMAIL]
-                if original_manual_lock_user:
+                if original_manual_lock_user or asset.manual_lock_user:
                     to_addresses.append(original_manual_lock_user)
                     if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
@@ -360,7 +372,7 @@ def assets(request, name, asset_type):
             asset.save()
             result = True
         except Exception as ex:
-            pass #TODO
+            raise Exception(str(ex))
     return result
 
 

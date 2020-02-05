@@ -167,7 +167,7 @@ class FunTestClient:
             "email_list": email_list,
             "submitter_email": submitter_email,
             "environment": environment,
-            "test_bed_type": test_bed_type,
+            "test_bed_type": [test_bed_type],
             "description": description,
             "max_run_time": max_run_time
         }

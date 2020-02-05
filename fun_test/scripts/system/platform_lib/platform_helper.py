@@ -885,7 +885,7 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(result, "F1_{}: SSD's ONLINE".format(f1))
         return result
 
-    def get_dpcsh_data_for_cmds(self, cmd, f1=0, get_raw_output=False):
+    def get_dpcsh_data_for_cmds(self, cmd, f1=0, command_duration=10):
         split_cmd = cmd.split(" ", 1)
         verb = split_cmd[0]
         data = split_cmd[1]
@@ -893,9 +893,9 @@ class Platform(RedFishTool, IpmiTool):
             self.load_new_image = True
             self.initialize_dpcsh()
         if f1 == 0:
-            output = self.dpc_f1_0.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_0.json_execute(verb=verb, data=data, command_duration=command_duration)
         elif f1 == 1:
-            output = self.dpc_f1_1.json_execute(verb=verb, data=data)
+            output = self.dpc_f1_1.json_execute(verb=verb, data=data, command_duration=command_duration)
         result = output["data"]
         return result
 
@@ -1043,12 +1043,17 @@ class Platform(RedFishTool, IpmiTool):
         fun_test.test_assert(f1_0_network_result, "Snake test on F1_0")
         fun_test.test_assert(f1_1_network_result, "Snake test on F1_1")
 
-    def verify_port_link_status(self, f1=0, port_num_list=[0], speed="100g", verify_sw=True, verify_hw=True, verfiy_fec=False):
+    def verify_port_link_status(self, f1=0, port_num_list=[0], speed="100g", verify_sw=True, verify_hw=True, verfiy_fec=False, strict=True):
         link_status = self.get_dpcsh_data_for_cmds("port linkstatus", f1=0)
         link_status_json = self.parse_link_status_out(link_status, f1, create_table=False)
+        result_list = []
         for port_num in port_num_list:
             result = self.verify_link_status_json(link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec)
-            fun_test.test_assert(result, "Validate port : {}".format(port_num))
+            result_list.append(result)
+            if strict:
+                fun_test.test_assert(result, "Validate port : {}".format(port_num))
+        final_result = all(result_list)
+        return final_result
 
     def verify_link_status_json(self, link_status_json, port_num, speed, verify_sw, verify_hw, verfiy_fec,
                                 verify_xcvr=True):
@@ -1068,14 +1073,26 @@ class Platform(RedFishTool, IpmiTool):
             result = False
         return result
 
+    def brk_mode_speed_conversion(self, speed=None, brkmode=None):
+        result = None
+        if speed == "100g":
+            result = "no_brk_100g"
+        if speed == "25g":
+            result = "brk_4x25g"
+        if brkmode == "brk_4x25g":
+            result = "25g"
+        if brkmode == "no_brk_100g":
+            result = "100g"
+        return result
+
+
     def split_n_verify_port_link_status(self, port_num, speed, f1=0, verify_sw=True, verify_hw=True, verfiy_fec=False,
                                         verify_using_ethtool=True):
+        brkmode = self.brk_mode_speed_conversion(speed=speed)
         if speed == "100g":
-            brkmode = "no_brk_100g"
             port_num_list = [port_num]
             self.port_break_dpcsh(port_num, brkmode)
         elif speed == "25g":
-            brkmode = "brk_4x25g"
             port_num_list = range(port_num, port_num + 8)
             self.port_break_dpcsh(port_num, brkmode)
 
@@ -1085,15 +1102,36 @@ class Platform(RedFishTool, IpmiTool):
         self.verify_port_link_status(f1, port_num_list, speed, verify_sw=verify_sw, verify_hw=verify_hw,
                                      verfiy_fec=verfiy_fec)
         if verify_using_ethtool:
-            self.verify_port_link_status_ethtool()
+            self.verify_port_link_status_ethtool(f1, port_num_list, speed)
 
-    def verify_port_link_status_ethtool(self):
-        pass
+    def verify_port_link_status_ethtool(self, f1, port_num_list=[0], speed="100g", link_detected="yes"):
+        docker = self.come_handle.get_funcp_container(f1)
+        for fpg_port in port_num_list:
+            result = True
+            fpg = "fpg" + str(fpg_port)
+            response = docker.ethtool(fpg)
+            fun_test.test_assert_expected(link_detected, response["link_detected"], fpg + " link detected status")
+            eth_speed = str(int(re.search(r"\d+", response["speed"]).group())/1000) + "g"
+            fun_test.test_assert_expected(speed, eth_speed, fpg + "speed")
+        docker.disconnect()
 
-    def port_break_dpcsh(self, port_num=0, brkmode="no_brk_100g"):
+    def port_break_dpcsh(self, port_num=0, brkmode="no_brk_100g", f1=0):
+        port_num_list = [port_num]
+        speed = self.brk_mode_speed_conversion(brkmode=brkmode)
+        fpg = "fpg" + str(port_num)
+
         port_break_cmd = 'port breakoutset {"portnum":%s, "shape":0} {"brkmode":%s}' % (port_num, brkmode)
-        self.get_dpcsh_data_for_cmds(port_break_cmd)
-        fun_test.sleep("Port breakoutset", seconds=2)
+        self.get_dpcsh_data_for_cmds(f1=f1, cmd=port_break_cmd)
+        fun_test.sleep("Port breakout set", seconds=10)
+
+        result = self.verify_port_link_status(f1, port_num_list, speed, verify_sw=False, verify_hw=False, verfiy_fec=False, strict=False)
+        fun_test.test_assert(result, "{} set to brkmode: {}".format(fpg, brkmode))
+
+    def docker_bringup_all_fpg_ports(self, f1):
+        docker = self.come_handle.get_funcp_container(f1)
+        cmd = "for e in $(ifconfig -a | grep fpg | awk -F: '{print $1}'); do ifconfig $e up; done"
+        docker.command(cmd)
+        fun_test.sleep("All the fpg ports to be up", seconds=20)
 
 
 class StorageApi:
@@ -1410,3 +1448,43 @@ class DliPower:
     def get_outlet_name(self, outlet):
         name = self.switch.get_outlet_name(outlet)
         return name
+
+class PwmTachtool:
+    DEVICE_ID = 0
+
+    def __init__(self, bmc_handle=None):
+        if bmc_handle:
+            self.bmc_handle = bmc_handle
+        else:
+            if not getattr(self, "fs", False):
+                self.initialise_fs()
+            self.bmc_handle = Bmc(host_ip=self.fs['bmc']['mgmt_ip'],
+                                  ssh_username=self.fs['bmc']['mgmt_ssh_username'],
+                                  ssh_password=self.fs['bmc']['mgmt_ssh_password'])
+
+    def initialise_fs(self):
+        fs_name = fun_test.get_job_environment_variable("test_bed_type")
+        self.fs = AssetManager().get_fs_spec(fs_name)
+
+    def pwmtachtool(self, cmd):
+        pwm_cmd = "pwmtachtool 0 " + cmd
+        result = self.bmc_handle.command(pwm_cmd)
+        return result
+
+    def set_pwm_dutycycle(self, fan, speed):
+        cmd = "--set-pwm-dutycycle %s %s" % (fan, speed)
+        result = self.pwmtachtool(cmd)
+        fun_test.sleep("To set fan speed", seconds=3)
+        fun_test.log("Fan {} speed set to dutycycle: {}".format(fan, speed))
+        return result
+
+    def get_fan_speed(self, fan):
+        speed = False
+        cmd = "--get-fan-speed {}".format(fan)
+        result = self.pwmtachtool(cmd)
+        match_speed = re.search(r"speed\s+is\s+(?P<speed>\d+)", result)
+        if match_speed:
+            speed = int(match_speed.group("speed"))
+            fun_test.log("Fan {} speed: {}".format(fan, speed))
+        return speed
+
