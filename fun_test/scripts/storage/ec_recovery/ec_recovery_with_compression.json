@@ -28,7 +28,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300,
     "reboot_hosts": false,
-    "already_deployed": true,
+    "already_deployed": false,
     "space_savings": 80
   },
   "RecoveryWithMFailure": {
