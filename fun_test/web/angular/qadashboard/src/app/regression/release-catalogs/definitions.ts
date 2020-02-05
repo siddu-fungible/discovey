@@ -92,7 +92,7 @@ export class ReleaseCatalogExecution extends Api {
   deleted: boolean = false;
   error_message: string = null;
   build_number: number = null;
-
+  update_last_good_build: boolean = false;
 
   customDeserializableProperties = ["suite_executions"];
   deserializationHooks = {suite_executions: function(data)  {
@@ -111,7 +111,8 @@ export class ReleaseCatalogExecution extends Api {
       recurring: this.recurring,
       release_train: this.release_train,
       suite_executions: this.suite_executions.map(suiteElement => suiteElement.serialize()),
-      ready_for_execution: this.ready_for_execution
+      ready_for_execution: this.ready_for_execution,
+      update_last_good_build: this.update_last_good_build
     }
   }
 

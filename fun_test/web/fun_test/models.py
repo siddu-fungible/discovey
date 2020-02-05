@@ -401,6 +401,11 @@ class CatalogTestCaseExecution(models.Model):
     def __str__(self):
         return "{} {} {} {}".format(self.execution_id, self.jira_id, self.engineer, self.test_bed)
 
+class LastGoodBuild(FunModel):
+    release_train = models.TextField(default="master", null=True)
+    build_number = models.TextField(default="", null=True)
+    release_catalog_execution_id = models.IntegerField()
+    updated_date = models.DateTimeField(default=datetime.now)
 
 class ReleaseCatalogExecution(FunModel):
     release_catalog_id = models.IntegerField()
@@ -419,6 +424,7 @@ class ReleaseCatalogExecution(FunModel):
     ready_for_execution = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     error_message = models.TextField(default=None, null=True)
+    update_last_good_build = models.BooleanField(default=False)
 
     def __str__(self):
         return "CID: {} ME: {}".format(self.id, self.master_execution_id)
