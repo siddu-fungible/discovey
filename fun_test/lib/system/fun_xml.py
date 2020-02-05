@@ -730,6 +730,7 @@ class TestSection(GenericElement):
     def set_log_anchor(self, log_anchor, checkpoint, result, expected, actual):
         anchor = GenericElement("a")
         anchor.set("name", log_anchor)
+        anchor.set("id", log_anchor)
         anchor.text = "checkpoint:" + checkpoint + " Result:" + result + " Expected:" + str(
             expected) + " Actual:" + str(actual)
         anchor.set_attribute(attribute="class", attribute_value=RESULT_COLORS[result.lower()])
@@ -777,11 +778,13 @@ class TestSection(GenericElement):
         one_row.append(one_table_data)
 
         one_table_data = GenericElement("td")
-        anchor = GenericElement("a", id="cp_" + log_anchor)
+        # anchor = GenericElement("a", id="cp_" + log_anchor)
+        anchor = GenericElement("div", id="cp_" + log_anchor)
+
         anchor.set("href", "#" + log_anchor)
         anchor.set("parent-id", self.href_id)
         anchor.text = result
-        anchor.set_attribute(attribute="class", attribute_value=RESULT_COLORS[result.lower()] + " checkpointlink")
+        anchor.set_attribute(attribute="class", attribute_value=RESULT_COLORS[result.lower()] + " checkpointlink pseudo-anchor")
         one_table_data.append(anchor)
         one_table_data.set_attribute(attribute="class", attribute_value=RESULT_COLORS[result.lower()])
         one_row.append(one_table_data)

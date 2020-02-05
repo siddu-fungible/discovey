@@ -136,7 +136,8 @@ class StorageController(NetworkController, DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, command_duration=TIMEOUT):
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, host_nqn, subsys_nqn,
+                          command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",
@@ -146,7 +147,9 @@ class StorageController(NetworkController, DpcshClient):
                                   "name": name,
                                   "remote_ip": remote_ip,
                                   "port": port,
-                                  "remote_nsid": remote_nsid}}
+                                  "remote_nsid": remote_nsid,
+                                  "host_nqn": host_nqn,
+                                  "subsys_nqn": subsys_nqn}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
     def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, command_duration=TIMEOUT):
