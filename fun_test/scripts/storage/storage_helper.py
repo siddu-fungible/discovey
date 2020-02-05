@@ -300,7 +300,7 @@ def single_fs_setup(obj):
                                       password=obj.api_server_password)
 
     # Polling for API Server status
-    fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
+    fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout, come_obj=obj.come_obj[0]),
                            message="Bundle Image boot: API server is up")
     fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
     # Check if bond interface status is Up and Running
@@ -546,6 +546,43 @@ def compare(actual, expected, threshold, operation):
         return actual < (expected * (1 - threshold)) and ((expected - actual) > 2)
     else:
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
+
+
+def fetch_nvme_list(host_obj):
+    result = {'status': False}
+    nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
+    if nvme_list_raw:
+        if "failed to open" in nvme_list_raw.lower():
+            nvme_list_raw = nvme_list_raw + "}"
+            temp1 = nvme_list_raw.replace('\n', '')
+            temp2 = re.search(r'{.*', temp1).group()
+            nvme_list_dict = json.loads(temp2, strict=False)
+        else:
+            try:
+                nvme_list_dict = json.loads(nvme_list_raw)
+            except:
+                nvme_list_raw = nvme_list_raw + "}"
+                nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+
+        try:
+            nvme_device_list = []
+            for device in nvme_list_dict["Devices"]:
+                if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or \
+                        "fs1600" in device["ModelNumber"].lower():
+                    nvme_device_list.append(device["DevicePath"])
+                elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                    if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                        nvme_device_list.append(device["DevicePath"])
+            fio_filename = str(':'.join(nvme_device_list))
+            result = {'status': True, 'nvme_device': fio_filename}
+        except:
+            fio_filename = None
+            result = {'status': False, 'nvme_device': fio_filename}
+    else:
+        result = {'status': False, 'nvme_device': None}
+
+    return result
 
 
 def fetch_nvme_device(end_host, nsid, size=None):
@@ -836,7 +873,7 @@ def cleanup_host(host_obj):
     return result
 
 
-def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
+def ensure_api_server_is_up(sc_api, timeout=180, come_obj=None):  #WORKAROUND: timeout == 240
     result = False
     try:
         # Polling for API Server status
@@ -850,8 +887,14 @@ def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
             else:
                 fun_test.sleep("Waiting for API server to be up", 10)
                 fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
+        if not api_server_up_timer.is_expired():
+            if come_obj:
+                come_obj.command("netstat -anpt")
+                come_obj.command("ps -ef")
+
     except Exception as ex:
         fun_test.critical(str(ex))
+
     return result
 
 
