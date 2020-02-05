@@ -325,8 +325,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self, already_deployed=False):
-        super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed)
+    def initialize(self, already_deployed=False, online_dpu_count=2):
+        super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
+                                                                online_dpu_count=online_dpu_count)
 
     def cleanup(self):
         """
