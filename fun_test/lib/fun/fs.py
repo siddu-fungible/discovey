@@ -1004,7 +1004,7 @@ class BootupWorker(Thread):
                     if f1_index == self.fs.disable_f1_index:
                         continue
 
-                    bmc.remove_uart_logs(f1_index=f1_index)
+                    # bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
                                      context=self.context)
