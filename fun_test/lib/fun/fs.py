@@ -592,7 +592,7 @@ class Bmc(Linux):
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
                 output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index)
 
         else:
             output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
