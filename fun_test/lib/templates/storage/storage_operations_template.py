@@ -122,18 +122,23 @@ class StorageControllerOperationsTemplate():
 
     def verify_dataplane_ip(self, storage_controller, dut_index, raw_api_call=True):
         result = True
-        if raw_api_call:
-            for node in self.node_ids:
-                dut = self.topology.get_dut(index=dut_index)
-                fs_obj = self.topology.get_dut_instance(index=dut_index)
-                for f1_index in range(fs_obj.NUM_F1S):
-                    dpu_id = node + "." + str(f1_index)
+
+        for node in self.node_ids:
+            dut = self.topology.get_dut(index=dut_index)
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            for f1_index in range(fs_obj.NUM_F1S):
+                dpu_id = node + "." + str(f1_index)
+                first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
+                dataplane_ip = str(first_bond_interface.ip).split('/')[0]
+                if raw_api_call:
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                     result_api = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
                     fun_test.test_assert(expression=result_api["status"], message="Fetch Dataplane IPs using Raw API")
-                    first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                    dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                     result &= (str(result_api["data"]["dataplane_ip"]) == str(dataplane_ip))
+                else:
+                    get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
+                    fun_test.test_assert(expression=get_dpu, message="Fetch Dataplane IPs")
+                    result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
     def initialize(self, already_deployed=False, online_dpu_count=2):
@@ -329,7 +334,30 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
                                                                 online_dpu_count=online_dpu_count)
 
-    def cleanup(self):
+    def host_diagnostics(self, host_obj):
+
+        host_handle = host_obj.get_instance()
+        host_handle.dmesg()
+        for dut_index in self.topology.get_duts().keys():
+            dut = self.topology.get_dut(index=dut_index)
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            for f1_index in range(fs_obj.NUM_F1S):
+                bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
+                first_bond_interface = bond_interfaces[0]
+                dataplane_ip = str(first_bond_interface.ip).split('/')[0]
+                fun_test.add_checkpoint(expected=True, actual=host_handle.ping(dataplane_ip),
+                                        checkpoint="{host} can ping FS {fs_name} F1_{f1index} dataplane IP"
+                                        .format(host=host_handle, fs_name=fs_obj.name, f1index=f1_index))
+
+    def fs_diagnostics(self, fs_obj):
+        for f1_index in range(fs_obj.NUM_F1S):
+            f1_container = fs_obj.get_funcp_container(f1_index=f1_index)
+            f1_container.ifconfig()
+            f1_container.command("arp -n")
+            f1_container.command("route -n")
+            f1_container.ping()
+
+    def cleanup(self, test_result=True):
         """
         Kill all FIO instances on Host
         NVMe disconnect from Host
@@ -338,6 +366,10 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         Delete created volumes
         :return:
         """
+        if not test_result:
+            hosts = self.topology.get_available_host_instances()
+            for host_obj in hosts:
+                self.host_diagnostics(host_obj=host_obj)
         for host_obj in self.host_nvme_device:
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
