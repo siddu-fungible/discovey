@@ -36,4 +36,4 @@ for job in s:
         pass
 
     if print_it:
-        print "http://integration.fungible.local/regression/suite_detail/{} {}".format(job.execution_id, suite_name)
+        print "http://integration.fungible.local/regression/suite_detail/{} {} {}".format(job.execution_id, suite_name, job.result)
