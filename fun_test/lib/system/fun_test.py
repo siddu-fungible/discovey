@@ -300,6 +300,7 @@ class FunTest:
         self.current_time_series_checkpoint = 0
         self.fss = []
         self.at_least_one_failed = False
+        self.current_test_case_exception = False
         self.closed = False
         self.time_series_enabled = False
 
@@ -318,6 +319,9 @@ class FunTest:
         self.checkpoints = {}
         self.script_file_name = ""
         self.storage_api_enabled = False  # Just for backward-compatibility while we switchover to swagger
+
+    def is_current_test_case_failed(self):
+        return self.current_test_case_exception
 
     def enable_storage_api(self):   # Only needed for transition
         from lib.utilities.http import fetch_binary_file
@@ -2116,6 +2120,7 @@ class FunTestScript(object):
                     except TestException as ex:
                         fun_test.check_pause_on_failure(str(ex))
                         try:
+                            fun_test.current_test_case_exception = True
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
@@ -2129,6 +2134,7 @@ class FunTestScript(object):
                         fun_test.check_pause_on_failure(str(ex))
 
                         try:
+                            fun_test.current_test_case_exception = True
                             test_case.cleanup()
                         except Exception as ex:
                             fun_test.critical(str(ex))
