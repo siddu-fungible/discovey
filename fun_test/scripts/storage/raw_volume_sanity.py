@@ -103,6 +103,8 @@ class BltApiStorageTest (FunTestCase):
             vol_uuid = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                       body_volume_intent_create=body_volume_intent_create)
             vol_uuid_list.append(vol_uuid)
+
+        for i in range(self.blt_count):
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid_list[i],
                                                                                validate_nvme_connect=True,
