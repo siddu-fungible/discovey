@@ -243,6 +243,9 @@ class DurableVolumeTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "test_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = job_inputs["test_bs"]
+            self.fio_verify_cmd_args["bs"] = job_inputs["test_bs"]
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -541,6 +544,11 @@ class DurableVolumeTestcase(FunTestCase):
         test_thread_id = {}
         host_clone = {}
         # Writing first 50% of volume with --verify=md5
+
+        if "bs" not in self.fio_write_cmd_args:
+            self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            self.fio_verify_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
@@ -1061,10 +1069,19 @@ class DurableVolumeTestcase(FunTestCase):
 
 
 class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=1,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C16363"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1091,10 +1108,19 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
 
 
 class DurVolmDriveFailRebuild(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=2,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19529"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1121,10 +1147,19 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
 
 
 class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=3,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19169"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1151,10 +1186,19 @@ class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
 
 
 class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=4,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C16364"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1182,10 +1226,19 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
 
 
 class DurVolmDriveFailReSync(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=5,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19238"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1213,10 +1266,19 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
 
 
 class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
+    def __init__(self):
+        testcase = self.__class__.__name__
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=6,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
-                              test_rail_case_ids=["C19454"],
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
