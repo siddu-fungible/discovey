@@ -492,7 +492,7 @@ class BwTest(FunTestCase):
                                                                                     self.mtu))
 
         # Check this variables for NFCP test. As those will fail
-        if not self.fcp and not enable_fcp:
+        if not self.fcp:
             come_obj.command(
                 "echo SELECT 1 > /scratch/opt/fungible/f10_del")
             come_obj.command(
@@ -665,6 +665,7 @@ class LatencyTest(FunTestCase):
         f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
         f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
         enable_fcp = fun_test.shared_variables["enable_fcp"]
+        come_obj = fun_test.shared_variables["come_obj"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
@@ -703,8 +704,7 @@ class LatencyTest(FunTestCase):
                                                                                     self.mtu))
                 f11_hosts[index]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[index]["iface_name"],
                                                                                     self.mtu))
-        if not self.fcp and not enable_fcp:
-            come_obj = Linux(host_ip="fs66-come", ssh_username="fun", ssh_password="123")
+        if not self.fcp:
             come_obj.command(
                 "echo SELECT 1 > /scratch/opt/fungible/f10_del")
             come_obj.command(
@@ -777,7 +777,7 @@ class LatencyTest(FunTestCase):
             f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
             f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
 
-            if self.fcp and not enable_fcp:
+            if self.fcp:
                 f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
                 f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
                 if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
@@ -978,9 +978,9 @@ if __name__ == '__main__':
     ts.add_test_case(LatWriteFcp1500())
     ts.add_test_case(BwWriteFcp9000())
     ts.add_test_case(LatWriteFcp9000())
-    # ts.add_test_case(BwWriteNfcp1500())
-    # ts.add_test_case(LatWriteNfcp1500())
-    # ts.add_test_case(BwWriteNfcp9000())
-    # ts.add_test_case(LatWriteNfcp9000())
+    ts.add_test_case(BwWriteNfcp1500())
+    ts.add_test_case(LatWriteNfcp1500())
+    ts.add_test_case(BwWriteNfcp9000())
+    ts.add_test_case(LatWriteNfcp9000())
 
     ts.run()
