@@ -1,3 +1,5 @@
+
+
 from lib.system.fun_test import *
 
 fun_test.enable_storage_api()
@@ -38,12 +40,7 @@ class BringupSetup(FunTestScript):
         self.storage_controller_template.initialize(online_dpu_count=online_dpu_count,
                                                     already_deployed=already_deployed)
         fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
-        fs_obj_list = []
-        for dut_index in self.topology.get_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
 
-        fun_test.shared_variables["fs_obj_list"] = fs_obj_list
 
     def cleanup(self):
         self.topology.cleanup()
@@ -64,10 +61,18 @@ class BltApiStorageTest (FunTestCase):
                               ''')
 
     def setup(self):
-        testcase = " BltApiStorageTest"
+        testcase = self.__class__.__name__
         self.topology = fun_test.shared_variables["topology"]
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
-        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
+        self.fs_obj_list = []
+        for dut_index in self.topology.get_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.fs_obj_list.append(fs_obj)
+
+        print("fs_obj list is ",self.fs_obj_list)
+
+
+
         benchmark_parsing = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
@@ -88,18 +93,18 @@ class BltApiStorageTest (FunTestCase):
         fun_test.shared_variables["blt_count"] = self.blt_count
         vol_type = VolumeTypes().LOCAL_THIN
         if self.DUT == 1:
-            fs_obj = self.fs_obj_list[0]
+            self.fs_obj = self.fs_obj_list[0]
         hosts = self.topology.get_available_host_instances()
         for i in range(self.blt_count):
             body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + str(i), vol_type=vol_type,
                                                                capacity=self.capacity,
-                                                               compression_effort=self.compression_effort,
-                                                               encrypt=self.encrypt, data_protection={})
-            vol_uuid = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
+                                                               compression_effort=False,
+                                                               encrypt=False, data_protection={})
+            vol_uuid = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                       body_volume_intent_create=body_volume_intent_create)
             vol_uuid_list.append(vol_uuid)
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=volume_list[volumes],
+                                                                               volume_uuid=vol_uuid_list[volumes],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
