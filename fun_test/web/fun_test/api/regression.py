@@ -49,14 +49,12 @@ def test_beds(request, id):
     if request.method == "GET":
         minimal = request.GET.get("minimal", False)
         name = request.GET.get("name", None)
-
+        q = Q()
         if not id:
             valid_test_beds = am.get_valid_test_beds()
             if name:
-                all_test_beds = TestBed.objects.filter(name=name)
-            else:
-                all_test_beds = TestBed.objects.all().order_by('name')
-
+                q = q & Q(name=name)
+            all_test_beds = TestBed.objects.filter(q).order_by('name')
             all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
 
@@ -335,11 +333,11 @@ def assets(request, name, asset_type):
     result = None
     if request.method == "GET":
         test_bed_name = request.GET.get("test_bed_name", None)
+        q = Q()
         if not name:
-            if not test_bed_name:
-                all_assets = Asset.objects.all()
-            else:
-                all_assets = Asset.objects.filter(test_beds__contains=test_bed_name)
+            if test_bed_name:
+                q = q & Q(test_beds__contains=test_bed_name)
+            all_assets = Asset.objects.filter(q)
             result = []
             for one_asset in all_assets:
                 one_record = {"name": one_asset.name,

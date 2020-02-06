@@ -127,7 +127,7 @@ export class RegressionService implements OnInit {
     if (minimal !== null) {
       queryParams.push(['minimal', minimal]);
     }
-    if (name !== null) {
+    if (name) {
       queryParams.push(['name', name]);
     }
     let queryParamString = this.commonService.queryParamsToString(queryParams);

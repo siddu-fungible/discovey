@@ -55,13 +55,14 @@
               <div style="display: flex; flex-direction: row">
                 <div style="width: 50%;align-self: center;">
                   <ng-container [ngSwitch]="testBed.health_status">
-                    <ng-container *ngSwitchCase="assetStates.DISABLED"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span class="health-icon" tooltip
+                                                                              placement="left"
                         [tooltipContentString]="'Disabled'">&#9855;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.DEGRADING"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Degrading'">&#9928;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.HEALTHY"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.HEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Healthy'">&#9728;</span></ng-container>
                   </ng-container>
                 </div>
@@ -71,7 +72,7 @@
                         [tooltipContentString]="'Enable health-check'" [checked]="testBed.health_check_enabled" (changed)="onToggleHealthCheckEnabled($event, testBed)"></app-toggle-button>
                 </div>
               </div>
-              <div *ngIf="testBed.health_status !== assetStates.HEALTHY">
+              <div *ngIf="testBed.health_status !== assetHealthStates.HEALTHY">
                 <small>{{ testBed.health_check_message }}</small>
               </div>
 
@@ -269,13 +270,13 @@
               <div style="display: flex; flex-direction: row">
                 <div style="width: 50%; align-self: center;">
                   <ng-container [ngSwitch]="asset.health_status">
-                    <ng-container *ngSwitchCase="assetStates.DISABLED"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DISABLED"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Disabled'">&#9855;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.UNHEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Unhealthy'">&#9760;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.DEGRADING"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.DEGRADING"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Degrading'">&#9928;</span></ng-container>
-                    <ng-container *ngSwitchCase="assetStates.HEALTHY"><span class="health-icon" tooltip placement="left"
+                    <ng-container *ngSwitchCase="assetHealthStates.HEALTHY"><span class="health-icon" tooltip placement="left"
                         [tooltipContentString]="'Healthy'">&#9728;</span></ng-container>
                   </ng-container>
                 </div>
@@ -284,7 +285,7 @@
                         [tooltipContentString]="'Enable health-check'" [checked]="asset.health_check_enabled" (changed)="onToggleAssetHealthCheckEnabled($event, asset)"></app-toggle-button>
                 </div>
               </div>
-              <div *ngIf="asset.health_status !== assetStates.HEALTHY">
+              <div *ngIf="asset.health_status !== assetHealthStates.HEALTHY">
                 <small>{{ asset.health_check_message }}
                 </small>
               </div>

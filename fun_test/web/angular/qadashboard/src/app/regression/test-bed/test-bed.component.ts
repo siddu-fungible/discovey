@@ -61,7 +61,6 @@ export class TestBedComponent implements OnInit {
   userProfile: UserProfile = null;
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
   assetHealthStates: ApiType = new ApiType();
-  assetStates: any = null;
   testBedName: string = null;
 
 
@@ -97,7 +96,6 @@ export class TestBedComponent implements OnInit {
       return this.assetHealthStates.get('/api/v1/regression/asset_health_states');
       }),
       switchMap(response => {
-        this.assetStates = response;
         return this.fetchTestBeds();
       }),
       switchMap(response => {
