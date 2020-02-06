@@ -7921,25 +7921,6 @@
         "children": [
           {
             "metric_model_name": "MetricContainer",
-            "name": "fs1600_raw_striped",
-            "label": "Striped",
-            "children": [
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "teramarks_customer_apple_single_writer_reader_tcp",
-                "reference": true,
-                "label": "Single-Reader TCP"
-              },
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "teramarks_customer_apple_single_writer_multiple_reader_tcp",
-                "reference": true,
-                "label": "Multiple-Reader TCP"
-              }
-            ]
-          },
-          {
-            "metric_model_name": "MetricContainer",
             "name": "multi_host_raw_block_nvmetcp",
             "label": "NVMe/TCP - Multi host",
             "reference": true

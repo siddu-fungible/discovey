@@ -339,22 +339,22 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.169"
+      "mgmt_ip": "10.1.112.101"
     },
-    "name": "fs-60",
+    "name": "fs-127",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.170"
+      "mgmt_ip": "10.1.112.103"
     },
     "workarounds": {
       "retimer_workaround": true
     },
-    "gateway_ip": "10.1.105.1",
+    "gateway_ip": "10.1.112.1",
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.171"
+      "mgmt_ip": "10.1.112.102"
     }
   },
   {
