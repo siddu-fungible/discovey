@@ -104,7 +104,7 @@ class BltApiStorageTest (FunTestCase):
                                                                       body_volume_intent_create=body_volume_intent_create)
             vol_uuid_list.append(vol_uuid)
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[volumes],
+                                                                               volume_uuid=vol_uuid_list[i],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
