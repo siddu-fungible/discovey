@@ -75,6 +75,7 @@ Django will be installed via the instructions mentioned in the Quick-start secti
 # export DEVELOPMENT_MODE=1;
 # python web/manage.py migrate --database=default
 # python start_development_server
+# python scripts/examples/sanity.py (this will generate a link to the report on the web-server)
 ````
 
 
