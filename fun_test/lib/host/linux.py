@@ -1981,41 +1981,41 @@ class Linux(object, ToDictMixin):
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
-        fio_command += " --name=%s" % name
-        fio_command += " --filename=%s" % filename
-        fio_command += " --ioengine=%s" % ioengine
-        fio_command += " --bs=%s" % bs
-        fio_command += " --numjobs=%s" % numjobs
-        fio_command += " --iodepth=%s" % iodepth
-        fio_command += " --output-format=%s" % output_format
-        fio_command += " --rw=%s" % rw
+        fio_command += " --name={}".format(name)
+        fio_command += " --filename={}".format(filename)
+        fio_command += " --ioengine={}".format(ioengine)
+        fio_command += " --bs={}".format(bs)
+        fio_command += " --numjobs={}".format(numjobs)
+        fio_command += " --iodepth={}".format(iodepth)
+        fio_command += " --output-format={}".format(output_format)
+        fio_command += " --rw={}".format(rw)
         if runtime:
-            fio_command += " --runtime=%s" % runtime
+            fio_command += " --runtime={}".format(runtime)
         if fill_device:
-            fio_command += " --fill_device=%s" % fill_device
-        fio_command += " --direct=%s" % direct
-        fio_command += " --group_reporting=%s" % group_reporting
-        fio_command += " --randrepeat=%s" % randrepeat
+            fio_command += " --fill_device={}".format(fill_device)
+        fio_command += " --direct={}".format(direct)
+        fio_command += " --group_reporting={}".format(group_reporting)
+        fio_command += " --randrepeat={}".format(randrepeat)
         if verify:
-            fio_command += " --verify=%s" % verify
+            fio_command += " --verify={}".format(verify)
         if offset:
-            fio_command += " --offset=%s" % offset
+            fio_command += " --offset={}".format(offset)
         if verify_fatal:
-            fio_command += " --verify_fatal=%s" % verify_fatal
+            fio_command += " --verify_fatal={}".format(verify_fatal)
         if do_verify:
-            fio_command += " --do_verify=%s" % do_verify
+            fio_command += " --do_verify={}".format(do_verify)
         if time_based:
             fio_command += " --time_based"
         if norandommap:
             fio_command += " --norandommap"
         if verify_state_save:
-            fio_command += " --verify_state_save=%s" % verify_state_save
+            fio_command += " --verify_state_save={}".format(verify_state_save)
         if verify_state_load:
-            fio_command += " --verify_state_load=%s" % verify_state_load
+            fio_command += " --verify_state_load={}".format(verify_state_load)
         if verify_dump:
-            fio_command += " --verify_dump=%s" % verify_dump
+            fio_command += " --verify_dump={}".format(verify_dump)
         if output:
-            fio_command += " --output=%s" % output
+            fio_command += " --output={}".format(output)
 
         # Building the fio command
         fun_test.debug(fio_command)
@@ -3046,6 +3046,15 @@ class Linux(object, ToDictMixin):
         service_host.disconnect()
         return result
 
+    def dmesg(self):
+        command = "dmesg"
+        output = None
+        try:
+            output = self.command(command)
+        except Exception as ex:
+            critical_str = str(ex)
+            fun_test.critical(critical_str)
+        return output
 
 class LinuxBackup:
     def __init__(self, linux_obj, source_file_name, backedup_file_name):
