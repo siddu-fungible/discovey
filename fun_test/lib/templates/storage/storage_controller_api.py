@@ -279,7 +279,7 @@ class StorageControllerApi(object):
     def is_raw_vol_in_db(self, vol_uuid, come_handle, capacity, stripe_count, vol_type, encrypt, *args):
         result = {"status": False}
         command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
+        output = self.convert_cqlsh_result_to_json(come_handle, command)
         if output:
             volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
             if volume_db_uuid["status"]:
@@ -303,7 +303,7 @@ class StorageControllerApi(object):
     def is_attach_in_db(self, port_uuid, come_handle, remote_ip, subsys_nqn, transport):
         result = {"status": False}
         command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
+        output = self.convert_cqlsh_result_to_json(come_handle, command)
         if output:
             port_db_uuid = self.get_uuid_from_db(output, port_uuid)
             if port_db_uuid["status"]:
@@ -323,7 +323,7 @@ class StorageControllerApi(object):
     def is_detach_in_db(self, come_handle, port_uuid):
         result = {"status": True}
         command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
+        output = self.convert_cqlsh_result_to_json(come_handle, command)
         if output:
             port_db_uuid = self.get_uuid_from_db(output, port_uuid)
             if port_db_uuid["status"]:
@@ -334,7 +334,7 @@ class StorageControllerApi(object):
     def is_delete_in_db(self, come_handle, vol_uuid):
         result = {"status": True}
         command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
+        output = self.convert_cqlsh_result_to_json(come_handle, command)
         if output:
             volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
             if volume_db_uuid["status"]:
@@ -342,7 +342,7 @@ class StorageControllerApi(object):
                 return result
         return result
 
-    def execute_cqlsh_command(self, come_handle, command):
+    def convert_cqlsh_result_to_json(self, come_handle, command):
         result = []
         output = come_handle.command(command)
         lines = output.split("\n")
