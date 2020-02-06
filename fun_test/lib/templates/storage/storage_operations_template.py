@@ -133,10 +133,11 @@ class StorageControllerOperationsTemplate():
             if not already_deployed:
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
-                                                             dpu_indexes=dpu_indexes),
+                                                            dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
-            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
-                                          message="Make sure {} DPUs are online".format(online_dpu_count))
+            num_dpus = len(dpu_indexes)
+            fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(),
+                                          message="Make sure {} DPUs are online".format(num_dpus))
 
     def cleanup(self):
         pass
@@ -314,9 +315,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self, already_deployed=False, online_dpu_count=2):
+    def initialize(self, already_deployed=False, dpu_indexes=None):
         super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
-                                                                online_dpu_count=online_dpu_count)
+                                                                dpu_indexes=dpu_indexes)
 
     def cleanup(self):
         """

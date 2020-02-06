@@ -54,7 +54,7 @@ class RunStorageApiCommands(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=False, online_dpu_count=2)
+        self.storage_controller_template.initialize(already_deployed=False, dpu_indexes=[0, 1])
 
         fs_obj_list = []
         for dut_index in self.topology.get_available_duts().keys():
