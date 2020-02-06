@@ -277,63 +277,70 @@ class StorageControllerApi(object):
         return res
 
     def is_raw_vol_in_db(self, vol_uuid, come_handle, capacity, stripe_count, vol_type, encrypt, *args):
-        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
-        if not output:
-            fun_test.test_assert(False, "Volume :{} not present in Cassandra Database".format(vol_uuid))
-            return False
-        volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
-        if not volume_db_uuid:
-            fun_test.test_assert(False, "Volume :{} not present in Cassandra Database".format(vol_uuid))
-            return False
-        if volume_db_uuid['capacity'] != capacity:
-            fun_test.test_assert(False, "Requested capacity and created capacity are different")
-        if volume_db_uuid['stripe_count'] != stripe_count:
-            fun_test.test_assert(False, "Stripe count doesn't match")
-        if volume_db_uuid['volume_type'] != vol_type:
-            fun_test.test_assert(False, "Create volume type doesn't match")
-        if volume_db_uuid['encrypt'] != encrypt:
-            fun_test.test_assert(False, "Encryption state doesn't match")
-
-    def is_attach_in_db(self, port_uuid, come_handle, remote_ip, subsys_nqn, transport):
-        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
-        port_db_uuid = self.get_uuid_from_db(output, port_uuid)
-        if not port_db_uuid:
-            fun_test.test_assert(False, "Port details not present in Cassandra Database")
-            return False
-        if port_db_uuid['remote_ip'] != remote_ip:
-            fun_test.test_assert(False, "remote_ip doesn't match")
-        if port_db_uuid['subsys_nqn'] != subsys_nqn:
-            fun_test.test_assert(False, "subsys_nqn doesn't match")
-        if port_db_uuid['transport'] != transport:
-            fun_test.test_assert(False, "transport doesn't match")
-
-    def is_detach_in_db(self, come_handle, port_uuid):
-        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
-        output = self.execute_cqlsh_command(come_handle, command)
-        if output:
-            port_db_uuid = self.get_uuid_from_db(output, port_uuid)
-            if port_db_uuid:
-                fun_test.test_assert(False, "Detached volume still present in Cassandra Database")
-                return False
-            else:
-                return True
-        else:
-            return True
-
-    def is_delete_in_db(self, come_handle, vol_uuid):
+        result = {"status": False}
         command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
         output = self.execute_cqlsh_command(come_handle, command)
         if output:
             volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
-            if volume_db_uuid:
-                fun_test.test_assert(False, "Deleted volume still present in Cassandra Database")
-                return False
+            if volume_db_uuid["status"]:
+                field_list = ["capacity", "stripe_count", "encrypt"]
+                for i in field_list:
+                    if eval(i) != volume_db_uuid["data"][i]:
+                        result = {"status": False, "data": "{} doesn't match {} {}".
+                            format(i, volume_db_uuid["data"][i], eval(i))}
+                        return result
+                if vol_type != volume_db_uuid["data"]["volume_type"]:
+                    result = {"status": False, "data": "{} vol_type doesn't match".format(vol_type)}
+                    return result
+                result = {"status": True}
             else:
-                return True
+                result = {"status": False, "data": "Didn't find the uuid {}".format(vol_uuid)}
+            return result
         else:
-            return True
+            result = {"status": False, "data": "Object not found in Cassandra DB"}
+        return result
+
+    def is_attach_in_db(self, port_uuid, come_handle, remote_ip, subsys_nqn, transport):
+        result = {"status": False}
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if output:
+            port_db_uuid = self.get_uuid_from_db(output, port_uuid)
+            if port_db_uuid["status"]:
+                field_list = ["remote_ip", "subsys_nqn", "transport"]
+                for i in field_list:
+                    if eval(i) != port_uuid["data"][i]:
+                        result = {"status": False, "data": "{} doesn't match".format(i)}
+                        return result
+                result = {"status": True}
+            else:
+                return result
+        else:
+            result = {"status": False, "data": "Object not found in Cassandra DB"}
+            return result
+        return result
+
+    def is_detach_in_db(self, come_handle, port_uuid):
+        result = {"status": True}
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.port_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if output:
+            port_db_uuid = self.get_uuid_from_db(output, port_uuid)
+            if port_db_uuid["status"]:
+                result = {"status": False, "data": "{} uuid is not detached".format(port_uuid)}
+                return result
+        return result
+
+    def is_delete_in_db(self, come_handle, vol_uuid):
+        result = {"status": True}
+        command = "docker exec -ti run_sc cqlsh -e \"SELECT JSON * from storage_controller.volume_db\""
+        output = self.execute_cqlsh_command(come_handle, command)
+        if output:
+            volume_db_uuid = self.get_uuid_from_db(output, vol_uuid)
+            if volume_db_uuid["status"]:
+                result = {"status": False, "data": "{} uuid is not deleted".format(vol_uuid)}
+                return result
+        return result
 
     def execute_cqlsh_command(self, come_handle, command):
         result = []
@@ -348,12 +355,12 @@ class StorageControllerApi(object):
 
     # Check if a particular volume uuid or port uuid is in cassandra DB
     def get_uuid_from_db(self, db_data, uuid):
-        result = False
+        result = {"status": False}
         for vol in db_data:
             if vol["uuid"] == uuid:
-                result = vol
-                break
-        return result
+                result = {"status": True, "data": vol}
+                return result
+
 
 
 if __name__ == "__main__":
