@@ -145,6 +145,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = False
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
+        if "reboot_hosts" in job_inputs:
+            self.reboot_hosts = job_inputs["reboot_hosts"]
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -1143,7 +1147,28 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
             host_handle.command("ifconfig")
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
+
+
         if not nvme_list_found:
+            try:
+                # Check host F1 connectivity
+                fun_test.log("Checking host F1 connectivity")
+                for ip in self.f1_ips:
+                    ping_status = host_handle.ping(dst=ip)
+                    if not ping_status:
+                        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                        docker_f1_handle.command("arp -n")
+                        docker_f1_handle.command("route -n")
+                        docker_f1_handle.command("ifconfig")
+                        fun_test.log("\nRoutes from host {}".format(host_handle))
+                        host_handle.command("arp -n")
+                        host_handle.command("route -n")
+                        host_handle.command("ifconfig")
+
+                    fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+                                           format(host_handle.host_ip, ip))
+            except Exception as ex:
+                fun_test.critical(str(ex))
             fun_test.log("Printing dmesg from host {}".format(host_handle))
             host_handle.command("dmesg")
         fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
@@ -1180,6 +1205,8 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         # Reading the written output
         fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
+        if not fio_output:
+            host_handle.command("dmesg")
         fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):

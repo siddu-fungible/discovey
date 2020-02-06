@@ -3,7 +3,10 @@
         class="pseudo-anchor">{{ !showingTestBeds? "+ Show": "- Hide" }} test-beds</span>
   <app-test-bed *ngIf="showingTestBeds" [embed]="true"></app-test-bed>
 
-  <div class="card">
+  <span style="margin-left: 20px; display: block" (click)="showingQueues = !showingQueues"
+        class="pseudo-anchor">{{ !showingQueues? "+ Show": "- Hide" }} queues</span>
+
+  <div class="card" *ngIf="showingQueues">
     <div class="card-header">
       Queue occupancy
     </div>
@@ -180,7 +183,7 @@
                   {{ suiteExecution.fields.execution_id }}
                 </a>
                 <div *ngIf="suiteExecution.fields.auto_scheduled_execution_id > -1">
-                  <small>Auto: {{ suiteExecution.fields.auto_scheduled_execution_id }}</small>
+                  <small>Auto: <a [routerLink]="'/regression/suite_detail/' + suiteExecution.fields.auto_scheduled_execution_id">{{ suiteExecution.fields.auto_scheduled_execution_id }}</a></small>
                 </div>
               </td>
               <td>

@@ -12,6 +12,7 @@ from fun_global import Codes, get_current_epoch_time
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
+from lib.fun.storage.fs_storage import FsStorage
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -26,7 +27,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "platform_halt: exit status 1",
                  "Assertion failed",
                  "Trap exception",
-                 "CSR:FEP_.*_FATAL_INTR"]
+                 r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
 DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
@@ -354,6 +355,9 @@ class Bmc(Linux):
         if not self.bundle_compatible and not (self.fs and self.fs.get_revision() in ["2"]):
             s = "sku=SKU_FS1600_{} ".format(f1_index) + boot_args
 
+        if self.fs.get_revision() in ["2"]:
+            s = re.sub(' cc_huid=\d+', "", s)
+
         if self.hbm_dump_enabled:
             if "cc_huid" not in s:
                 huid = 3
@@ -584,14 +588,17 @@ class Bmc(Linux):
         # self.u_boot_command(command="setenv loadaddr {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index,
         #                    expected=self.U_BOOT_F1_PROMPT)
 
-        if not rich_input_boot_args:
+        is_custom_app = False
+        if "load_mods" not in boot_args and "hw_hsu_test" not in boot_args:
+            is_custom_app = True
+        if not rich_input_boot_args and not is_custom_app:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
                 output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index)
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected=None)
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
@@ -601,14 +608,14 @@ class Bmc(Linux):
             fun_test.set_version(version=version.replace("bld_", ""))
         """
 
-        if not rich_input_boot_args:
+        if not rich_input_boot_args and not is_custom_app:
             sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
             for section in sections:
                 fun_test.test_assert(expression=section in output,
                                      message="{} seen".format(section),
                                      context=self.context)
         else:
-            fun_test.sleep("Waiting for custom apps to finish", seconds=120)
+            fun_test.sleep("Waiting for custom apps to finish", seconds=10)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
 
         result = True
@@ -708,6 +715,7 @@ class Bmc(Linux):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
+        self.command("cat /tmp/F1_STATUS")
         return True
 
     def reset_come(self):
@@ -772,6 +780,10 @@ class Bmc(Linux):
                 continue
 
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
+            if self.fs.bundle_compatible:
+                artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                    self._get_context_prefix("funos_f1_{}.log".format(f1_index)))
+
             fun_test.scp(source_ip=self.host_ip,
                          source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
                          source_username=self.ssh_username,
@@ -996,7 +1008,7 @@ class BootupWorker(Thread):
                     if f1_index == self.fs.disable_f1_index:
                         continue
 
-                    bmc.remove_uart_logs(f1_index=f1_index)
+                    # bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
                                      context=self.context)
@@ -1435,7 +1447,11 @@ class ComE(Linux):
             for f1_index in range(self.NUM_F1S):
                 self.sudo_command("rm -f {}".format(self.get_dpc_log_path(f1_index=f1_index)))
 
-            fun_test.test_assert(expression=self.detect_pfs(), message="Fungible PFs detected", context=self.context)
+            if not self.detect_pfs():
+                self.diags()
+                fun_test.test_assert(False, message="Fungible PFs detected", context=self.context)
+            else:
+                fun_test.test_assert(True, message="Fungible PFs detected", context=self.context)
             fun_test.test_assert(expression=self.setup_dpc(), message="Setup DPC", context=self.context)
             fun_test.test_assert(expression=self.is_dpc_ready(), message="DPC ready", context=self.context)
 
@@ -1511,8 +1527,8 @@ class ComE(Linux):
     def diags(self):
         fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
         clone = self.clone()
-        clone.command("dmesg")
-        clone.command("cat /var/log/syslog")
+        clone.command("dmesg", timeout=120)
+        clone.command("cat /var/log/syslog", timeout=60)
 
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
@@ -1727,6 +1743,9 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
+        if not devices:
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
+            self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0
@@ -2106,6 +2125,10 @@ class Fs(object, ToDictMixin):
         if ("bundle_compatible" in spec and spec["bundle_compatible"]) or (self.bundle_image_parameters) or (self.get_revision() in ["2"]):
             self.bundle_compatible = True
             self.skip_funeth_come_power_cycle = True
+
+        if ("bundle_compatible" in spec and not spec["bundle_compatible"]):
+            self.bundle_compatible = False
+
         self.mpg_ips = spec.get("mpg_ips", [])
         # self.auto_boot = auto_boot
         self.bmc_maintenance_threads = []
@@ -2131,6 +2154,8 @@ class Fs(object, ToDictMixin):
 
         self.errors_detected = []
         fun_test.register_fs(self)
+
+        self.storage = FsStorage(fs_obj=self)
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2920,7 +2945,15 @@ if __name__ == "__main2__":
     # i = fs.bam()
 
 
-if __name__ == "__main__":
+if __name__ == "__main_2_":
     come = ComE(host_ip="fs118-come", ssh_username="fun", ssh_password="123")
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
+    topology = th.deploy(already_deployed=False)
+    fs_obj = topology.get_dut_instance(index=0)
+    fs_obj.storage.nvme_ssds(f1_index=0)

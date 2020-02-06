@@ -19,6 +19,7 @@ Script to track the Inspur Performance Cases of various read write combination o
 
 
 def fio_parser(arg1, host_index, **kwargs):
+    fun_test.log("fio_parser input kwargs: {}".format(kwargs))
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
     fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
@@ -910,6 +911,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         host_numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
                     fio_cmd_args["multiple_jobs"] += fio_job_args
                     fun_test.log("Current FIO args to be used: {}".format(fio_cmd_args))
+                    fun_test.log("Timeout to be used: {}".format(self.fio_cmd_args["timeout"]))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
                                                                           arg1=host_clone[host_name],

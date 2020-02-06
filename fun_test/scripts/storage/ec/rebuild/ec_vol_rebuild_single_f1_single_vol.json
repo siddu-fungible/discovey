@@ -6,7 +6,7 @@
     "f1_in_use": 0,
     // Script won't disturb the syslog level setting, if it is set to "default". If any other level is needed set this config to that level in int format
     "syslog": "default",
-    "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
+    "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 4420, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
     "command_timeout": 5,
     "reboot_timeout": 300,
     "num_ssd": 12,
@@ -35,6 +35,7 @@
     "api_server_up_timeout": 300
   },
   "DurVolSingleDriveFailRebuild": {
+    "test_rail_case_id": ["C16363"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -57,15 +58,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -81,18 +79,19 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 3600},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
   "DurVolmDriveFailRebuild": {
+    "test_rail_case_id": ["C19529"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -115,15 +114,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -139,18 +135,19 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 7200},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
   "DurVolmPlusOneDriveFailRebuild": {
+    "test_rail_case_id": ["C19169"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -173,15 +170,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -197,18 +191,19 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 7200},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
   "DurVolSingleDriveFailReSync": {
+    "test_rail_case_id": ["C16364"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -231,15 +226,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -255,18 +247,19 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 7200},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
   "DurVolmDriveFailReSync": {
+    "test_rail_case_id": ["C19238"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -289,15 +282,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -313,18 +303,19 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 7200},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
   "DurVolmPlusOneDriveFailReSync": {
+    "test_rail_case_id": ["C19454"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -347,15 +338,12 @@
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
-      "num_volumes": 1,
-      "compress": true,
-      "zip_effort": "ZIP_EFFORT_64Gbps",
-      "zip_filter": "FILTER_TYPE_DEFLATE"
+      "num_volumes": 1
     },
     // timeout used for the storage controller
     "command_timeout": 10,
     "ns_id": 1,
-    "nvme_io_queues": 1,
+    "nvme_io_queues": 16,
     "back_pressure": false,
     "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
     "nvme_device": "/dev/nvme",
@@ -371,14 +359,14 @@
     "failure_start_time_ratio": 0.05,
     "test_volume_start_index": 0,
     "attach_transport": "TCP",
-    "transport_port": 1099,
+    "transport_port": 4420,
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "warm_up_fio_cmd_args": {"bs": "1024k", "iodepth": 1, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "timeout": 7200},
     //"fio_cmd_args": {"multiple_jobs": "--direct=1 --prio=0 --rw=randrw --rwmixread=70 --ramp_time=10 --cpus_allowed_policy=split --norandommap --randrepeat=0 --cpus_allowed={} --numjobs={} --iodepth={} --bs=4k --io_size={}", "timeout": 150},
-    "fio_write_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"bs": "4k", "iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   }

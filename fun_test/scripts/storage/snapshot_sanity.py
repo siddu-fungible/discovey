@@ -57,7 +57,10 @@ def nvme_connect_method(host_info, nqn_list, transport_type, test_network, trans
         nqn = nqn_list[index]
 
         host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
-        host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+        filesuffix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        nvme_connect_filename = "nvme_connect_auto_" + str(filesuffix)
+        host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w {}.pcap".
+                                     format(nvme_connect_filename))
 
         fun_test.log("transport is {}, test_network is {}, tranport_port is {}, nqn is {}, "
                      "nvme_io_q is {}, host_ip is {}".format(unicode.lower(transport_type), test_network,
@@ -395,6 +398,10 @@ class SnapVolumeTestCase(FunTestCase):
             self.snap_uuid[x] = utils.generate_uuid()
 
             # Create COW volume
+            if hasattr(self, "cow_vol_capacity"):
+                cow_capacity = self.cow_vol_capacity
+            else:
+                cow_capacity = self.blt_details["capacity"]
             if hasattr(self, "encrypt") and self.encrypt:
                 if hasattr(self, "key_len"):
                     self.xts_key = utils.generate_key(length=self.key_len)
@@ -407,7 +414,7 @@ class SnapVolumeTestCase(FunTestCase):
                 self.encrypt = True
 
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                       capacity=self.blt_details["capacity"],
+                                                                       capacity=cow_capacity,
                                                                        block_size=self.blt_details["block_size"],
                                                                        name="enc_cow_vol_" + str(x),
                                                                        uuid=self.cow_uuid[x],
@@ -418,7 +425,7 @@ class SnapVolumeTestCase(FunTestCase):
                 fun_test.test_assert(command_result["status"], "Creation of encrypted COW volume")
             else:
                 command_result = self.storage_controller.create_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
-                                                                       capacity=self.blt_details["capacity"],
+                                                                       capacity=cow_capacity,
                                                                        block_size=self.blt_details["block_size"],
                                                                        name="cow_vol_" + str(x),
                                                                        uuid=self.cow_uuid[x],
@@ -429,8 +436,9 @@ class SnapVolumeTestCase(FunTestCase):
             if hasattr(self, "skip_fio") and self.skip_fio:
                 # Snapvolume just contains bitmap so calculate the size required based on BV size
                 # Num of blocks
-                num_blocks = self.blt_details["capacity"] / self.blt_details["block_size"]
-                self.snap_capacity = num_blocks
+                # num_blocks = self.blt_details["capacity"] / self.blt_details["block_size"]
+                # self.snap_capacity = num_blocks
+                self.snap_capacity = self.blt_details["capacity"]
                 command_result = self.storage_controller.create_snap_volume(
                     capacity=self.snap_capacity,
                     block_size=self.blt_details["block_size"],
@@ -441,6 +449,7 @@ class SnapVolumeTestCase(FunTestCase):
                     command_duration=self.command_timeout)
                 fun_test.test_assert(command_result["status"], "Creation of Snap Volume")
                 fun_test.sleep("Snap volume created")
+                self.snap_vol_created = True
 
                 if self.snap_attach:
                     # Attach snapvolume to controller
@@ -685,29 +694,21 @@ class SnapVolumeTestCase(FunTestCase):
                     command_result = self.storage_controller.detach_volume_from_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                                            ns_id=x + 1,
                                                                                            command_duration=self.command_timeout)
-
-                fun_test.log(command_result)
-                if command_result["status"]:
-                    self.blt_detach_count += 1
-                else:
-                    fun_test.test_assert(command_result["status"], "Detach Snapvolume with nsid {} from ctrlr".format(x))
+                    fun_test.test_assert(command_result["status"],
+                                         "Detach Snapvolume with nsid {} from ctrlr".format(x))
             # Delete SNAP volume
             if self.snap_vol_created:
 
                 command_result = self.storage_controller.delete_volume(uuid=self.snap_uuid[x],
                                                                        type="VOL_TYPE_BLK_SNAP",
                                                                        command_duration=self.command_timeout)
-                fun_test.test_assert(command_result["status"], "Delete Snapvolume {}".format(x))
+                fun_test.test_assert(command_result["status"], "Delete Snap volume {}".format(x))
 
             # Delete COW volume
             command_result = self.storage_controller.delete_volume(uuid=self.cow_uuid[x],
                                                                    type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                    command_duration=self.command_timeout)
-            fun_test.log(command_result)
-            if command_result["status"]:
-                self.blt_delete_count += 1
-            else:
-                fun_test.test_assert(not command_result["status"], "Delete COW vol {}".format(x))
+            fun_test.test_assert(command_result["status"], "Delete COW vol {}".format(x))
 
         command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid,
                                                                    command_duration=self.command_timeout)
@@ -861,6 +862,38 @@ class C13026(SnapVolumeTestCase):
         ''')
 
 
+class C13010(SnapVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              test_rail_case_ids=["C13010"],
+                              summary="Perform Write operation on a Snapshot",
+                              steps='''
+                              1. Create a BLT for base volume & then a BLT for COW volume.
+                              2. Attach the BV to controller
+                              3. Connect from host to BV
+                              4. Create a SNAP volume
+        ''')
+
+
+class C13049(SnapVolumeTestCase):
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              test_rail_case_ids=["C13049"],
+                              summary="Create,Attach,Detach & Delete of Snapshot when COW volume size"
+                                      "is less than Base volume size",
+                              steps='''
+                              1. Create a BLT for base volume & then a BLT for COW volume.
+                              2. Attach the BV to controller
+                              3. Connect from host to BV
+                              4. Create a SNAP volume
+        ''')
+
+    def run(self):
+        pass
+
+
 if __name__ == "__main__":
     bltscript = Singledpu()
     bltscript.add_test_case(C12991())
@@ -871,4 +904,6 @@ if __name__ == "__main__":
     bltscript.add_test_case(C35455())
     bltscript.add_test_case(C13067())
     bltscript.add_test_case(C13026())
+    bltscript.add_test_case(C13010())
+    bltscript.add_test_case(C13049())
     bltscript.run()
