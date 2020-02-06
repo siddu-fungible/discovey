@@ -243,6 +243,9 @@ class DurableVolumeTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "test_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = job_inputs["test_bs"]
+            self.fio_verify_cmd_args["bs"] = job_inputs["test_bs"]
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -541,6 +544,11 @@ class DurableVolumeTestcase(FunTestCase):
         test_thread_id = {}
         host_clone = {}
         # Writing first 50% of volume with --verify=md5
+
+        if "bs" not in self.fio_write_cmd_args:
+            self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            self.fio_verify_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
