@@ -1,0 +1,12 @@
+"BltApiStorageTest":{
+  "num_f1": 1,
+  "blt_count": 8,
+  "num_host": 4,
+  "capacity": 17179869184,
+  "compression_effort": "False",
+  "encrypt": "False",
+  "name": "blt_vol",
+   "DUT":1,
+  "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+  "ethernet_adapter": "Mellanox"
+}
