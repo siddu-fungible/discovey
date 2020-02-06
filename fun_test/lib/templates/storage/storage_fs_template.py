@@ -116,7 +116,7 @@ def configure_ec_volume_across_f1s(ec_info={}, command_timeout=5):
     for index, sc in enumerate(ec_info["storage_controller_list"]):
         print "storage controller list is: {}".format(sc)
         print "dir of storage controller list is: {}".format(dir(sc))
-        command_result = sc.ip_cfg(ip=ec_info["f1_ips"][index], port=ec_info["transport_port"])
+        command_result = sc.ip_cfg(ip=ec_info["f1_ips"][index])
         fun_test.test_assert(command_result["status"], "Enabling controller to listen in {} on {} port in DUT {}".
                              format(ec_info["f1_ips"][index], ec_info["transport_port"], index))
 

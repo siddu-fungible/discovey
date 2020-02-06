@@ -285,4 +285,14 @@ export class ReleaseDetailComponent implements OnInit {
     })
   }
 
+  updateLastGoodBuild() {
+    let url = this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id});
+    this.releaseCatalogExecution.update_last_good_build = !this.releaseCatalogExecution.update_last_good_build;
+    this.releaseCatalogExecution.update(url).subscribe(response => {
+
+    }, error => {
+      this.logger.error(`Unable to update last-good build`, error);
+    })
+  }
+
 }

@@ -401,6 +401,30 @@ class CatalogTestCaseExecution(models.Model):
     def __str__(self):
         return "{} {} {} {}".format(self.execution_id, self.jira_id, self.engineer, self.test_bed)
 
+class LastGoodBuild(FunModel):
+    release_train = models.TextField(default="master", null=True)
+    build_number = models.TextField(default="", null=True)
+    release_catalog_execution_id = models.IntegerField()
+    updated_date = models.DateTimeField(default=datetime.now)
+
+    @staticmethod
+    def set(release_train, build_number, release_catalog_execution_id):
+        last_good_build = LastGoodBuild(release_train=release_train,
+                                        build_number=build_number,
+                                        release_catalog_execution_id=release_catalog_execution_id,
+                                        updated_date=get_current_time())
+        last_good_build.save()
+
+    @staticmethod
+    def get(release_train):
+        result = None
+        try:
+            last_good_build = LastGoodBuild.objects.filter(release_train=release_train).order_by('-updated_date').first()
+            if last_good_build:
+                result = last_good_build.to_dict()
+        except ObjectDoesNotExist:
+            logger.error("Release train: {} last good build does not exist".format(release_train))
+        return result
 
 class ReleaseCatalogExecution(FunModel):
     release_catalog_id = models.IntegerField()
@@ -419,6 +443,7 @@ class ReleaseCatalogExecution(FunModel):
     ready_for_execution = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     error_message = models.TextField(default=None, null=True)
+    update_last_good_build = models.BooleanField(default=False)
 
     def __str__(self):
         return "CID: {} ME: {}".format(self.id, self.master_execution_id)
