@@ -715,6 +715,7 @@ class Bmc(Linux):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
+        self.command("cat /tmp/F1_STATUS")
         return True
 
     def reset_come(self):
