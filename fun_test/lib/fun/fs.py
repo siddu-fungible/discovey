@@ -588,14 +588,17 @@ class Bmc(Linux):
         # self.u_boot_command(command="setenv loadaddr {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index,
         #                    expected=self.U_BOOT_F1_PROMPT)
 
-        if not rich_input_boot_args:
+        is_custom_app = False
+        if "load_mods" not in boot_args and "hw_hsu_test" not in boot_args:
+            is_custom_app = True
+        if not rich_input_boot_args and not is_custom_app:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
                 output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index)
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected=None)
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
@@ -605,14 +608,14 @@ class Bmc(Linux):
             fun_test.set_version(version=version.replace("bld_", ""))
         """
 
-        if not rich_input_boot_args:
+        if not rich_input_boot_args and not is_custom_app:
             sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
             for section in sections:
                 fun_test.test_assert(expression=section in output,
                                      message="{} seen".format(section),
                                      context=self.context)
         else:
-            fun_test.sleep("Waiting for custom apps to finish", seconds=120)
+            fun_test.sleep("Waiting for custom apps to finish", seconds=10)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
 
         result = True
@@ -1004,7 +1007,7 @@ class BootupWorker(Thread):
                     if f1_index == self.fs.disable_f1_index:
                         continue
 
-                    bmc.remove_uart_logs(f1_index=f1_index)
+                    # bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
                                      context=self.context)
@@ -1523,8 +1526,8 @@ class ComE(Linux):
     def diags(self):
         fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
         clone = self.clone()
-        clone.command("dmesg")
-        clone.command("cat /var/log/syslog")
+        clone.command("dmesg", timeout=120)
+        clone.command("cat /var/log/syslog", timeout=60)
 
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
@@ -1739,6 +1742,9 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
+        if not devices:
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
+            self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0
