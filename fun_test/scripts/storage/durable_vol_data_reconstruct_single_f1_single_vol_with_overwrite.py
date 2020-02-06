@@ -1093,9 +1093,9 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger Single Plex failure
+        8. Perform write on test volume with --verify=md5 option & during write trigger Single Plex failure
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
+        10. Perform re-write on test volume with --verify option & during write trigger Rebuild on spare plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
@@ -1123,9 +1123,9 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m Plex failures
+        8. Perform write on test volume with --verify=md5 option & during write trigger m Plex failures
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
+        10. Perform re-write on test volume with --verify option & during write trigger Rebuild on spare plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
@@ -1153,9 +1153,9 @@ class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
+        8. Perform write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
+        10. Perform re-write on test volume with --verify option & during write trigger Rebuild on spare plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
@@ -1183,9 +1183,9 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger Single Plex failure
+        8. Perform write on test volume with --verify=md5 option & during write trigger Single Plex failure
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & Recover the failed plex and 
+        10. Perform re-write on test volume with --verify option & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
@@ -1214,9 +1214,9 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m Plex failures
+        8. Perform write on test volume with --verify=md5 option & during write trigger m Plex failures
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option  & Recover the failed plex and 
+        10. Perform re-write on test volume with --verify option  & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
@@ -1245,9 +1245,9 @@ class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
+        8. Perform write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
         9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option  & Recover the failed plex and 
+        10. Perform re-write on test volume with --verify option  & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
         11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
