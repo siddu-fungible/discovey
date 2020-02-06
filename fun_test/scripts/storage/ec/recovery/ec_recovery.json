@@ -49,13 +49,14 @@
         "lsv": 4096,
         "jvol": 512
       },
-      "capacity": 34359738368,
+      "capacity": 4294967296,
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
+    "testcase_id": ["C16229"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -103,6 +104,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
+    "testcase_id": ["C16230"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -151,6 +153,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
+    "testcase_id": ["C18748"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -199,6 +202,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
+    "testcase_id": ["C18749"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -211,7 +215,7 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid4",
     "nvme_io_queues": 16,
     "fio_write_cmd_args": {"name": "RecoveryWithMplusConcurrentFailure_RandWrite","ioengine": "libaio", "size": "100%", "rw": "randwrite", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "verify": "md5", "do_verify": 0, "cpus_allowed_policy": "split", "refill_buffers": "NO_VALUE", "timeout": 3600},
-    "fio_read_cmd_args": {"name": "RecoveryWithMplusConcurrentFailure_RandRead","ioengine": "libaio", "size": "100%", "rw": "randread", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "do_verify": 1, "verify": "md5", "cpus_allowed_policy": "split", "verify_fatal": 1, "timeout": 3600},
+    "fio_read_cmd_args": {"name": "RecoveryWithMplusConcurrentFailure_RandRead","ioengine": "libaio", "size": "10%", "rw": "randread", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "do_verify": 1, "verify": "md5", "cpus_allowed_policy": "split", "verify_fatal": 1, "timeout": 3600},
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "collect_network_stats": false,
@@ -248,6 +252,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
+    "testcase_id": ["C18750"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -260,7 +265,7 @@
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid5",
     "nvme_io_queues": 16,
     "fio_write_cmd_args": {"name": "RecoveryWithKplusMConcurrentFailure_RandWrite","ioengine": "libaio", "size": "100%", "rw": "randwrite", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "verify": "md5", "do_verify": 0, "cpus_allowed_policy": "split", "refill_buffers": "NO_VALUE", "timeout": 3600},
-    "fio_read_cmd_args": {"name": "RecoveryWithKplusMConcurrentFailure_RandRead","ioengine": "libaio", "size": "100%", "rw": "randread", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "do_verify": 1, "verify": "md5", "cpus_allowed_policy": "split", "verify_fatal": 1, "timeout": 3600},
+    "fio_read_cmd_args": {"name": "RecoveryWithKplusMConcurrentFailure_RandRead","ioengine": "libaio", "size": "10%", "rw": "randread", "direct": 1, "prio": 0, "iodepth": 1, "numjobs": 1, "do_verify": 1, "verify": "md5", "cpus_allowed_policy": "split", "verify_fatal": 1, "timeout": 3600},
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "collect_network_stats": false,

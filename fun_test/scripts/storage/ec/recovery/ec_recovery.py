@@ -169,7 +169,7 @@ class RecoveryWithFailures(FunTestCase):
         pass
 
     def setup(self):
-
+        """
         testcase = self.__class__.__name__
         self.sc_lock = Lock()
         self.syslog = fun_test.shared_variables["syslog"]
@@ -193,7 +193,7 @@ class RecoveryWithFailures(FunTestCase):
             setattr(self, k, v)
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-
+        """
 
         if not hasattr(self, "num_ssd"):
             self.num_ssd = 1
@@ -219,19 +219,9 @@ class RecoveryWithFailures(FunTestCase):
             self.plex_fail_method = job_inputs["plex_fail_method"]
         if "plex_failure_combination" in job_inputs:
             self.plex_failure_combination = job_inputs["plex_failure_combination"]
-        if "write_bs" in job_inputs:
-            self.fio_write_cmd_args["bs"] = str(job_inputs["write_bs"]) + "k"
-        if "read_bs" in job_inputs:
-            self.fio_read_cmd_args["bs"] = str(job_inputs["read_bs"]) + "k"
-        if "csi_perf_iodepth" in job_inputs:
-            self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
-            if not isinstance(self.csi_perf_iodepth, list):
-                self.csi_perf_iodepth = [self.csi_perf_iodepth]
-            self.full_run_iodepth = self.csi_perf_iodepth
-        if "post_results" in job_inputs:
-            self.post_results = job_inputs["post_results"]
-        else:
-            self.post_results = False
+        if "test_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = job_inputs["test_bs"]
+            self.fio_read_cmd_args["bs"] = job_inputs["test_bs"]
 
         self.f1_in_use = fun_test.shared_variables["f1_in_use"]
         self.fs = fun_test.shared_variables["fs_obj"]
@@ -377,15 +367,18 @@ class RecoveryWithFailures(FunTestCase):
 
                     self.vol_stats = collections.OrderedDict()
                     # Perform write
-                    #self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
-                    #self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
+                    if "bs" not in self.fio_write_cmd_args:
+                        self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+                        self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
                     fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
                                                       cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
                                                       **self.fio_write_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Write completed on EC volume from host")
-                    self.vol_stats["vol_stats_initial_write"] = self.storage_controller.peek(
+                    self.vol_stats["vol_stats_before_initial_read"] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.simple_assert(self.vol_stats["vol_stats_before_initial_read"]["status"],
+                                           "Collected volume stats before initial READ")
 
                     # Perform read
                     fio_output = host_handle.pcie_fio(filename=self.host_info[host_name]["fio_filename"],
@@ -396,6 +389,8 @@ class RecoveryWithFailures(FunTestCase):
                                          "READ with verify completed before failing any plex")
                     self.vol_stats["vol_stats_initial_read"] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.simple_assert(self.vol_stats["vol_stats_initial_read"]["status"], "Collected volume stats after initial READ")
+                    # TODO Include simple_assert here
                     EC_volume_stats = self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_EC"][self.ec_info["uuids"][num]["ec"][0]]
                     fun_test.log("EC Volume stats:\n{}".format(EC_volume_stats))
                     fun_test.test_assert(EC_volume_stats, "EC Volume stats after initial READ")
@@ -450,6 +445,8 @@ class RecoveryWithFailures(FunTestCase):
                                 self.vol_stats["vol_stats_after_1_plex_failure"] = self.storage_controller.peek(
                                     props_tree="storage/volumes", legacy=False, chunk=8192,
                                     command_duration=self.command_timeout)
+                                fun_test.simple_assert(self.vol_stats["vol_stats_after_1_plex_failure"]["status"],
+                                                       "Collected volume stats after 1 plex failure")
                                 EC_vol_stats_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
                                     self.ec_info["uuids"][num]["ec"][0]]
                                 device_failed = self.device_id_failed[0]
@@ -465,6 +462,8 @@ class RecoveryWithFailures(FunTestCase):
                                 self.vol_stats["vol_stats_after_2_plex_failure"] = self.storage_controller.peek(
                                     props_tree="storage/volumes", legacy=False, chunk=8192,
                                     command_duration=self.command_timeout)
+                                fun_test.simple_assert(self.vol_stats["vol_stats_after_2_plex_failure"]["status"],
+                                                       "Collected volume stats after 2 plex failure")
                                 EC_vol_stats_2_plex_failure = \
                                 self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
                                     self.ec_info["uuids"][num]["ec"][0]]
@@ -475,9 +474,9 @@ class RecoveryWithFailures(FunTestCase):
                                 num_reads_diff_2_plex_failure = (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"]) + \
                                                  (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"])
 
-                                fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_2_plex_failure - EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_2_plex_failure),
+                                fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_2_plex_failure - EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_2_plex_failure - EC_recovery_read_count_1_plex_failure),
                                                               actual=(num_reads_diff_2_plex_failure,
-                                                                      num_reads_diff_1_plex_failure + num_reads_diff_2_plex_failure),
+                                                                      (num_reads_diff_1_plex_failure + num_reads_diff_2_plex_failure)/2),
                                                               message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
                                                                   num_reads_diff_2_plex_failure, EC_recovery_read_count_2_plex_failure - EC_recovery_read_count_1_plex_failure))
 
@@ -493,6 +492,8 @@ class RecoveryWithFailures(FunTestCase):
                         self.vol_stats["vol_stats_concurrent_plex_failure"] = self.storage_controller.peek(
                             props_tree="storage/volumes", legacy=False, chunk=8192,
                             command_duration=self.command_timeout)
+                        fun_test.simple_assert(self.vol_stats["vol_stats_concurrent_plex_failure"]["status"],
+                                               "Collected volume stats after 2 concurrent plex failure")
                         EC_vol_stats_concurrent_plex_failure = \
                         self.vol_stats["vol_stats_concurrent_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
                             self.ec_info["uuids"][num]["ec"][0]]
@@ -677,8 +678,34 @@ class RecoveryWithFailures(FunTestCase):
                                  format(self.ctrlr_uuid[index]))
 
 class RecoveryWithMFailure(RecoveryWithFailures):
+
+    def __init__(self):
+        testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+        self.syslog = fun_test.shared_variables["syslog"]
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
     def describe(self):
         self.set_test_details(id=1,
+                              test_rail_case_ids=self.testcase_id,
                               summary="EC recovery with M plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -702,8 +729,33 @@ class RecoveryWithMFailure(RecoveryWithFailures):
 
 class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
+    def __init__(self):
+        testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+        self.syslog = fun_test.shared_variables["syslog"]
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
     def describe(self):
         self.set_test_details(id=2,
+                              test_rail_case_ids=self.testcase_id,
                               summary="EC recovery with M+1 plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -727,8 +779,33 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
 class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
+    def __init__(self):
+        testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+        self.syslog = fun_test.shared_variables["syslog"]
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
     def describe(self):
         self.set_test_details(id=3,
+                              test_rail_case_ids=self.testcase_id,
                               summary="EC recovery with M concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -752,8 +829,33 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
 class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
+    def __init__(self):
+        testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+        self.syslog = fun_test.shared_variables["syslog"]
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
     def describe(self):
         self.set_test_details(id=4,
+                              test_rail_case_ids=self.testcase_id,
                               summary="EC recovery with M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -777,8 +879,33 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
 class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
+    def __init__(self):
+        testcase = self.__class__.__name__
+        self.sc_lock = Lock()
+        self.syslog = fun_test.shared_variables["syslog"]
+
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
     def describe(self):
         self.set_test_details(id=5,
+                              test_rail_case_ids=self.testcase_id,
                               summary="EC recovery with K plus M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -803,8 +930,8 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 if __name__ == "__main__":
     ecrecovery = ECBlockRecoveryScript()
     ecrecovery.add_test_case(RecoveryWithMFailure())
-    ecrecovery.add_test_case(RecoveryWithMplus1Failure())
-    ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
-    ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
-    ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
+    #ecrecovery.add_test_case(RecoveryWithMplus1Failure())
+    #ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
+    #ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
+    #ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
     ecrecovery.run()

@@ -59,6 +59,7 @@
       "key_size": 32,
       "xtweak_size": 8
     },
+    "testcase_id": ["C18784"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -108,6 +109,7 @@
       "key_size": 32,
       "xtweak_size": 8
     },
+    "testcase_id": ["C18785"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -158,6 +160,7 @@
       "key_size": 32,
       "xtweak_size": 8
     },
+    "testcase_id": ["C18786"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -208,6 +211,7 @@
       "key_size": 32,
       "xtweak_size": 8
     },
+    "testcase_id": ["C18787"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -259,6 +263,7 @@
       "key_size": 32,
       "xtweak_size": 8
     },
+    "testcase_id": ["C18788"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
