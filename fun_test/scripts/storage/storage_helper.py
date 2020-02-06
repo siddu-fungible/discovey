@@ -553,7 +553,8 @@ def fetch_nvme_list(host_obj):
     nvme_list_raw = host_obj.sudo_command("nvme list -o json")
     host_obj.disconnect()
     if nvme_list_raw:
-        if "failed to open" in nvme_list_raw.lower():
+        # This is used due to the error lines printed in json output
+        if not nvme_list_raw.startswith("{"):
             nvme_list_raw = nvme_list_raw + "}"
             temp1 = nvme_list_raw.replace('\n', '')
             temp2 = re.search(r'{.*', temp1).group()
@@ -568,14 +569,20 @@ def fetch_nvme_list(host_obj):
         try:
             nvme_device_list = []
             for device in nvme_list_dict["Devices"]:
-                if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or \
-                        "fs1600" in device["ModelNumber"].lower():
+                if ("Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or "fs1600" in
+                        device["ModelNumber"].lower()) and device["NameSpace"] > 0:
                     nvme_device_list.append(device["DevicePath"])
+                '''
+                Not required now as product name is defined
                 elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
                     if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
                         nvme_device_list.append(device["DevicePath"])
-            fio_filename = str(':'.join(nvme_device_list))
-            result = {'status': True, 'nvme_device': fio_filename}
+                '''
+            if nvme_device_list:
+                fio_filename = str(':'.join(nvme_device_list))
+                result = {'status': True, 'nvme_device': fio_filename}
+            else:
+                result = {'status': False}
         except:
             fio_filename = None
             result = {'status': False, 'nvme_device': fio_filename}
