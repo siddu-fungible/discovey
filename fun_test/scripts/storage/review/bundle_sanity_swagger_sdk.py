@@ -84,10 +84,8 @@ class BltApiStorageTest(FunTestCase):
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
         self.storage_controller_template.initialize()
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+        fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
+                       for dut_index in self.topology.get_available_duts().keys()]
 
         vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
@@ -149,9 +147,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                                                  dut_index=dut_index)
 
     def run(self):
-        hosts = self.topology.get_hosts()
-        for host_id in hosts:
-            host_obj = hosts[host_id]
+        hosts = self.topology.get_available_host_instances()
+        for host_obj in hosts:
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
@@ -160,8 +157,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                 only_read=True)
 
     def cleanup(self):
-        # self.storage_controller_template.cleanup()
-        pass
+        self.storage_controller_template.cleanup(test_result=fun_test.is_current_test_case_failed())
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
