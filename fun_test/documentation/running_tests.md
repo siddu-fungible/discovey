@@ -1,4 +1,4 @@
-Before running any script
+Before running any script do the following at least once
 ~~~
 cd /project/users/QA/regression/Integration/fun_test
 export PYTHONPATH=`pwd`
