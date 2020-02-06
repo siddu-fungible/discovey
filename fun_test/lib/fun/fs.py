@@ -1743,7 +1743,7 @@ class ComE(Linux):
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
         if not devices:
-            fun_test.log("No PCI devices detected")
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
             self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
