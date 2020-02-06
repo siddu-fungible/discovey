@@ -23,7 +23,9 @@ class StorageControllerOperationsTemplate():
     def get_health(self, storage_controller):
         return storage_controller.health()
 
-    def set_dataplane_ips(self, storage_controller, dut_index, num_dpu=2):
+    def set_dataplane_ips(self, storage_controller, dut_index, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]
         result = False
         topology_result = None
         try:
@@ -37,10 +39,7 @@ class StorageControllerOperationsTemplate():
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            num_f1s = fs_obj.NUM_F1S
-            if num_dpu < 2:
-                num_f1s = num_dpu
-            for f1_index in range(num_f1s):
+            for f1_index in dpu_indexes:
 
                 bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
                 fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
@@ -123,7 +122,9 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self, already_deployed=False, online_dpu_count=2):
+    def initialize(self, already_deployed=False, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]        
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
@@ -132,7 +133,7 @@ class StorageControllerOperationsTemplate():
             if not already_deployed:
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
-                                                            num_dpu=online_dpu_count),
+                                                             dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
                                           message="Make sure {} DPUs are online".format(online_dpu_count))
