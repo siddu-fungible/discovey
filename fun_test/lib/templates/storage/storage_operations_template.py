@@ -93,7 +93,7 @@ class StorageControllerOperationsTemplate():
             fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
         return result
 
-    def get_online_dpus(self):
+    def get_online_dpus(self, dpu_indexes):
         """
         Find the number of DPUs online using API
         :return: Returns the number of DPUs online
@@ -111,7 +111,7 @@ class StorageControllerOperationsTemplate():
 
             for node in self.node_ids:
 
-                for f1_index in range(fs_obj.NUM_F1S):
+                for f1_index in dpu_indexes:
                     dpu_id = node + "." + str(f1_index)
                     dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
                                                         dpu_id=dpu_id, raw_api_call=True)
@@ -136,7 +136,7 @@ class StorageControllerOperationsTemplate():
                                                             dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             num_dpus = len(dpu_indexes)
-            fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(),
+            fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
                                           message="Make sure {} DPUs are online".format(num_dpus))
 
     def cleanup(self):
