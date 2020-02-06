@@ -309,7 +309,7 @@ class StorageControllerApi(object):
             if port_db_uuid["status"]:
                 field_list = ["remote_ip", "subsys_nqn", "transport"]
                 for i in field_list:
-                    if eval(i) != port_uuid["data"][i]:
+                    if eval(i) != port_db_uuid["data"][i]:
                         result = {"status": False, "data": "{} doesn't match".format(i)}
                         return result
                 result = {"status": True}
