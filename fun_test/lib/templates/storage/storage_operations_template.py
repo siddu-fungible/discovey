@@ -23,7 +23,7 @@ class StorageControllerOperationsTemplate():
     def get_health(self, storage_controller):
         return storage_controller.health()
 
-    def set_dataplane_ips(self, storage_controller, dut_index):
+    def set_dataplane_ips(self, storage_controller, dut_index, num_dpu=2):
         result = False
         topology_result = None
         try:
@@ -37,7 +37,10 @@ class StorageControllerOperationsTemplate():
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
+            num_f1s = fs_obj.NUM_F1S
+            if num_dpu < 2:
+                num_f1s = num_dpu
+            for f1_index in range(num_f1s):
 
                 bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
                 fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
@@ -128,7 +131,8 @@ class StorageControllerOperationsTemplate():
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
+                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
+                                                            num_dpu=online_dpu_count),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
                                           message="Make sure {} DPUs are online".format(online_dpu_count))
