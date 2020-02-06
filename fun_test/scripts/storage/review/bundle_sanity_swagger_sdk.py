@@ -9,14 +9,14 @@ from swagger_client.models.volume_types import VolumeTypes
 
 
 def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                        runtime=600, bs="4k", ioengine="libaio", direct="1",
+                        runtime=600, bs="4k", ioengine="libaio", direct=1,
                         time_based=False, norandommap=True, verify="md5", verify_fatal=1,
                         offset="0kb", verify_state_save=1, verify_dump=1,
                         verify_state_load=1, only_read=False):
     host_linux_handle = host_obj.get_instance()
 
     if not only_read:
-        host_linux_handle.command("cd ~; rm -fr test_fio_with_integrity;"
+        host_linux_handle.command("cd /tmp; rm -fr test_fio_with_integrity;"
                                   "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
                                            filename=filename, ioengine=ioengine, direct=direct,
@@ -162,6 +162,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
         fs_obj.come.ensure_expected_containers_running()
+        fs_obj.re_initialize()
         fun_test.test_assert(expression=self.storage_controller_template.get_health(
             storage_controller=fs_obj.get_storage_controller()),
                              message="{}: API server health".format(fs_obj))
