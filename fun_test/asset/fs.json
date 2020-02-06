@@ -1248,8 +1248,8 @@
     "revision": "2",
     "bundle_compatible": true,
     "fpga": {
-      "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "",
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
       "mgmt_ip": "fs139-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7011,
