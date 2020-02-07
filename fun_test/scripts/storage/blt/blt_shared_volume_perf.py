@@ -1,5 +1,5 @@
 from lib.system.fun_test import *
-
+from lib.system import utils
 fun_test.enable_storage_api()
 from lib.system import utils
 from lib.host.linux import Linux
@@ -40,9 +40,6 @@ class BringupSetup(FunTestScript):
         else:
             self.already_deployed = False
 
-        if "capacity" in job_inputs:
-            self.capacity = job_inputs["capacity"]
-
         '''
         self = single_fs_setup(self, set_dataplane_ips=False)
 
@@ -60,10 +57,9 @@ class BringupSetup(FunTestScript):
         self.topology = topology_helper.deploy(already_deployed=self.already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(dpu_indexes=[0],
-                                                    already_deployed=self.already_deployed)
-        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+        self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
+        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
+        fun_test.shared_variables["blt_template"] = self.blt_template
 
         fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
@@ -87,8 +83,7 @@ class BringupSetup(FunTestScript):
         self.topology.cleanup()
 
 
-class BltApiStorageTest(FunTestCase):
-
+class SharedVolumePerfTest(FunTestCase):
 
     def describe(self):
 
@@ -104,26 +99,33 @@ class BltApiStorageTest(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
+
         self.topology = fun_test.shared_variables["topology"]
-        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        self.blt_template = fun_test.shared_variables["blt_template"]
         self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
-        benchmark_parsing = True
+
+        tc_config = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
 
-        benchmark_dict = {}
-        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        tc_config = {}
+        tc_config = utils.parse_file_to_json(benchmark_file)
 
-        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
-            benchmark_parsing = False
+        if testcase not in tc_config or not tc_config[testcase]:
+            tc_config = False
             fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
                               format(testcase, benchmark_file))
-            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
-        fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+            fun_test.test_assert(tc_config, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        fun_test.test_assert(tc_config, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
-        for k, v in benchmark_dict[testcase].iteritems():
+        for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
 
+        job_inputs = fun_test.get_job_inputs()
+        if "capacity" in job_inputs:
+            self.capacity = job_inputs["capacity"]
+
+        """
         self.topology = fun_test.shared_variables["topology"]
         self.fs_objs = fun_test.shared_variables["fs_objs"]
         self.come_obj = fun_test.shared_variables["come_obj"]
@@ -131,12 +133,23 @@ class BltApiStorageTest(FunTestCase):
         self.sc_objs = fun_test.shared_variables["sc_obj"]
         self.f1_ips = fun_test.shared_variables["f1_ips"]
         self.host_info = fun_test.shared_variables["host_info"]
+        """
 
         self.vol_uuid_list = []
         fun_test.shared_variables["blt_count"] = self.blt_count
         vol_type = VolumeTypes().LOCAL_THIN
         
-        self.hosts = self.topology.get_available_host_instances()
+        self.available_hosts = self.topology.get_available_hosts()
+        self.host_objs = self.available_hosts.values()
+
+        self.host_info = {}
+        # Populating the linux handles of the hosts
+        for host_name, host_obj in self.available_hosts.items():
+            self.host_info[host_name] = {}
+            self.host_info[host_name]["test_interface"] = host_obj.get_test_interface(index=0)
+            self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
+            self.host_info[host_name]["handle"] = host_obj.get_instance()
+
         chars = string.ascii_uppercase + string.ascii_lowercase
         for i in range(self.blt_count):
             self.name_string = ""
@@ -146,50 +159,37 @@ class BltApiStorageTest(FunTestCase):
                                                                capacity=self.capacity,
                                                                compression_effort=False,
                                                                encrypt=False, data_protection={})
-            vol_uuid = self.storage_controller_template.create_volume(self.fs_obj_list,
-                                                                       body_volume_intent_create)
+            vol_uuid = self.blt_template.create_volume(self.fs_obj_list,
+                                                       body_volume_intent_create)
 
             self.vol_uuid_list.append(vol_uuid[0])
 
         for i in range(self.blt_count):
-            attach_vol_result = self.storage_controller_template.attach_volume(self.fs_obj_list[0],
-                                                                               self.vol_uuid_list[i],
-                                                                               self.hosts,
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
+            attach_vol_result = self.blt_template.attach_volume(self.fs_obj_list[0],
+                                                                self.vol_uuid_list[i],
+                                                                self.host_objs,
+                                                                validate_nvme_connect=True,
+                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
+        for host_name in self.host_info:
+            self.host_info[host_name]["num_volumes"] = self.blt_count
 
-        self.host_nvme_device[host_obj]
-
-
-
-
-
-
+        # Populating the NVMe devices available to the hosts
+        for host_name in self.host_info:
+            host_obj = self.available_hosts[host_name]
             self.host_info[host_name]["nvme_block_device_list"] = []
-            volume_pattern = self.nvme_device.replace("/dev/", "") + r"(\d+)n(\d+)"
-            for volume_name in lsblk_output:
-                match = re.search(volume_pattern, volume_name)
-                if match:
-                    self.nvme_block_device = self.nvme_device + str(match.group(1)) + "n" + \
-                                             str(match.group(2))
-                    self.host_info[host_name]["nvme_block_device_list"].append(self.nvme_block_device)
-                    fun_test.log("NVMe Block Device/s: {}".
-                                 format(self.host_info[host_name]["nvme_block_device_list"]))
-
+            for namespace in self.blt_template.host_nvme_device[host_obj]:
+                self.host_info[host_name]["nvme_block_device_list"].append("/dev/{}".format(namespace))
+            fun_test.log("Available NVMe devices: {}".format(self.host_info[host_name]["nvme_block_device_list"]))
             fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
                                           actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                           message="Expected NVMe devices are available")
-
             self.host_info[host_name]["nvme_block_device_list"].sort()
-            self.host_info[host_name]["fio_filename"] = ":".join(
-                self.host_info[host_name]["nvme_block_device_list"])
-            fun_test.shared_variables["host_info"] = self.host_info
-            fun_test.log("Hosts info: {}".format(self.host_info))
-            # for value in enumerate(attach_vol_result):
-            # if value["data"]["uuid"] not in vol_uuid_list:
-            #     fun_test.test_assert(expression=attach_vol_result, message="created volume is not attached")
+            self.host_info[host_name]["fio_filename"] = ":".join(self.host_info[host_name]["nvme_block_device_list"])
+
+        fun_test.shared_variables["host_info"] = self.host_info
+        fun_test.log("Hosts info: {}".format(self.host_info))
 
     def run(self):
 
@@ -200,13 +200,10 @@ class BltApiStorageTest(FunTestCase):
         end_host_thread = {}
         fio_output = {}
         fio_offset = 1
-        for index,host_name in enumerate(self.host_info):
-            self.host_info[host_name]["nvme_block_device_list"] =
 
         for index, host_name in enumerate(self.host_info):
             fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
                          "provided")
-
             jobs = ""
             fio_output[index] = {}
             end_host_thread[index] = self.host_info[host_name]["handle"].clone()
@@ -234,9 +231,8 @@ class BltApiStorageTest(FunTestCase):
                                                                  **warm_up_fio_cmd_args)
                 fio_offset += self.fio_io_size
 
-
     def cleanup(self):
-        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+        fun_test.shared_variables["storage_controller_template"] = self.blt_template
 
 
 class ConfigPeristenceAfterReset(FunTestCase):
@@ -255,7 +251,6 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                  ''')
 
     def setup(self):
-
 
         self.topology = fun_test.shared_variables["topology"]
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
@@ -322,6 +317,6 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(BltApiStorageTest())
+    setup_bringup.add_test_case(SharedVolumePerfTest())
     #setup_bringup.add_test_case(ConfigPeristenceAfterReset())
     setup_bringup.run()
