@@ -56,7 +56,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "testcase_id": ["C16229"],
+    "test_rail_case_id": ["C16229"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -104,7 +104,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "testcase_id": ["C16230"],
+    "test_rail_case_id": ["C16230"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -153,7 +153,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "testcase_id": ["C18748"],
+    "test_rail_case_id": ["C18748"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -202,7 +202,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "testcase_id": ["C18749"],
+    "test_rail_case_id": ["C18749"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,
@@ -252,7 +252,7 @@
       "jvol_size_multiplier": 8,
       "num_volumes": 1
     },
-    "testcase_id": ["C18750"],
+    "test_rail_case_id": ["C18750"],
     "num_ssd": 12,
     "command_timeout": 30,
     "iter_interval": 10,

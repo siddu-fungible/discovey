@@ -169,11 +169,11 @@ class RecoveryWithFailures(FunTestCase):
         pass
 
     def setup(self):
-        """
+
         testcase = self.__class__.__name__
         self.sc_lock = Lock()
         self.syslog = fun_test.shared_variables["syslog"]
-
+        """
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
         benchmark_file = ""
@@ -390,7 +390,6 @@ class RecoveryWithFailures(FunTestCase):
                     self.vol_stats["vol_stats_initial_read"] = self.storage_controller.peek(
                         props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
                     fun_test.simple_assert(self.vol_stats["vol_stats_initial_read"]["status"], "Collected volume stats after initial READ")
-                    # TODO Include simple_assert here
                     EC_volume_stats = self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_EC"][self.ec_info["uuids"][num]["ec"][0]]
                     fun_test.log("EC Volume stats:\n{}".format(EC_volume_stats))
                     fun_test.test_assert(EC_volume_stats, "EC Volume stats after initial READ")
@@ -681,8 +680,8 @@ class RecoveryWithMFailure(RecoveryWithFailures):
 
     def __init__(self):
         testcase = self.__class__.__name__
-        self.sc_lock = Lock()
-        self.syslog = fun_test.shared_variables["syslog"]
+        #self.sc_lock = Lock()
+        #self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -705,7 +704,7 @@ class RecoveryWithMFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=1,
-                              test_rail_case_ids=self.testcase_id,
+                              test_rail_case_ids=self.test_rail_case_id,
                               summary="EC recovery with M plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -731,8 +730,8 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
     def __init__(self):
         testcase = self.__class__.__name__
-        self.sc_lock = Lock()
-        self.syslog = fun_test.shared_variables["syslog"]
+        #self.sc_lock = Lock()
+        #self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -755,7 +754,7 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=2,
-                              test_rail_case_ids=self.testcase_id,
+                              test_rail_case_ids=self.test_rail_case_id,
                               summary="EC recovery with M+1 plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -781,8 +780,8 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
         testcase = self.__class__.__name__
-        self.sc_lock = Lock()
-        self.syslog = fun_test.shared_variables["syslog"]
+        #self.sc_lock = Lock()
+        #self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -805,7 +804,7 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=3,
-                              test_rail_case_ids=self.testcase_id,
+                              test_rail_case_ids=self.test_rail_case_id,
                               summary="EC recovery with M concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -831,8 +830,8 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
         testcase = self.__class__.__name__
-        self.sc_lock = Lock()
-        self.syslog = fun_test.shared_variables["syslog"]
+        #self.sc_lock = Lock()
+        #self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -855,7 +854,7 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=4,
-                              test_rail_case_ids=self.testcase_id,
+                              test_rail_case_ids=self.test_rail_case_id,
                               summary="EC recovery with M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -881,8 +880,8 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
         testcase = self.__class__.__name__
-        self.sc_lock = Lock()
-        self.syslog = fun_test.shared_variables["syslog"]
+        #self.sc_lock = Lock()
+        #self.syslog = fun_test.shared_variables["syslog"]
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_parsing = True
@@ -905,7 +904,7 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=5,
-                              test_rail_case_ids=self.testcase_id,
+                              test_rail_case_ids=self.test_rail_case_id,
                               summary="EC recovery with K plus M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -930,8 +929,8 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 if __name__ == "__main__":
     ecrecovery = ECBlockRecoveryScript()
     ecrecovery.add_test_case(RecoveryWithMFailure())
-    #ecrecovery.add_test_case(RecoveryWithMplus1Failure())
-    #ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
-    #ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
-    #ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithMplus1Failure())
+    ecrecovery.add_test_case(RecoveryWithMConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithMplusConcurrentFailure())
+    ecrecovery.add_test_case(RecoveryWithKplusMConcurrentFailure())
     ecrecovery.run()
