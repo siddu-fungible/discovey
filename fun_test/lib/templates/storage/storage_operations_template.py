@@ -23,7 +23,9 @@ class StorageControllerOperationsTemplate():
     def get_health(self, storage_controller):
         return storage_controller.health()
 
-    def set_dataplane_ips(self, storage_controller, dut_index):
+    def set_dataplane_ips(self, storage_controller, dut_index, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]
         result = False
         topology_result = None
         try:
@@ -37,7 +39,7 @@ class StorageControllerOperationsTemplate():
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
+            for f1_index in dpu_indexes:
 
                 bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
                 fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
@@ -91,7 +93,7 @@ class StorageControllerOperationsTemplate():
             fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
         return result
 
-    def get_online_dpus(self):
+    def get_online_dpus(self, dpu_indexes):
         """
         Find the number of DPUs online using API
         :return: Returns the number of DPUs online
@@ -109,7 +111,7 @@ class StorageControllerOperationsTemplate():
 
             for node in self.node_ids:
 
-                for f1_index in range(fs_obj.NUM_F1S):
+                for f1_index in dpu_indexes:
                     dpu_id = node + "." + str(f1_index)
                     dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
                                                         dpu_id=dpu_id, raw_api_call=True)
@@ -120,7 +122,9 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self, already_deployed=False, online_dpu_count=2):
+    def initialize(self, already_deployed=False, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]        
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
@@ -128,10 +132,12 @@ class StorageControllerOperationsTemplate():
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
+                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
+                                                            dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
-            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
-                                          message="Make sure {} DPUs are online".format(online_dpu_count))
+            num_dpus = len(dpu_indexes)
+            fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
+                                          message="Make sure {} DPUs are online".format(num_dpus))
 
     def cleanup(self):
         pass
@@ -309,8 +315,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self, already_deployed=False):
-        super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed)
+    def initialize(self, already_deployed=False, dpu_indexes=None):
+        super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
+                                                                dpu_indexes=dpu_indexes)
 
     def cleanup(self):
         """
