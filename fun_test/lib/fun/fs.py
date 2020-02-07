@@ -2287,7 +2287,14 @@ class Fs(object, ToDictMixin):
 
     def cleanup(self):
         self.cleanup_attempted = True
-        self.get_come().cleanup()
+        come = self.get_come()
+        try:
+            come.command("date")
+            if come.is_host_up():
+                self.get_come().cleanup()
+        except Exception as ex:
+            pass
+            
         self.get_bmc().cleanup()
 
         if self.errors_detected:
