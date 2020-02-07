@@ -549,10 +549,10 @@ class DurableVolumeTestcase(FunTestCase):
         fio_output = {}
         test_thread_id = {}
         host_clone = {}
-        self.fio_write_cmd_args["buffer_pattern"] = "{}".format(self.dd_create_file["output_file"])
-        self.fio_verify_cmd_args["buffer_pattern"] = "{}".format(self.dd_create_file["output_file"])
+        self.fio_write_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
+        self.fio_verify_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
 
-        # Writing first 50% of volume with --verify=md5
+        # Writing first 50% of volume size with buffer pattern file
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
@@ -699,7 +699,7 @@ class DurableVolumeTestcase(FunTestCase):
                                          host_name))
 
         fun_test.sleep("before starting write", 15)
-        # Writing remaining 50% of volume with --verify=md5
+        # Writing new data (buffer pattern) to whole volume of volume
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 # Creating buffer pattern file with new conent
