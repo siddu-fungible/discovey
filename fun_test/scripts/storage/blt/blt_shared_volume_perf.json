@@ -49,8 +49,8 @@
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=128k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split "
-
+      "multiple_jobs": "--rw=randwrite --bs=128k --numjobs=16 --iodepth=1 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "timeout": 3600
     }
   }
 }
