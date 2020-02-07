@@ -1177,6 +1177,53 @@ def disalbe_init_fs1600(come_obj):
     return result
 
 
+def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout):
+    result = False
+    command_result = storage_controller.set_fcp_scheduler(fcp_sch_config=config_fcp_scheduler,
+                                                               command_timeout=command_timeout)
+    if not command_result["status"]:
+        fun_test.critical("Unable to set the fcp scheduler bandwidth...So proceeding the test with the "
+                          "default setting")
+    elif config_fcp_scheduler != command_result["data"]:
+        fun_test.critical("Unable to fetch the applied FCP scheduler config... So proceeding the test "
+                          "with the default setting")
+    else:
+        fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
+        result = True
+    return result
+
+
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
+    arg1.disconnect()
+
+
+def add_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["numa_cpus"][numa_node_to_use]
+    return hosts
+
+
+def host_nvme_block_devices(hosts):
+    return hosts
+
+
+def post_final_test_results(fio_result, internal_result, fio_jobs_iodepth, fio_modes):
+    test_result = True
+    fun_test.log(fio_result)
+    fun_test.log(internal_result)
+    for combo in fio_jobs_iodepth:
+        for mode in fio_modes:
+            if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                test_result = False
+
+    fun_test.log("Test Result: {}".format(test_result))
+
+
+
+
 class CollectStats(object):
     def __init__(self, storage_controller, sc_lock=None):
         self.storage_controller = storage_controller
@@ -2401,6 +2448,57 @@ class CollectStats(object):
                     fun_test.log("Waiting for the CDU Stats collection thread having the ID {} to "
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+
+    def populate_stats_to_file(self, stats_collect_details, mode, iodepth):
+        for index, value in enumerate(stats_collect_details):
+            for func, arg in value.iteritems():
+                filename = arg.get("output_file")
+                if filename:
+                    if func == "vp_utils":
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "per_vp":
+                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "resource_bam_args":
+                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vol_stats":
+                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vppkts_stats":
+                        fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "psw_stats":
+                        fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "fcp_stats":
+                        fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "wro_stats":
+                        fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "erp_stats":
+                        fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "etp_stats":
+                        fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "eqm_stats":
+                        fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "hu_stats":
+                        fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ddr_stats":
+                        fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ca_stats":
+                        fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "cdu_stats":
+                        fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
 
 
 def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):

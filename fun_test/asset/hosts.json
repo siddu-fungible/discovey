@@ -377,6 +377,10 @@
       "host_ip": "mktg01-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-02": {
@@ -397,6 +401,10 @@
       "host_ip": "mktg02-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-03": {
@@ -417,6 +425,10 @@
       "host_ip": "mktg03-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-04": {
@@ -437,6 +449,10 @@
       "host_ip": "mktg04-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-05": {
@@ -517,6 +533,10 @@
       "host_ip": "mktg08-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-09": {
@@ -577,6 +597,10 @@
       "host_ip": "mktg11-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-12": {

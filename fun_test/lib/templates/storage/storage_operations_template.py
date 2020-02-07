@@ -185,7 +185,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
         return result
 
-    def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False):
+    def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False,
+                      nvme_io_queues=None):
 
         """
         :param fs_obj: fs_object from topology
@@ -216,7 +217,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result_list.append(result)
                 except ApiException as e:
                     fun_test.test_assert(expression=False,
-                                         message="Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                                         message="Exception when attach volume on fs %s: %s\n" % (fs_obj, e))
                     result = None
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -234,7 +235,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     dataplane_ip = result.ip
 
                 fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
-                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip),
+                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip,
+                                                                            nvme_io_queues=nvme_io_queues),
                                      message="NVMe connect from host: {}".format(host_obj.name))
                 if host_obj not in self.host_nvme_device:
                     self.host_nvme_device[host_obj] = []
@@ -245,6 +247,54 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             result = result_list[0]
         else:
             result = result_list
+        return result
+
+    def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
+                            raw_api_call=False, nvme_io_queues=None, round_robin_attach=True):
+        """
+        :param fs_obj: fs_object from topology
+        :param volume_uuid_list: list of volumes to be attached
+        :param host_obj_list: list of host handles from topology to which the volume needs to be attached
+        :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
+        :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
+        :param round_robin_attach: True indicates volume not shared between hosts
+        :return: Attach volume result in case of 1 host_obj
+                 If multiple host_obj are provided, the result is a list of attach operation results,
+                 in the same order of host_obj
+                """
+        result = {}
+        try:
+            final_volume_uuid_list = volume_uuid_list
+            final_host_obj_list = host_obj_list
+            if len(volume_uuid_list) == len(host_obj_list) and round_robin_attach:
+                # when 1:1 mapping is to be done
+                fun_test.log("Num volumes to attach is {} and num hosts is {}. "
+                             "So attaching one volume to one host".format(len(final_volume_uuid_list),
+                                                                          len(final_host_obj_list)))
+            elif (len(volume_uuid_list) == len(host_obj_list) and not round_robin_attach) \
+                    or ((len(host_obj_list) < len(volume_uuid_list)) and not round_robin_attach):
+                # when volumes are shared among hosts
+                final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
+                final_host_obj_list = host_obj_list * len(volume_uuid_list)
+            elif len(host_obj_list) < len(volume_uuid_list) and round_robin_attach:
+                # when volumes are attached in round robin fashion
+                fun_test.log("Num volumes to attach is {} and num hosts is {}. "
+                             "So attaching volumes in round robin fashion")
+                for i in range(len(host_obj_list), len(volume_uuid_list)):
+                    final_host_obj_list.append(host_obj_list[i % len(host_obj_list)])
+
+            for index in range(len(final_host_obj_list)):
+                if not final_host_obj_list[index] in result.keys():
+                    result[final_host_obj_list[index]] = []
+                fun_test.log("Attaching {} volume to {} host".format(final_volume_uuid_list[index],
+                                                                     final_host_obj_list[index].name))
+                output = self.attach_volume(fs_obj=fs_obj, volume_uuid=final_volume_uuid_list[index],
+                                            host_obj=host_obj_list[index],
+                                            validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
+                                            nvme_io_queues=nvme_io_queues)
+                result[final_host_obj_list[index]].append(output[0]["data"])
+        except Exception as ex:
+            fun_test.critical(str(ex))
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
