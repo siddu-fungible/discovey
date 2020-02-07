@@ -6,7 +6,7 @@
   "capacity": 17179869184,
   "compression_effort": "False",
   "encrypt": "False",
-  "name": "blt_vol",
+  "name": "vol",
    "DUT":1,
   "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
   "ethernet_adapter": "Mellanox",
