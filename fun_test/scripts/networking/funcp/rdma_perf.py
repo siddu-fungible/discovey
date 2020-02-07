@@ -493,17 +493,31 @@ class BwTest(FunTestCase):
 
         # Check this variables for NFCP test. As those will fail
         if not self.fcp:
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
-            come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
-            come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
-            fun_test.sleep("Removed FTEP", seconds=5)
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f11_fcp_tunnel")
+            temp_f10_tunnel = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_fcp_tunnel\"")
+            temp_f11_tunnel = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_fcp_tunnel\"")
+            f10_tunnel_info = temp_f10_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+            f11_tunnel_info = temp_f11_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+
+            if f10_tunnel_info != '' and f11_tunnel_info != '':
+                f10_tunnel_name = f10_tunnel_info.replace("'", "\\'")
+                f11_tunnel_name = f11_tunnel_info.replace("'", "\\'")
+
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f10_del".format(f10_tunnel_name))
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f11_del".format(f11_tunnel_name))
+                del_f10_tun = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
+                del_f11_tun = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+                fun_test.sleep("Removed FTEP", seconds=5)
+
+                f10_return_code = re.sub("\D", "", del_f10_tun)
+                f11_return_code = re.sub("\D", "", del_f11_tun)
+                if f10_return_code != "1" or f11_return_code != "1":
+                    fun_test.simple_assert(False, "Tunnel delete failed")
 
         for size in self.io_size:
             for qp in qp_list:
@@ -569,21 +583,20 @@ class BwTest(FunTestCase):
                 f10_fcp_stats_after = f10_storage_controller.peek("stats/fcp/nu/global")
                 f11_fcp_stats_after = f11_storage_controller.peek("stats/fcp/nu/global")
 
-                if self.fcp and enable_fcp:
+                if self.fcp:
                     f10_fcb_dst_fcp_pkt_rcvd = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"]
                     f11_fcb_src_fcp_pkt_xmtd = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"]
                     if f10_fcb_dst_fcp_pkt_rcvd == f11_fcb_src_fcp_pkt_xmtd and f10_fcb_dst_fcp_pkt_rcvd != 0:
                         fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                     counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                    f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                     counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                    f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                    fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                     # NFCP counters check
                     counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -591,14 +604,33 @@ class BwTest(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 1000:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 1000:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")
+                else:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
                 avg_bandwidth = 0
                 msg_rate = 0
@@ -705,16 +737,31 @@ class LatencyTest(FunTestCase):
                 f11_hosts[index]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[index]["iface_name"],
                                                                                     self.mtu))
         if not self.fcp:
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
-            come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
-            come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f11_fcp_tunnel")
+            temp_f10_tunnel = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_fcp_tunnel\"")
+            temp_f11_tunnel = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_fcp_tunnel\"")
+            f10_tunnel_info = temp_f10_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+            f11_tunnel_info = temp_f11_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+
+            if f10_tunnel_info != '' and f11_tunnel_info != '':
+                f10_tunnel_name = f10_tunnel_info.replace("'", "\\'")
+                f11_tunnel_name = f11_tunnel_info.replace("'", "\\'")
+
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f10_del".format(f10_tunnel_name))
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f11_del".format(f11_tunnel_name))
+                del_f10_tun = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
+                del_f11_tun = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+                fun_test.sleep("Removed FTEP", seconds=5)
+
+                f10_return_code = re.sub("\D", "", del_f10_tun)
+                f11_return_code = re.sub("\D", "", del_f11_tun)
+                if f10_return_code != "1" or f11_return_code != "1":
+                    fun_test.simple_assert(False, "Tunnel delete failed")
 
         for size in self.io_size:
             f10_pid_list = []
@@ -784,14 +831,13 @@ class LatencyTest(FunTestCase):
                     fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                 counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                 counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                 # NFCP counters check
                 counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -799,14 +845,33 @@ class LatencyTest(FunTestCase):
                     try:
                         counter_diff = f10_fcp_stats_after["data"][cname] - \
                                        f10_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                         counter_diff = f11_fcp_stats_after["data"][cname] - \
                                        f11_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                     except:
                         fun_test.critical("NFCP counter issue")
+            else:
+                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff == 0),
+                                       message="F10: Traffic is using FCP")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff == 0),
+                                       message="F11: Traffic is using FCP")
+                counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                               f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                fun_test.simple_assert(expression=(counter_diff != 0),
+                                       message="F10 : NFCP counters not incrementing")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                fun_test.simple_assert(expression=(counter_diff != 0),
+                                       message="F11 : NFCP counters not incrementing")
 
             min_latency = 0
             max_latency = 0
@@ -978,9 +1043,9 @@ if __name__ == '__main__':
     ts.add_test_case(LatWriteFcp1500())
     ts.add_test_case(BwWriteFcp9000())
     ts.add_test_case(LatWriteFcp9000())
-    ts.add_test_case(BwWriteNfcp1500())
+    # ts.add_test_case(BwWriteNfcp1500())
     ts.add_test_case(LatWriteNfcp1500())
-    ts.add_test_case(BwWriteNfcp9000())
-    ts.add_test_case(LatWriteNfcp9000())
+    # ts.add_test_case(BwWriteNfcp9000())
+    # ts.add_test_case(LatWriteNfcp9000())
 
     ts.run()
