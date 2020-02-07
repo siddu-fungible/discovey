@@ -7,7 +7,7 @@
             "mtu": 9000,
             "address" : "7.1.1.2",
             "prefix length" : 24,
-            "spine_index" : 1,
+            "spine_index" : 0,
             "gph_index" : 0,
             "enable" : true
         },
