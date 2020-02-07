@@ -33,6 +33,11 @@
                 <div>
                   <a href="/regression/test_bed?test_bed_name={{ testBed.name }}">{{ testBed.name }}</a>
                 </div>
+                <div>
+                  <a class="pseudo-anchor fun-button-secondary" style="font-size: smaller"
+                     href="/regression?test_bed_type={{ testBed.name }}">Show
+                    jobs</a>
+                </div>
                 <!--div style="width: 50%">
                   Enabled: <app-toggle-button [checked]="!testBed.disabled" (changed)="onToggleDisabled($event, testBed)"></app-toggle-button>
                 </div-->
