@@ -473,9 +473,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for i in range(self.blt_count):
                 ctrlr_index = i % self.num_hosts
                 ns_id = (i / self.num_hosts) + 1
+                host_nqn = "nqn.2015-09.com.Fungible:"+self.host_ips[ctrlr_index] #changed remote ip to host_nqn
                 attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.thin_uuid_list[i],
                                                                  transport=self.transport_type.upper(),
-                                                                 remote_ip=self.host_ips[ctrlr_index])
+                                                                 host_nqn=host_nqn)
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching BLT volume {} to the host {}".
                                      format(self.thin_uuid_list[i], self.host_ips[ctrlr_index]))
@@ -1216,7 +1217,7 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
-    bltscript.add_test_case(MultiHostFioRandWrite())
-    bltscript.add_test_case(PreCommitSanity())
-    bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
+    #bltscript.add_test_case(MultiHostFioRandWrite())
+    #bltscript.add_test_case(PreCommitSanity())
+    #bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()

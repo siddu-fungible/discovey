@@ -164,10 +164,10 @@ class StorageControllerApi(object):
             fun_test.critical(str(ex))
         return result
 
-    def volume_attach_remote(self, vol_uuid, remote_ip, transport="TCP"):
+    def volume_attach_remote(self, vol_uuid, host_nqn, transport="TCP"):
         result = {"status": False, "data": {}}
         url = "storage/volumes/{}/ports".format(vol_uuid)
-        data = {"remote_ip": remote_ip, "transport": transport}
+        data = {"host_nqn": host_nqn, "transport": transport}
         response = self.execute_api("POST", url, data=data)
         try:
             if response.ok:
