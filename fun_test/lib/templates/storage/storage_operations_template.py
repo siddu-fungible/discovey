@@ -220,7 +220,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result = None
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid,
+                                                         host_nqn="nqn.2015-09.com.Fungible:{}".format(host_data_ip))
                 result_list.append(result)
             if validate_nvme_connect:
                 if raw_api_call:
