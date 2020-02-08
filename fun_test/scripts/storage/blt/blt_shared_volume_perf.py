@@ -232,7 +232,7 @@ class SharedVolumePerfTest(FunTestCase):
                 offset = " --offset={}%".format(fio_offset)
                 size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + offset + size + str(jobs)
+                                                        fio_cpus_allowed_args + str(jobs)
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
