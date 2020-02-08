@@ -413,6 +413,13 @@ class NicEmulation(FunTestCase):
             fun_test.test_assert(False, "Not enough x16 servers for test")
         min_host = min(len(f10_hosts), len(f11_hosts))
 
+        if fun_test.shared_variables["test_speed"] == 200:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 4,
+                                   message="Not enough x16 servers for 200G test")
+        elif fun_test.shared_variables["test_speed"] == 100:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 2,
+                                   message="Not enough x16 servers for 100G test")
+
         for x in range(0, min_host):
             f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                                                         rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
@@ -466,10 +473,12 @@ class BwTest(FunTestCase):
             total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
+            fun_test.log("Running {} test".format(link_capacity))
             # hosts used for populating charts, 4 for 200G & 2 for 100G
             hosts = 4
         else:
             link_capacity = "100G"
+            fun_test.log("Running {} test".format(link_capacity))
             hosts = 2
         for index in range(total_link_bw):
             f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
