@@ -39,9 +39,9 @@
   },
   "SharedVolumePerfTest":{
     "num_f1": 1,
-    "blt_count": 8,
-    "num_host": 4,
-    "capacity": 17179869184,
+    "blt_count": 1,
+    "num_host": 2,
+    "capacity": 1073741824,
     "compression_effort": "False",
     "encrypt": "False",
     "name": "raw_volume_",
@@ -49,7 +49,7 @@
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=128k --numjobs=16 --iodepth=1 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randrw --bs=4k --numjobs=16 --iodepth=1 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
       "timeout": 3600
     }
   }
