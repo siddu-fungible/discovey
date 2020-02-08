@@ -473,7 +473,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for i in range(self.blt_count):
                 ctrlr_index = i % self.num_hosts
                 ns_id = (i / self.num_hosts) + 1
-                host_nqn = "nqn.2015-09.com.Fungible:"+self.host_ips[ctrlr_index] #changed remote ip to host_nqn
+                host_nqn = "nqn.2015-09.com.Fungible:{}".format(self.host_ips[ctrlr_index])
                 attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.thin_uuid_list[i],
                                                                  transport=self.transport_type.upper(),
                                                                  host_nqn=host_nqn)
