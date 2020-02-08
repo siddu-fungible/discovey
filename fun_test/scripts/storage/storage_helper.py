@@ -1206,10 +1206,6 @@ def add_host_numa_cpus(hosts, numa_node_to_use):
     return hosts
 
 
-def host_nvme_block_devices(hosts):
-    return hosts
-
-
 def post_final_test_results(fio_result, internal_result, fio_jobs_iodepth, fio_modes):
     test_result = True
     fun_test.log(fio_result)

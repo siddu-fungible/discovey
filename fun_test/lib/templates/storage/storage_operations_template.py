@@ -262,6 +262,23 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                  If multiple host_obj are provided, the result is a list of attach operation results,
                  in the same order of host_obj
                 """
+        """
+        The function attaches volume from param volume_uuid_list to host in param host_obj_list based on
+        param round_robin_attach provided by user. If volume is to be shared among hosts then user needs to 
+        set it to round_robin_attach false
+        
+        case1: set round_robin_attach=True when one vol is attached to one host
+        eg: 12 vol on 12 different host
+        
+        case2: set round_robin_attach=False when one vol is shared among multiple hosts
+        eg: 3 vols shared among 3 hosts
+        
+        case3: set round_robin_attach=True when num hosts < num volumes and volumes are not shared
+        eg: 8 vols on 2 hosts such that each host has 4 volumes attached
+        
+        case4: set round_robin_attach=False when num hosts < num volumes and volumes are to be shared among hosts
+        eg: 8 vols on 2 hosts such that each host has 8 volumes attached
+        """
         result = {}
         try:
             final_volume_uuid_list = volume_uuid_list
@@ -278,8 +295,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 final_host_obj_list = host_obj_list * len(volume_uuid_list)
             elif len(host_obj_list) < len(volume_uuid_list) and round_robin_attach:
                 # when volumes are attached in round robin fashion
-                fun_test.log("Num volumes to attach is {} and num hosts is {}. "
-                             "So attaching volumes in round robin fashion")
+                fun_test.log("Num volumes to attach is {} and num hosts is {} and round_robin_attach is True. "
+                             "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
+                                                                          len(final_host_obj_list)))
                 for i in range(len(host_obj_list), len(volume_uuid_list)):
                     final_host_obj_list.append(host_obj_list[i % len(host_obj_list)])
 
