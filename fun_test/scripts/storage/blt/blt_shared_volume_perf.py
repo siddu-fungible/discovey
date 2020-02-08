@@ -62,10 +62,14 @@ class BringupSetup(FunTestScript):
         self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
         fun_test.shared_variables["blt_template"] = self.blt_template
 
-        fs_obj_list = []
+        self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+            self.fs_obj_list.append(fs_obj)
+
+        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+
+        # self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
 
         '''
         fun_test.shared_variables["fs_obj_list"] = fs_obj_list
@@ -151,7 +155,7 @@ class SharedVolumePerfTest(FunTestCase):
             self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
             self.host_info[host_name]["handle"] = host_obj.get_instance()
 
-        chars = string.ascii_uppercase + string.ascii_lowercase
+        # chars = string.ascii_uppercase + string.ascii_lowercase
         for i in range(self.blt_count):
             suffix = utils.generate_uuid(length=4)
             body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i), vol_type=vol_type,
