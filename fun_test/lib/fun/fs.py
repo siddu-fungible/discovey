@@ -320,7 +320,7 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
