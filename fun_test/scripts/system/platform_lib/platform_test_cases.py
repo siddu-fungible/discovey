@@ -3,7 +3,7 @@ from scripts.system.platform_lib.platform_helper import *
 from scripts.storage.pocs.apple.apc_pdu_auto import *
 
 
-def run_deco(func):
+def run_decorator(func):
     def function_wrapper(self):
         self.run_passed = False
         func(self)
@@ -55,7 +55,7 @@ class DiscoverStaticIp(PlatformGeneralTestCase):
         self.initialize_variables()
         self.intialize_handles()
 
-    @run_deco
+    @run_decorator
     def run(self):
         fpga_up = self.fpga_handle.is_host_up()
         fun_test.test_assert(fpga_up, "FPGA reachable")
@@ -81,7 +81,7 @@ class DiscoverDhcpIp(PlatformGeneralTestCase):
         self.initialize_variables()
         self.intialize_handles()
 
-    @run_deco
+    @run_decorator
     def run(self):
         fpga_up = self.fpga_handle.is_host_up()
         fun_test.test_assert(fpga_up, "FPGA reachable")
@@ -103,7 +103,7 @@ class AlternateCommunicationToBmc(PlatformGeneralTestCase):
                               test_rail_case_ids=["T23133"],
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         # todo: web interface check;
         redfish_active = self.check_if_redfish_is_active()
@@ -126,7 +126,7 @@ class PlatformComponentVersioningDiscovery(PlatformGeneralTestCase):
         self.initialize_variables()
         self.intialize_handles()
 
-    @run_deco
+    @run_decorator
     def run(self):
         # todo: add revision  rev1 or rev2
         fpga_verified = self.verify_drop_version(system="fpga")
@@ -154,7 +154,7 @@ class BootSequenceFpga(PlatformGeneralTestCase):
         super(BootSequenceFpga, self).setup()
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.work_around_power_cycle = True
         self.fs_basic_checks()
@@ -197,7 +197,7 @@ class BootSequenceBmc(PlatformGeneralTestCase):
         super(BootSequenceBmc, self).setup()
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.fs_basic_checks()
 
@@ -242,7 +242,7 @@ class BootSequenceCome(PlatformGeneralTestCase):
         super(BootSequenceCome, self).setup()
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.fs_basic_checks()
 
@@ -288,7 +288,7 @@ class BmcLinkToggle(PlatformGeneralTestCase):
         super(BmcLinkToggle, self).setup()
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         bmc_up = self.bmc_handle.ensure_host_is_up()
         fun_test.test_assert(bmc_up, "BMC is up")
@@ -336,7 +336,7 @@ class BmcColdBoot(PlatformGeneralTestCase):
         ApcPduTestcase.setup(self)
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         ApcPduTestcase.run(self)
 
@@ -356,7 +356,7 @@ class BmcIpmiReset(PlatformGeneralTestCase):
         ApcPduTestcase.setup(self)
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.warm_reboot = True
         self.cold_reboot = False
@@ -380,7 +380,7 @@ class BmcTransportForCommunication(PlatformGeneralTestCase):
                               summary="bmc transport for communication",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         bmc_up = self.bmc_handle.ensure_host_is_up()
         fun_test.test_assert(bmc_up, "BMC is reachable")
@@ -395,7 +395,7 @@ class TemperatureSensorBmcIpmi(PlatformGeneralTestCase):
                               summary="temperature sensor repository database of bmc",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         # todo:
         response = self.check_ipmi_tool_connect()
@@ -410,7 +410,7 @@ class FanSensorBootupIpmi(PlatformGeneralTestCase):
                               summary="fan sensor repository database of bmc",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         response = self.check_ipmi_tool_connect()
         fun_test.test_assert(response, "IPMI tool is active")
@@ -424,7 +424,7 @@ class TemperatureFanMeasurement(PlatformGeneralTestCase):
                               summary="temperature and fan measurements reported on BMC(redfish)",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.validate_fans()
         self.validate_temperaure_sensors()
@@ -437,7 +437,7 @@ class InletExhasutThreshold(PlatformGeneralTestCase):
                               summary="max/min threshold of sensor on BMC (inlet, exhaust)",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         # todo: verify i this is what we need to do
         self.validate_temperaure_sensors()
@@ -450,7 +450,7 @@ class FanRedfishtool(PlatformGeneralTestCase):
                               summary="failure logs via ipmitool/redfish",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         #todo: not sure
         result = self.read_fans_data()
@@ -464,7 +464,7 @@ class F1AsicTemperature(PlatformGeneralTestCase):
                               summary="F1 asic temperature",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.validate_temperaure_sensors()
         result = self.verify_ipmi_sdr_info()
@@ -477,7 +477,7 @@ class BootComeUefiOrBios(PlatformGeneralTestCase):
                               summary="",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         # todo:
         # self.boot_come_uefi()
@@ -499,7 +499,7 @@ class PcieDiscoverySsdViaRc(PlatformGeneralTestCase):
         super(PcieDiscoverySsdViaRc, self).setup()
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         fun_test.add_checkpoint("SSD check via DPCSH")
         # todo: check the dpch problem, and bmc method
@@ -517,7 +517,7 @@ class PcieDeviceDetection(PlatformGeneralTestCase):
                               summary="",
                               steps="""""")
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.check_if_f1s_detected()
         fun_test.log("Collecting 'lspci -vv -d1dad:' data")
@@ -537,7 +537,7 @@ class HostConnectionViaPcieBus(StorageApi, PlatformGeneralTestCase):
         testcase = self.__class__.__name__
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         host_volume_map = {}
         host_volume_map[self.volume_creation_details["name"]] = "mktg-server-04"
@@ -557,7 +557,7 @@ class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
         self.initialize_test_case_variables(testcase)
         StorageApi.__init__(self)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.create_volume_and_run_fio()
 
@@ -577,7 +577,7 @@ class SnakeTest(PlatformGeneralTestCase):
         PlatformGeneralTestCase.setup(self)
         self.initialize_test_case_variables(testcase)
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.start_snake_test_verify(self.runtime)
 
@@ -595,7 +595,7 @@ class PortSplitTestCase(PlatformGeneralTestCase):
         self.load_new_image = True
         # self.initialize_dpcsh()
 
-    @run_deco
+    @run_decorator
     def run(self):
         self.get_dpcsh_data_for_cmds("port enableall")
         self.docker_bringup_all_fpg_ports(f1=0)
@@ -622,17 +622,208 @@ class PortSplitTestCase(PlatformGeneralTestCase):
         self.verify_port_link_status_ethtool(f1=0, port_num_list=[1, 2, 3], speed="100g", link_detected="no")
 
 
+class FanSpeedVariations(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=25,
+                              summary="Fan speed variation check",
+                              steps="""""")
+
+    def setup(self):
+        PlatformGeneralTestCase.setup(self)
+        self.pwmtt = PwmTachtool(self.bmc_handle)
+
+    @run_decorator
+    def run(self):
+        result = True
+        fan = 0
+        set_to_duty_cycle = 20
+        sleep_for_sec = 300
+        threshold_percentage = 20
+        intial_rpm = 10000
+
+        initial_speed = self.pwmtt.get_fan_speed(fan)
+        normal_initial_speed = True if initial_speed < intial_rpm else False
+        fun_test.test_assert(normal_initial_speed, "Initiall fan speed within {} RPM".format(intial_rpm))
+
+        self.pwmtt.set_pwm_dutycycle(fan, set_to_duty_cycle)
+        fun_test.test_assert(True, "Set Fan {} duty-cycle: {}".format(fan, set_to_duty_cycle))
+
+        fan_speed_after_changing = self.pwmtt.get_fan_speed(fan)
+        fun_test.sleep("For auto adjustment of fan", seconds=sleep_for_sec)
+        fan_speed_after_waiting = self.pwmtt.get_fan_speed(fan)
+
+        change_percentage = self.get_change(fan_speed_after_waiting, initial_speed)
+        fun_test.log("Percentage change in the fan speed : {}".format(change_percentage))
+        if change_percentage > threshold_percentage or change_percentage < 0:
+            result = False
+        fun_test.test_assert(result, "Fan speed normalized")
+
+    def cleanup(self):
+        self.pwmtt.set_pwm_dutycycle(0, 80)
+        PlatformGeneralTestCase.cleanup(self)
+
+    @staticmethod
+    def get_change(current, previous):
+        if current == previous:
+            return 0
+        try:
+            return (float(current - previous) / previous) * 100.0
+        except ZeroDivisionError:
+            return 0
+
+
+class MultipleF1Reset(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=26,
+                              summary="multiple times F1 reset test ",
+                              test_rail_case_ids=["T24815"],
+                              steps="""""")
+        # "http://integration.fungible.local/regression/submit_job_page?saved_job_config=463441"
+
+    def setup(self):
+        self.iterations = 10
+        self.already_deployed = False
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        for iteration in range(self.iterations):
+            fun_test.log("Iteration : {} of {}".format(iteration+1, self.iterations))
+            fun_test.add_checkpoint("Iteration : {} of {}".format(iteration+1, self.iterations))
+
+            self.stop_cc_linux_n_health()
+
+            self.bmc_handle.reset_f1(0)
+            fun_test.add_checkpoint("Reset F1-0")
+            self.bmc_handle.reset_f1(1)
+            fun_test.add_checkpoint("Reset F1-1")
+            fun_test.sleep("F1's to reset", seconds=50)
+
+            self.come_handle.reboot()
+            fun_test.add_checkpoint("Reboot COMe")
+            if iteration != (self.iterations - 1):
+                self.fs_obj.already_deployed = False
+                self.fs_obj.re_initialize()
+                self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+                self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+                self.come_handle = self.fs_obj.get_come()
+                self.bmc_handle = self.fs_obj.get_bmc()
+
+    def stop_cc_linux_n_health(self):
+        try:
+            self.come_handle.stop_health_monitors()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cc_health_check()
+        except Exception as ex:
+            fun_test.critical(ex)
+        try:
+            self.come_handle.stop_cclinux_service()
+        except Exception as ex:
+            fun_test.critical(ex)
+
+
+class BundleInstallWithDisable(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=27,
+                              summary="Boot bundle image with all the links down and NO SSD's",
+                              steps="""""")
+
+    def setup(self):
+        self.already_deployed = False
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        self.get_dpcsh_data_for_cmds("port disableall", f1=0, command_duration=60)
+        self.get_dpcsh_data_for_cmds("port disableall", f1=1, command_duration=60)
+
+
+class BroadcomLoginVerification(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=28,
+                              summary="boot sequence - BRCM56041 1GE/10GE switch",
+                              test_rail_case_ids=["T23155"],
+                              steps="""""")
+
+    @run_decorator
+    def run(self):
+        result = False
+        self.fpga_handle.command("cd ~/apps")
+        self.fpga_handle.command("./hps_pca6408 -b 0 -s 0x20 -o 1 -r 0x1 -v 0x87")
+        self.fpga_handle.command("./hps_pca6408 -b 0 -s 0x20 -o 1 -r 0x3 -v 0x80")
+        bmc_handle_cloned = self.bmc_handle.clone()
+        bmc_handle_cloned.command("/mnt/sdmmc0p1/scripts/UART6_console.sh 1")
+        bmc_handle_cloned.sendline("microcom -s 9600 /dev/ttyS3")
+        bmc_handle_cloned.sendline(chr(0))
+        bmc_handle_cloned.prompt_terminator = "Fungible> "
+        bmc_handle_cloned.command("h", timeout=4)
+        output = bmc_handle_cloned.command("h", timeout=4)
+        if "List all commands" in output:
+            result = True
+        fun_test.test_assert(result, "BCM console running")
+        bmc_handle_cloned.disconnect()
+
+
+class TftpImage(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=29,
+                              summary="boot any image",
+                              steps="""""")
+
+    def setup(self):
+        self.already_deployed = False
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        pass
+
 
 class General(PlatformGeneralTestCase):
     def describe(self):
-        self.set_test_details(id=24,
+        self.set_test_details(id=30,
                               summary="",
                               steps="""""")
 
     def setup(self):
         pass
 
-    @run_deco
+    @run_decorator
     def run(self):
         pass
 
@@ -663,7 +854,12 @@ if __name__ == "__main__":
         HostConnectionViaPcieBus,
         ComeVolumeCreation,
         SnakeTest,
-        PortSplitTestCase
+        PortSplitTestCase,
+        FanSpeedVariations,
+        MultipleF1Reset,
+        BroadcomLoginVerification,
+        BundleInstallWithDisable,
+        TftpImage
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

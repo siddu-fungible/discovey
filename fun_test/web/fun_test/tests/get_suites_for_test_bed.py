@@ -7,7 +7,7 @@ filter_test_bed = None
 if len(sys.argv) > 1:
     filter_test_bed = sys.argv[1]
 
-s = SuiteExecution.objects.filter(test_bed_type="suite-based").order_by("-started_time")
+s = SuiteExecution.objects.filter(test_bed_type="suite-based").order_by("-completed_time")
 for job in s:
     duts_used = []
     run_time = job.run_time
@@ -36,4 +36,4 @@ for job in s:
         pass
 
     if print_it:
-        print "http://integration.fungible.local/regression/suite_detail/{} {}".format(job.execution_id, suite_name)
+        print "http://integration.fungible.local/regression/suite_detail/{} {} {}".format(job.execution_id, suite_name, job.result)

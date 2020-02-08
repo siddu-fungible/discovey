@@ -212,6 +212,7 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["hosts_obj"] = host_dict
 
             # Check PICe Link on host
+            self.host_pcie_info = {}
             servers_mode = self.server_key["fs"][fs_name]["hosts"]
             for server in servers_mode:
                 result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
@@ -219,9 +220,14 @@ class BringupSetup(FunTestCase):
                                                                          % server)
                 linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
                 linux_obj.sudo_command("netplan apply")
+                server_hostname = linux_obj.sudo_command("hostname").strip()
+                linux_obj.disconnect()
+                self.host_pcie_info[server_hostname] = result
+
                 if result == "2":
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
+            fun_test.shared_variables["host_pcie_info"] = self.host_pcie_info
 
             # Bringup FunCP
             fun_test.test_assert(expression=funcp_obj.bringup_funcp(prepare_docker=update_funcp),
@@ -265,6 +271,21 @@ class BringupSetup(FunTestCase):
                         temp_host_list1.append(host_info["name"])
             fun_test.shared_variables["hosts_obj"] = host_dict
 
+            # Check PICe Link on host
+            self.host_pcie_info = {}
+            servers_mode = self.server_key["fs"][fs_name]["hosts"]
+            for server in servers_mode:
+                result = verify_host_pcie_link(hostname=server, mode=servers_mode[server], reboot=False)
+                fun_test.test_assert(expression=(result != "0"), message="Make sure that PCIe links on host %s went up"
+                                                                         % server)
+                self.host_pcie_info[server] = result
+                linux_obj = Linux(host_ip=server, ssh_username="localadmin", ssh_password="Precious1*")
+                linux_obj.sudo_command("netplan apply")
+                if result == "2":
+                    fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
+                                            % servers_mode[server])
+            fun_test.shared_variables["host_pcie_info"] = self.host_pcie_info
+
         fun_test.shared_variables["host_len_f10"] = len(host_dict["f1_0"])
         fun_test.shared_variables["host_len_f11"] = len(host_dict["f1_1"])
 
@@ -299,6 +320,7 @@ class NicEmulation(FunTestCase):
     def run(self):
         host_objs = fun_test.shared_variables["hosts_obj"]
         enable_fcp = fun_test.shared_variables["enable_fcp"]
+        self.host_pcie_info = fun_test.shared_variables["host_pcie_info"]
         abstract_key = ""
         if enable_fcp:
             abstract_key = "abstract_configs_bgp"
@@ -366,27 +388,39 @@ class NicEmulation(FunTestCase):
                 handle.sudo_command("rm -rf /tmp/*bw* && rm -rf /tmp/*rping* /tmp/*lat*")
                 handle.sudo_command("dmesg -c > /dev/null")
                 hostname = handle.command("hostname").strip()
-                if handle.lsmod("funeth"):
-                    iface_name = handle.command(
-                        "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
-                        strip()
-                    iface_addr = handle.command(
-                        "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
-                            iface_name)).strip()
-                else:
-                    fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
-                if objs == "f1_0":
-                    f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
-                                     "handle": handle, "roce_handle": Rocetools(handle)}
-                    f10_hosts.append(f10_host_dict)
-                elif objs == "f1_1":
-                    f11_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
-                                     "handle": handle, "roce_handle": Rocetools(handle)}
-                    f11_hosts.append(f11_host_dict)
+                if hostname in self.host_pcie_info and self.host_pcie_info[hostname] == "1":
+                    if handle.lsmod("funeth"):
+                        iface_name = handle.command(
+                            "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
+                            strip()
+                        iface_addr = handle.command(
+                            "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
+                                iface_name)).strip()
+                    else:
+                        fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
+                    if objs == "f1_0":
+                        f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
+                                         "handle": handle, "roce_handle": Rocetools(handle)}
+                        f10_hosts.append(f10_host_dict)
+                    elif objs == "f1_1":
+                        f11_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
+                                         "handle": handle, "roce_handle": Rocetools(handle)}
+                        f11_hosts.append(f11_host_dict)
         fun_test.shared_variables["f10_hosts"] = f10_hosts
         fun_test.shared_variables["f11_hosts"] = f11_hosts
 
-        for x in range(0, fun_test.shared_variables["host_len_f10"]):
+        if (len(f10_hosts) == 0 or len(f11_hosts) == 0):
+            fun_test.test_assert(False, "Not enough x16 servers for test")
+        min_host = min(len(f10_hosts), len(f11_hosts))
+
+        if fun_test.shared_variables["test_speed"] == 200:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 4,
+                                   message="Not enough x16 servers for 200G test")
+        elif fun_test.shared_variables["test_speed"] == 100:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 2,
+                                   message="Not enough x16 servers for 100G test")
+
+        for x in range(0, min_host):
             f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                                                         rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
                                                         perftest_branch=fun_test.shared_variables["perftest_branch"],
@@ -426,6 +460,7 @@ class BwTest(FunTestCase):
         roce_speed = fun_test.shared_variables["test_speed"]
         f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
         f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
@@ -433,15 +468,17 @@ class BwTest(FunTestCase):
 
         # Using hosts based on minimum host length
         if not roce_speed:
-            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+            total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
             total_link_bw = 1
         if total_link_bw > 1:
             link_capacity = "200G"
+            fun_test.log("Running {} test".format(link_capacity))
             # hosts used for populating charts, 4 for 200G & 2 for 100G
             hosts = 4
         else:
             link_capacity = "100G"
+            fun_test.log("Running {} test".format(link_capacity))
             hosts = 2
         for index in range(total_link_bw):
             f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
@@ -462,18 +499,34 @@ class BwTest(FunTestCase):
                                                                                     self.mtu))
                 f11_hosts[index]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[index]["iface_name"],
                                                                                     self.mtu))
+
+        # Check this variables for NFCP test. As those will fail
         if not self.fcp:
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
-            come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
-            come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
-            fun_test.sleep("Removed FTEP", seconds=5)
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f11_fcp_tunnel")
+            temp_f10_tunnel = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_fcp_tunnel\"")
+            temp_f11_tunnel = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_fcp_tunnel\"")
+            f10_tunnel_info = temp_f10_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+            f11_tunnel_info = temp_f11_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+
+            if f10_tunnel_info != '' and f11_tunnel_info != '':
+                f10_tunnel_name = f10_tunnel_info.replace("'", "\\'")
+                f11_tunnel_name = f11_tunnel_info.replace("'", "\\'")
+
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f10_del".format(f10_tunnel_name))
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f11_del".format(f11_tunnel_name))
+                del_f10_tun = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
+                del_f11_tun = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+                fun_test.sleep("Removed FTEP", seconds=5)
+
+                f10_return_code = re.sub("\D", "", del_f10_tun)
+                f11_return_code = re.sub("\D", "", del_f11_tun)
+                if f10_return_code != "1" or f11_return_code != "1":
+                    fun_test.simple_assert(False, "Tunnel delete failed")
 
         for size in self.io_size:
             for qp in qp_list:
@@ -546,14 +599,13 @@ class BwTest(FunTestCase):
                         fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                     counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                    f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                     counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                    f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                    fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                     # NFCP counters check
                     counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -561,14 +613,33 @@ class BwTest(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")
+                else:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
                 avg_bandwidth = 0
                 msg_rate = 0
@@ -634,13 +705,15 @@ class LatencyTest(FunTestCase):
         roce_speed = fun_test.shared_variables["test_speed"]
         f10_storage_controller = fun_test.shared_variables["f10_storage_controller"]
         f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
+        enable_fcp = fun_test.shared_variables["enable_fcp"]
+        come_obj = fun_test.shared_variables["come_obj"]
         kill_time = 140
         test_case_failure_time = 20
         wait_duration = 5
 
         # Using hosts based on minimum host length
         if not roce_speed:
-            total_link_bw = min(fun_test.shared_variables["host_len_f10"], fun_test.shared_variables["host_len_f11"])
+            total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
             total_link_bw = 1
         if total_link_bw > 1:
@@ -673,17 +746,31 @@ class LatencyTest(FunTestCase):
                 f11_hosts[index]["handle"].sudo_command("ifconfig {} mtu {}".format(f11_hosts[index]["iface_name"],
                                                                                     self.mtu))
         if not self.fcp:
-            come_obj = Linux(host_ip="fs66-come", ssh_username="fun", ssh_password="123")
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'4.4.4.4\\\']\\\" >> /scratch/opt/fungible/f10_del")
-            come_obj.command(
-                "echo SELECT 1 > /scratch/opt/fungible/f11_del")
-            come_obj.command(
-                "echo DEL \\\"openconfig-fcp:fcp-tunnel[ftep=\\\'3.3.3.3\\\']\\\" >> /scratch/opt/fungible/f11_del")
-            come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
-            come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f10_fcp_tunnel")
+            come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_fcp_tunnel")
+            come_obj.command("echo keys *fcp-tunnel* >> /scratch/opt/fungible/f11_fcp_tunnel")
+            temp_f10_tunnel = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_fcp_tunnel\"")
+            temp_f11_tunnel = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_fcp_tunnel\"")
+            f10_tunnel_info = temp_f10_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+            f11_tunnel_info = temp_f11_tunnel.replace("OK", '').replace('\r', '').strip().split("\n")[0]
+
+            if f10_tunnel_info != '' and f11_tunnel_info != '':
+                f10_tunnel_name = f10_tunnel_info.replace("'", "\\'")
+                f11_tunnel_name = f11_tunnel_info.replace("'", "\\'")
+
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f10_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f10_del".format(f10_tunnel_name))
+                come_obj.command("echo SELECT 1 > /scratch/opt/fungible/f11_del")
+                come_obj.command("echo DEL \\\"{}\\\" >> /scratch/opt/fungible/f11_del".format(f11_tunnel_name))
+                del_f10_tun = come_obj.command("docker exec F1-0 bash -c \"redis-cli < f10_del\"")
+                del_f11_tun = come_obj.command("docker exec F1-1 bash -c \"redis-cli < f11_del\"")
+                fun_test.sleep("Removed FTEP", seconds=5)
+
+                f10_return_code = re.sub("\D", "", del_f10_tun)
+                f11_return_code = re.sub("\D", "", del_f11_tun)
+                if f10_return_code != "1" or f11_return_code != "1":
+                    fun_test.simple_assert(False, "Tunnel delete failed")
 
         for size in self.io_size:
             f10_pid_list = []
@@ -753,14 +840,13 @@ class LatencyTest(FunTestCase):
                     fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                 counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                 counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                 # NFCP counters check
                 counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -768,14 +854,33 @@ class LatencyTest(FunTestCase):
                     try:
                         counter_diff = f10_fcp_stats_after["data"][cname] - \
                                        f10_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                         counter_diff = f11_fcp_stats_after["data"][cname] - \
                                        f11_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                     except:
                         fun_test.critical("NFCP counter issue")
+            else:
+                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff == 0),
+                                       message="F10: Traffic is using FCP")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff == 0),
+                                       message="F11: Traffic is using FCP")
+                counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                               f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                fun_test.simple_assert(expression=(counter_diff != 0),
+                                       message="F10 : NFCP counters not incrementing")
+                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                               f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                fun_test.simple_assert(expression=(counter_diff != 0),
+                                       message="F11 : NFCP counters not incrementing")
 
             min_latency = 0
             max_latency = 0
@@ -948,7 +1053,7 @@ if __name__ == '__main__':
     ts.add_test_case(BwWriteFcp9000())
     ts.add_test_case(LatWriteFcp9000())
     # ts.add_test_case(BwWriteNfcp1500())
-    # ts.add_test_case(LatWriteNfcp1500())
+    ts.add_test_case(LatWriteNfcp1500())
     # ts.add_test_case(BwWriteNfcp9000())
     # ts.add_test_case(LatWriteNfcp9000())
 

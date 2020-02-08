@@ -11,6 +11,7 @@ import {UserService} from "../../services/user/user.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserProfile} from "../../login/definitions";
 import {Api, ApiType} from "../../lib/api";
+import {ActivatedRoute} from "@angular/router";
 
 enum EditMode {
   NONE = 0,
@@ -60,6 +61,7 @@ export class TestBedComponent implements OnInit {
   userProfile: UserProfile = null;
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
   assetHealthStates: ApiType = new ApiType();
+  testBedName: string = null;
 
 
   constructor(private regressionService: RegressionService,
@@ -68,7 +70,8 @@ export class TestBedComponent implements OnInit {
               private commonService: CommonService,
               private service: TestBedService,
               private userService: UserService,
-              private modalService: NgbModal
+              private modalService: NgbModal,
+              private route: ActivatedRoute
   ) { }
 
   ngOnInit() {
@@ -77,6 +80,11 @@ export class TestBedComponent implements OnInit {
       this.loggerService.error("Unable to fetch user profile");
       return;
     }
+    this.route.queryParams.subscribe(params => {
+      if (params['test_bed_name']) {
+        this.testBedName = params['test_bed_name'];
+      }
+    });
     // fetchUsers
     // fetchTestbeds
     this.driver = new Observable(observer => {
@@ -122,7 +130,7 @@ export class TestBedComponent implements OnInit {
 
   fetchAssets() {
     if (!this.embed) {
-      return this.service.assets().pipe(switchMap(response => {
+      return this.service.assets(this.testBedName).pipe(switchMap(response => {
         let dutAssets = [];
         let hostAssets = [];
         let perfListenerAssets = [];
@@ -156,7 +164,7 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchTestBeds() {
-    return this.regressionService.fetchTestbeds().pipe(switchMap(response => {
+    return this.regressionService.fetchTestbeds(null, this.testBedName).pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
         testBed.editingDescription = false;
@@ -440,7 +448,7 @@ export class TestBedComponent implements OnInit {
       this.assetLockInfo.clear();
       this.refreshAll();
     }, error => {
-      this.loggerService.error("Unable to lock " + this.assetLockInfo.asset.name);
+      this.loggerService.error("Unable to lock " + this.assetLockInfo.asset.name, error);
     })
   }
 

@@ -861,10 +861,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.20.2/24",
+        "ip": "15.1.41.2/24",
         "switch_info": {
-          "name": "qfx-3",
-          "port": "et-0/0/14:0"
+          "name": "cab04-arista-100g",
+          "port": "Et17/1"
         }
       }
     }
@@ -881,10 +881,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.21.2/24",
+        "ip": "15.1.42.2/24",
         "switch_info": {
-          "name": "qfx-3",
-          "port": "et-0/0/14:2"
+          "name": "cab04-arista-100g",
+          "port": "Et18/1"
         }
       }
     }
@@ -901,10 +901,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.22.2/24",
+        "ip": "15.1.43.2/24",
         "switch_info": {
-          "name": "qfx-3",
-          "port": "et-0/0/21:0"
+          "name": "cab04-arista-100g",
+          "port": "Et19/1"
         }
       }
     }
@@ -921,10 +921,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.23.2/24",
+        "ip": "15.1.44.2/24",
         "switch_info": {
-          "name": "qfx-3",
-          "port": "et-0/0/21:1"
+          "name": "cab04-arista-100g",
+          "port": "Et20/1"
         }
       }
     }
@@ -941,10 +941,10 @@
     "test_interface_info": {
       "0": {
         "name": "enp216s0",
-        "ip": "15.1.24.2/24",
+        "ip": "15.1.45.2/24",
         "switch_info": {
-          "name": "qfx-3",
-          "port": "et-0/0/21:2"
+          "name": "cab04-arista-100g",
+          "port": "Et21/1"
         }
       }
     }

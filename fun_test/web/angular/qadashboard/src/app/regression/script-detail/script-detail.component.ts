@@ -1,4 +1,4 @@
-import {Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {RegressionService} from "../regression.service";
 import {forkJoin, Observable, of, throwError} from "rxjs";
 import {catchError, last, switchMap, windowWhen} from "rxjs/operators";
@@ -10,6 +10,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.service";
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
+import {TreeNode} from "../../ui-elements/tree/definitions";
 
 class DataModel {
   letter: string;
@@ -109,15 +110,15 @@ class ArtifactTree {
   templateUrl: './script-detail.component.html',
   styleUrls: ['./script-detail.component.css'],
   animations: [trigger('show', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate(300)
-      ]),
-      transition(':leave', [
-        animate(1, style({ opacity: 1.0 }))
-      ]),
-      state('*', style({ opacity: 1.0 })),
-    ])]
+    transition(':enter', [
+      style({opacity: 0}),
+      animate(300)
+    ]),
+    transition(':leave', [
+      animate(1, style({opacity: 1.0}))
+    ]),
+    state('*', style({opacity: 1.0})),
+  ])]
 })
 export class ScriptDetailComponent implements OnInit {
   driver: Observable<any> = null;
@@ -126,6 +127,8 @@ export class ScriptDetailComponent implements OnInit {
   artifacts: Artifact [] = null;
   artifactFilter = {assetType: null, assetId: null};
   sidePanelOpen: boolean = false;
+  tree: TreeNode = null;
+  selectedStatsSet: any = new Set();
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -144,9 +147,21 @@ export class ScriptDetailComponent implements OnInit {
     this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
     ssc.display_name = "debug vp_util";
     ssc.name = "debug_vp_util";
-    this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    // this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+
+    this.tree = new TreeNode({name: "Stats", leaf: false, id: 0});
+    let systemNode = this.tree.addChild(new TreeNode({name: "system", leaf: false, id: 0}));
+    // let storageNode = this.tree.addChild(new TreeNode({name: "storage", leaf: false, id: 1}));
+    let bamNode = systemNode.addChild(new TreeNode({name: "BAM", leaf: false, id: 0}));
+    let vpNode = systemNode.addChild(new TreeNode({name: "VP utilization", leaf: false, id: 1}));
+    let defaultPool = bamNode.addChild(new TreeNode({name: "default_alloc_pool", leaf: false, id: 0}));
+    defaultPool.addChild(new TreeNode({name: "usage_percent", leaf: true, id: 0}));
+    vpNode.addChild(new TreeNode({name: "utilization_distribution", leaf: true, id: 0}));
+    vpNode.addChild(new TreeNode({name: "utilization_by_cluster", leaf: true, id: 1}));
+    // storageNode.addChild(new TreeNode({name: "SSD", leaf: true, id: 0}));
 
   }
+
   suiteExecutionId: number = 10000;
   logPrefix: number = null;
   scriptId: number = null;
@@ -187,7 +202,7 @@ export class ScriptDetailComponent implements OnInit {
   showingArtifactPanel: boolean = false;
   artifactTree: ArtifactTree = new ArtifactTree();
   showingTablesPanel: boolean = false;
-  testCaseTablePanels: {[panelHeader: string]: any} = {};
+  testCaseTablePanels: { [panelHeader: string]: any } = {};
   registeredAssets: RegisteredAsset [];
 
   timeSeriesTypes: any = null;
@@ -248,6 +263,39 @@ export class ScriptDetailComponent implements OnInit {
     });
 
 
+  }
+
+  clickedStatsTreeNode(flatNode): void {
+    console.log(flatNode.lineage);
+    console.log(flatNode.treeNode.checked);
+    if (flatNode.treeNode.checked) {
+      this.selectedStatsSet.add(flatNode.treeNode);
+    } else {
+      this.selectedStatsSet.delete(flatNode.treeNode);
+    }
+    // this.selectedStats = Array.from(this.selectedStatsSet);
+  }
+
+  deSelectStats(stat): void {
+    stat.checked = false;
+    this.selectedStatsSet.delete(stat);
+  }
+
+  setStatistics(): void {
+    this.selectedStatistics = [];
+    this.selectedStatsSet.forEach(stats => {
+      let sc = new StatisticsCategory();
+      sc.display_name = "System";
+      sc.name = "system";
+      let ssc = new StatisticsSubCategory();
+      /*ssc.display_name = "BAM";
+      ssc.name = "bam";
+      this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});*/
+      ssc.display_name = stats.name;
+      ssc.name = stats.name;
+      this.selectedStatistics.push({statisticsCategory: sc, statisticsSubCategory: ssc});
+    });
+    this.viewChartsClick();
   }
 
   _parseTestCaseTables(response) {
@@ -332,6 +380,7 @@ export class ScriptDetailComponent implements OnInit {
     });
 
   }
+
   onCheckpointClick2(testCaseExecution, checkpointIndex, contextId?: 0) {
 
   }
@@ -426,7 +475,7 @@ export class ScriptDetailComponent implements OnInit {
 
 
         return of(true);
-      }), catchError (error => {
+      }), catchError(error => {
         this.loggerService.error("Unable fetch checkpoint logs");
         return throwError(error);
       }))
@@ -440,7 +489,7 @@ export class ScriptDetailComponent implements OnInit {
     let maxEntries = this.numLookbackLogs;
     let count = 0;
     let checkpointIndexesToCheck = [this.currentCheckpointIndex];
-    if (this.currentTestCaseExecution.checkpoints.length > 0 && ((this.currentCheckpointIndex - 1) > 0 )) {
+    if (this.currentTestCaseExecution.checkpoints.length > 0 && ((this.currentCheckpointIndex - 1) > 0)) {
       checkpointIndexesToCheck.push(this.currentCheckpointIndex - 1);
     }
 
@@ -481,7 +530,7 @@ export class ScriptDetailComponent implements OnInit {
     }))
   }
 
-  
+
   onShowTestCasePanelClick() {
     this.showTestCasePanel = true;
     this.showCheckpointPanel = true;
@@ -567,8 +616,10 @@ export class ScriptDetailComponent implements OnInit {
       this.selectedStatistics = [];
     }
 
-    this.selectedStatistics.push({statisticsCategory: this.selectedStatisticsCategory,
-      statisticsSubCategory: this.selectedStatisticsSubCategory});
+    this.selectedStatistics.push({
+      statisticsCategory: this.selectedStatisticsCategory,
+      statisticsSubCategory: this.selectedStatisticsSubCategory
+    });
     this.selectedStatisticsCategory = null;
     this.selectedStatisticsSubCategory = null;
     this.selectedStatistics = [...this.selectedStatistics];
@@ -608,7 +659,6 @@ export class ScriptDetailComponent implements OnInit {
   openTestCaseTablesPanelClick() {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
-
 
 
 }

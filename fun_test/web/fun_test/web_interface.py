@@ -20,6 +20,9 @@ def get_homepage_url():
     return s
 
 
+def get_regression_server_url():
+    return "http://{}".format(REGRESSION_SERVER_DOMAIN_NAME)
+
 def get_regression_url():
     return get_homepage_url() + "/regression"
 

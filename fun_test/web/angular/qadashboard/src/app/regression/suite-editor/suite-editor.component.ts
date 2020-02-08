@@ -116,7 +116,10 @@ export class SuiteEditorComponent implements OnInit {
       return of(true);
     }));
 
-    this.refreshAll();
+    setTimeout(() => {
+      this.customTestBedSpecPopulationStatus = "Refreshing";
+      this.refreshAll();
+    }, 1);
 
   }
 
