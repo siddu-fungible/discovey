@@ -61,7 +61,6 @@ class BringupSetup(FunTestScript):
         self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
         self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
         fun_test.shared_variables["blt_template"] = self.blt_template
-	fun_test.shared_variables["fio"] = {}
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -216,6 +215,7 @@ class SharedVolumePerfTest(FunTestCase):
         fio_output = {}
         fio_offset = 1
 
+        fun_test.shared_variables["fio"] = {}
         for index, host_name in enumerate(self.host_info):
             fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
                          "provided")
