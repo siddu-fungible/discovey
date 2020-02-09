@@ -208,7 +208,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
-                attach_fields = BodyVolumeAttach(transport=Transport().TCP, remote_ip=host_data_ip)
+                attach_fields = BodyVolumeAttach(transport=Transport().TCP,
+                                                 host_nqn="nqn.2015-09.com.Fungible:{}".format(host_data_ip))
 
                 try:
                     result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
