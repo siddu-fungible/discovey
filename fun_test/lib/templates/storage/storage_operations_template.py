@@ -208,7 +208,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
-                attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
+                attach_fields = BodyVolumeAttach(transport=Transport().TCP, remote_ip=host_data_ip)
 
                 try:
                     result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
@@ -360,8 +360,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
                     fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with remote IP {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['remote_ip']))
+                                         message="Detach Volume {} from host with host_nqn {}".format(
+                                             volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
