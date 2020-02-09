@@ -289,7 +289,7 @@ export class ReleaseDetailComponent implements OnInit {
     let url = this.releaseCatalogExecution.getUrl({id: this.releaseCatalogExecution.id});
     this.releaseCatalogExecution.update_last_good_build = !this.releaseCatalogExecution.update_last_good_build;
     this.releaseCatalogExecution.update(url).subscribe(response => {
-
+      this.fetchSuiteDetails();
     }, error => {
       this.logger.error(`Unable to update last-good build`, error);
     })

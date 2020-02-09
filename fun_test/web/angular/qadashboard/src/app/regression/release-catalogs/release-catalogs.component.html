@@ -68,6 +68,10 @@
                      name="recurring"
                      [checked]="releaseCatalogExecution.recurring"> Recurring
 
+    <input [(ngModel)]="releaseCatalogExecution.update_last_good_build" type="checkbox"
+                     name="update_last_good_build"
+                     [checked]="releaseCatalogExecution.update_last_good_build"> Update last good build
+
     <table class="fun-table-borderless">
       <tr>
         <td class="fun-table-borderless-header">
