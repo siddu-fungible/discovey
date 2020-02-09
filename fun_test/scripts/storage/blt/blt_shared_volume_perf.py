@@ -136,7 +136,6 @@ class SharedVolumePerfTest(FunTestCase):
         if "num_host" in job_inputs:
             self.num_host = job_inputs["num_host"]
 
-
         """
         self.topology = fun_test.shared_variables["topology"]
         self.fs_objs = fun_test.shared_variables["fs_objs"]
@@ -215,7 +214,7 @@ class SharedVolumePerfTest(FunTestCase):
 
     def run(self):
 
-        self.fio_io_size = 100 / self.num_host
+        self.fio_io_size = 100 / len(self.host_info)
         # self.offsets = ["1%", "26%", "51%", "76%"]
 
         thread_id = {}
@@ -409,10 +408,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
-
     def cleanup(self):
         self.storage_controller_template.cleanup()
-
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
@@ -425,5 +422,5 @@ class ConfigPeristenceAfterReset(FunTestCase):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(SharedVolumePerfTest())
-    #setup_bringup.add_test_case(ConfigPeristenceAfterReset())
+    # setup_bringup.add_test_case(ConfigPeristenceAfterReset())
     setup_bringup.run()
