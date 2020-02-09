@@ -41,9 +41,6 @@ class BringupSetup(FunTestScript):
         else:
             self.already_deployed = False
 
-        if "capacity" in job_inputs:
-            self.c
-
         '''
         self = single_fs_setup(self, set_dataplane_ips=False)
 
