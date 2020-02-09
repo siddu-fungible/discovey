@@ -84,7 +84,9 @@ class BringupSetup(FunTestScript):
 
     def cleanup(self):
 
+        self.blt_template.cleanup()
         self.topology.cleanup()
+
 
 
 class SharedVolumePerfTest(FunTestCase):
@@ -290,6 +292,7 @@ class SharedVolumePerfTest(FunTestCase):
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
+
 
 
 class ConfigPeristenceAfterReset(FunTestCase):
