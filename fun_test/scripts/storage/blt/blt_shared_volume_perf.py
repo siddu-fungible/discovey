@@ -41,6 +41,9 @@ class BringupSetup(FunTestScript):
         else:
             self.already_deployed = False
 
+        if "capacity" in job_inputs:
+            self.c
+
         '''
         self = single_fs_setup(self, set_dataplane_ips=False)
 
@@ -128,6 +131,11 @@ class SharedVolumePerfTest(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
+        if "blt_count" in job_inputs:
+            self.blt_count = job_inputs["blt_count"]
+        if "num_host" in job_inputs:
+            self.num_host = job_inputs["num_host"]
+
 
         """
         self.topology = fun_test.shared_variables["topology"]

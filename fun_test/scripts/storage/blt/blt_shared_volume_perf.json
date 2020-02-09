@@ -41,7 +41,7 @@
     "num_f1": 1,
     "blt_count": 1,
     "num_host": 2,
-    "capacity": 1099511627776,
+    "capacity": 1073741824,
     "compression_effort": "False",
     "encrypt": "False",
     "name": "raw_volume_",
