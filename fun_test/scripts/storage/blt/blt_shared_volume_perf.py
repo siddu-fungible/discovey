@@ -233,7 +233,7 @@ class SharedVolumePerfTest(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                offset = " --offset={}%".format(fio_offset)
+                offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
                 size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + offset + size + jobs
