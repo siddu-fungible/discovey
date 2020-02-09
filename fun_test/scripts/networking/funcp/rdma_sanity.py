@@ -99,6 +99,18 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["qp_list"] = job_inputs["qp_list"]
         else:
             fun_test.shared_variables["qp_list"] = [512]
+        if "funos_branch" in job_inputs:
+            fun_test.shared_variables["funos_branch"] = job_inputs["funos_branch"]
+        else:
+            fun_test.shared_variables["funos_branch"] = None
+        if "funsdk_branch" in job_inputs:
+            fun_test.shared_variables["funsdk_branch"] = job_inputs["funsdk_branch"]
+        else:
+            fun_test.shared_variables["funsdk_branch"] = None
+        if "funsdk_commit" in job_inputs:
+            fun_test.shared_variables["funsdk_commit"] = job_inputs["funsdk_commit"]
+        else:
+            fun_test.shared_variables["funsdk_commit"] = None
         if "fundrv_branch" in job_inputs:
             fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
         else:
@@ -308,7 +320,10 @@ class NicEmulation(FunTestCase):
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
             funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
-                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"],
+                                funsdk_branch=fun_test.shared_variables["funsdk_branch"],
+                                funsdk_commit=fun_test.shared_variables["funsdk_commit"],
+                                funos_branch=fun_test.shared_variables["funos_branch"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=4, num_queues=1)
 
