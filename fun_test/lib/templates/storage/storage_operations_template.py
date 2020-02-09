@@ -263,8 +263,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         host_linux_handle = host_obj.get_instance()
         for driver in self.NVME_HOST_MODULES:
-            if not host_linux_handle.lsmod(module=driver):
-                host_linux_handle.modprobe(driver)
+            # if not host_linux_handle.lsmod(module=driver):
+            host_linux_handle.modprobe(driver)
 
         fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
