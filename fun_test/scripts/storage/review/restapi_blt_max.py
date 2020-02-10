@@ -18,7 +18,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -42,7 +42,7 @@ class CreateMaxBLTVolumes(FunTestCase):
                               3. Attach volumes to a remote host
                               ''')
 
-    def setup(self, enable_encryption = False, skip_initialize=True, stripe_enabled=False):
+    def setup(self, enable_encryption = False, skip_initialize=False, stripe_enabled=False):
         self.topology = fun_test.shared_variables["topology"]
         vol_name = "blt_vol"
         count = 0
