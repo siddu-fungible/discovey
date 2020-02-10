@@ -347,9 +347,10 @@ class ECVolumeLevelTestcase(FunTestCase):
                 fun_test.test_assert(response["status"], "Create EC Volume {}".
                                      format(count + 1))
                 self.volume_uuid_list.append(response["data"]["uuid"])
+                host_nqn = "nqn.2015-09.com.Fungible:{}".format(host_ips[num])
                 attach_volume = sc.volume_attach_remote(vol_uuid=response["data"]["uuid"],
                                                         transport=self.attach_transport.upper(),
-                                                        remote_ip=host_ips[num])
+                                                        host_nqn=host_nqn)
                 host_nqn = attach_volume["data"]["host_nqn"]
                 subsys_nqn = attach_volume["data"]["subsys_nqn"] if "subsys_nqn" in attach_volume["data"] else \
                     attach_volume["data"].get("nqn")

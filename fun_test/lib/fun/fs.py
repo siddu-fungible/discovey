@@ -320,7 +320,7 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -1303,6 +1303,9 @@ class ComE(Linux):
         while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
+        if not expected_containers_running:
+            self.command("netstat -anpt")
+            self.command("ps -ef")
         return expected_containers_running
 
     def is_expected_containers_running(self):
