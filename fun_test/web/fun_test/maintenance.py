@@ -2961,7 +2961,7 @@ if __name__ == "__main_alibaba_rdma__":
 if __name__ == "__main__":
     owner_info = "Ashwin S (ashwin.s@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
-    base_line_date = datetime(year=2020, month=2, day=5, minute=0, hour=0, second=0)
+    base_line_date = datetime(year=2020, month=2, day=10, minute=0, hour=0, second=0)
     data_sets = []
     one_data_set = {}
     one_data_set["name"] = "failure percentage"
