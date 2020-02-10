@@ -7956,6 +7956,12 @@
             "name": "integration_job_run_time",
             "label": "Integration job run time",
             "children": []
+          },
+          {
+            "metric_model_name": "FlakyTestsFailurePerformance",
+            "name": "flaky_tests_failure_ratio",
+            "label": "Flaky tests failure ratio",
+            "children": []
           }
         ]
       }

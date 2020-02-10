@@ -2886,7 +2886,7 @@ if __name__ == "__main_bltvolume__":
 
     print json.dumps(new_charts, indent=4)
 
-if __name__ == "__main__":
+if __name__ == "__main_alibaba_rdma__":
     metric_model_name = "AlibabaRdmaPerformance"
     charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
     for chart in charts:
@@ -2957,3 +2957,27 @@ if __name__ == "__main__":
                 new_charts.append(leaf_chart.get_metrics_json_blob())
             # print json.dumps(new_charts, indent=4)
     print "added new charts for different sizes"
+
+if __name__ == "__main__":
+    owner_info = "Ashwin S (ashwin.s@fungible.com)"
+    source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
+    base_line_date = datetime(year=2020, month=2, day=10, minute=0, hour=0, second=0)
+    data_sets = []
+    one_data_set = {}
+    one_data_set["name"] = "failure percentage"
+    one_data_set["inputs"] = {}
+    one_data_set["output"] = {"name": "output_failure_percentage", "min": 0, "max": -1, "expected": -1, "reference": -1,
+                              "best": -1, "unit": PerfUnit.UNIT_NUMBER}
+    data_sets.append(one_data_set)
+    ml.create_leaf(chart_name="Flaky tests failure ratio", internal_chart_name="flaky_tests_failure_ratio",
+                           data_sets=data_sets, leaf=True,
+                           description="TBD",
+                           owner_info=owner_info, source=source,
+                           positive=False, y1_axis_title=PerfUnit.UNIT_NUMBER,
+                           visualization_unit=PerfUnit.UNIT_NUMBER,
+                           metric_model_name="FlakyTestsFailurePerformance",
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+    print "created flaky tests failure ratio chart"
