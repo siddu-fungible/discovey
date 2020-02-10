@@ -572,8 +572,11 @@ def fetch_nvme_list(host_obj):
             nvme_device_list = []
             for device in nvme_list_dict["Devices"]:
                 if ("Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or "fs1600" in
-                        device["ModelNumber"].lower()) and device["NameSpace"] > 0:
-                    nvme_device_list.append(device["DevicePath"])
+                        device["ModelNumber"].lower()):
+                    if "namespace" in device.lower() and device["NameSpace"] > 0:
+                        nvme_device_list.append(device["DevicePath"])
+                    elif "namespace" not in device.lower():
+                        nvme_device_list.append(device["DevicePath"])
                 '''
                 Not required now as product name is defined
                 elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
