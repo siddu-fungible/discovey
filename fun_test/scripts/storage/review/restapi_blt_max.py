@@ -18,7 +18,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        already_deployed = True
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -42,17 +42,18 @@ class CreateMaxBLTVolumes(FunTestCase):
                               3. Attach volumes to a remote host
                               ''')
 
-    def setup(self, enable_encryption = False, skip_initialize=False, stripe_enabled=False):
+    def setup(self, enable_encryption = False, skip_initialize=True, stripe_enabled=False):
         self.topology = fun_test.shared_variables["topology"]
         vol_name = "blt_vol"
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 1600277970940
+        capacity = 107374182400
         compression_effort = False
         if enable_encryption:
             encrypt = True
         else:
             encrypt = False
+
         if stripe_enabled:
             stripe_count = 12
         else:
@@ -77,23 +78,23 @@ class CreateMaxBLTVolumes(FunTestCase):
                                                                compression_effort=compression_effort,
                                                                encrypt=encrypt, data_protection={},
                                                                stripe_count=stripe_count)
-            vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj_list=fs_obj_list,
+            vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj,
                                                                            body_volume_intent_create=body_volume_intent_create)
-            final_vol_uuid_dict[x] = vol_uuid_dict[fs_obj]
+            final_vol_uuid_dict[x] = vol_uuid_dict
             fun_test.test_assert(expression=vol_uuid_dict, message="Create volume{} with uuid {}"
                                  .format(x, final_vol_uuid_dict[x]))
 
         hosts = self.topology.get_available_hosts()
-        for fs_obj in vol_uuid_dict:
-            for host_id in hosts:
-                host_obj = hosts[host_id]
-                for x in range(1, volume_count + 1, 1):
-                    attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
-                                                                                       volume_uuid=final_vol_uuid_dict[x],
-                                                                                       validate_nvme_connect=False,
-                                                                                       raw_api_call=True)
-                    fun_test.test_assert(expression=attach_vol_result, message="Attach Volume with uuid {} Successful"
-                                         .format(final_vol_uuid_dict[x]))
+        # for fs_obj in vol_uuid_dict:
+        for host_id in hosts:
+            host_obj = hosts[host_id]
+            for x in range(1, volume_count + 1, 1):
+                attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
+                                                                                   volume_uuid=final_vol_uuid_dict[x][0],
+                                                                                   validate_nvme_connect=False,
+                                                                                   raw_api_call=True)
+                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume with uuid {} Successful"
+                                     .format(final_vol_uuid_dict[x][0]))
 
     def run(self):
         hosts = self.topology.get_available_hosts()
@@ -189,5 +190,5 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(CreateMaxBLTVolumes())
     setup_bringup.add_test_case(MaxBltEncryption())
     setup_bringup.add_test_case(MaxStripeVolume())
-    setup_bringup.add_test_case(MaxStripeVolumeEncryption)
+    setup_bringup.add_test_case(MaxStripeVolumeEncryption())
     setup_bringup.run()
