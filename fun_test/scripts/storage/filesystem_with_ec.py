@@ -342,6 +342,7 @@ class DurableVolumeTestcase(FunTestCase):
                     # Map filesystem to a disk
                     nvme_disk_dict = dict(zip(temp_nvme_list, temp_filesys_list))
 
+                    # TODO change mount path to /mnt for reboot case
                     host_handle.sudo_command("rm -rf /tmp/mount_point*")
                     mount_path = "/tmp/mount_point_"
                     # Format the disk, create a mount point and mount it
@@ -901,6 +902,24 @@ class C18375(DurableVolumeTestcase):
         """)
 
 
+class AllFilesystem(DurableVolumeTestcase):
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Creating all supported filesystem on volume",
+                              test_rail_case_ids=["C18375"],
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1        
+        3. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test        
+        4. Export (Attach) the above volume to the Remote Host
+        5. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        6. Creating all supported filesystem on volume
+        7. Create a 1MB data file and write a file with buffern pattern from data file
+        8. After Write is completed, fail one of the plex.
+        9. Perform read operation now using the data file for pattern match
+        """)
+
+
 if __name__ == "__main__":
     ecscript = DurableVolScript()
     ecscript.add_test_case(C18013())
@@ -908,4 +927,5 @@ if __name__ == "__main__":
     ecscript.add_test_case(C18373())
     ecscript.add_test_case(C18374())
     ecscript.add_test_case(C18375())
+    ecscript.add_test_case(AllFilesystem())
     ecscript.run()
