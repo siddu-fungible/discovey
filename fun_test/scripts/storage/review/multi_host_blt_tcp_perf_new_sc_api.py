@@ -39,7 +39,7 @@ class BringupSetup(FunTestScript):
 
         dpu_index = None
         if num_f1 == 1:
-            dup_index = [0]
+            dpu_index = [0]
 
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
@@ -173,7 +173,7 @@ class MultiHostFioRandRead(FunTestCase):
                 fs_obj = self.topology.get_dut_instance(index=dut_index)
                 fs_obj_list.append(fs_obj)
             fs_obj = fs_obj_list[0]
-            self.storage_controller_dpcsh_obj = fs_obj.get_storage_controller(f1_index=1)
+            self.storage_controller_dpcsh_obj = fs_obj.get_storage_controller(f1_index=0)
             self.hosts = self.topology.get_available_host_instances()
 
             # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
@@ -194,7 +194,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             self.create_volume_list = []
             for i in range(self.blt_count):
-                name = "blt13_vol" + str(i + 1)
+                name = "blt_vol" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.storage_controller_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],

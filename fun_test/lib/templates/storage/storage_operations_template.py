@@ -283,19 +283,19 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         try:
             final_volume_uuid_list = volume_uuid_list
             final_host_obj_list = host_obj_list
-            if len(volume_uuid_list) == len(host_obj_list) and volume_is_shared:
+            if len(volume_uuid_list) == len(host_obj_list) and not volume_is_shared:
                 # when 1:1 mapping is to be done
                 fun_test.log("Num volumes to attach is {} and num hosts is {}. "
                              "So attaching one volume to one host".format(len(final_volume_uuid_list),
                                                                           len(final_host_obj_list)))
-            elif (len(volume_uuid_list) == len(host_obj_list) and not volume_is_shared) \
-                    or ((len(host_obj_list) < len(volume_uuid_list)) and not volume_is_shared):
+            elif (len(volume_uuid_list) == len(host_obj_list) and volume_is_shared) \
+                    or ((len(host_obj_list) < len(volume_uuid_list)) and volume_is_shared):
                 # when volumes are shared among hosts
                 final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
                 final_host_obj_list = host_obj_list * len(volume_uuid_list)
-            elif len(host_obj_list) < len(volume_uuid_list) and volume_is_shared:
+            elif len(host_obj_list) < len(volume_uuid_list) and not volume_is_shared:
                 # when volumes are attached in round robin fashion
-                fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is True. "
+                fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
                              "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
                                                                           len(final_host_obj_list)))
                 for i in range(len(host_obj_list), len(volume_uuid_list)):
