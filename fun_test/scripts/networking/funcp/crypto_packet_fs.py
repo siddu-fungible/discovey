@@ -46,6 +46,10 @@ class BringupSetup(FunTestCase):
     def run(self):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
         if "f10_retimer" in job_inputs:
             f10_retimer = str(job_inputs["f10_retimer"]).strip("[]").replace(" ", "")
         else:
