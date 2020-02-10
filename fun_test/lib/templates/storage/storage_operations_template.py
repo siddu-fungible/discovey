@@ -250,52 +250,52 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
-                            raw_api_call=False, nvme_io_queues=None, round_robin_attach=True):
+                            raw_api_call=False, nvme_io_queues=None, volume_is_shared=True):
         """
         :param fs_obj: fs_object from topology
         :param volume_uuid_list: list of volumes to be attached
         :param host_obj_list: list of host handles from topology to which the volume needs to be attached
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
-        :param round_robin_attach: True indicates volume not shared between hosts
+        :param volume_is_shared: True indicates volume not shared between hosts
         :return: Attach volume result in case of 1 host_obj
                  If multiple host_obj are provided, the result is a list of attach operation results,
                  in the same order of host_obj
                 """
         """
         The function attaches volume from param volume_uuid_list to host in param host_obj_list based on
-        param round_robin_attach provided by user. If volume is to be shared among hosts then user needs to 
-        set it to round_robin_attach false
+        param volume_is_shared provided by user. If volume is to be shared among hosts then user needs to 
+        set it to volume_is_shared false
         
-        case1: set round_robin_attach=True when one vol is attached to one host
+        case1: set volume_is_shared=True when one vol is attached to one host
         eg: 12 vol on 12 different host
         
-        case2: set round_robin_attach=False when one vol is shared among multiple hosts
+        case2: set volume_is_shared=False when one vol is shared among multiple hosts
         eg: 3 vols shared among 3 hosts
         
-        case3: set round_robin_attach=True when num hosts < num volumes and volumes are not shared
+        case3: set volume_is_shared=True when num hosts < num volumes and volumes are not shared
         eg: 8 vols on 2 hosts such that each host has 4 volumes attached
         
-        case4: set round_robin_attach=False when num hosts < num volumes and volumes are to be shared among hosts
+        case4: set volume_is_shared=False when num hosts < num volumes and volumes are to be shared among hosts
         eg: 8 vols on 2 hosts such that each host has 8 volumes attached
         """
         result = {}
         try:
             final_volume_uuid_list = volume_uuid_list
             final_host_obj_list = host_obj_list
-            if len(volume_uuid_list) == len(host_obj_list) and round_robin_attach:
+            if len(volume_uuid_list) == len(host_obj_list) and volume_is_shared:
                 # when 1:1 mapping is to be done
                 fun_test.log("Num volumes to attach is {} and num hosts is {}. "
                              "So attaching one volume to one host".format(len(final_volume_uuid_list),
                                                                           len(final_host_obj_list)))
-            elif (len(volume_uuid_list) == len(host_obj_list) and not round_robin_attach) \
-                    or ((len(host_obj_list) < len(volume_uuid_list)) and not round_robin_attach):
+            elif (len(volume_uuid_list) == len(host_obj_list) and not volume_is_shared) \
+                    or ((len(host_obj_list) < len(volume_uuid_list)) and not volume_is_shared):
                 # when volumes are shared among hosts
                 final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
                 final_host_obj_list = host_obj_list * len(volume_uuid_list)
-            elif len(host_obj_list) < len(volume_uuid_list) and round_robin_attach:
+            elif len(host_obj_list) < len(volume_uuid_list) and volume_is_shared:
                 # when volumes are attached in round robin fashion
-                fun_test.log("Num volumes to attach is {} and num hosts is {} and round_robin_attach is True. "
+                fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is True. "
                              "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
                                                                           len(final_host_obj_list)))
                 for i in range(len(host_obj_list), len(volume_uuid_list)):

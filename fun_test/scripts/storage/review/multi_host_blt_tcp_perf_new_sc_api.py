@@ -207,7 +207,7 @@ class MultiHostFioRandRead(FunTestCase):
             self.attach_vol_result = self.storage_controller_template.attach_m_vol_n_host(fs_obj=fs_obj,
                                                                                      volume_uuid_list=self.create_volume_list,
                                                                                      host_obj_list=self.hosts,
-                                                                                     round_robin_attach=True,
+                                                                                     volume_is_shared=True,
                                                                                      raw_api_call=True)
             fun_test.test_assert(expression=self.attach_vol_result, message="Attached volumes to hosts")
             fun_test.shared_variables["volumes_list"] = self.create_volume_list
