@@ -46,10 +46,18 @@ class BringupSetup(FunTestCase):
     def run(self):
         global funcp_obj, servers_mode, servers_list, fs_name
         fs_name = fun_test.get_job_environment_variable('test_bed_type')
-        f1_0_boot_args = "app=mdt_test,hw_hsu_test cc_huid=3 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt"
-        f1_1_boot_args = "app=mdt_test,hw_hsu_test cc_huid=2 --dpc-server --all_100g --serial --dpc-uart " \
-                         "retimer=0 --mgmt"
+        if "f10_retimer" in job_inputs:
+            f10_retimer = str(job_inputs["f10_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f10_retimer = 0
+        if "f11_retimer" in job_inputs:
+            f11_retimer = str(job_inputs["f11_retimer"]).strip("[]").replace(" ", "")
+        else:
+            f11_retimer = 0
+        f1_0_boot_args = "app=mdt_test,load_mods cc_huid=3 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt".format(f10_retimer)
+        f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
+                         "retimer={} --mgmt".format(f11_retimer)
 
         topology_helper = TopologyHelper()
         job_inputs = fun_test.get_job_inputs()
