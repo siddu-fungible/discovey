@@ -5,6 +5,20 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 
+class NvmeCliTest():
+    def __init__(self):
+
+        pass
+
+    def validate_id_ns(self):
+        pass
+
+    def clear_dmesg(self,host_handle):
+        host_handle.sudo_command("dmesg -c")
+
+
+    def get_dmesg(self,host_handle,string="Dmesg output"):
+        pass
 
 class BringupSetup(FunTestScript):
     topology = None
@@ -42,7 +56,7 @@ class RunNvmeIdentifyCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol"
+        name = "blt_vol2"
         already_deployed = False
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
@@ -84,6 +98,17 @@ class RunNvmeIdentifyCommands(FunTestCase):
 
         self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
 
+    def getCtrlId(self,lnx,device):
+        op = json.loads(lnx.sudo_command("nvme -id-ctrl {DEVICE} -o=json".format(DEVICE=device)))
+        print "Output : " + str(op)
+        return op["cntlid"]
+
+    def getNvmSetId(self,lnx,ns):
+        op = json.loads(lnx.sudo_command("nvme -id-ns {NS} -o=json".format(NS=ns)))
+        print "Output : " + str(op)
+        return op["nvmsetid"]
+
+
     def run(self):
         hosts = self.topology.get_available_hosts()
         bmc_handle = self.fs_obj.get_bmc()
@@ -107,6 +132,7 @@ class RunNvmeIdentifyCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_ns = '/dev/' + nvme_device_name
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
@@ -118,65 +144,137 @@ class RunNvmeIdentifyCommands(FunTestCase):
             cns_needing_nsid = [0x00, 0x02, 0x03, 0x10, 0x11, 0x12]
             cns_needing_cntid = [0x12, 0x13, 0x14, 0x15]
             test_result = True
-            for cns in identify_cns_list:
-                # Clear dmesg before start of test
-                host_handle.sudo_command("dmesg -c")
-                other_args = ''
-                if cns in cns_needing_nsid:
-                    other_args += ' --namespace-id=' + str(nsid)
+            if 1:
+                for cns in identify_cns_list:
+                    # Clear dmesg before start of test
+                    host_handle.sudo_command("dmesg -c")
+                    other_args = ''
+                    if cns in cns_needing_nsid:
+                        other_args += ' --namespace-id=' + str(nsid)
 
-                if cns in cns_needing_cntid:
-                    # TBD
-                    pass
+                    if cns in cns_needing_cntid:
+                        # TBD
+                        pass
 
-                command_result = host_handle.sudo_command("nvme admin-passthru {NVME_DEVICE} --opcode={IDENTIFY_OPCODE} --data-len=4096 "
-                                      "--cdw10={CNS} {OTHER_ARGS} -r".format(NVME_DEVICE=nvme_device,
-                                                                          IDENTIFY_OPCODE=identify_opcode, CNS=cns, OTHER_ARGS=other_args))
-                print "Command result is {COMMAND_RESULT}".format(COMMAND_RESULT=command_result)
+                    command_result = host_handle.sudo_command("nvme admin-passthru {NVME_DEVICE} --opcode={IDENTIFY_OPCODE} --data-len=4096 "
+                                          "--cdw10={CNS} {OTHER_ARGS} -r".format(NVME_DEVICE=nvme_device,
+                                                                              IDENTIFY_OPCODE=identify_opcode, CNS=cns, OTHER_ARGS=other_args))
+                    print "Command result is {COMMAND_RESULT}".format(COMMAND_RESULT=command_result)
 
-                time.sleep(5)
-                dmesg = host_handle.sudo_command("dmesg")
-                print "Dmesg for Identify CNS {CNS}".format(CNS=cns)
-                print str(dmesg)
+                    time.sleep(5)
+                    dmesg = host_handle.sudo_command("dmesg")
+                    print "Dmesg for Identify CNS {CNS}".format(CNS=cns)
+                    print str(dmesg)
 
-                result_temp = "failed to connect socket" not in dmesg or "Call Trace:" not in dmesg
-                if not result_temp:
-                    fun_test.critical("failed to connect socket or Call Trace: found in dmesg for  Identify CNS {CNS}")
-                fun_test.add_checkpoint(checkpoint="Validate dmesg for Identify CNS {CNS}".format(CNS=cns),
-                                        expected=True, actual=result_temp)
-
-                test_result &= result_temp
-
-                # Read uart log file
-                relevant_logs = bmc_handle.command("grep -A 100 {FILTER} {LOG_FILE}".format(FILTER=uart_last_timestamp, LOG_FILE=str(uart_log_file)))
-                print "Relevant logs " + str(relevant_logs)
-
-                last_line_in_log_file = relevant_logs.split("\n")[-1]
-                last_timestamp = last_line_in_log_file.split(' ')[0]
-                uart_last_timestamp = last_timestamp.replace("[", '')
-                print "Next Uart last time stamp is " + str(uart_last_timestamp)
-
-
-
-                # For mandatory commands, we should not get this error
-                if cns in identify_cns_mandatory:
-                    result_temp = "ERR epnvme " not in relevant_logs
+                    result_temp = "failed to connect socket" not in dmesg or "Call Trace:" not in dmesg
                     if not result_temp:
-                        fun_test.critical("NVME command is NOT accepted Mandatory Identify CNS {CNS}".format(CNS=cns))
+                        fun_test.critical("failed to connect socket or Call Trace: found in dmesg for  Identify CNS {CNS}".format(CNS=cns))
+                    fun_test.add_checkpoint(checkpoint="Validate dmesg for Identify CNS {CNS}".format(CNS=cns),
+                                            expected=True, actual=result_temp)
 
-                    fun_test.add_checkpoint(checkpoint="Validate NVME command is accepted for Identify CNS {CNS}".format(CNS=cns),
+                    test_result &= result_temp
+
+                    # Read uart log file
+                    relevant_logs = bmc_handle.command("grep -A 100 {FILTER} {LOG_FILE}".format(FILTER=uart_last_timestamp, LOG_FILE=str(uart_log_file)))
+                    print "Relevant logs " + str(relevant_logs)
+
+                    last_line_in_log_file = relevant_logs.split("\n")[-1]
+                    last_timestamp = last_line_in_log_file.split(' ')[0]
+                    uart_last_timestamp = last_timestamp.replace("[", '')
+                    print "Next Uart last time stamp is " + str(uart_last_timestamp)
+
+
+
+                    # For mandatory commands, we should not get this error
+                    if cns in identify_cns_mandatory:
+                        result_temp = "ERR epnvme " not in relevant_logs
+                        if not result_temp:
+                            fun_test.critical("NVME command is NOT accepted Mandatory Identify CNS {CNS}".format(CNS=cns))
+
+                        fun_test.add_checkpoint(checkpoint="Validate NVME command is accepted for Identify CNS {CNS}".format(CNS=cns),
+                                                        expected=True, actual=result_temp)
+
+                        test_result &= result_temp
+
+                    # Connection should not be reset
+                    result_temp = "Got close notification for queue " not in relevant_logs
+                    if not result_temp:
+                        fun_test.critical("Connection is reset for Identify CNS {CNS}".format(CNS=cns))
+                    fun_test.add_checkpoint(checkpoint="Validate whether connection is not reset for Identify CNS {CNS}".format(CNS=cns),
                                                     expected=True, actual=result_temp)
 
                     test_result &= result_temp
 
-                # Connection should not be reset
-                result_temp = "Got close notification for queue " not in relevant_logs
-                if not result_temp:
-                    fun_test.critical("Connection is reset for Identify CNS {CNS}")
-                fun_test.add_checkpoint(checkpoint="Validate whether connection is not reset for Identify CNS {CNS}".format(CNS=cns),
-                                                expected=True, actual=result_temp)
+            identify_cmd_list = ['id-ns', 'id-ns-granularity', 'list-ns', 'id-ctrl', 'list-ctrl', 'id-nvmset', 'id-uuid']
+            identify_cmd_variations = {
+                'id-ns' : [None, ' -f '],
+                'id-ns-granularity' : [None],
+                'list-ns' : [' --all', ' --namespace-id={NSID}'.format(NSID=str(nsid)) ],
+                'id-ctrl' : [None],
+                'list-ctrl' : [' --cntid=' + str(self.getCtrlId(host_handle,nvme_device)), ' --namespace-id={NSID}'.format(NSID=str(nsid))],
+                'id-nvmset' : [None, ' --nvmset=' + str(self.getNvmSetId(host_handle,nvme_device_ns)) ],
+                'id-uuid' : [None]
+            }
 
-                test_result &= result_temp
+            for identify_cmd in identify_cmd_list:
+                variation_args = ''
+                for variation in identify_cmd_variations[identify_cmd]:
+                    if variation is None:
+                        variation_args = ''
+                    else:
+                        variation_args += variation
+
+                    # Clear dmesg before start of test
+                    host_handle.sudo_command("dmesg -c")
+                    other_args = ''
+                    if identify_cmd == "id-ns" :
+                        other_args += ' --namespace-id=' + str(nsid)
+                        other_args += ' -H'
+
+
+                    if identify_cmd not in ["list-ns", "list-ctrl"]:
+                        other_args += " --output-format=json"
+
+
+                    nvme_cmd = "nvme {IDENTIFY_CMD} {NVME_DEVICE} {OTHER_ARGS} {VARIATION_ARGS} ".format(
+                                    IDENTIFY_CMD=identify_cmd,NVME_DEVICE=nvme_device,
+                                            OTHER_ARGS=other_args, VARIATION_ARGS=variation_args)
+                    command_result = host_handle.sudo_command(nvme_cmd)
+                    print "Command result is {COMMAND_RESULT}".format(COMMAND_RESULT=command_result)
+
+                    time.sleep(5)
+                    dmesg = host_handle.sudo_command("dmesg")
+                    print "Dmesg for {NVME_CMD}".format(NVME_CMD=nvme_cmd)
+                    print str(dmesg)
+
+                    result_temp = "failed to connect socket" not in dmesg or "Call Trace:" not in dmesg
+                    if not result_temp:
+                        fun_test.critical("failed to connect socket or Call Trace: found in dmesg for  for {NVME_CMD}".format(NVME_CMD=nvme_cmd))
+                    fun_test.add_checkpoint(checkpoint="Validate dmesg for for {NVME_CMD}".format(NVME_CMD=nvme_cmd),
+                                            expected=True, actual=result_temp)
+
+                    test_result &= result_temp
+
+                    # Read uart log file
+                    relevant_logs = bmc_handle.command("grep -A 100 {FILTER} {LOG_FILE}".format(FILTER=uart_last_timestamp, LOG_FILE=str(uart_log_file)))
+                    print "Relevant logs " + str(relevant_logs)
+
+                    last_line_in_log_file = relevant_logs.split("\n")[-1]
+                    last_timestamp = last_line_in_log_file.split(' ')[0]
+                    uart_last_timestamp = last_timestamp.replace("[", '')
+                    print "Next Uart last time stamp is " + str(uart_last_timestamp)
+
+
+                    # Connection should not be reset
+                    result_temp = "Got close notification for queue " not in relevant_logs
+                    if not result_temp:
+                        fun_test.critical("Connection is reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd))
+                    fun_test.add_checkpoint(checkpoint="Validate whether connection is not reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd),
+                                                    expected=True, actual=result_temp)
+
+                    test_result &= result_temp
+
+
 
             fun_test.test_assert(expression=test_result, message="Identify test result")
 
@@ -341,9 +439,10 @@ class RunNvmeGetFeatureCommands(FunTestCase):
         self.storage_controller_template.cleanup()
 
 
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(RunNvmeIdentifyCommands())
-    setup_bringup.add_test_case(RunNvmeGetFeatureCommands())
+    #setup_bringup.add_test_case(RunNvmeGetFeatureCommands())
     #setup_bringup.add_test_case(RunStorageApiCommands())
     setup_bringup.run()
