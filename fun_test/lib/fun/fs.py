@@ -320,7 +320,7 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -335,7 +335,7 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -710,6 +710,12 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
+        fun_test.sleep(message="Wait for serial proxies", seconds=10)
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+
 
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
@@ -1297,6 +1303,9 @@ class ComE(Linux):
         while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
+        if not expected_containers_running:
+            self.command("netstat -anpt")
+            self.command("ps -ef")
         return expected_containers_running
 
     def is_expected_containers_running(self):
@@ -2281,7 +2290,14 @@ class Fs(object, ToDictMixin):
 
     def cleanup(self):
         self.cleanup_attempted = True
-        self.get_come().cleanup()
+        come = self.get_come()
+        try:
+            come.command("date")
+            if come.is_host_up():
+                self.get_come().cleanup()
+        except Exception as ex:
+            pass
+            
         self.get_bmc().cleanup()
 
         if self.errors_detected:

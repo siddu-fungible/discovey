@@ -23,7 +23,9 @@ class StorageControllerOperationsTemplate():
     def get_health(self, storage_controller):
         return storage_controller.health()
 
-    def set_dataplane_ips(self, storage_controller, dut_index):
+    def set_dataplane_ips(self, storage_controller, dut_index, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]
         result = False
         topology_result = None
         try:
@@ -37,7 +39,7 @@ class StorageControllerOperationsTemplate():
         for node in self.node_ids:
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
+            for f1_index in dpu_indexes:
 
                 bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
                 fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
@@ -91,7 +93,7 @@ class StorageControllerOperationsTemplate():
             fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
         return result
 
-    def get_online_dpus(self):
+    def get_online_dpus(self, dpu_indexes):
         """
         Find the number of DPUs online using API
         :return: Returns the number of DPUs online
@@ -109,7 +111,7 @@ class StorageControllerOperationsTemplate():
 
             for node in self.node_ids:
 
-                for f1_index in range(fs_obj.NUM_F1S):
+                for f1_index in dpu_indexes:
                     dpu_id = node + "." + str(f1_index)
                     dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
                                                         dpu_id=dpu_id, raw_api_call=True)
@@ -120,7 +122,9 @@ class StorageControllerOperationsTemplate():
 
         return result
 
-    def initialize(self, already_deployed=False, online_dpu_count=2):
+    def initialize(self, already_deployed=False, dpu_indexes=None):
+        if dpu_indexes is None:
+            dpu_indexes = [0, 1]        
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
@@ -128,10 +132,12 @@ class StorageControllerOperationsTemplate():
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller),
+                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
+                                                            dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
-            fun_test.test_assert_expected(expected=online_dpu_count, actual=self.get_online_dpus(),
-                                          message="Make sure {} DPUs are online".format(online_dpu_count))
+            num_dpus = len(dpu_indexes)
+            fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
+                                          message="Make sure {} DPUs are online".format(num_dpus))
 
     def cleanup(self):
         pass
@@ -202,7 +208,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
-                attach_fields = BodyVolumeAttach(transport=Transport().TCP_TRANSPORT, remote_ip=host_data_ip)
+                attach_fields = BodyVolumeAttach(transport=Transport().TCP,
+                                                 host_nqn="nqn.2015-09.com.Fungible:{}".format(host_data_ip))
 
                 try:
                     result = storage_controller.storage_api.attach_volume(volume_uuid=volume_uuid,
@@ -214,7 +221,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result = None
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid, remote_ip=host_data_ip)
+                result = raw_sc_api.volume_attach_remote(vol_uuid=volume_uuid,
+                                                         host_nqn="nqn.2015-09.com.Fungible:{}".format(host_data_ip))
                 result_list.append(result)
             if validate_nvme_connect:
                 if raw_api_call:
@@ -256,8 +264,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         host_linux_handle = host_obj.get_instance()
         for driver in self.NVME_HOST_MODULES:
-            if not host_linux_handle.lsmod(module=driver):
-                host_linux_handle.modprobe(driver)
+            # if not host_linux_handle.lsmod(module=driver):
+            host_linux_handle.modprobe(driver)
 
         fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
@@ -309,9 +317,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self, already_deployed=False, online_dpu_count=2):
+    def initialize(self, already_deployed=False, dpu_indexes=None):
         super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
-                                                                online_dpu_count=online_dpu_count)
+                                                                dpu_indexes=dpu_indexes)
 
     def cleanup(self):
         """
@@ -353,8 +361,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
                     fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with remote IP {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['remote_ip']))
+                                         message="Detach Volume {} from host with host_nqn {}".format(
+                                             volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 

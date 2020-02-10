@@ -1,0 +1,18 @@
+{
+"BltApiStorageTest":{
+  "num_f1": 1,
+  "blt_count": 8,
+  "num_host": 4,
+  "capacity": 17179869184,
+  "compression_effort": "False",
+  "encrypt": "False",
+  "name": "vol",
+   "DUT":1,
+  "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+  "ethernet_adapter": "Mellanox",
+  "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=128k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=25%"
+
+    }
+}
+}
