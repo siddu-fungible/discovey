@@ -1303,6 +1303,9 @@ class ComE(Linux):
         while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
+        if not expected_containers_running:
+            self.command("netstat -anpt")
+            self.command("ps -ef")
         return expected_containers_running
 
     def is_expected_containers_running(self):
