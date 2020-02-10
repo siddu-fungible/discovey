@@ -473,6 +473,10 @@
       "host_ip": "mktg05-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-06": {
@@ -493,6 +497,10 @@
       "host_ip": "mktg06-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-07": {
@@ -513,6 +521,10 @@
       "host_ip": "mktg07-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-08": {
@@ -557,6 +569,10 @@
       "host_ip": "mktg09-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-10": {
@@ -577,6 +593,10 @@
       "host_ip": "mktg10-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-11": {
@@ -621,6 +641,10 @@
       "host_ip": "mktg12-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-13": {
@@ -641,6 +665,10 @@
       "host_ip": "mktg13-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "mktg-server-14": {
@@ -661,6 +689,10 @@
       "host_ip": "mktg14-ilo.fungible.local",
       "username": "admin",
       "password": "admin"
+    },
+    "numa_cpus": {
+      "node0": "0-19,40-59",
+      "node1": "20-39,60-79"
     }
   },
   "cab02-qa-01": {
@@ -791,6 +823,10 @@
           "port": "et-0/0/56"
         }
       }
+    },
+    "numa_cpus": {
+      "node0": "0-7,16-23",
+      "node1": "8-15,24-31"
     }
   },
   "cab02-qa-10": {
@@ -811,6 +847,10 @@
           "port": "et-0/0/57"
         }
       }
+    },
+    "numa_cpus": {
+      "node0": "0-7,16-23",
+      "node1": "8-15,24-31"
     }
   },
   "cab02-qa-11": {
@@ -831,6 +871,10 @@
           "port": "et-0/0/58"
         }
       }
+    },
+    "numa_cpus": {
+      "node0": "0-7,16-23",
+      "node1": "8-15,24-31"
     }
   },
   "cab02-qa-12": {
@@ -851,6 +895,10 @@
           "port": "et-0/0/59"
         }
       }
+    },
+    "numa_cpus": {
+      "node0": "0-7,16-23",
+      "node1": "8-15,24-31"
     }
   },
   "cab02-qa-13": {
@@ -871,6 +919,10 @@
           "port": "et-0/0/14"
         }
       }
+    },
+    "numa_cpus": {
+      "node0": "0-7,16-23",
+      "node1": "8-15,24-31"
     }
   },
   "cab04-qa-01": {
