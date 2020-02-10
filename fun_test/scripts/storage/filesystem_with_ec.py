@@ -348,8 +348,8 @@ class DurableVolumeTestcase(FunTestCase):
                     # Format the disk, create a mount point and mount it
                     test_file = []
                     path_list = []
+                    count = 1
                     for vol_name, filesys_name in nvme_disk_dict.items():
-                        count = 1
                         command_result = host_handle.create_filesystem(fs_type=filesys_name, device=vol_name)
                         fun_test.simple_assert(command_result, "{} : Format on {} with type {}".
                                                format(host_name, vol_name, filesys_name))
