@@ -619,6 +619,12 @@ def fetch_nvme_device(end_host, nsid, size=None):
     return result
 
 
+def get_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+    return hosts
+
+
 def fetch_numa_cpus(end_host, ethernet_adapter):
     numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
