@@ -6,6 +6,9 @@ from scripts.networking.funcp.helper import *
 from lib.templates.storage.qemu_storage_template import QemuStorageTemplate
 from lib.host.linux import *
 from lib.templates.security.xts_openssl_template import XtsOpenssl
+from asset.asset_manager import *
+import re
+import ipaddress
 
 
 class ScriptSetup(FunTestScript):
@@ -17,7 +20,7 @@ class ScriptSetup(FunTestScript):
     def setup(self):
         self.server_key = fun_test.parse_file_to_json(fun_test.get_script_parent_directory() +
                                                       '/fs_connected_servers.json')
-        fun_test.shared_variables["xts_ssl"] = True
+        fun_test.shared_variables["xts_ssl"] = False
 
     def cleanup(self):
         host_dict = fun_test.shared_variables["hosts_obj"]
@@ -62,6 +65,10 @@ class BringupSetup(FunTestCase):
                          "retimer={} --mgmt".format(f10_retimer)
         f1_1_boot_args = "app=mdt_test,load_mods cc_huid=2 --dpc-server --serial --all_100g --dpc-uart " \
                          "retimer={} --mgmt".format(f11_retimer)
+        if "deadbeef" in job_inputs:
+            fun_test.shared_variables["data_pattern"] = job_inputs["deadbeef"]
+        else:
+            fun_test.shared_variables["data_pattern"] = False
 
         topology_helper = TopologyHelper()
         job_inputs = fun_test.get_job_inputs()
@@ -92,6 +99,10 @@ class BringupSetup(FunTestCase):
             fun_test.shared_variables["topology"] = topology
             fun_test.test_assert(topology, "Topology deployed")
             fs = topology.get_dut_instance(index=0)
+            f10_instance = fs.get_f1(index=0)
+            f11_instance = fs.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
             come_obj = fs.get_come()
             fun_test.shared_variables["come_obj"] = come_obj
             come_obj.sudo_command("netplan apply")
@@ -126,6 +137,20 @@ class BringupSetup(FunTestCase):
                     fun_test.add_checkpoint("<b><font color='red'><PCIE link did not come up in %s mode</font></b>"
                                             % servers_mode[server])
         else:
+            am = AssetManager()
+            th = TopologyHelper(spec=am.get_test_bed_spec(name=fs_name))
+            topology = th.get_expanded_topology()
+            dut = topology.get_dut(index=0)
+            dut_name = dut.get_name()
+            fs_spec = fun_test.get_asset_manager().get_fs_spec(name=dut_name)
+            fs_obj = Fs.get(fs_spec=fs_spec, already_deployed=True)
+            come_obj = fs_obj.get_come()
+            f10_instance = fs_obj.get_f1(index=0)
+            f11_instance = fs_obj.get_f1(index=1)
+            fun_test.shared_variables["f10_storage_controller"] = f10_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["f11_storage_controller"] = f11_instance.get_dpc_storage_controller()
+            fun_test.shared_variables["come_obj"] = come_obj
+
             fun_test.log("Getting host info")
             host_dict = {"f1_0": [], "f1_1": []}
             temp_host_list = []
@@ -169,7 +194,10 @@ class CryptoCore(FunTestCase):
         self.blt_block_size = 4096
         self.blt_uuid = utils.generate_uuid()
         self.command_timeout = 5
-        self.storage_controller = StorageController(target_ip="fs66-come", target_port=40221)
+        self.storage_controller = fun_test.shared_variables["f11_storage_controller"]
+
+        # Remove *.txt files from /tmp
+        self.host_obj.sudo_command("rm -rf /tmp/*")
 
         if not fun_test.shared_variables["xts_ssl"]:
             self.xts_ssl_template = XtsOpenssl(self.host_obj)
@@ -192,8 +220,8 @@ class CryptoCore(FunTestCase):
                                                                xtweak=xts_tweak,
                                                                uuid=self.blt_uuid,
                                                                command_duration=self.command_timeout)
-        fun_test.simple_assert(command_result["status"], "BLT creation with encryption with uuid {}".
-                               format(self.blt_uuid))
+        fun_test.test_assert(command_result["status"], "BLT creation with encryption with uuid {}".
+                             format(self.blt_uuid))
 
         # Create a PCIe controller
         self.controller_uuid = utils.generate_uuid()
@@ -203,15 +231,15 @@ class CryptoCore(FunTestCase):
                                                                    ctlid=0,
                                                                    huid=1,
                                                                    command_duration=self.command_timeout)
-        fun_test.simple_assert(command_result["status"],
-                               "Creation of PCIe controller with uuid {}".format(self.controller_uuid))
+        fun_test.test_assert(command_result["status"],
+                             "Creation of PCIe controller with uuid {}".format(self.controller_uuid))
 
         # # Attach PCI controller to Vol
         command_result = self.storage_controller.attach_volume_to_controller(vol_uuid=self.blt_uuid,
                                                                              ctrlr_uuid=self.controller_uuid,
                                                                              ns_id=1,
                                                                              command_duration=self.command_timeout)
-        fun_test.simple_assert(command_result["status"], "Attaching vol to PCIe controller")
+        fun_test.test_assert(command_result["status"], "Attaching vol to PCIe controller")
 
         # Create qemu object
         self.qemu = QemuStorageTemplate(host=self.host_obj, dut=0)
@@ -219,12 +247,15 @@ class CryptoCore(FunTestCase):
         # Stop services on host
         self.qemu.stop_host_services()
 
-        # Remove *.txt files from /tmp
-        self.host_obj.remove_file("/tmp/*.txt")
-
         # Create a file on host used as input for nvme write
-        self.host_obj.command("while true ; do printf DEADBEEF; done | head -c {} > /tmp/input_file.txt".
-                              format(write_size))
+        if fun_test.shared_variables["data_pattern"]:
+            fun_test.log("Create a input with pattern DEADBEEF")
+            self.host_obj.command("while true ; do printf DEADBEEF; done | head -c {} > /tmp/input_file.txt".
+                                  format(write_size))
+        else:
+            fun_test.log("Create a input with random chars from urandom file")
+            self.host_obj.command("tr -dc A-Za-z0-9 < /dev/urandom | head -c {} > /tmp/input_file.txt".
+                                  format(write_size))
         self.md5sum_input = self.qemu.md5sum(file_name="/tmp/input_file.txt")
         fun_test.simple_assert(self.md5sum_input, "Computing md5sum for input file")
         fun_test.log("The md5sum of the input file is {}".format(self.md5sum_input))
@@ -258,16 +289,16 @@ class CryptoCore(FunTestCase):
                                                 count=blk_count,
                                                 size=write_size,
                                                 data="/tmp/input_file.txt")
-            fun_test.simple_assert(expression=blt_write[i] == "Success",
-                                   message="Write failed with {} on BLT".format(blt_write[i]))
+            fun_test.test_assert(expression=blt_write[i] == "Success",
+                                 message="Write status : {}, on BLT".format(blt_write[i]))
 
             blt_read[i] = self.qemu.nvme_read(device=nvme_block_device,
                                               start=start_count,
                                               count=blk_count,
                                               size=write_size,
                                               data="/tmp/read_blt" + "_lba_" + str(start_count))
-            fun_test.simple_assert(expression=blt_write[i] == "Success",
-                                   message="Read failed with {} on BLT, LBA {}".format(blt_read[i], start_count))
+            fun_test.test_assert(expression=blt_write[i] == "Success",
+                                 message="Read status : {}, on BLT, LBA {}".format(blt_read[i], start_count))
 
             self.md5sum_output = self.qemu.md5sum(file_name="/tmp/read_blt" + "_lba_" + str(start_count))
             fun_test.simple_assert(self.md5sum_output, "Computing md5sum for output file")
@@ -279,7 +310,7 @@ class CryptoCore(FunTestCase):
             command_result = self.storage_controller.detach_volume_from_controller(ns_id=1,
                                                                                    ctrlr_uuid=self.controller_uuid,
                                                                                    command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Detach BLT with uuid {}".format(self.blt_uuid))
+            fun_test.test_assert(command_result["status"], "Detach BLT with uuid {}".format(self.blt_uuid))
 
             command_result = self.storage_controller.mount_volume(type="VOL_TYPE_BLK_LOCAL_THIN",
                                                                   capacity=self.blt_capacity,
@@ -287,13 +318,13 @@ class CryptoCore(FunTestCase):
                                                                   name="thin_block1",
                                                                   uuid=self.blt_uuid,
                                                                   command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Mount BLT without encryption")
+            fun_test.test_assert(command_result["status"], "Mount BLT without encryption")
 
             command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.controller_uuid,
                                                                                  ns_id=1,
                                                                                  vol_uuid=self.blt_uuid,
                                                                                  command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Attaching BLT without encryption")
+            fun_test.test_assert(command_result["status"], "Attaching BLT without encryption")
 
             blt_read_cipher[i] = self.qemu.nvme_read(device=nvme_block_device,
                                                      start=start_count,
@@ -312,7 +343,7 @@ class CryptoCore(FunTestCase):
             command_result = self.storage_controller.detach_volume_from_controller(ns_id=1,
                                                                                    ctrlr_uuid=self.controller_uuid,
                                                                                    command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Detach BLT with uuid {}".format(self.blt_uuid))
+            fun_test.test_assert(command_result["status"], "Detach BLT with uuid {}".format(self.blt_uuid))
 
             # command_result = self.storage_controller.unmount_volume(type="VOL_TYPE_BLK_LSV",
             #                                                         uuid=self.blt_uuid,
@@ -328,13 +359,13 @@ class CryptoCore(FunTestCase):
                                                                   xtweak=xts_tweak,
                                                                   uuid=self.blt_uuid,
                                                                   command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Mount BLT with encryption")
+            fun_test.test_assert(command_result["status"], "Mount BLT with encryption")
 
             command_result = self.storage_controller.attach_volume_to_controller(ctrlr_uuid=self.controller_uuid,
                                                                                  ns_id=1,
                                                                                  vol_uuid=self.blt_uuid,
                                                                                  command_duration=self.command_timeout)
-            fun_test.simple_assert(command_result["status"], "Attaching BLT with encryption")
+            fun_test.test_assert(command_result["status"], "Attaching BLT with encryption")
 
             blt_read_plain[i] = self.qemu.nvme_read(device=nvme_block_device,
                                                     start=start_count,
