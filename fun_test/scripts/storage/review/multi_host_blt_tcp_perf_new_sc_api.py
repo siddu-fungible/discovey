@@ -33,14 +33,22 @@ class BringupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             already_deployed = job_inputs["already_deployed"]
 
+        num_f1 = 1
+        if "num_f1" in job_inputs:
+            num_f1 = job_inputs["num_f1"]
+
+        dpu_index = None
+        if num_f1 == 1:
+            dup_index = [0]
+
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-        storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        storage_controller_template.initialize(already_deployed=already_deployed)
-        fun_test.shared_variables["storage_controller_template"] = storage_controller_template
+        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
+        self.storage_controller_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
+        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
 
         # Below lines are needed so that we create/attach volumes only once and other testcases use the same volumes
         fun_test.shared_variables["blt"] = {}
@@ -48,6 +56,7 @@ class BringupSetup(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
+        self.storage_controller_template.cleanup()
         self.topology.cleanup()
 
 
@@ -207,7 +216,7 @@ class MultiHostFioRandRead(FunTestCase):
             self.attach_vol_result = self.storage_controller_template.attach_m_vol_n_host(fs_obj=fs_obj,
                                                                                      volume_uuid_list=self.create_volume_list,
                                                                                      host_obj_list=self.hosts,
-                                                                                     volume_is_shared=True,
+                                                                                     volume_is_shared=False,
                                                                                      raw_api_call=True)
             fun_test.test_assert(expression=self.attach_vol_result, message="Attached volumes to hosts")
             fun_test.shared_variables["volumes_list"] = self.create_volume_list

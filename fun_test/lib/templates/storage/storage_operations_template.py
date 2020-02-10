@@ -250,7 +250,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
-                            raw_api_call=False, nvme_io_queues=None, volume_is_shared=True):
+                            raw_api_call=False, nvme_io_queues=None, volume_is_shared=False):
         """
         :param fs_obj: fs_object from topology
         :param volume_uuid_list: list of volumes to be attached
@@ -265,18 +265,18 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         The function attaches volume from param volume_uuid_list to host in param host_obj_list based on
         param volume_is_shared provided by user. If volume is to be shared among hosts then user needs to 
-        set it to volume_is_shared false
+        set it to volume_is_shared true
         
-        case1: set volume_is_shared=True when one vol is attached to one host
+        case1: set volume_is_shared=False when one vol is attached to one host
         eg: 12 vol on 12 different host
         
-        case2: set volume_is_shared=False when one vol is shared among multiple hosts
+        case2: set volume_is_shared=True when one vol is shared among multiple hosts
         eg: 3 vols shared among 3 hosts
         
-        case3: set volume_is_shared=True when num hosts < num volumes and volumes are not shared
+        case3: set volume_is_shared=False when num hosts < num volumes and volumes are not shared
         eg: 8 vols on 2 hosts such that each host has 4 volumes attached
         
-        case4: set volume_is_shared=False when num hosts < num volumes and volumes are to be shared among hosts
+        case4: set volume_is_shared=True when num hosts < num volumes and volumes are to be shared among hosts
         eg: 8 vols on 2 hosts such that each host has 8 volumes attached
         """
         result = {}
