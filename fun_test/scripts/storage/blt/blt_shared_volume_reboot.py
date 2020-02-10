@@ -376,7 +376,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
     def run(self):
 
         self.host_info = fun_test.shared_variables["host_info"]
-
+        fun_test.sleep('Sleeping 5 minuts', seconds=300)
         for host_name in self.host_info:
             host_obj = self.available_hosts[host_name]
             self.host_info[host_name]["nvme_block_device_list"] = []
