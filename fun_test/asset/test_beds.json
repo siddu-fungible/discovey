@@ -1,5 +1,5 @@
 {
-  "fs-60": {
+  "fs-127": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
@@ -73,7 +73,7 @@
             "dual": 14
           }
         },
-        "dut": "fs-60"
+        "dut": "fs-127"
       }
     }
   },
@@ -1082,7 +1082,7 @@
             "dual": 14
           }
         },
-        "dut": "fs-60"
+        "dut": "fs-127"
       }
     }
   },
@@ -3679,6 +3679,54 @@
       }
     }
   },
+  "fs-170": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-170",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.170.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.170.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.170.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.170.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4,
+                8,
+                12
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
   "fs-174": {
     "dut_info": {
       "0": {
@@ -4006,5 +4054,92 @@
         "dut": "fs-171"
       }
     }
+  },
+   "fs-139": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-139",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.139.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.139.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.139.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.139.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et31/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et32/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et1/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et2/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    },
+    "host_info": [
+      "cab04-qa-01",
+      "cab04-qa-02",
+      "cab04-qa-04",
+      "cab04-qa-05"
+    ]
   }
 }

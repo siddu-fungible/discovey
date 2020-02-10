@@ -58,6 +58,7 @@ export class TreeComponent implements OnInit {
       flatNode.treeNode = treeNode;
       flatNode.indent = 0;
       flatNode.hide = false;
+      flatNode.collapsed = false;
       this.flatNodes.push(flatNode);
       if (this.tree.children) {
         this.tree.children.forEach(thisChildNode => {
@@ -110,11 +111,6 @@ export class TreeComponent implements OnInit {
         }
       }
     } else {
-      // if (flatNode.treeNode.meta_data.checked) {
-      //   flatNode.treeNode.meta_data.checked = false;
-      // } else {
-      //   flatNode.treeNode.meta_data["checked"] = true;
-      // }
       flatNode.treeNode.checked = !flatNode.treeNode.checked;
       this.clickedStatsTreeNode.emit(flatNode);
     }
@@ -138,7 +134,7 @@ export class TreeComponent implements OnInit {
     let s = "";
     if (node.hasOwnProperty("indent")) {
       for (let i = 0; i < node.indent - 1; i++) {
-        s += "<span style=\"color: white\">&rarr;</span>";
+        s += "<span style=\"color: whitesmoke\">&rarr;</span>";
       }
       if (node.indent)
         s += "<span>&nbsp;&nbsp;</span>";

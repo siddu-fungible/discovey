@@ -339,22 +339,22 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.105.169"
+      "mgmt_ip": "10.1.112.101"
     },
-    "name": "fs-60",
+    "name": "fs-127",
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.105.170"
+      "mgmt_ip": "10.1.112.103"
     },
     "workarounds": {
       "retimer_workaround": true
     },
-    "gateway_ip": "10.1.105.1",
+    "gateway_ip": "10.1.112.1",
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.105.171"
+      "mgmt_ip": "10.1.112.102"
     }
   },
   {
@@ -403,7 +403,7 @@
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.20.32"
+      "mgmt_ip": "10.1.20.38"
     },
     "apc_info": {
       "username": "admin",
@@ -1201,6 +1201,39 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs170-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs170-come"
+    },
+    "name": "fs-170",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs170-fpga",
+      "telnet_ip": "fs-terminal.fungible.local",
+      "telnet_port": 2030,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 8,
+      "password": "Precious1*",
+      "host_ip": "r9-pdu3.fungible.local"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "fs174-bmc"
     },
     "come": {
@@ -1282,7 +1315,7 @@
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "",
+      "mgmt_ssh_username": "root",
       "mgmt_ip": "fs140-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7012,
@@ -1315,7 +1348,7 @@
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "",
+      "mgmt_ssh_username": "root",
       "mgmt_ip": "fs141-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7013,
@@ -1347,8 +1380,8 @@
     "revision": "2",
     "bundle_compatible": true,
     "fpga": {
-      "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "",
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
       "mgmt_ip": "10.1.21.117",
       "telnet_ip": "fs-terminal",
       "telnet_port": 2020,
