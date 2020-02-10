@@ -11,6 +11,8 @@ import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.s
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
 import {TreeNode} from "../../ui-elements/tree/definitions";
+import {Location} from "@angular/common";
+import {HttpParams} from "@angular/common/http";
 
 class DataModel {
   letter: string;
@@ -135,7 +137,8 @@ export class ScriptDetailComponent implements OnInit {
               private route: ActivatedRoute,
               private commonService: CommonService,
               private modalService: NgbModal,
-              private service: ScriptDetailService
+              private service: ScriptDetailService,
+              private location: Location
   ) {
     this.selectedStatistics = [];
     let sc = new StatisticsCategory();
@@ -539,6 +542,8 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onContextOptionsClick(content) {
+    let params = new HttpParams();
+    params.set('context', content);
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
     }, (reason) => {
       console.log("Rejected");
