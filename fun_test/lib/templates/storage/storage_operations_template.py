@@ -1,6 +1,4 @@
 from lib.system.fun_test import *
-from lib.topology.topology_helper import TopologyHelper
-from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from swagger_client.models.body_volume_attach import BodyVolumeAttach
 from swagger_client.models.body_node_update import BodyNodeUpdate
 from swagger_client.models.volume_types import VolumeTypes
@@ -21,26 +19,29 @@ class StorageControllerOperationsTemplate():
         self.topology = topology
         self.node_ids = []
 
-    def get_health(self, storage_controller):
-        return storage_controller.health()
+    def get_health(self):
+        for dut_index in self.topology.get_available_duts().keys():
+            fs = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs.get_storage_controller()
+            return storage_controller.health()
 
-    # get rid of storage controller
-    def set_dataplane_ips(self, storage_controller, dut_index, dpu_indexes=None):
+    def set_dataplane_ips(self, dut_index, dpu_indexes=None):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         result = False
+        topology_result = None
+
+        dut = self.topology.get_dut(index=dut_index)
+        fs_obj = self.topology.get_dut_instance(index=dut_index)
+        storage_controller = fs_obj.get_storage_controller()
         topology_result = None
         try:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
             fun_test.log(topology_result)
         except ApiException as e:
             fun_test.critical("Exception while getting topology%s\n" % e)
-
-        self.node_ids = [x.uuid for x in topology_result.data.values()]
-
-        for node in self.node_ids:
-            dut = self.topology.get_dut(index=dut_index)
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
+        node_ids = [x.uuid for x in topology_result.data.values()]
+        for node in node_ids:
             for f1_index in dpu_indexes:
 
                 bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
@@ -54,11 +55,12 @@ class StorageControllerOperationsTemplate():
                 next_hop = str(ip_obj.hosts().next())
 
                 # body_node_update = BodyNodeUpdate(op=NodeUpdateOp().DPU_DP_ID, ip_assignment_dhcp=False,
-                #                                 next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
+                #                             next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
 
                 # WORKAROUND: SWOS-8586
                 body_node_update = BodyNodeUpdate(op="DPU_DP_IP", ip_assignment_dhcp=False,
-                                                  next_hop=next_hop, dataplane_ip=dataplane_ip, subnet_mask=subnet_mask)
+                                                  next_hop=next_hop, dataplane_ip=dataplane_ip,
+                                                  subnet_mask=subnet_mask)
                 dpu_id = node + "." + str(f1_index)
                 try:
                     assign_dataplane_ip = storage_controller.topology_api.update_dpu(
@@ -145,19 +147,15 @@ class StorageControllerOperationsTemplate():
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
-
     def initialize(self, already_deployed=False, dpu_indexes=None):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
-            fs = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs.get_storage_controller()
-            fun_test.test_assert(self.get_health(storage_controller=storage_controller),
+            fun_test.test_assert(self.get_health(),
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
-                fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60) #WORKAROUND
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, storage_controller=storage_controller,
-                                                            dpu_indexes=dpu_indexes),
+                fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)  # WORKAROUND
+                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             num_dpus = len(dpu_indexes)
             fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
@@ -320,16 +318,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 result = nvme_volumes[-1:][0]
         return result
 
-    def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                          rw="readwrite", runtime=60, bs="4k", ioengine="libaio", direct=1,
-                          time_based=True, norandommap=True, verify=None, do_verify=None):
-        host_linux_handle = host_obj.get_instance()
-        fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
-                                           filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                           timeout=runtime+15, time_based=time_based, norandommap=norandommap,
-                                           verify=verify, do_verify=do_verify)
-        return fio_result
-
     def get_nvme_namespaces(self, host_handle):
         lsblk_output = host_handle.lsblk(options="-b")
         nvme_volumes = []
@@ -348,7 +336,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def host_diagnostics(self, host_obj):
 
         dmesg_output = host_obj.dmesg()
-
         for dut_index in self.topology.get_duts().keys():
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -359,25 +346,41 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.add_checkpoint(expected=True, actual=host_obj.ping(dataplane_ip),
                                         checkpoint="{host} can ping FS {fs_name} F1_{f1index} dataplane IP"
                                         .format(host=host_obj, fs_name=fs_obj.name, f1index=f1_index))
-        artifact_file_name = fun_test.get_test_case_artifact_file_name(
-            self._get_context_prefix("f1_{}_dpc_log.txt".format(f1_index)))
 
-        fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} DPC Log").format(f1_index),
-                                    filename=artifact_file_name,
-                                    asset_type=asset_type,
-                                    asset_id=asset_id,
-                                    artifact_category=self.fs.ArtifactCategory.BRING_UP,
-                                    artifact_sub_category=self.fs.ArtifactSubCategory.COME)
+        artifact_file_name = fun_test.get_test_case_artifact_file_name(
+            "host_{}_dmesg.txt".format(host_obj))
+        with open(artifact_file_name, "w") as diag_file:
+            diag_file.write(dmesg_output)
+            diag_file.write("\n")
+
+        fun_test.add_auxillary_file(description="Host {} dmesg".format(host_obj), filename=artifact_file_name)
 
     def fs_diagnostics(self, fs_obj):
         for f1_index in range(fs_obj.NUM_F1S):
             f1_container = fs_obj.get_funcp_container(f1_index=f1_index)
-            f1_container.ifconfig()
-            f1_container.command("arp -n")
-            f1_container.command("route -n")
-            f1_container.ping()
+            ifconfig = f1_container.ifconfig()
+            arp = f1_container.command("arp -n")
+            route = f1_container.command("route -n")
+            artifact_file_name = fun_test.get_test_case_artifact_file_name(
+                "{}_F1_{}_container_stats.txt".format(fs_obj, f1_index))
+            with open(artifact_file_name, "w") as diag_file:
+                diag_file.write(ifconfig)
+                diag_file.write("\n")
+                diag_file.write(arp)
+                diag_file.write("\n")
+                diag_file.write(route)
+                diag_file.write("\n")
+            # f1_container.ping()  # How to ping default gateway?
 
-    # have a diagnostics function
+    def diagnostics(self):
+
+        hosts = self.topology.get_available_host_instances()
+        for host_obj in hosts:
+            self.host_diagnostics(host_obj=host_obj)
+
+        for dut_index in self.topology.get_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.fs_diagnostics(fs_obj=fs_obj)
 
     def cleanup(self, test_result_failed=False):
         """
@@ -389,9 +392,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :return:
         """
         if test_result_failed:
-            hosts = self.topology.get_available_host_instances()
-            for host_obj in hosts:
-                self.host_diagnostics(host_obj=host_obj)
+            self.diagnostics()
+
         for host_obj in self.host_nvme_device:
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
