@@ -5,33 +5,8 @@ from lib.host.linux import Linux
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
+from lib.templates.storage.storage_traffic_template import StorageTrafficTemplate
 from swagger_client.models.volume_types import VolumeTypes
-
-
-def fio_integrity_check(host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
-                        runtime=600, bs="4k", ioengine="libaio", direct=1,
-                        time_based=False, norandommap=True, verify="md5", verify_fatal=1,
-                        offset="0kb", verify_state_save=1, verify_dump=1,
-                        verify_state_load=1, only_read=False):
-    host_linux_handle = host_obj.get_instance()
-
-    if not only_read:
-        host_linux_handle.command("cd /tmp; rm -fr test_fio_with_integrity;"
-                                  "mkdir test_fio_with_integrity; cd test_fio_with_integrity")
-        fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="write",
-                                           filename=filename, ioengine=ioengine, direct=direct,
-                                           timeout=1500, fill_device=1, do_verify=0,
-                                           verify=verify, verify_fatal=verify_fatal, offset=offset,
-                                           verify_state_save=verify_state_save, verify_dump=verify_dump)
-        fun_test.test_assert(expression=fio_result, message="Write FIO test")
-
-    host_linux_handle.command("cd ~/test_fio_with_integrity; ls")
-    fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="read",
-                                       filename=filename, ioengine=ioengine, direct=direct,
-                                       timeout=1500,  offset=offset, fill_device=1,
-                                       verify=verify, do_verify=1, verify_fatal=verify_fatal,
-                                       verify_state_load=verify_state_load, verify_dump=verify_dump)
-    fun_test.test_assert(expression=fio_result, message="Read FIO result")
 
 
 class BringupSetup(FunTestScript):
@@ -87,27 +62,28 @@ class BltApiStorageTest(FunTestCase):
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
 
-        vol_uuid_dict = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
+        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_dict, message="Volume of capacity 100GB created")
-        hosts = self.topology.get_hosts()
-        for fs_obj in vol_uuid_dict:
-            for host_id in hosts:
-                host_obj = hosts[host_id]
-                attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=fs_obj,
-                                                                                   volume_uuid=vol_uuid_dict[fs_obj],
-                                                                                   validate_nvme_connect=True,
-                                                                                   raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
+        hosts = self.topology.get_available_host_instances()
+        for index, fs_obj in enumerate(fs_obj_list):
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+                                                                               volume_uuid=vol_uuid_list[index],
+                                                                               validate_nvme_connect=True,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
     def run(self):
-        hosts = self.topology.get_hosts()
-        for host_id in hosts:
-            host_obj = hosts[host_id]
+        hosts = self.topology.get_available_host_instances()
+        storage_traffic_template = StorageTrafficTemplate(
+            storage_operations_template=self.storage_controller_template)
+
+        for host_obj in hosts:
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
-            fio_integrity_check(host_obj=host_obj, filename="/dev/"+nvme_device_name, numjobs=1, iodepth=32)
+            storage_traffic_template.fio_integrity_check(host_linux_handle=host_obj.get_instance(), filename="/dev/"+nvme_device_name,
+                                                         numjobs=1, iodepth=32)
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
@@ -140,21 +116,21 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-        fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)
+        fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)  # WORKAROUND
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.storage_controller_template.verify_dataplane_ip(storage_controller=fs_obj.get_storage_controller(),
                                                                  dut_index=dut_index)
 
     def run(self):
-        hosts = self.topology.get_available_host_instances()
-        for host_obj in hosts:
+        storage_traffic_template = StorageTrafficTemplate(
+            storage_operations_template=self.storage_controller_template)
+        for host_obj in self.topology.get_available_host_instances():
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
-
-            fio_integrity_check(host_obj=host_obj, filename="/dev/"+nvme_device_name, numjobs=1, iodepth=32,
-                                only_read=True)
+            storage_traffic_template.fio_integrity_check(host_linux_handle=host_obj, filename="/dev/"+nvme_device_name,
+                                                         numjobs=1, iodepth=32, verify_integrity=True)
 
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result=fun_test.is_current_test_case_failed())
@@ -163,8 +139,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         fs_obj.reset()
         fs_obj.come.ensure_expected_containers_running()
         fs_obj.re_initialize()
-        fun_test.test_assert(expression=self.storage_controller_template.get_health(
-            storage_controller=fs_obj.get_storage_controller()),
+        fun_test.test_assert(expression=self.storage_controller_template.get_health(),
                              message="{}: API server health".format(fs_obj))
 
 
