@@ -1234,7 +1234,7 @@ class ComE(Linux):
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
     HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
-    HBM_COLLECT_MAX_TIMER = 40 * 60
+    HBM_COLLECT_MAX_TIMER = 60 * 60
 
     BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
@@ -1928,7 +1928,7 @@ class ComE(Linux):
 
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
-                fun_test.log("HBM dumping going on")
+                fun_test.add_checkpoint("HBM dumping going on")
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
                 while not hbm_dump_timer.is_expired(print_remaining_time=True):
                     fun_test.sleep("HBM Dump", seconds=60)
@@ -1953,7 +1953,8 @@ class ComE(Linux):
                                 fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
 
                         break
-
+                if hbm_dump_timer.is_expired():
+                    fun_test.log("HBM dump timer expired. Giving up ...")
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2307,9 +2308,10 @@ class Fs(object, ToDictMixin):
                         continue
                     if f1.hbm_dump_complete:
                         continue
-                    fun_test.log("Errors were detected. Starting HBM dump")
+                    fun_test.log("Errors were detected")
                     f1.hbm_dump_complete = True
                     if not self.bundle_compatible:
+                        fun_test.log("Starting HBM dump")
                         self.get_come().setup_hbm_tools()
                         self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
