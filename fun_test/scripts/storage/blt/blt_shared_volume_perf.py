@@ -132,8 +132,8 @@ class SharedVolumePerfTest(FunTestCase):
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
-        if "num_host" in job_inputs:
-            self.num_host = job_inputs["num_host"]
+        if "num_hosts" in job_inputs:
+            self.num_host = job_inputs["num_hosts"]
 
         """
         self.topology = fun_test.shared_variables["topology"]
