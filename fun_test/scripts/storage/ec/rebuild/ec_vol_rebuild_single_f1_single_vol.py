@@ -381,6 +381,7 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.shared_variables["ec"][host_name] = {}
                 host_handle = self.host_info[host_name]["handle"]
                 if not fun_test.shared_variables["ec"]["nvme_connect"]:
+
                     # Checking nvme-connect status
                     if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
@@ -543,12 +544,13 @@ class DurableVolumeTestcase(FunTestCase):
         fio_output = {}
         test_thread_id = {}
         host_clone = {}
-        # Writing first 50% of volume with --verify=md5
 
+        # If FIO block size is not provided by user, setting FIO block size to the stripe length
         if "bs" not in self.fio_write_cmd_args:
             self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
             self.fio_verify_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
 
+        # Writing first 50% of volume with --verify=md5
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
@@ -577,7 +579,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Triggering drive failure
         if hasattr(self, "trigger_failure") and self.trigger_failure:
             # Sleep for sometime before triggering the drive failure
-            wait_time = 10
+            wait_time = 20
             fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                            seconds=wait_time)
             # Check whether the drive index to be failed is given or not. If not pick a random one
