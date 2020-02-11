@@ -148,7 +148,7 @@ class SharedVolumePerfTest(FunTestCase):
         self.vol_uuid_list = []
         fun_test.shared_variables["blt_count"] = self.blt_count
         vol_type = VolumeTypes().LOCAL_THIN
-        
+
         self.hosts = self.topology.get_available_host_instances()
         # Populating the linux handles of the hosts
 
@@ -206,11 +206,9 @@ class SharedVolumePerfTest(FunTestCase):
         fun_test.shared_variables["host_info"] = self.hosts
         fun_test.log("Hosts info: {}".format(self.hosts))
 
-    def run(self):
-
+        # Warming up the volumes
         self.fio_io_size = 100 / len(self.hosts)
         # self.offsets = ["1%", "26%", "51%", "76%"]
-
         thread_id = {}
         end_host_thread = {}
         fio_output = {}
@@ -285,9 +283,15 @@ class SharedVolumePerfTest(FunTestCase):
 
         fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
+    def run(self):
+
+        for mode in self.fio_modes:
+            for io_depth in self.fio_iodepth:
+                for index, host in enumerate(self.hosts):
+                    pass
+
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
-
 
 
 class ConfigPeristenceAfterReset(FunTestCase):
