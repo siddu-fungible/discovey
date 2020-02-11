@@ -414,6 +414,7 @@ class LastGoodBuild(FunModel):
                                         release_catalog_execution_id=release_catalog_execution_id,
                                         updated_date=get_current_time())
         last_good_build.save()
+        return last_good_build
 
     @staticmethod
     def get(release_train):
@@ -421,7 +422,7 @@ class LastGoodBuild(FunModel):
         try:
             last_good_build = LastGoodBuild.objects.filter(release_train=release_train).order_by('-updated_date').first()
             if last_good_build:
-                result = last_good_build.to_dict()
+                result = last_good_build
         except ObjectDoesNotExist:
             logger.error("Release train: {} last good build does not exist".format(release_train))
         return result
