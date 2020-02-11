@@ -41,6 +41,7 @@ class StorageControllerOperationsTemplate():
         except ApiException as e:
             fun_test.critical("Exception while getting topology%s\n" % e)
         node_ids = [x.uuid for x in topology_result.data.values()]
+        fun_test.test_assert(expression=node_ids, message="Fetch node IDs using topology API")
         for node in node_ids:
             for f1_index in dpu_indexes:
 
@@ -112,7 +113,7 @@ class StorageControllerOperationsTemplate():
             except ApiException as e:
                 fun_test.critical("Exception while getting topology%s\n" % e)
             self.node_ids = [x.uuid for x in topology_result.data.values()]
-
+            fun_test.test_assert(expression=self.node_ids, message="Fetch node IDs using topology API")
             for node in self.node_ids:
 
                 for f1_index in dpu_indexes:
@@ -139,11 +140,11 @@ class StorageControllerOperationsTemplate():
                 if raw_api_call:
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                     result_api = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
-                    fun_test.test_assert(expression=result_api["status"], message="Fetch Dataplane IPs using Raw API")
+                    fun_test.test_assert(expression=result_api["status"], message="Fetch dataplane IPs using Raw API")
                     result &= (str(result_api["data"]["dataplane_ip"]) == str(dataplane_ip))
                 else:
                     get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
-                    fun_test.test_assert(expression=get_dpu, message="Fetch Dataplane IPs")
+                    fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IPs")
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
@@ -154,7 +155,7 @@ class StorageControllerOperationsTemplate():
             fun_test.test_assert(self.get_health(),
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
-                fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)  # WORKAROUND
+                fun_test.sleep(message="Wait before sending dataplane IP commands", seconds=60)  # WORKAROUND
                 fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             num_dpus = len(dpu_indexes)
@@ -304,11 +305,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = None
         host_linux_handle = host_obj.get_instance()
-        nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
+        self.get_nvme_namespaces_lsblk(host_handle=host_linux_handle)
+        nvme_volumes = self.get_fungible_nvme_namespace(host_handle=host_linux_handle)
         if len(nvme_volumes) > 0:
             if subsys_nqn:
                 for namespace in nvme_volumes:
-                    nvme_device = namespace[:-2]
+                    nvme_device = namespace.replace('/dev/', '').rsplit('n', 1)[0]
                     namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
                         nvme_device))
                     if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
@@ -318,13 +320,45 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 result = nvme_volumes[-1:][0]
         return result
 
-    def get_nvme_namespaces(self, host_handle):
+    def get_nvme_namespaces_lsblk(self, host_handle):
         lsblk_output = host_handle.lsblk(options="-b")
         nvme_volumes = []
         for volume_name in lsblk_output:
             if re.search("nvme", volume_name):
                 nvme_volumes.append(volume_name)
         return nvme_volumes
+
+    def get_fungible_nvme_namespace(self, host_handle):
+        # WORKAROUND - SWOS-8804
+        result = None
+        nvme_list_raw = host_handle.nvme_list(json_output=True)
+        if nvme_list_raw:
+            # This is used due to the error lines printed in json output
+            if not nvme_list_raw.startswith("{"):
+                nvme_list_raw = nvme_list_raw + "}"
+                temp1 = nvme_list_raw.replace('\n', '')
+                temp2 = re.search(r'{.*', temp1).group()
+                nvme_list_dict = json.loads(temp2, strict=False)
+            else:
+                try:
+                    nvme_list_dict = json.loads(nvme_list_raw)
+                except:
+                    nvme_list_raw = nvme_list_raw + "}"
+                    nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+            try:
+                nvme_device_list = []
+                for device in nvme_list_dict["Devices"]:
+                    if ("Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or "fs1600" in
+                            device["ModelNumber"].lower()):
+                        if "NameSpace" in device and device["NameSpace"] > 0:
+                            nvme_device_list.append(device["DevicePath"])
+                        elif "NameSpace" not in device:
+                            nvme_device_list.append(device["DevicePath"])
+                if nvme_device_list:
+                    result = nvme_device_list
+            except:
+                fun_test.critical(message="Cannot find Fungible NVMe devices")
+        return result
 
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
@@ -336,6 +370,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def host_diagnostics(self, host_obj):
 
         dmesg_output = host_obj.dmesg()
+
         for dut_index in self.topology.get_duts().keys():
             dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -344,8 +379,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 first_bond_interface = bond_interfaces[0]
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 fun_test.add_checkpoint(expected=True, actual=host_obj.ping(dataplane_ip),
-                                        checkpoint="{host} can ping FS {fs_name} F1_{f1index} dataplane IP"
-                                        .format(host=host_obj, fs_name=fs_obj.name, f1index=f1_index))
+                                        checkpoint="{host} can ping FS {fs_name} F1_{f1_index} dataplane IP"
+                                        .format(host=host_obj, fs_name=fs_obj.name, f1_index=f1_index))
 
         artifact_file_name = fun_test.get_test_case_artifact_file_name(
             "host_{}_dmesg.txt".format(host_obj))
@@ -374,9 +409,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def diagnostics(self):
 
-        hosts = self.topology.get_available_host_instances()
-        for host_obj in hosts:
-            self.host_diagnostics(host_obj=host_obj)
+        for host_obj in self.host_nvme_device:
+            host_handle = host_obj.get_instance()
+            self.host_diagnostics(host_obj=host_handle)
 
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
