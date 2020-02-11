@@ -1,5 +1,8 @@
+from lib.system import fun_test
+
 class FsPlatform:
-    images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag', 'emmc']
+    #images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag', 'emmc']
+    images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag']
 
     def __init__(self, fs_obj):
         self.fs_obj = fs_obj
@@ -17,8 +20,6 @@ class FsPlatform:
         dpc_client = self.fs_obj.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
         cmd = "config/chip_info"
         dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=3)
-        fun_test.simple_assert(expression=dpc_result['status'], message="Get chip info results")
-        fun_test.debug(dpc_result['data'])
         result = dpc_result["data"]
         return result['images']
 
@@ -26,14 +27,15 @@ class FsPlatform:
     def validate_firmware(self, f1_index=0, bld_props=None):
         """ This method takes the above methods and assert if entities are not equal.
             Currently We are just checking the main 4CC components which are updated during the upgrade process
-            e.g eepr is not checked """
+            e.g eepr or emmc is not checked """
 
-        sdk_version = self.get_funsdk_flash_version(bld_props)
+        sdk_version = self.get_funsdk_flash_version_from_props(bld_props)
         images = self.get_active_funsdk_version_from_dpu(f1_index)
-
         TF = []
-        for name in images_to_check:
+        for name in self.images_to_check:
             running_version = images[name]['active']['version']
+            print("Comparing ... image={}, running_version={}, should have version={}"
+                .format(name, running_version, sdk_version))
             TF.append(running_version == int(sdk_version))
 
         return_code = True if all(TF) else False

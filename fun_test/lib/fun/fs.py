@@ -1296,6 +1296,7 @@ class ComE(Linux):
     def get_build_props(self):
         try:
             output = self.command("cat {}".format(self.BLD_PROPS_PATH))
+            output += '}'
             jO = json.loads(output)
         except:
             fun_test.critical("Come file: {} seem corrupt".format(self.BLD_PROPS_PATH))
@@ -2981,6 +2982,6 @@ if __name__ == "__main__":
     fs_obj = topology.get_dut_instance(index=0)
     #fs_obj.storage.nvme_ssds(f1_index=0)
     ## test invoke code 
-    bld_props = self.get_build_props()
+    bld_props = fs_obj.get_come().get_build_props()
     fs_obj.platform.validate_firmware(f1_index=0, bld_props=bld_props)
     fs_obj.platform.validate_firmware(f1_index=1, bld_props=bld_props)
