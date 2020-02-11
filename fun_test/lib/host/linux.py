@@ -1548,6 +1548,15 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def nvme_list(self, json_output=False):
+
+        cmd = "nvme list"
+        if json_output:
+            cmd += "-o json"
+        output = self.sudo_command(cmd)
+        return output
+
+    @fun_test.safe
     def lsblk(self, options=None):
         result = collections.OrderedDict()
         if options:
