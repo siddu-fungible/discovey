@@ -280,6 +280,22 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         
         case4: set volume_is_shared=True when num hosts < num volumes and volumes are to be shared among hosts
         eg: 8 vols on 2 hosts such that each host has 8 volumes attached
+        
+        return-type: dict
+        :returns dictionary with host objects as keys with list as value containing API response
+        
+        result = {<lib.topology.host.Host instance at 0x10e753d88>: 
+            [{u'status': True, u'message': u'Attach Success', u'warning': u'', 
+            u'data': {u'uuid': u'd2c3c947fef0480c', u'nsid': 1, u'host_nqn': 
+            u'nqn.2015-09.com.Fungible:15.1.14.2', u'ip': u'15.104.1.2', 
+            u'subsys_nqn': u'nqn.2015-09.com.fungible:FS1.0', u'transport': u'TCP', 
+            u'remote_ip': u'0.0.0.0'}, u'error_message': u''}], 
+        <lib.topology.host.Host instance at 0x10e579518>: 
+            [{u'status': True, u'message': u'Attach Success', u'warning': u'', 
+            u'data': {u'uuid': u'01b52e9650ad4643', u'nsid': 2, u'host_nqn':
+            u'nqn.2015-09.com.Fungible:15.1.13.2', u'ip': u'15.104.1.2', 
+            u'subsys_nqn': u'nqn.2015-09.com.fungible:FS1.0', u'transport': u'TCP',
+             u'remote_ip': u'0.0.0.0'}, u'error_message': u''}]}
         """
         result = {}
         try:
