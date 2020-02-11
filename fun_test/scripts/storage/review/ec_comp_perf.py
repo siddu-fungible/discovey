@@ -1133,6 +1133,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log(total_bytes_pushed_to_disk)
                         fun_test.log(cr)
                         fun_test.log("===================================================================")
+                        fun_test.test_assert(True, "Compression ration for iodepth {} is: ".format(iodepth,cr))
                         fun_test.debug("\nVolume stats diff: {}".format(curr_stats_diff))
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]
