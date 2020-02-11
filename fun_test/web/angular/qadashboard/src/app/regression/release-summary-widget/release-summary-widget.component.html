@@ -1,5 +1,6 @@
 <ng-container *ngFor="let releaseTrain of byReleaseTrain| keyvalue">
     <h6 style="display: inline-block">{{ releaseTrain.key }}</h6>
+   <small>&nbsp;&nbsp;Stable: {{ lastGoodMap[releaseTrain.key] }}</small>
     <table class="fun-table">
       <tr *ngFor="let description of releaseTrain.value | keyvalue">
         <td>

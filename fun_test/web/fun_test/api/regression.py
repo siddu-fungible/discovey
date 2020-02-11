@@ -855,6 +855,12 @@ def last_good_build(request, release_train):
     if request.method == "PUT":
         request_json = json.loads(request.body)
         last_good_build_object = LastGoodBuild.set(**request_json)
+        if last_good_build_object:
+            result = last_good_build.to_dict()
+    if request.method == "GET":
+        last_good_build_object = LastGoodBuild.get(release_train=release_train)
+        if last_good_build_object:
+            result = last_good_build_object.to_dict()
     return result
 
 
