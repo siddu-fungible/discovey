@@ -3,9 +3,10 @@ import {RegressionService} from "../regression.service";
 import {Observable, of} from "rxjs";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ReleaseCatalogExecution} from "../release-catalogs/definitions";
-import {switchMap} from "rxjs/operators";
+import {last, switchMap} from "rxjs/operators";
 import {CommonService} from "../../services/common/common.service";
 import {ApiType} from "../../lib/api";
+import {LastGoodBuild} from "../last-good-build/definitions";
 
 @Component({
   selector: 'app-release-summary-widget',
@@ -21,6 +22,7 @@ export class ReleaseSummaryWidgetComponent implements OnInit {
   byReleaseTrain: {[releaseTrain: string]: any} = {};
   jobStatusTypes: ApiType = null;
   allBuildNumbers: number [] = [];
+  lastGoodMap: {[releaseTrain: string]: any} = {};
   ngOnInit() {
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getJobStatusTypes();
@@ -52,6 +54,8 @@ export class ReleaseSummaryWidgetComponent implements OnInit {
             executions: [],
             master_execution: null
           };
+          this.getLastGoodBuild(releaseCatalogExecution.release_train, this.byReleaseTrain[releaseCatalogExecution.release_train][releaseCatalogExecution.description]);
+          this.lastGoodMap[releaseCatalogExecution.release_train] = null;
         }
 
         if (releaseCatalogExecution.state > this.jobStatusTypes["UNKNOWN"] && releaseCatalogExecution.state <= this.jobStatusTypes["COMPLETED"]) {
@@ -61,6 +65,13 @@ export class ReleaseSummaryWidgetComponent implements OnInit {
     });
     this.allBuildNumbers = Array.from(setOfBuildNumbers).sort().reverse();
     let i = 0;
+  }
+
+  getLastGoodBuild(releaseTrain: string, key: string) {
+    let lastGoodBuild = new LastGoodBuild();
+    lastGoodBuild.get(lastGoodBuild.getUrl({release_train: releaseTrain})).subscribe(response => {
+      this.lastGoodMap[releaseTrain] = lastGoodBuild.build_number;
+    })
   }
 
   refresh() {

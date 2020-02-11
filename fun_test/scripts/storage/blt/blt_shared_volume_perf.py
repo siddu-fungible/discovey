@@ -149,16 +149,8 @@ class SharedVolumePerfTest(FunTestCase):
         fun_test.shared_variables["blt_count"] = self.blt_count
         vol_type = VolumeTypes().LOCAL_THIN
         
-        self.available_hosts = self.topology.get_available_hosts()
-        self.host_objs = self.available_hosts.values()
-
-        self.host_info = {}
+        self.hosts = self.topology.get_available_host_instances()
         # Populating the linux handles of the hosts
-        for host_name, host_obj in self.available_hosts.items():
-            self.host_info[host_name] = {}
-            self.host_info[host_name]["test_interface"] = host_obj.get_test_interface(index=0)
-            self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
-            self.host_info[host_name]["handle"] = host_obj.get_instance()
 
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for i in range(self.blt_count):
@@ -173,48 +165,50 @@ class SharedVolumePerfTest(FunTestCase):
         for i in range(self.blt_count):
             attach_vol_result = self.blt_template.attach_volume(self.fs_obj_list[0],
                                                                 self.vol_uuid_list[i],
-                                                                self.host_objs,
+                                                                self.hosts,
                                                                 validate_nvme_connect=True,
                                                                 raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
-        for host_name in self.host_info:
-            self.host_info[host_name]["num_volumes"] = self.blt_count
+        for host in self.hosts:
+            host.num_volumes = self.blt_count
 
         # Populating the NVMe devices available to the hosts
-        for host_name in self.host_info:
-            host_obj = self.available_hosts[host_name]
-            self.host_info[host_name]["nvme_block_device_list"] = []
-            for namespace in self.blt_template.host_nvme_device[host_obj]:
-                self.host_info[host_name]["nvme_block_device_list"].append("/dev/{}".format(namespace))
-            fun_test.log("Available NVMe devices: {}".format(self.host_info[host_name]["nvme_block_device_list"]))
-            fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
-                                          actual=len(self.host_info[host_name]["nvme_block_device_list"]),
+        for host in self.hosts:
+            host.nvme_block_device_list = []
+            for namespace in self.blt_template.host_nvme_device[host]:
+                host.nvme_block_device_list.append("/dev/{}".format(namespace))
+            fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
+            fun_test.test_assert_expected(expected=host.num_volumes,
+                                          actual=len(host.nvme_block_device_list),
                                           message="Expected NVMe devices are available")
-            self.host_info[host_name]["nvme_block_device_list"].sort()
-            self.host_info[host_name]["fio_filename"] = ":".join(self.host_info[host_name]["nvme_block_device_list"])
+            host.nvme_block_device_list.sort()
+            host.fio_filename = ":".join(host.nvme_block_device_list)
 
         # Extracting the host CPUs
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            if host_name.startswith("cab0"):
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu("node[01]")
-                    self.host_info[host_name]["host_numa_cpus"] = ",".join(host_numa_cpus_filter.values())
-            else:
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                        self.override_numa_node["override_node"]]
-                else:
-                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+        # for host in self.hosts:
+        #     host_handle = host.instance
+        #     if host.name.startswith("cab0"):
+        #         if self.override_numa_node["override"]:
+        #             host_numa_cpus_filter = host_handle.lscpu("node[01]")
+        #             host.host_numa_cpus = ",".join(host_numa_cpus_filter.values())
+        #     else:
+        #         if self.override_numa_node["override"]:
+        #             host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
+        #             host.host_numa_cpus = host_numa_cpus_filter[self.override_numa_node["override_node"]]
+        #         else:
+        #             host.host_numa_cpus = fetch_numa_cpus(host_handle, self.ethernet_adapter)
+        numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
+        if self.override_numa_node["override"]:
+            numa_node_to_use = self.override_numa_node["override_node"]
+        self.hosts = get_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
 
-        fun_test.shared_variables["host_info"] = self.host_info
-        fun_test.log("Hosts info: {}".format(self.host_info))
+        fun_test.shared_variables["host_info"] = self.hosts
+        fun_test.log("Hosts info: {}".format(self.hosts))
 
     def run(self):
 
-        self.fio_io_size = 100 / len(self.host_info)
+        self.fio_io_size = 100 / len(self.hosts)
         # self.offsets = ["1%", "26%", "51%", "76%"]
 
         thread_id = {}
@@ -223,18 +217,18 @@ class SharedVolumePerfTest(FunTestCase):
         fio_offset = 1
 
         fun_test.shared_variables["fio"] = {}
-        for index, host_name in enumerate(self.host_info):
+        for index, host in enumerate(self.hosts):
             fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
                          "provided")
             fio_output[index] = {}
-            end_host_thread[index] = self.host_info[host_name]["handle"].clone()
-            wait_time = len(self.host_info) - index
+            end_host_thread[index] = host.instance.clone()
+            wait_time = len(self.hosts) - index
             if "multiple_jobs" in self.warm_up_fio_cmd_args:
                 warm_up_fio_cmd_args = {}
                 # Adding the allowed CPUs into the fio warmup command
-                fio_cpus_allowed_args = " --cpus_allowed={}".format(self.host_info[host_name]["host_numa_cpus"])
+                fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                 jobs = ""
-                for id, device in enumerate(self.host_info[host_name]["nvme_block_device_list"]):
+                for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
                 size = " --size={}%".format(self.fio_io_size)
@@ -253,22 +247,22 @@ class SharedVolumePerfTest(FunTestCase):
 
         fun_test.sleep("Fio threads started", 10)
         try:
-            for i, host_name in enumerate(self.host_info):
+            for i, host in enumerate(self.hosts):
                 fun_test.log("Joining fio thread {}".format(i))
                 fun_test.join_thread(fun_test_thread_id=thread_id[i])
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fun_test.shared_variables["fio"][i])
                 fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                     "FIO randwrite test with IO depth 16 in host {}".format(host_name))
+                                     "FIO randwrite test with IO depth 16 in host {}".format(host.name))
                 fio_output[i] = fun_test.shared_variables["fio"][i]
         except Exception as ex:
             fun_test.critical(str(ex))
-            fun_test.log("FIO Command Output from host {}:\n {}".format(host_name, fio_output[i]))
+            fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
 
         aggr_fio_output = {}
-        for index, host_name in enumerate(self.host_info):
+        for index, host in enumerate(self.hosts):
             fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                 "FIO randwrite test with IO depth 16 in host {}".format(host_name))
+                                 "FIO randwrite test with IO depth 16 in host {}".format(host.name))
             for op, stats in fun_test.shared_variables["fio"][index].items():
                 if op not in aggr_fio_output:
                     aggr_fio_output[op] = {}
@@ -284,10 +278,10 @@ class SharedVolumePerfTest(FunTestCase):
                     # Converting the KBps to MBps
                     aggr_fio_output[op][field] = int(round(value / 1000))
                 if "latency" in field:
-                    aggr_fio_output[op][field] = int(round(value) / len(self.host_info))
+                    aggr_fio_output[op][field] = int(round(value) / len(self.hosts))
                 # Converting the runtime from milliseconds to seconds and taking the average out of it
                 if field == "runtime":
-                    aggr_fio_output[op][field] = int(round(value / 1000) / len(self.host_info))
+                    aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
 
         fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 

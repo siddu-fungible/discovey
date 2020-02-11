@@ -1,0 +1,144 @@
+{
+  "MultiHostFioRandRead": {
+    "num_ssd": 12,
+    "blt_count": 12,
+    "blt_details": {
+      "capacity": 1600277970944,
+      "block_size": 4096,
+      "compression_effort": false,
+      "encrypt": false
+    },
+    "drive_margin": 0,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
+    "nvme_io_queues": 16,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100% --verify=md5 --do_verify=0",
+      "timeout": 7200
+    },
+    "fio_cmd_args": {
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
+      "runtime": 300,
+      "timeout": 330
+    },
+    "fio_modes": [
+      "randread"
+    ],
+    "fio_bs": "4k",
+    "fio_jobs_iodepth": ["(1, 1)", "(16, 1)", "(32, 1)", "(32, 2)", "(32, 4)", "(32, 8)", "(32, 16)"],
+    "full_run_iodepth": [128],
+    "fio_full_run_time": 1200,
+    "fio_full_run_timeout": 1230,
+    "fio_job_name": {
+      "randread": "nhosts"
+    },
+    "expected_fio_result": {
+      "(1, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(16, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 1)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 4)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 8)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 16)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+  "MultiHostFioRandWrite": {
+    "num_ssd": 12,
+    "blt_count": 12,
+    "blt_details": {
+      "capacity": 1600277970944,
+      "block_size": 4096,
+      "compression_effort": false,
+      "encrypt": false
+    },
+    "drive_margin": 0,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
+    "nvme_io_queues": 16,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --size=100%",
+      "timeout": 7200
+    },
+    "fio_cmd_args": {
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
+      "runtime": 300,
+      "timeout": 330
+    },
+    "fio_modes": [
+      "randwrite"
+    ],
+    "fio_bs": "4k",
+    "fio_jobs_iodepth": ["(1, 1)", "(8, 1)", "(16, 1)", "(32, 1)"],
+    "full_run_iodepth": [32],
+    "fio_full_run_time": 1200,
+    "fio_full_run_timeout": 1230,
+    "fio_job_name": {
+      "randwrite": "nhosts"
+    },
+    "expected_fio_result": {
+      "(1, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(8, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(16, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}},
+      "(32, 1)": {"randwrite": {"write": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [16]
+  },
+  "PreCommitSanity": {
+    "num_ssd": 1,
+    "blt_count": 1,
+    "blt_details": {
+      "capacity": 1073741824,
+      "block_size": 4096,
+      "compression_effort": false,
+      "encrypt": false
+    },
+    "drive_margin": 0,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
+    "nvme_io_queues": 16,
+    "command_timeout": 30,
+    "iter_interval": 2,
+    "warm_up_traffic": 1,
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=write --bs=4k --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --runtime=60",
+      "timeout": 90
+    },
+    "fio_cmd_args": {
+      "multiple_jobs": "--ioengine=libaio --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1 --norandommap --randrepeat=0",
+      "runtime": 60,
+      "timeout": 90
+    },
+    "fio_modes": [
+      "randread"
+    ],
+    "fio_bs": "4k",
+    "fio_jobs_iodepth": ["(32, 2)"],
+    "full_run_iodepth": [128],
+    "fio_full_run_time": 1200,
+    "fio_full_run_timeout": 1230,
+    "fio_job_name": {
+      "randread": "precommit_sanity"
+    },
+    "expected_fio_result": {
+      "(32, 2)": {"randread": {"read": {"bw": 732, "iops": 187, "clatency": 63, "latency90": 107, "latency95": 119, "latency99": 160, "latency9999": 1893}}}
+    },
+    "host_count": 1,
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  }
+}

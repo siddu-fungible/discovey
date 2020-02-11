@@ -750,7 +750,7 @@ class LatencyTest(FunTestCase):
         if not roce_speed:
             total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
-            total_link_bw = fun_test.shared_variables["roce_speed"]
+            total_link_bw = fun_test.shared_variables["test_speed"]
         if total_link_bw > 1:
             link_capacity = "200G"
             lat_iterations = 100000
