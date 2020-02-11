@@ -448,16 +448,16 @@ class RecoveryWithFailures(FunTestCase):
                                                        "Collected volume stats after 1 plex failure")
                                 EC_vol_stats_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
                                     self.ec_info["uuids"][num]["ec"][0]]
-                                device_failed = self.device_id_failed[0]
+                                #device_failed = self.device_id_failed[0]
                                 EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_1_plex_failure = EC_vol_stats_1_plex_failure ["stats"]["plex_read_fail_count"], EC_vol_stats_1_plex_failure ["stats"]["recovery_read_count"]
-                                num_reads_diff_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed]]["stats"]["num_reads"] - self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed]]["stats"]["num_reads"]
+                                num_reads_diff_1_plex_failure = self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex]]["stats"]["num_reads"] - self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex]]["stats"]["num_reads"]
                                 fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_1_plex_failure),
                                                               actual= (num_reads_diff_1_plex_failure, num_reads_diff_1_plex_failure),
                                                               message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
                                                                  num_reads_diff_1_plex_failure, EC_recovery_read_count_1_plex_failure))
                             # Volume stats validation after 2 plex failure
                             elif len(self.device_id_failed) == 2:
-                                device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
+                                #device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
                                 self.vol_stats["vol_stats_after_2_plex_failure"] = self.storage_controller.peek(
                                     props_tree="storage/volumes", legacy=False, chunk=8192,
                                     command_duration=self.command_timeout)
@@ -470,12 +470,12 @@ class RecoveryWithFailures(FunTestCase):
                                                                                       "plex_read_fail_count"], \
                                                                                   EC_vol_stats_2_plex_failure["stats"][
                                                                                       "recovery_read_count"]
-                                num_reads_diff_2_plex_failure = (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"]["num_reads"]) + \
-                                                 (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][device_failed_0]]["stats"]["num_reads"])
+                                num_reads_diff_2_plex_failure = (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"]["num_reads"]) + \
+                                                 (self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]]["stats"]["num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]]["stats"]["num_reads"])
 
                                 fun_test.test_assert_expected(expected=(EC_plex_read_fail_count_2_plex_failure - EC_plex_read_fail_count_1_plex_failure, EC_recovery_read_count_2_plex_failure - EC_recovery_read_count_1_plex_failure),
                                                               actual=(num_reads_diff_2_plex_failure,
-                                                                      (num_reads_diff_1_plex_failure + num_reads_diff_2_plex_failure)/2),
+                                                                      num_reads_diff_2_plex_failure/2),
                                                               message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
                                                                   num_reads_diff_2_plex_failure, EC_recovery_read_count_2_plex_failure - EC_recovery_read_count_1_plex_failure))
 
@@ -502,25 +502,25 @@ class RecoveryWithFailures(FunTestCase):
                         device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
                         num_reads_diff_concurrent_plex_failure = (self.vol_stats["vol_stats_concurrent_plex_failure"]["data"][
                                                              "VOL_TYPE_BLK_LOCAL_THIN"][
-                                                             self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"][
+                                                             self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"][
                                                              "num_reads"] -
                                                          self.vol_stats["vol_stats_initial_read"]["data"][
                                                              "VOL_TYPE_BLK_LOCAL_THIN"][
-                                                             self.ec_info["uuids"][num]["blt"][device_failed_1]]["stats"][
+                                                             self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"][
                                                              "num_reads"]) + \
                                                         (self.vol_stats["vol_stats_concurrent_plex_failure"]["data"][
                                                              "VOL_TYPE_BLK_LOCAL_THIN"][
-                                                             self.ec_info["uuids"][num]["blt"][device_failed_0]][
+                                                             self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]][
                                                              "stats"]["num_reads"] -
                                                          self.vol_stats["vol_stats_initial_read"]["data"][
                                                              "VOL_TYPE_BLK_LOCAL_THIN"][
-                                                             self.ec_info["uuids"][num]["blt"][device_failed_0]][
+                                                             self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]][
                                                              "stats"]["num_reads"])
                         fun_test.test_assert_expected(expected=(
                         EC_plex_read_fail_count_concurrent_plex_failure,
                         EC_recovery_read_count_concurrent_plex_failure),
                                                       actual=(num_reads_diff_concurrent_plex_failure,
-                                                              num_reads_diff_concurrent_plex_failure),
+                                                              num_reads_diff_concurrent_plex_failure/2),
                                                       message="Expected number of plex_read_fails: {} and recovery_read_count: {} are reported in the stats".format(
                                                           EC_plex_read_fail_count_concurrent_plex_failure,
                                                           EC_recovery_read_count_concurrent_plex_failure))
@@ -619,62 +619,87 @@ class RecoveryWithFailures(FunTestCase):
                             self.device_id_failed.remove(plex)
                     self.device_id_clean_up = self.device_id_failed
                     # Executing NVMe disconnect from all the hosts
+                    self.nvme_disconnect = False
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                     nvme_disconnect_exit_status = host_handle.exit_status()
                     fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                                   message="{} - NVME Disconnect Status".format(host_name))
-
+                    self.nvme_disconnect = True
                 # Detaching all the EC/LS volumes from the external server
+                self.volume_detach = False
                 command_result = self.storage_controller.detach_volume_from_controller(
                     ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
                                      "Detaching {} EC/LS volume from DUT".format(num))
-
+                self.volume_detach = True
+                # Unconfiguring all the LSV/EC and it's plex volumes
+                self.volume_delete = False
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
+                self.volume_delete = True
+    def cleanup(self):
+        # If the READ fails, Power ON the drives that were powered OFF
+        try:
+            for plex in self.device_id_failed:
+                if self.plex_fail_method == "ssd_power_off":
+                    fun_test.log("After READ failure, initiating power ON for drive {}".format(plex))
+                    device_bringup_status = self.storage_controller.power_toggle_ssd("on",
+                                                                                        device_id=plex,
+                                                                                        command_duration=self.command_timeout)
+                    fun_test.simple_assert(device_bringup_status["status"],
+                                           "Powering ON Device ID {}".format(plex))
+                    # Validate if Device is marked Failed
+                    device_stats = self.storage_controller.get_ssd_power_status(plex, command_duration=self.command_timeout)
+                    fun_test.simple_assert(device_stats["status"],
+                                           "Device {} stats command".format(plex))
+                    fun_test.test_assert_expected(expected=0,
+                                                  actual=device_stats["data"]["input"],
+                                                  message="Device ID {} is powered ON".format(
+                                                      plex))
+                elif self.plex_fail_method == "drive_pull":
+                    fun_test.log("After READ failure, clearing fault for device id {}".format(plex))
+                    device_bringup_status = self.storage_controller.enable_device(device_id=plex,
+                                                                                        command_duration=self.command_timeout)
+                    fun_test.simple_assert(device_bringup_status["status"],
+                                           "Clearing fault on Device ID {}".format(plex))
+                    # Validate if Device is marked Online
+                    device_stats = self.storage_controller.get_device_status(device_id=plex, command_duration=self.command_timeout)
+                    fun_test.simple_assert(device_stats["status"],
+                                           "Device {} stats command".format(plex))
+                    fun_test.test_assert_expected(expected="DEV_ONLINE",
+                                                  actual=device_stats["data"]["device state"],
+                                                  message="Cleared fault on Device ID {}".format(
+                                                      plex))
+            if not self.nvme_disconnect:
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    # Executing NVMe disconnect from all the hosts
+                    nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+            if not self.volume_detach:
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"],
+                                         "Detaching {} EC/LS volume from DUT".format(num))
+            if not self.volume_delete:
                 # Unconfiguring all the LSV/EC and it's plex volumes
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
-
-    def cleanup(self):
-        # If the READ fails, Power ON the drives that were powered OFF
-        for plex in self.device_id_failed:
-            if self.plex_fail_method == "ssd_power_off":
-                fun_test.log("After READ failure, initiating power ON for drive {}".format(plex))
-                device_bringup_status = self.storage_controller.power_toggle_ssd("on",
-                                                                                    device_id=plex,
-                                                                                    command_duration=self.command_timeout)
-                fun_test.simple_assert(device_bringup_status["status"],
-                                       "Powering ON Device ID {}".format(plex))
-                # Validate if Device is marked Failed
-                device_stats = self.storage_controller.get_ssd_power_status(plex, command_duration=self.command_timeout)
-                fun_test.simple_assert(device_stats["status"],
-                                       "Device {} stats command".format(plex))
-                fun_test.test_assert_expected(expected=0,
-                                              actual=device_stats["data"]["input"],
-                                              message="Device ID {} is powered ON".format(
-                                                  plex))
-            elif self.plex_fail_method == "drive_pull":
-                fun_test.log("After READ failure, clearing fault for device id {}".format(plex))
-                device_bringup_status = self.storage_controller.enable_device(device_id=plex,
-                                                                                    command_duration=self.command_timeout)
-                fun_test.simple_assert(device_bringup_status["status"],
-                                       "Clearing fault on Device ID {}".format(plex))
-                # Validate if Device is marked Online
-                device_stats = self.storage_controller.get_device_status(device_id=plex, command_duration=self.command_timeout)
-                fun_test.simple_assert(device_stats["status"],
-                                       "Device {} stats command".format(plex))
-                fun_test.test_assert_expected(expected="DEV_ONLINE",
-                                              actual=device_stats["data"]["device state"],
-                                              message="Cleared fault on Device ID {}".format(
-                                                  plex))
-
-        # Deleting all the storage controller
-        for index in xrange(len(self.host_info)):
-            command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
-                                                                       command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
-                                 format(self.ctrlr_uuid[index]))
+                # Deleting all the storage controller
+            for index in xrange(len(self.host_info)):
+                command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                                                                           command_duration=self.command_timeout)
+                fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
+                                     format(self.ctrlr_uuid[index]))
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
 class RecoveryWithMFailure(RecoveryWithFailures):
 

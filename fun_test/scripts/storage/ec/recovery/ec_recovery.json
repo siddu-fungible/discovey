@@ -30,7 +30,9 @@
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 300
+    "api_server_up_timeout": 300,
+    "already_deployed": true,
+    "reboot_hosts": false
   },
   "RecoveryWithMFailure": {
     "ec_list": ["4,2"],
@@ -49,7 +51,7 @@
         "lsv": 4096,
         "jvol": 512
       },
-      "capacity": 4294967296,
+      "capacity": 34359738368,
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
