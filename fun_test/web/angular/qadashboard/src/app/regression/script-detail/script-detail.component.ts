@@ -687,14 +687,15 @@ export class ScriptDetailComponent implements OnInit {
   navigateByQuery(param) {
     this.queryParams = [];
     if (param) {
-      this.queryParams.push([param, 1]);
+      this.queryParams.push([param.name, param.value]);
     }
     let queryParamString = this.commonService.queryParamsToString(this.queryParams);
     let url = `${this.baseUrl}${queryParamString}`;
     this.router.navigateByUrl(url);
   }
 
-  routeByOption(value, param) {
+  routeByOption(value, queryParam) {
+    let param = {"name": queryParam, "value": 1};
     if (value) {
       value = !value;
       this.navigateByQuery(null);
