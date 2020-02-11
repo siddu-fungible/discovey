@@ -702,6 +702,9 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.fio_cmd_args["multiple_jobs"] = re.sub(r"--bs=\w+ ", "--bs={} ".format(self.bs),
                                                         self.fio_cmd_args["multiple_jobs"])
             fun_test.log("FIO param --bs is overridden by user to: --bs={}".format(self.bs))
+        if "fio_runtime" in job_inputs:
+            self.fio_runtime = job_inputs["fio_runtime"]
+            self.fio_run_timeout = self.fio_runtime + 60
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
@@ -715,6 +718,7 @@ class ECVolumeLevelTestcase(FunTestCase):
         final_vol_stat = {}
         initial_rcnvme_stat = {}
         final_rcnvme_stat = {}
+        compression_ratio ={}
 
         start_stats = True
 
@@ -743,6 +747,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             size = (self.ec_info["capacity"] * self.ec_info["num_volumes"]) / (1024 ** 3)
             row_data_dict["size"] = str(size) + "G"
             row_data_dict["num_hosts"] = self.num_hosts
+
+            # Ratio calc  
+            server_written_total_bytes = 0
+            total_bytes_pushed_to_disk = 0
 
             # Deciding whether the fio command has to run for the entire volume size or for a certain period of time,
             # based on if the current IO depth is in self.full_run_iodepth
@@ -890,7 +898,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                 else:
                     fun_test.critical("Not starting the mpstats collection because of lack of interval and count "
                                       "details")
-
+                 
                 # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} Num jobs: {} for the EC".
                              format(row_data_dict["mode"], fio_block_size, fio_iodepth, fio_num_jobs * global_num_jobs))
@@ -1088,6 +1096,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                     row_data_dict[op + field] = aggr_fio_output[iodepth][op][field]
 
             fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output[iodepth]))
+            server_written_total_bytes = aggr_fio_output[iodepth]["write"]["io_bytes"]
 
             if not aggr_fio_output[iodepth]:
                 fio_result[iodepth] = False
@@ -1114,7 +1123,17 @@ class ECVolumeLevelTestcase(FunTestCase):
                         curr_stats_diff = vol_stats_diff(initial_vol_stats=initial_vol_stat[iodepth]["data"],
                                                          final_vol_stats=final_vol_stat[iodepth]["data"],
                                                          vol_details=self.vol_details)
-                        fun_test.simple_assert(curr_stats_diff["status"], "Volume stats diff to measure amplification")
+                        fun_test.simple_assert(curr_stats_diff["status"], "Volume stats diff to measure amplification and compression ratio")
+                        total_bytes_pushed_to_disk = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LSV"]["write_bytes"] 
+                        cr = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
+                        compression_ratio[iodepth] = cr
+                        fun_test.log("Server written bytes, Bytes pushed to disk, Compression ratio ")
+                        fun_test.log(iodepth)
+                        fun_test.log(server_written_total_bytes)
+                        fun_test.log(total_bytes_pushed_to_disk)
+                        fun_test.log(cr)
+                        fun_test.log("===================================================================")
+                        fun_test.test_assert(True, "Compression ration for iodepth {} is: ".format(iodepth,cr))
                         fun_test.debug("\nVolume stats diff: {}".format(curr_stats_diff))
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]

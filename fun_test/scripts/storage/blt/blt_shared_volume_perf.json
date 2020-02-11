@@ -25,7 +25,7 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {
       "override": true,
-      "override_node": "NUMA node0 CPU(s)"
+      "override_node": 0
     },
     "api_server_port": 50220,
     "api_server_username": "admin",

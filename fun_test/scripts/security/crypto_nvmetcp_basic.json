@@ -1,0 +1,86 @@
+{
+  "GlobalSetup": {
+    "bootargs": [
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": ["ep", "storage"],
+    "num_f1_per_fs": 2,
+    "num_f1s": 1,
+    "num_hosts": 1,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": "default",
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
+    "csi_perf_pdtrace_hbm_size_kb": 204800,
+    "csr_network": {
+      "0": {
+        "test_interface_ip": "20.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:30",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "20.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      },
+      "4": {
+        "test_interface_ip": "21.1.1.1/24",
+        "test_interface_mac": "fe:dc:ba:44:66:31",
+        "test_net_route": {
+          "net": "29.1.1.0/24",
+          "gw": "21.1.1.2",
+          "arp": "00:de:ad:be:ef:00"
+        },
+        "f1_loopback_ip": "29.1.1.1"
+      }
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300
+  },
+  "BLTKey256": {
+    "drive_margin": 0,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn1",
+    "transport_type": "tcp",
+    "transport_port": 1099,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 67108864,
+      "block_size": 4096,
+      "encrypt": "enable"
+    },
+    "key_size": 32,
+    "xtweak_size": 8,
+    "command_timeout": 5,
+    "write_size": 4096,
+    "data_size": 8192,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"
+  }
+}
