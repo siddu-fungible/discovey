@@ -230,8 +230,8 @@ class MultiHostFioRandRead(FunTestCase):
             for host in self.hosts:
                 if host.name.startswith("cab0"):
                     host.host_numa_cpus = ",".join(host.spec["cpus"]["numa_node_ranges"])
-            else:
-                host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+                else:
+                    host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
             # Check number of volumes and devices found from hosts
             for host in self.hosts:
