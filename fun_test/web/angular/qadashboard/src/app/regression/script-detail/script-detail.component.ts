@@ -3,7 +3,7 @@ import {RegressionService} from "../regression.service";
 import {forkJoin, Observable, of, throwError} from "rxjs";
 import {catchError, last, switchMap, windowWhen} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -11,8 +11,7 @@ import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.s
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
 import {TreeNode} from "../../ui-elements/tree/definitions";
-import {Location} from "@angular/common";
-import {HttpParams} from "@angular/common/http";
+import {ViewChild, ElementRef} from '@angular/core';
 
 class DataModel {
   letter: string;
@@ -131,6 +130,8 @@ export class ScriptDetailComponent implements OnInit {
   sidePanelOpen: boolean = false;
   tree: TreeNode = null;
   selectedStatsSet: any = new Set();
+  queryParams: any[] = [];
+  @ViewChild('contextOptions') contextOptions: ElementRef;
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
@@ -138,7 +139,7 @@ export class ScriptDetailComponent implements OnInit {
               private commonService: CommonService,
               private modalService: NgbModal,
               private service: ScriptDetailService,
-              private location: Location
+              private router: Router
   ) {
     this.selectedStatistics = [];
     let sc = new StatisticsCategory();
@@ -165,7 +166,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  suiteExecutionId: number = 10000;
+  suiteExecutionId: number = null;
   logPrefix: number = null;
   scriptId: number = null;
   scriptPath: string = null;
@@ -209,9 +210,10 @@ export class ScriptDetailComponent implements OnInit {
   registeredAssets: RegisteredAsset [];
 
   timeSeriesTypes: any = null;
+  baseUrl: string = null;
 
   ngOnInit() {
-
+    this.baseUrl = '/regression/script_detail';
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getTimeSeriesTypes();
     })).pipe(switchMap(response => {
@@ -249,23 +251,55 @@ export class ScriptDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this._parseTestCaseTables(response);
       return of(true);
+    })).pipe(switchMap(response => {
+      return this.getQueryParams();
     }));
 
     this.route.params.subscribe(params => {
       if (params['suiteExecutionId']) {
         this.suiteExecutionId = parseInt(params['suiteExecutionId']);
+        // this.baseUrl += "/" + this.suiteExecutionId;
       }
       if (params['logPrefix']) {
         this.logPrefix = params['logPrefix'];
+        // this.baseUrl += "/" + this.logPrefix;
       }
       if (params["scriptId"]) {
         this.scriptId = parseInt(params["scriptId"]);
+        // this.baseUrl += "/" + this.scriptId;
+      }
+      if (this.scriptId && this.logPrefix && this.suiteExecutionId) {
+        this.baseUrl += "/" + this.scriptId + "/" + this.logPrefix + "/" + this.suiteExecutionId;
       }
       this.refreshAll();
-
     });
 
+  }
 
+  getQueryParams() {
+    this.route.queryParams.subscribe(params => {
+      if (params['context']) {
+        this.onContextOptionsClick(this.contextOptions);
+      } else {
+        this.modalService.dismissAll();
+      }
+      if (params['charts']) {
+        this.viewChartsClick();
+      } else {
+        this.sidePanelOpen = false;
+      }
+      if (params['more_logs']) {
+        this.openArtifactsPanelClick();
+      } else {
+        this.showingArtifactPanel = false;
+      }
+      if (params['tables']) {
+        this.openTestCaseTablesPanelClick();
+      } else {
+        this.showingTablesPanel = false;
+      }
+    });
+    return of(true);
   }
 
   clickedStatsTreeNode(flatNode): void {
@@ -542,15 +576,24 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   onContextOptionsClick(content) {
-    let params = new HttpParams();
-    params.set('context', content);
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
     }, (reason) => {
       console.log("Rejected");
+      this.routeToMenu(null);
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
     this.selectedContexts = this.availableContexts.filter(availableContext => availableContext.selected);
 
+  }
+
+  routeToMenu(param) {
+    this.queryParams = [];
+    if (param) {
+      this.queryParams.push([param, 1]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(this.queryParams);
+    let url = `${this.baseUrl}${queryParamString}`;
+    this.router.navigateByUrl(url);
   }
 
   findMatchingTestCase(time): number {
@@ -606,6 +649,9 @@ export class ScriptDetailComponent implements OnInit {
     });*/
 
     this.sidePanelOpen = !this.sidePanelOpen;
+    if (!this.sidePanelOpen) {
+      this.routeToMenu(null);
+    }
   }
 
   addStatisticsCategory() {
@@ -644,6 +690,9 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openArtifactsPanelClick() {
+    if (this.showingArtifactPanel) {
+
+    }
     this.showingArtifactPanel = !this.showingArtifactPanel;
     this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
@@ -665,5 +714,21 @@ export class ScriptDetailComponent implements OnInit {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
 
+  routeBasedOnBoolean(value, param) {
+    if (value) {
+        value = !value;
+        this.routeToMenu(null);
+      } else {
+        this.routeToMenu(param);
+      }
+  }
+
+  deleteQueryParam(param) {
+    for (let i = 0; i < this.queryParams.length; i++) {
+      if (this.queryParams[i][0] === param) {
+        this.queryParams.splice(i, 1);
+      }
+    }
+  }
 
 }

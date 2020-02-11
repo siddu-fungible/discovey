@@ -3,21 +3,22 @@
   <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
-  <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context
+  <button class="fun-button-with-icon" (click)="routeToMenu('context')"><i class="fa fa-columns"></i>&nbsp;Context
     options
   </button>
-  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': viewingCharts}"
-          (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select
+  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': sidePanelOpen}"
+          (click)="routeToMenu('charts')"><i class="fa fa-bar-chart"></i>&nbsp;Select
     charts
   </button>
-  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console
+  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i
+    class="fa fa-file-text-o"></i>&nbsp;Console
     log
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingArtifactPanel}"
-          (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs
+          (click)="routeBasedOnBoolean(showingArtifactPanel, 'more_logs')"><i class="fa fa-files-o"></i>&nbsp;More logs
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingTablesPanel}"
-          (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables
+          (click)="routeBasedOnBoolean(showingTablesPanel, 'tables')"><i class="fa fa-table"></i> Show tables
   </button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
