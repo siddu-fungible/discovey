@@ -258,15 +258,12 @@ export class ScriptDetailComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['suiteExecutionId']) {
         this.suiteExecutionId = parseInt(params['suiteExecutionId']);
-        // this.baseUrl += "/" + this.suiteExecutionId;
       }
       if (params['logPrefix']) {
         this.logPrefix = params['logPrefix'];
-        // this.baseUrl += "/" + this.logPrefix;
       }
       if (params["scriptId"]) {
         this.scriptId = parseInt(params["scriptId"]);
-        // this.baseUrl += "/" + this.scriptId;
       }
       if (this.scriptId && this.logPrefix && this.suiteExecutionId) {
         this.baseUrl += "/" + this.scriptId + "/" + this.logPrefix + "/" + this.suiteExecutionId;
@@ -586,15 +583,6 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  routeToMenu(param) {
-    this.queryParams = [];
-    if (param) {
-      this.queryParams.push([param, 1]);
-    }
-    let queryParamString = this.commonService.queryParamsToString(this.queryParams);
-    let url = `${this.baseUrl}${queryParamString}`;
-    this.router.navigateByUrl(url);
-  }
 
   findMatchingTestCase(time): number {
     let testCaseIndex = 0;
@@ -690,9 +678,6 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openArtifactsPanelClick() {
-    if (this.showingArtifactPanel) {
-
-    }
     this.showingArtifactPanel = !this.showingArtifactPanel;
     this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
@@ -714,13 +699,23 @@ export class ScriptDetailComponent implements OnInit {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
 
+  routeToMenu(param) {
+    this.queryParams = [];
+    if (param) {
+      this.queryParams.push([param, 1]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(this.queryParams);
+    let url = `${this.baseUrl}${queryParamString}`;
+    this.router.navigateByUrl(url);
+  }
+
   routeBasedOnBoolean(value, param) {
     if (value) {
-        value = !value;
-        this.routeToMenu(null);
-      } else {
-        this.routeToMenu(param);
-      }
+      value = !value;
+      this.routeToMenu(null);
+    } else {
+      this.routeToMenu(param);
+    }
   }
 
   deleteQueryParam(param) {
