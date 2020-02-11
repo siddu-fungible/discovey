@@ -140,11 +140,11 @@ class StorageControllerOperationsTemplate():
                 if raw_api_call:
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                     result_api = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}".format(dpu_id)).json()
-                    fun_test.test_assert(expression=result_api["status"], message="Fetch dataplane IPs using Raw API")
+                    fun_test.test_assert(expression=result_api["status"], message="Fetch dataplane IP using Raw API")
                     result &= (str(result_api["data"]["dataplane_ip"]) == str(dataplane_ip))
                 else:
                     get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
-                    fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IPs")
+                    fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IP")
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
