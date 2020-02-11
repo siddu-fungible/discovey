@@ -625,6 +625,17 @@ def get_host_numa_cpus(hosts, numa_node_to_use):
     return hosts
 
 
+def get_device_numa_node(end_host, ethernet_adapter):
+    numa_node = None
+    lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
+    fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+    adapter_id = lspci_output[0]['id']
+    fun_test.simple_assert(adapter_id, "Retrieve Ethernet Adapter Bus ID")
+    lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
+    numa_node = lspci_verbose_output[0]['numa_node']
+    return numa_node
+
+
 def fetch_numa_cpus(end_host, ethernet_adapter):
     numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)

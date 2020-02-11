@@ -198,9 +198,9 @@ class SharedVolumePerfTest(FunTestCase):
         #             host.host_numa_cpus = host_numa_cpus_filter[self.override_numa_node["override_node"]]
         #         else:
         #             host.host_numa_cpus = fetch_numa_cpus(host_handle, self.ethernet_adapter)
-        numa_node_to_use = 1
+        numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
         if self.override_numa_node["override"]:
-            numa_node_to_use = 0
+            numa_node_to_use = self.override_numa_node["override_node"]
         self.hosts = get_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
 
         fun_test.shared_variables["host_info"] = self.hosts
