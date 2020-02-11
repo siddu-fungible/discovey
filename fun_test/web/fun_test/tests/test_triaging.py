@@ -596,6 +596,7 @@ if __name__ == "__main2__":
     original_t.save()
 
 if __name__ == "__main__":
+    # Triage3.objects.all().delete()
     while True:
         Daemon.get(name=DAEMON_NAME).beat()
         triages = Triage3.objects.filter(status__gt=TriagingStates.COMPLETED)

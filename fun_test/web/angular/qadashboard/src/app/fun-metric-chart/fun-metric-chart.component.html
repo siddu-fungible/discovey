@@ -2,8 +2,18 @@
 <div *ngIf="status === null" class="chart-div" [ngClass]="{'component': paddingNeeded}">
   <div style="max-width: 1000px; height: 100%; margin: auto;">
     <br>
-    <!-- showing the units dropdown on the right-->
+    <!-- showing the units dropdown on the right and days in past on the left-->
     <div *ngIf="!minimal">
+      <span style="float: left">
+        <span *ngIf="showingAll">
+          <span class="fun-action-link" (click)="setDaysInPast(DEFAULT_DAYS_IN_PAST)">Last 60 days</span>&nbsp;|&nbsp;
+          <span class="highlight">All</span>
+        </span>
+        <span *ngIf="!showingAll">
+          <span class="highlight">Last 60 days</span>&nbsp;|&nbsp;
+          <span class="fun-action-link" (click)="setDaysInPast(MAX_DAYS_IN_PAST)">All</span>
+        </span>
+      </span>
       <select *ngIf="leaf" [(ngModel)]="selectedUnit"
               (ngModelChange)="onUnitChange($event)" style="float: right">
         <option [ngValue]="units" *ngFor="let units of category">{{ units }}</option>
@@ -33,9 +43,9 @@
               <td *ngSwitchCase="'LSF job id'" class="word-break">
                 <a class="pseudo-anchor" (click)="openLsfUrl(point.value)">{{ point.value }}</a>
               </td>
-              <td *ngSwitchCase="'Version'" class="word-break">
-                <a class="pseudo-anchor" (click)="openVersionUrl(point.value)">{{ point.value }}</a>
-              </td>
+              <!--<td *ngSwitchCase="'Version'" class="word-break">-->
+                <!--<a class="pseudo-anchor" (click)="openVersionUrl(point.value)">{{ point.value }}</a>-->
+              <!--</td>-->
               <td *ngSwitchCase="'Suite execution id'" class="word-break">
                 <a class="pseudo-anchor" (click)="openSuiteUrl(point.value)">{{ point.value }}</a>
               </td>
@@ -125,15 +135,15 @@
           </tr>
         </table>
       </div>
-      <div>
-        <i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span
-          (click)="editingDaysInPast = true">{{ daysInPast }}</span></i>
-        <i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number"
-                                                                                       style="width: 100px"
-                                                                                       [(ngModel)]="daysInPast">
-          <span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>
-          <span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>
-      </div>
+      <!--<div>-->
+        <!--<i *ngIf="!editingDaysInPast" class="grey-text">Show days in past: <span-->
+          <!--(click)="editingDaysInPast = true">{{ daysInPast }}</span></i>-->
+        <!--<i *ngIf="editingDaysInPast" style="font-size: 95%;">Show days in past: <input type="number"-->
+                                                                                       <!--style="width: 100px"-->
+                                                                                       <!--[(ngModel)]="daysInPast">-->
+          <!--<span><i class="fa fa-check fa-fw tick-color" (click)="submitDaysInPast()"></i></span>-->
+          <!--<span><i class="fa fa-times fa-fw close-color" (click)="editingDaysInPast = false"></i></span></i>-->
+      <!--</div>-->
     </div>
     <br>
     <div class="closed-section"></div>

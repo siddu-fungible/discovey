@@ -531,24 +531,37 @@ def _make_gateway(index=0):
 ## flash image ##
 @roles('bmc')
 @task
-def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
+def flashF(index=0, flags=False, type=None, image=None, version=None, old=None):
     """ flash image of chip[index] over type tftp with provided arguments """
     global child
+    child = connectF(index, True)
+    child.sendline ('echo connected to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv autoload no')
+    child.expect ('\nf1 # ')
+    child.sendline ('lmpg;lfw;ltrain;ls;')
+    child.expect ('\nf1 # ')
+
     CCHUID = 3 - int(index)
-    if env.FS1600REV == 2:
-        sku_string = "SKU_FS1600r2_{}".format(index)
+    if env.FS1600REV == 1:
+        sku_string = "sku=SKU_FS1600_{}".format(index)
+        cchuid_string = "cc_huid={}".format(CCHUID)
     else:
-        sku_string = "SKU_FS1600_{}".format(index)
-    bootargs = 'cc_huid={} sku={} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, sku_string)
-    #print bootargs
+        sku_string = ""
+        cchuid_string = ""
+
+    bootargs = '{} {} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(cchuid_string, sku_string)
+    print bootargs
 
     command = 'tftpboot'
     if image and version:
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
-            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb', 'husc', 'kbag' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb', 'husc', 'kbag' ] ..." % type)
         elif type == 'eepr':
             if env.FS1600REV == 2:
                 fimage='funsdk-release/{}/eeprom_fs1600r2_{}_packed.bin'.format(version, index)
@@ -570,6 +583,10 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
             fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
         elif type == 'hbsb':
             fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
+        elif type == 'hbsc':
+            fimage='funsdk-release/{}/hu_sbm_serdes.bin'.format(version)
+        elif type == 'kbag':
+            fimage='funsdk-release/{}/key_bag.bin'.format(version)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -587,15 +604,6 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
     bootargs += 'fw-upgrade-{}={}@0xa800000080000000{}'.format(type, fsize, FLAGS)
     print bootargs
 
-    child = connectF(index, True)
-    child.sendline ('echo connected to chip={} ...'.format(index))
-    child.expect ('\nf1 # ')
-    child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
-    child.expect ('\nf1 # ')
-    child.sendline ('setenv autoload no')
-    child.expect ('\nf1 # ')
-    child.sendline ('lmpg;lfw;ltrain;ls;')
-    child.expect ('\nf1 # ')
     child.sendline ('setenv gatewayip %s' % _make_gateway(index))
     child.expect ('\nf1 # ')
     child.sendline ('dhcp')
@@ -742,12 +750,10 @@ def argsF(index=0, bootargs=BOOTARGS):
     """ set bootargs of chip[index] with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    if env.FS1600REV == 2:
-        sku_string = "SKU_FS1600r2_{}".format(index)
-    else:
+    if env.FS1600REV == 1:
         sku_string = "SKU_FS1600_{}".format(index)
-    bootargs = 'cc_huid={} '.format(CCHUID) + bootargs
-    bootargs = 'sku={} '.format(sku_string) + bootargs
+        bootargs = 'cc_huid={} sku={} '.format(CCHUID, sku_string) + bootargs
+    print bootargs
     child = connectF(index, reset=False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')

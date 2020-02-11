@@ -1,0 +1,271 @@
+{
+  "GlobalSetup": {
+    "bootargs": ["app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-server --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    // Script won't disturb the syslog level setting, if it is set to "default". If any other level is needed set this config to that level in int format
+    "syslog": "default",
+    "attach": {"huid": 7, "ctlid": 0, "transport": "TCP", "port": 1099, "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1"},
+    "command_timeout": 5,
+    "reboot_timeout": 300,
+    "num_ssd": 12,
+    "dut_start_index": 2,
+    "host_start_index": 1,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": ["ep", "storage"],
+    "num_f1_per_fs": 2,
+    "num_f1s": 1,
+    "num_hosts": 1,
+    "fpg_int_prefix": "fpg",
+    "load_modules": ["nvme", "nvme_tcp"],
+    "huid": 7,
+    "ctlid": 0,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300
+  },
+  "C18013": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    "filesystem_list": ["ext4"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+  "C18372": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    "filesystem_list": ["ext3"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+  "C18373": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    "filesystem_list": ["ext2"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+  "C18374": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    "filesystem_list": ["xfs"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+  "C18375": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    "filesystem_list": ["btrfs"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  },
+    "AllFilesystem": {
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 68719476736,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 5
+    },
+    "filesystem_list": ["btrfs", "xfs", "ext3", "ext2", "ext4"],
+    "nvme_device": "/dev/nvme",
+    "command_timeout": 10,
+    "ns_id": 1,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "32G", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "do_verify": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"bs": 4096, "iodepth": 8, "numjobs": 1, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"pattern", "do_verify": 1, "timeout": 7200},
+    "status_interval": 10
+  }
+}

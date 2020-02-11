@@ -3,7 +3,7 @@ from django.db.models import Q
 from fun_settings import TEAM_REGRESSION_EMAIL, LOGS_DIR
 from fun_global import RESULTS
 import web.fun_test.django_interactive
-from web.fun_test.models import Daemon
+from web.fun_test.models import Daemon, LastGoodBuild
 from fun_global import get_current_time, get_build_number_for_latest
 from scheduler_global import JobStatusType
 import time
@@ -166,20 +166,24 @@ class CatalogExecutionStateMachine:
 
             job_results = []
             if job_ids:
-                completed_job_ids = 0
+                num_completed_jobs = 0
                 for job_id in job_ids:
                     s = SuiteExecution.objects.get(execution_id=job_id)
                     if JobStatusType.is_completed(s.state):
-                        completed_job_ids += 1
+                        num_completed_jobs += 1
                         time.sleep(60) # TODO: Result may not be available for a while
                         s = SuiteExecution.objects.get(execution_id=job_id)
                         job_results.append(s.result)
-                if len(job_ids) == completed_job_ids:
+                if len(job_ids) == num_completed_jobs:
                     catalog_execution.state = JobStatusType.COMPLETED
                     catalog_execution.completion_date = get_current_time()
                 if len(job_ids) == len(job_results):
                     if all(map(lambda x: x == RESULTS["PASSED"], job_results)):
                         catalog_execution.result = RESULTS["PASSED"]
+                        if catalog_execution.update_last_good_build:
+                            LastGoodBuild.set(release_train=catalog_execution.release_train,
+                                              build_number=catalog_execution.build_number,
+                                              release_catalog_execution_id=catalog_execution.id)
                     else:
                         catalog_execution.result = RESULTS["FAILED"]
                     logger.info("{}: Setting result: {}".format(catalog_execution, catalog_execution.result))
@@ -200,6 +204,7 @@ class CatalogExecutionStateMachine:
         new_catalog_execution.result = RESULTS["UNKNOWN"]
         new_catalog_execution.ready_for_execution = True
         new_catalog_execution.master_execution_id = catalog_execution.id
+        new_catalog_execution.update_last_good_build = catalog_execution.update_last_good_build
         new_catalog_execution.recurring = False
         for suite_execution in new_catalog_execution.suite_executions:
             suite_execution["job_id"] = None
@@ -218,7 +223,7 @@ class CatalogExecutionStateMachine:
                        master_execution_id=catalog_execution.id)
                 recurrent_catalog_executions = ReleaseCatalogExecution.objects.filter(q2)
                 if not recurrent_catalog_executions.count():
-                    logger.error("{}: Re-spawning ".format(catalog_execution))
+                    logger.info("{}: Re-spawning ".format(catalog_execution))
                     self.re_spawn(catalog_execution=catalog_execution)
 
     def run(self):

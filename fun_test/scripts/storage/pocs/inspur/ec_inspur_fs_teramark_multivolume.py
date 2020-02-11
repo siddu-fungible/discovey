@@ -19,6 +19,7 @@ Script to track the Inspur Performance Cases of various read write combination o
 
 
 def fio_parser(arg1, host_index, **kwargs):
+    fun_test.log("fio_parser input kwargs: {}".format(kwargs))
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
     fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
@@ -698,6 +699,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.fio_cmd_args["multiple_jobs"] = re.sub(r"--bs=\w+ ", "--bs={} ".format(self.bs),
                                                         self.fio_cmd_args["multiple_jobs"])
             fun_test.log("FIO param --bs is overridden by user to: --bs={}".format(self.bs))
+        if "fio_runtime" in job_inputs:
+            self.fio_runtime = job_inputs["fio_runtime"]
+            self.fio_run_timeout = self.fio_runtime + 60
+            self.full_run_iodepth = []
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}
@@ -910,6 +915,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         host_numa_cpus, global_num_jobs, fio_iodepth, self.ec_info["capacity"] / global_num_jobs)
                     fio_cmd_args["multiple_jobs"] += fio_job_args
                     fun_test.log("Current FIO args to be used: {}".format(fio_cmd_args))
+                    fun_test.log("Timeout to be used: {}".format(self.fio_cmd_args["timeout"]))
                     test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                           func=fio_parser,
                                                                           arg1=host_clone[host_name],

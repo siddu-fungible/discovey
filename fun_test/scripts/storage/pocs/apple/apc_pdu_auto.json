@@ -9,6 +9,7 @@
   "expected_nu_ports_f1_1": [],
   "expected_hnu_ports_f1_0": [],
   "expected_hnu_ports_f1_1": [],
+  "expected_come_uptime": 600,
   "num_hosts": 0,
   "apc_pdu_power_cycle_test": true,
   "reboot_machine_test": false,
