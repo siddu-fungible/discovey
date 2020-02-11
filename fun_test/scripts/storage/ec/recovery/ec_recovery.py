@@ -295,7 +295,7 @@ class RecoveryWithFailures(FunTestCase):
             for plex_fail_pattern in plex_fail_comb_list:
 
                 #configure ec volume
-                (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info,self.command_timeout)
+                (ec_config_status, self.ec_info) = self.storage_controller.configure_ec_volume(self.ec_info, self.command_timeout)
                 fun_test.simple_assert(ec_config_status, "Configuring EC/LSV volume")
 
                 fun_test.log("EC details after configuring EC Volume with encryption enabled:")
@@ -639,6 +639,7 @@ class RecoveryWithFailures(FunTestCase):
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
                 self.volume_delete = True
+
     def cleanup(self):
         # If the READ fails, Power ON the drives that were powered OFF
         try:
