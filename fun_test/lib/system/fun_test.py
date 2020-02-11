@@ -323,20 +323,39 @@ class FunTest:
     def is_current_test_case_failed(self):
         return self.current_test_case_exception
 
-    def enable_storage_api(self):   # Only needed for transition
+    def download_storage_api(self):
         from lib.utilities.http import fetch_binary_file
+        import tarfile
+        tar_ball_name = "swagger_client.tgz"
+        swagger_client_url = get_regression_server_url() + "/static/{}".format(tar_ball_name)
+        target_file_path = STASH_DIR + "/{}".format(tar_ball_name)
+        self.simple_assert(fetch_binary_file(url=swagger_client_url, target_file_path=target_file_path),
+                           "Unable to fetch swagger client")
+
+        tar = tarfile.open(target_file_path)
+        tar.extractall(path=STASH_DIR)
+        tar.close()
+
+    def enable_storage_api(self):   # Only needed for transition
         self.storage_api_enabled = True
+        api_path = STASH_DIR + "/swagger_client"
+        if os.path.exists(api_path):
+            shutil.rmtree(api_path)
+        """
         api_path = STASH_DIR + "/swagger_client"
         if not os.path.exists(api_path):
             fun_test.log("Swagger client does not exist. Fetching ...")
-            tar_ball_name = "swagger_client.tgz"
-            swagger_client_url = get_regression_server_url() + "/static/{}".format(tar_ball_name)
-            target_file_path = STASH_DIR + "/{}".format(tar_ball_name)
-            self.simple_assert(fetch_binary_file(url=swagger_client_url, target_file_path=target_file_path), "Unable to fetch swagger client")
-            import tarfile
-            tar = tarfile.open(target_file_path)
-            tar.extractall(path=STASH_DIR)
-            tar.close()
+            self.download_storage_api()
+        else:
+            version_file_path = "{}/swagger_client/version.txt"
+            if os.path.exists(version_file_path):
+                with open(version_file_path, "r") as version_file:
+                    content = version_file.read()
+                    api_version = content.strip()
+                    if api_version != STORAGE_API_VERSION:
+                        pass
+        """
+
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
