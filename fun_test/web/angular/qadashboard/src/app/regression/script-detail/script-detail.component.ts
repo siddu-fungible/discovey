@@ -275,22 +275,22 @@ export class ScriptDetailComponent implements OnInit {
 
   getQueryParams() {
     this.route.queryParams.subscribe(params => {
-      if (params['context']) {
+      if (params['show_context']) {
         this.onContextOptionsClick(this.contextOptions);
       } else {
         this.modalService.dismissAll();
       }
-      if (params['charts']) {
+      if (params['show_charts']) {
         this.viewChartsClick();
       } else {
         this.sidePanelOpen = false;
       }
-      if (params['more_logs']) {
+      if (params['show_more_logs']) {
         this.openArtifactsPanelClick();
       } else {
         this.showingArtifactPanel = false;
       }
-      if (params['tables']) {
+      if (params['show_tables']) {
         this.openTestCaseTablesPanelClick();
       } else {
         this.showingTablesPanel = false;
@@ -718,12 +718,12 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  deleteQueryParam(param) {
-    for (let i = 0; i < this.queryParams.length; i++) {
-      if (this.queryParams[i][0] === param) {
-        this.queryParams.splice(i, 1);
-      }
-    }
-  }
+  // deleteQueryParam(param) {
+  //   for (let i = 0; i < this.queryParams.length; i++) {
+  //     if (this.queryParams[i][0] === param) {
+  //       this.queryParams.splice(i, 1);
+  //     }
+  //   }
+  // }
 
 }
