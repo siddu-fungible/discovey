@@ -82,8 +82,11 @@ class BltApiStorageTest(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
-            storage_traffic_template.fio_integrity_check(host_linux_handle=host_obj.get_instance(), filename="/dev/"+nvme_device_name,
-                                                         numjobs=1, iodepth=32)
+
+            fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
+                                                                              filename="/dev/"+nvme_device_name,
+                                                                              numjobs=1, iodepth=32)
+            fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
@@ -116,7 +119,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
-        fun_test.sleep(message="Wait before firing Dataplane IP commands", seconds=60)  # WORKAROUND
+        fun_test.sleep(message="Wait before sending Dataplane IP commands", seconds=60)  # WORKAROUND
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.storage_controller_template.verify_dataplane_ip(storage_controller=fs_obj.get_storage_controller(),
@@ -129,16 +132,23 @@ class ConfigPeristenceAfterReset(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
-            storage_traffic_template.fio_integrity_check(host_linux_handle=host_obj, filename="/dev/"+nvme_device_name,
-                                                         numjobs=1, iodepth=32, verify_integrity=True)
+            fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj,
+                                                                              filename="/dev/" + nvme_device_name,
+                                                                              numjobs=1, iodepth=32,
+                                                                              verify_integrity=True)
+            fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
 
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result=fun_test.is_current_test_case_failed())
+        if not fun_test.is_current_test_case_failed():
+            hosts = self.topology.get_available_host_instances()
+            for host_obj in hosts:
+                self.storage_controller_template.host_diagnostics(host_obj=host_obj)
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
         fs_obj.come.ensure_expected_containers_running()
-        fs_obj.re_initialize()
+        # fs_obj.re_initialize()
         fun_test.test_assert(expression=self.storage_controller_template.get_health(),
                              message="{}: API server health".format(fs_obj))
 
