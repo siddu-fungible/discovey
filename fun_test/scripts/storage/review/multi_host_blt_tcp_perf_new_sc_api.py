@@ -225,8 +225,10 @@ class MultiHostFioRandRead(FunTestCase):
                                   command_timeout=5)
 
             # Fetch testcase numa cpus to be used
-            numa_node_to_use = "node0"
-            self.hosts = add_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
+            numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
+            if self.override_numa_node["override"]:
+                numa_node_to_use = self.override_numa_node["override_node"]
+            self.hosts = get_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
 
             # Check number of volumes and devices found from hosts
             for host in self.hosts:
