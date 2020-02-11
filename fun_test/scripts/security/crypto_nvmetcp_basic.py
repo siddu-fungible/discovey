@@ -754,12 +754,20 @@ class BLTKey256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Create a volume with 256 bit key and run FIO on single BLT with write,read,"
-                                      "randwrite/read pattern, block size & depth",
+                              summary="Create a volume with 256 bit key and run NVMe write/read on LBA",
                               steps='''
                               1. Create a local thin block volume with encryption using 256 bit key on dut.
-                              2. Attach it to external linux/container.
-                              3. Run FIO write traffic.
+                              2. Attach it to TCP controller
+                              3. NVMe connect from host to FS
+                              4. Using NVMe cli do write on LBA 0 using a 4kB input file
+                              5. Validate that the nvme read gives plain text
+                              6. Disconnect from host and detach the volume from controller
+                              7. Mount the BLT without encryption
+                              8. Read the LBA using nvme_cli and save it
+                              9. Mount it back with encryption
+                              10. Read back the data
+                              11. Compute encrypted text using openssl using the key & xtweak used for the LBA
+                              12. Compare the md5sum of the encrypted text from openssl and nvme read data
         ''')
 
 
