@@ -1905,6 +1905,8 @@ class ComE(Linux):
                                                      timeout=240)
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
+                fun_test.report_message("SC log available at {}".format(uploaded_path))
+
             self.command("rm {}".format(sc_logs_path))
 
         # Fetch redis logs if they exist
