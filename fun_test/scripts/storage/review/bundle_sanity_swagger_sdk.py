@@ -84,7 +84,7 @@ class BltApiStorageTest(FunTestCase):
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
 
             fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
-                                                                              filename="/dev/"+nvme_device_name,
+                                                                              filename="/dev/" + nvme_device_name,
                                                                               numjobs=1, iodepth=32)
             fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
 
