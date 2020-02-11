@@ -13,11 +13,11 @@
     log
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingArtifactPanel}"
-          (click)="routeOnOption(showingArtifactPanel, 'show_more_logs')"><i class="fa fa-files-o"></i>&nbsp;More
+          (click)="routeByOption(showingArtifactPanel, 'show_more_logs')"><i class="fa fa-files-o"></i>&nbsp;More
     logs
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingTablesPanel}"
-          (click)="routeOnOption(showingTablesPanel, 'show_test_case_tables')"><i class="fa fa-table"></i> Show
+          (click)="routeByOption(showingTablesPanel, 'show_test_case_tables')"><i class="fa fa-table"></i> Show
     tables
   </button>
   <!--button (click)="testClick()">Test</button-->

@@ -694,7 +694,7 @@ export class ScriptDetailComponent implements OnInit {
     this.router.navigateByUrl(url);
   }
 
-  routeOnOption(value, param) {
+  routeByOption(value, param) {
     if (value) {
       value = !value;
       this.navigateByQuery(null);
