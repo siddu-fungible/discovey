@@ -20,6 +20,15 @@
             "gph_index" : 1,
             "enable" : true
         },
+      {
+            "name" : "fpg12",
+            "mtu": 9000,
+            "address" : "11.1.1.2",
+            "prefix length" : 24,
+            "spine_index" : 2,
+            "gph_index" : 2,
+            "enable" : true
+        },
 	{
 	    "name" : "lo:0",
 	    "address" : "7.7.7.7",
@@ -37,7 +46,8 @@
 	"Local AS": 62011,
 	"Neighbors" : [
 	    { "peer" : "7.1.1.1", "peer-as": 62010},
-        { "peer" : "9.1.1.1", "peer-as": 62010}
+        { "peer" : "9.1.1.1", "peer-as": 62010},
+      { "peer" : "11.1.1.1", "peer-as": 62010}
 	]
     }
 }
