@@ -3,6 +3,8 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get
 import re
 from prettytable import PrettyTable
 import time
+from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit, FunPlatform
 from collections import OrderedDict
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
@@ -24,6 +26,23 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
                        "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                        "fio_job_name"]
+
+blt_unit_dict = {
+            "write_iops_unit": PerfUnit.UNIT_OPS,
+            "read_iops_unit": PerfUnit.UNIT_OPS,
+            "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "write_90_latency_unit": PerfUnit.UNIT_USECS,
+            "write_95_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "read_90_latency_unit": PerfUnit.UNIT_USECS,
+            "read_95_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_99_latency_unit": PerfUnit.UNIT_USECS
+        }
 
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
@@ -500,40 +519,75 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name):
+                 read_99_99_latency, fio_job_name, compression=False, encryption=False, compression_effort=-1,
+                 key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=log_time,
-                  volume=volume,
-                  test=test,
-                  block_size=block_size,
-                  io_depth=int(io_depth),
-                  size=size,
-                  operation=operation,
-                  num_ssd=num_ssd,
-                  num_volume=num_volumes,
-                  fio_job_name=fio_job_name,
-                  write_iops=write_iops,
-                  read_iops=read_iops,
-                  write_throughput=write_bw,
-                  read_throughput=read_bw,
-                  write_avg_latency=write_latency,
-                  read_avg_latency=read_latency,
-                  write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
+    if block_size.lower() == "4k":
+        blt = BltVolumePerformanceHelper()
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
+                      read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
+                      write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                      write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                      read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                      read_99_99_latency_unit="usecs")
+    else:
+        model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+        blt = ModelHelper(model_name=model_name)
+        blt.set_units(validate=True, **blt_unit_dict)
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency,
+                      compression=compression,
+                      encryption=encryption,
+                      compression_effort=compression_effort,
+                      key_size=key_size,
+                      xtweak=xtweak,
+                      io_size=io_size,
+                      platform=platform
+        )
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]

@@ -205,7 +205,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         else:
             host_obj_list = host_obj
         for host_obj in host_obj_list:
-            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
+            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj.name))
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
@@ -285,23 +285,26 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         try:
             final_volume_uuid_list = volume_uuid_list
             final_host_obj_list = host_obj_list
-            if len(volume_uuid_list) == len(host_obj_list) and not volume_is_shared:
-                # when 1:1 mapping is to be done
-                fun_test.log("Num volumes to attach is {} and num hosts is {}. "
-                             "So attaching one volume to one host".format(len(final_volume_uuid_list),
-                                                                          len(final_host_obj_list)))
-            elif (len(volume_uuid_list) == len(host_obj_list) and volume_is_shared) \
-                    or ((len(host_obj_list) < len(volume_uuid_list)) and volume_is_shared):
+            if volume_is_shared:
                 # when volumes are shared among hosts
                 final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
                 final_host_obj_list = host_obj_list * len(volume_uuid_list)
-            elif len(host_obj_list) < len(volume_uuid_list) and not volume_is_shared:
-                # when volumes are attached in round robin fashion
-                fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
-                             "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
-                                                                          len(final_host_obj_list)))
-                for i in range(len(host_obj_list), len(volume_uuid_list)):
-                    final_host_obj_list.append(host_obj_list[i % len(host_obj_list)])
+            else:
+                if len(host_obj_list) < len(volume_uuid_list):
+                    # when volumes are attached in round robin fashion
+                    fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
+                                 "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
+                                                                              len(final_host_obj_list)))
+                    for i in range(len(host_obj_list), len(volume_uuid_list)):
+                        final_host_obj_list.append(host_obj_list[i % len(host_obj_list)])
+
+                elif len(host_obj_list) > len(volume_uuid_list):
+                    # when volumes are attached in round robin fashion
+                    fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
+                                 "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
+                                                                              len(final_host_obj_list)))
+                    for i in range(len(volume_uuid_list), len(host_obj_list)):
+                        final_volume_uuid_list.append(volume_uuid_list[i % len(volume_uuid_list)])
 
             for index in range(len(final_host_obj_list)):
                 if not final_host_obj_list[index] in result.keys():
@@ -312,7 +315,10 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                             host_obj=host_obj_list[index],
                                             validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
                                             nvme_io_queues=nvme_io_queues)
-                result[final_host_obj_list[index]].append(output[0]["data"])
+                fun_test.test_assert(output[0]["status"],
+                                     message="Attach volume {} to host {}".format(final_volume_uuid_list[index],
+                                                                                  final_host_obj_list[index].name))
+                result[final_host_obj_list[index]].append(output[0])
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

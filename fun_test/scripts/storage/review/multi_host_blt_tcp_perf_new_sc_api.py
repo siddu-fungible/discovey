@@ -33,22 +33,17 @@ class BringupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             already_deployed = job_inputs["already_deployed"]
 
-        num_f1 = 1
-        if "num_f1" in job_inputs:
-            num_f1 = job_inputs["num_f1"]
+        dpu_index = None if not "num_f1" in job_inputs else range(job_inputs["num_f1"])
 
-        dpu_index = None
-        if num_f1 == 1:
-            dpu_index = [0]
-
+        # TODO: Check workload=storage in deploy(), set dut params
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
-        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+        self.sc_template = BltVolumeOperationsTemplate(topology=self.topology)
+        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
+        fun_test.shared_variables["storage_controller_template"] = self.sc_template
 
         # Below lines are needed so that we create/attach volumes only once and other testcases use the same volumes
         fun_test.shared_variables["blt"] = {}
@@ -56,7 +51,7 @@ class BringupSetup(FunTestScript):
         fun_test.shared_variables["blt"]["warmup_done"] = False
 
     def cleanup(self):
-        self.storage_controller_template.cleanup()
+        self.sc_template.cleanup()
         self.topology.cleanup()
 
 
@@ -147,10 +142,10 @@ class MultiHostFioRandRead(FunTestCase):
             self.warm_up_traffic = job_inputs["warm_up_traffic"]
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
-            self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 60
+            self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 15
         if "full_runtime" in job_inputs:
             self.fio_full_run_time = job_inputs["full_runtime"]
-            self.fio_full_run_timeout = self.fio_full_run_time + 60
+            self.fio_full_run_timeout = self.fio_full_run_time + 15
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
@@ -166,7 +161,7 @@ class MultiHostFioRandRead(FunTestCase):
                 and (not fun_test.shared_variables["blt"]["warmup_done"]):
 
             self.topology = fun_test.shared_variables["topology"]
-            self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+            self.sc_template = fun_test.shared_variables["storage_controller_template"]
 
             fs_obj_list = []
             for dut_index in self.topology.get_available_duts().keys():
@@ -196,14 +191,14 @@ class MultiHostFioRandRead(FunTestCase):
             for i in range(self.blt_count):
                 name = "blt_vol" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
-                                                                   vol_type=self.storage_controller_template.vol_type,
+                                                                   vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
                                                                    compression_effort=False,
                                                                    encrypt=False, data_protection={})
 
-                vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                               body_volume_intent_create=
-                                                                               body_volume_intent_create)
+                vol_uuid_list = self.sc_template.create_volume(fs_obj=fs_obj_list,
+                                                               body_volume_intent_create=
+                                                               body_volume_intent_create)
                 fun_test.test_assert(expression=vol_uuid_list,
                                      message="Created Volume {} Successful".format(vol_uuid_list[0]))
                 self.create_volume_list.append(vol_uuid_list[0])
@@ -213,11 +208,12 @@ class MultiHostFioRandRead(FunTestCase):
                                           message="Created {} number of volumes".format(self.blt_count))
 
             # Attach volumes to hosts and do nvme connect
-            self.attach_vol_result = self.storage_controller_template.attach_m_vol_n_host(fs_obj=fs_obj,
-                                                                                     volume_uuid_list=self.create_volume_list,
-                                                                                     host_obj_list=self.hosts,
-                                                                                     volume_is_shared=False,
-                                                                                     raw_api_call=True)
+            # TODO: Check if nvme connect needs to be only once on host
+            self.attach_vol_result = self.sc_template.attach_m_vol_n_host(fs_obj=fs_obj,
+                                                                          volume_uuid_list=self.create_volume_list,
+                                                                          host_obj_list=self.hosts,
+                                                                          volume_is_shared=False,
+                                                                          raw_api_call=True)
             fun_test.test_assert(expression=self.attach_vol_result, message="Attached volumes to hosts")
             fun_test.shared_variables["volumes_list"] = self.create_volume_list
             fun_test.shared_variables["attach_volumes_list"] = self.attach_vol_result
@@ -235,7 +231,7 @@ class MultiHostFioRandRead(FunTestCase):
             # Check number of volumes and devices found from hosts
             for host in self.hosts:
                 host.nvme_block_device_list = []
-                nvme_devices = self.storage_controller_template.get_host_nvme_device(host_obj=host)
+                nvme_devices = self.sc_template.get_host_nvme_device(host_obj=host)
 
                 if nvme_devices:
                     if isinstance(nvme_devices, list):
@@ -474,13 +470,14 @@ class MultiHostFioRandRead(FunTestCase):
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
             for i in range(1, len(self.hosts)):
-                fun_test.test_assert(fio_output[combo][mode][i], "Fio threaded test")
+                fun_test.simple_assert(fio_output[combo][mode][i], "Fio threaded test")
                 # Boosting the fio output with the testbed performance multiplier
                 multiplier = 1
                 for op, stats in self.expected_fio_result[combo][mode].items():
                     for field, value in stats.items():
                         if field == "latency":
-                            fio_output[combo][mode][i][op][field] = int(round(value / multiplier))
+                            fio_output[combo][mode][i][op][field] = \
+                                int(round(fio_output[combo][mode][i][op][field] / multiplier))
                         final_fio_output[combo][mode][op][field] += fio_output[combo][mode][i][op][field]
                 fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval))
 
