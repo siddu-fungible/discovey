@@ -930,13 +930,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
-                try:
-                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
-                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
-                        rotated_log_filename = rotated_log_file["filename"]
-                        self.command('rm {}'.format(rotated_log_filename))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
+            try:
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    self.command('rm {}'.format(rotated_log_filename))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
