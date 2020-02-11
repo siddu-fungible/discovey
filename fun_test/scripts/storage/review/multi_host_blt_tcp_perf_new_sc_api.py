@@ -5,7 +5,6 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 from lib.system import utils
-from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get_data_collection_time
 from lib.templates.storage.storage_fs_template import *
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
@@ -228,7 +227,11 @@ class MultiHostFioRandRead(FunTestCase):
             numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
             if self.override_numa_node["override"]:
                 numa_node_to_use = self.override_numa_node["override_node"]
-            self.hosts = get_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
+            for host in self.hosts:
+                if host.name.startswith("cab0"):
+                    host.host_numa_cpus = ",".join(host.spec["cpus"]["numa_node_ranges"])
+            else:
+                host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
             # Check number of volumes and devices found from hosts
             for host in self.hosts:
