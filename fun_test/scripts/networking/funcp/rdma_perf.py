@@ -436,16 +436,34 @@ class NicEmulation(FunTestCase):
             fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 2,
                                    message="Not enough x16 servers for 100G test")
 
+        build_rdma_threadid = {}
+        thread_count = 0
         for x in range(0, min_host):
-            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+            fun_test.log("Sarting build_rdma_repo on F1_0 for host: {}".format(f10_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f10_hosts[x]["roce_handle"].build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
         for x in range(0, min_host):
-            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+            fun_test.log("Sarting build_rdma_repo on F1_1 for host: {}".format(f11_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f11_hosts[x]["roce_handle"].build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
+        for thread_id in range(thread_count):
+            fun_test.join_thread(build_rdma_threadid[thread_id])
+            fun_test.log("Joined thread: {}".format(build_rdma_threadid[thread_id]))
+
         fun_test.log("SETUP Done")
 
     def cleanup(self):
@@ -497,7 +515,8 @@ class BwTest(FunTestCase):
             fun_test.log("Running {} test".format(link_capacity))
             hosts = 2
         for index in range(total_link_bw):
-            f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
+            command_result = f10_hosts[index]["handle"].ping(dst=f11_hosts[index]["ipaddr"])
+            fun_test.simple_assert(command_result, "HU -> HU ping")
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
             rdma_setup = f11_hosts[index]["roce_handle"].rdma_setup()
@@ -742,7 +761,8 @@ class LatencyTest(FunTestCase):
             lat_iterations = 10000
             hosts = 2
         for index in range(total_link_bw):
-            f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
+            command_result = f10_hosts[index]["handle"].ping(dst=f11_hosts[index]["ipaddr"])
+            fun_test.simple_assert(command_result, "HU -> HU ping")
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
             rdma_setup = f11_hosts[index]["roce_handle"].rdma_setup()

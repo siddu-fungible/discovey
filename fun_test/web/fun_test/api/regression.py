@@ -21,6 +21,7 @@ from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
 from web.fun_test.models_helper import get_ts_test_case_context_info_collection_name
 from web.fun_test.models_helper import get_ts_script_run_time_collection_name
+from web.fun_test.models import LastGoodBuild
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
@@ -695,7 +696,7 @@ def script_run_time(request, suite_execution_id, script_id):
 
 @api_safe_json_response
 def release_trains(request):
-    releases = ["master", "1.0a_aa", "1.0a_ab"]
+    releases = ["master", "1.0a_aa", "1.0a_ab", "1.0b_bm"]
     result = None
     if request.method == "GET":
         result = releases
@@ -845,6 +846,15 @@ def asset_health_states(request):
     result = None
     if request.method == "GET":
         result = AssetHealthStates().get_maps()
+    return result
+
+@csrf_exempt
+@api_safe_json_response
+def last_good_build(request, release_train):
+    result = None
+    if request.method == "PUT":
+        request_json = json.loads(request.body)
+        last_good_build_object = LastGoodBuild.set(**request_json)
     return result
 
 

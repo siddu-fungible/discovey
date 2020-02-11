@@ -254,6 +254,7 @@ api_v1_urls = [
     url(r'^regression/asset_health_states$', regression.asset_health_states),
     url(r'^login$', login),
     url(r'^logout$', logout),
+    url(r'^last_good_build/(.*)$', regression.last_good_build),
     url(r'^user_profiles$', user_profiles)
 ]
 
