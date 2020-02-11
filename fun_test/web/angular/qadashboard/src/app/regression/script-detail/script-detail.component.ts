@@ -3,7 +3,7 @@ import {RegressionService} from "../regression.service";
 import {forkJoin, Observable, of, throwError} from "rxjs";
 import {catchError, last, switchMap, windowWhen} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -11,7 +11,6 @@ import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.s
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
 import {TreeNode} from "../../ui-elements/tree/definitions";
-import {ViewChild, ElementRef} from '@angular/core';
 
 class DataModel {
   letter: string;
@@ -130,15 +129,13 @@ export class ScriptDetailComponent implements OnInit {
   sidePanelOpen: boolean = false;
   tree: TreeNode = null;
   selectedStatsSet: any = new Set();
-  queryParams: any[] = [];
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
               private commonService: CommonService,
               private modalService: NgbModal,
-              private service: ScriptDetailService,
-              private router: Router
+              private service: ScriptDetailService
   ) {
     this.selectedStatistics = [];
     let sc = new StatisticsCategory();
@@ -684,23 +681,14 @@ export class ScriptDetailComponent implements OnInit {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
 
-  navigateByQuery(param) {
-    this.queryParams = [];
-    if (param) {
-      this.queryParams.push([param.name, param.value]);
-    }
-    let queryParamString = this.commonService.queryParamsToString(this.queryParams);
-    let url = `${this.baseUrl}${queryParamString}`;
-    this.router.navigateByUrl(url);
-  }
 
   routeByOption(value, queryParam) {
     let param = {"name": queryParam, "value": 1};
     if (value) {
       value = !value;
-      this.navigateByQuery(null);
+      this.commonService.navigateByQuery(null, this.baseUrl);
     } else {
-      this.navigateByQuery(param);
+      this.commonService.navigateByQuery(param, this.baseUrl);
     }
   }
 
