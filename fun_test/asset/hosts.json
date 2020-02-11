@@ -378,9 +378,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-02": {
@@ -402,9 +401,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-03": {
@@ -426,9 +424,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-04": {
@@ -450,9 +447,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-05": {
@@ -474,9 +470,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-06": {
@@ -498,9 +493,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-07": {
@@ -522,9 +516,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-08": {
@@ -546,9 +539,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-09": {
@@ -570,9 +562,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-10": {
@@ -594,9 +585,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-11": {
@@ -618,9 +608,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-12": {
@@ -642,9 +631,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-13": {
@@ -666,9 +654,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "mktg-server-14": {
@@ -690,9 +677,8 @@
       "username": "admin",
       "password": "admin"
     },
-    "numa_cpus": {
-      "node0": "0-19,40-59",
-      "node1": "20-39,60-79"
+    "cpus": {
+      "numa_node_ranges": ["0-19,40-59","20-39,60-79"]
     }
   },
   "cab02-qa-01": {
@@ -824,9 +810,8 @@
         }
       }
     },
-    "numa_cpus": {
-      "node0": "0-7,16-23",
-      "node1": "8-15,24-31"
+    "cpus": {
+      "numa_node_ranges": ["0-7,16-23","8-15,24-31"]
     }
   },
   "cab02-qa-10": {
@@ -848,9 +833,8 @@
         }
       }
     },
-    "numa_cpus": {
-      "node0": "0-7,16-23",
-      "node1": "8-15,24-31"
+    "cpus": {
+      "numa_node_ranges": ["0-7,16-23", "8-15,24-31"]
     }
   },
   "cab02-qa-11": {
@@ -872,9 +856,8 @@
         }
       }
     },
-    "numa_cpus": {
-      "node0": "0-7,16-23",
-      "node1": "8-15,24-31"
+    "cpus": {
+      "numa_node_ranges": ["0-7,16-23","8-15,24-31"]
     }
   },
   "cab02-qa-12": {
@@ -896,9 +879,8 @@
         }
       }
     },
-    "numa_cpus": {
-      "node0": "0-7,16-23",
-      "node1": "8-15,24-31"
+    "cpus": {
+      "numa_node_ranges": ["0-7,16-23","8-15,24-31"]
     }
   },
   "cab02-qa-13": {
@@ -920,9 +902,8 @@
         }
       }
     },
-    "numa_cpus": {
-      "node0": "0-7,16-23",
-      "node1": "8-15,24-31"
+    "cpus": {
+      "numa_node_ranges": ["0-7,16-23","8-15,24-31"]
     }
   },
   "cab04-qa-01": {

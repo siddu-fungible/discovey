@@ -109,6 +109,7 @@ import { FunStatsTableComponent } from './statistics/fun-stats-table/fun-stats-t
 import { ReleaseSummaryWidgetComponent } from './regression/release-summary-widget/release-summary-widget.component';
 import { LoginComponent } from './login/login.component';
 import { TreeComponent } from './ui-elements/tree/tree.component';
+import { LastGoodBuildComponent } from './regression/last-good-build/last-good-build.component';
 
 
 @NgModule({
@@ -199,7 +200,8 @@ import { TreeComponent } from './ui-elements/tree/tree.component';
     FunStatsTableComponent,
     ReleaseSummaryWidgetComponent,
     LoginComponent,
-    TreeComponent
+    TreeComponent,
+    LastGoodBuildComponent
   ],
   imports: [
     BsDropdownModule,

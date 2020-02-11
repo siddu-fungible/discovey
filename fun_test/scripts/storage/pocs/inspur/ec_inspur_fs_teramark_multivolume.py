@@ -699,6 +699,10 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.fio_cmd_args["multiple_jobs"] = re.sub(r"--bs=\w+ ", "--bs={} ".format(self.bs),
                                                         self.fio_cmd_args["multiple_jobs"])
             fun_test.log("FIO param --bs is overridden by user to: --bs={}".format(self.bs))
+        if "fio_runtime" in job_inputs:
+            self.fio_runtime = job_inputs["fio_runtime"]
+            self.fio_run_timeout = self.fio_runtime + 60
+            self.full_run_iodepth = []
 
         # Going to run the FIO test for the block size and iodepth combo listed in fio_iodepth
         fio_result = {}

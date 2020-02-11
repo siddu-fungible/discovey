@@ -459,7 +459,8 @@
     },
     "host_info": [
       "mktg-server-02",
-      "mktg-server-03"
+      "mktg-server-03",
+      "mktg-server-07"
     ]
   },
   "fs-125": {

@@ -385,7 +385,7 @@ class NicEmulation(FunTestCase):
         for x in range(0, 1):
             fun_test.log("Sarting build_rdma_repo on F1_0 for host: {}".format(f10_hosts[x]["name"]))
             build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
-                func=f10_hosts[x]["roce_handle"].build_rdma_repo,
+                func=f10_host_roce.build_rdma_repo,
                 time_in_seconds=5,
                 rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                 rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
@@ -396,7 +396,7 @@ class NicEmulation(FunTestCase):
         for x in range(0, 1):
             fun_test.log("Sarting build_rdma_repo on F1_1 for host: {}".format(f11_hosts[x]["name"]))
             build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
-                func=f11_hosts[x]["roce_handle"].build_rdma_repo,
+                func=f11_host_roce.build_rdma_repo,
                 time_in_seconds=5,
                 rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                 rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],

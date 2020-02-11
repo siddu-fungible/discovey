@@ -673,6 +673,23 @@ def fetch_nvme_device(end_host, nsid, size=None):
     return result
 
 
+def get_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+    return hosts
+
+
+def get_device_numa_node(end_host, ethernet_adapter):
+    numa_node = None
+    lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
+    fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+    adapter_id = lspci_output[0]['id']
+    fun_test.simple_assert(adapter_id, "Retrieve Ethernet Adapter Bus ID")
+    lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
+    numa_node = lspci_verbose_output[0]['numa_node']
+    return numa_node
+
+
 def fetch_numa_cpus(end_host, ethernet_adapter):
     numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
@@ -2573,6 +2590,7 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
     return min_capacity
 
 
+
 def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
     result = {"status": False, "drive_uuids": []}
     # Fetching drive information
@@ -2593,7 +2611,6 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["status"] = True
 
     return result
-
 
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
@@ -2644,3 +2661,34 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
             fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result
+
+def get_plex_device_id(ec_info, storage_controller):
+    if "device_id" not in ec_info:
+        fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
+                     "So going to pull that info")
+        ec_info["drive_uuid"] = {}
+        ec_info["device_id"] = {}
+        for num in xrange(ec_info["num_volumes"]):
+            ec_info["drive_uuid"][num] = []
+            ec_info["device_id"][num] = []
+            for blt_uuid in ec_info["uuids"][num]["blt"]:
+                blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
+                                                         "stats")
+                blt_stats = storage_controller.peek(blt_props_tree)
+                fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
+                if "drive_uuid" in blt_stats["data"]:
+                    ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
+                else:
+                    fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
+                                           format(blt_uuid))
+                drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                           "drives", blt_stats["data"]["drive_uuid"])
+                drive_stats = storage_controller.peek(drive_props_tree)
+                fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
+                                       format(blt_stats["data"]["drive_uuid"]))
+                if "drive_id" in drive_stats["data"]:
+                    ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
+                else:
+                    fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
+                                           format(blt_stats["data"]["drive_uuid"]))
+    return ec_info
