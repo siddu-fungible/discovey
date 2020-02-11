@@ -528,11 +528,13 @@ def _make_gateway(index=0):
     a,b,c,d = socket.gethostbyname(ip).split('.')
     return '.'.join([a, b, c, '1'])
 
-## flash image ##
+## flash image getting too complicated, keeping it hidden ##
 @roles('bmc')
-@task
-def flashF(index=0, flags=False, type=None, image=None, version=None, old=None):
-    """ flash image of chip[index] over type tftp with provided arguments """
+#@task
+def flashF(index=0, flags=False, type=None, image=None, rootpath='funsdk-release', version=None, old=None):
+    """ flash image of chip[index] over type tftp with provided arguments
+    If working on private drop confirm if the path is accessibale by HTTP and TFTP """
+
     global child
     child = connectF(index, True)
     child.sendline ('echo connected to chip={} ...'.format(index))
@@ -556,37 +558,40 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=None):
     print bootargs
 
     command = 'tftpboot'
+    if version:
+        rooturl='{}/{}'.format(rootpath, version)
+
     if image and version:
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb', 'husc', 'kbag' ]:
-            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb', 'husc', 'kbag' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'husb', 'husc', 'kbag' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'husb', 'husc', 'kbag' ] ..." % type)
         elif type == 'eepr':
             if env.FS1600REV == 2:
-                fimage='funsdk-release/{}/eeprom_fs1600r2_{}_packed.bin'.format(version, index)
+                fimage='{}/eeprom_fs1600r2_{}_packed.bin'.format(rooturl, index)
             else:
-                fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
+                fimage='{}/eeprom_fs1600_{}_packed.bin'.format(rooturl, index)
         elif type == 'host':
-            fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
+            fimage='{}/host_firmware_packed.bin'.format(rooturl)
         elif type == 'emmc':
-            fimage='funsdk-release/{}/emmc_image.bin'.format(version)
+            fimage='{}/emmc_image.bin'.format(rooturl)
         elif type == 'sbpf':
-            fimage='funsdk-release/{}/esecure_firmware_all.bin'.format(version)
+            fimage='{}/esecure_firmware_all.bin'.format(rooturl)
         elif type == 'pufr':
-            fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
+            fimage='{}/esecure_puf_rom_packed.bin'.format(rooturl)
         elif type == 'frmw':
-            fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
+            fimage='{}/esecure_firmware_packed.bin'.format(rooturl)
         elif type == 'husd':
-            fimage='funsdk-release/{}/hu_sds.bin'.format(version)
+            fimage='{}/hu_sds.bin'.format(rooturl)
         elif type == 'husm':
-            fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
-        elif type == 'hbsb':
-            fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
+            fimage='{}/hu_sbm.bin'.format(rooturl)
+        elif type == 'husb':
+            fimage='{}/hbm_sbus.bin'.format(rooturl)
         elif type == 'hbsc':
-            fimage='funsdk-release/{}/hu_sbm_serdes.bin'.format(version)
+            fimage='{}/hu_sbm_serdes.bin'.format(rooturl)
         elif type == 'kbag':
-            fimage='funsdk-release/{}/key_bag.bin'.format(version)
+            fimage='{}/key_bag.bin'.format(rooturl)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -619,9 +624,9 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=None):
     child.sendline('{} 0xa800000080000000 {}:{};'.format(command, env.TFTPSERVER, fimage))
     child.expect ('\nf1 # ')
     if old:
-        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
+        child.sendline('{} 0xffffffff99000000 {}:{}/funos-f1.stripped;'.format(command, env.TFTPSERVER, rooturl))
     else:
-        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos.signed.bin;authfw 0xffffffff99000000'.format(command, env.TFTPSERVER))
+        child.sendline('{} 0xffffffff99000000 {}:{}/funos.signed.bin;authfw 0xffffffff99000000'.format(command, env.TFTPSERVER, rooturl))
     child.expect ('\nf1 # ')
     child.sendline ('echo booting to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
