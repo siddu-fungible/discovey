@@ -1,0 +1,94 @@
+{
+  "GlobalSetup": {
+    "bootargs": [
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "update_workspace": false,
+    "update_deploy_script": false,
+    "funcp_mode": [
+      "ep",
+      "storage"
+    ],
+    "num_f1_per_fs": 1,
+    "num_f1s": 1,
+    "num_hosts": 1,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": "default",
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300,
+    "nqn": "nqn.2017-05.com.fungible:nss-uuid1",
+    "ns_id":1,
+    "transport_type": "tcp",
+    "transport_port": 4420
+  },
+  "CloneCreation": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn.2017-05.com.fungible:nss-uuid1",
+    "ns_id":1,
+    "transport_type": "tcp",
+    "transport_port": 4420,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_write_cmd_args": {"ioengine": "libaio", "size": "100%", "rw": "randwrite", "direct": 1, "prio": 0, "iodepth": 1, "bs":"4k", "numjobs": 1, "verify": "md5", "do_verify": 0, "cpus_allowed_policy": "split", "refill_buffers": "NO_VALUE", "timeout": 300}
+  },
+  "CloneRead": {
+    "drive_margin": 0,
+    "num_ssd": 1,
+    "blt_count": 1,
+    "controllers": 1,
+    "syslog": "default",
+    "nqn": "nqn.2017-05.com.fungible:nss-uuid1",
+    "ns_id":1,
+    "transport_type": "tcp",
+    "transport_port": 4420,
+    "nvme_io_queues": 16,
+    "blt_details": {
+      "capacity": 5368709120,
+      "block_size": 4096
+    },
+    "command_timeout": 5,
+    "iter_interval": 2,
+    "fio_loop": 1,
+    "detach_vol": false,
+    "fio_read_cmd_args": {"ioengine": "libaio", "size": "100%", "rw": "randread", "direct": 1, "prio": 0, "iodepth": 1, "bs":"4k", "numjobs": 1, "do_verify": 1, "verify": "md5", "cpus_allowed_policy": "split","timeout": 300}
+    }
+
+
+}
+
