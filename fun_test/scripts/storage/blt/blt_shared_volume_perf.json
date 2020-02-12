@@ -39,9 +39,9 @@
   },
   "SharedVolumePerfTest":{
     "num_f1": 1,
-    "blt_count": 2,
+    "blt_count": 8,
     "num_hosts": 2,
-    "capacity": 1099511627776,
+    "capacity": 34359738368,
     "compression_effort": "False",
     "encrypt": "False",
     "name": "raw_volume_",
@@ -55,7 +55,7 @@
     },
     "fio_modes": ["randread"],
     "fio_bs": "4k",
-    "fio_iodepth": [256],
+    "fio_iodepth": [128,256,512],
     "fio_cmd_args": {
       "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 3600

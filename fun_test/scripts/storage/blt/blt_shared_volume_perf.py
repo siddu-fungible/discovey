@@ -176,8 +176,8 @@ class SharedVolumePerfTest(FunTestCase):
             for j, result in enumerate(attach_vol_result[i]):
                 host = self.hosts[j]
                 if self.raw_api_call:
-                    fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
-                                         format(i, host.name))
+                    # fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
+                    #                     format(i, host.name))
                     subsys_nqn = result["data"]["subsys_nqn"]
                     host_nqn = result["data"]["host_nqn"]
                     dataplane_ip = result["data"]["ip"]
@@ -307,7 +307,7 @@ class SharedVolumePerfTest(FunTestCase):
                     aggr_fio_output[op] = {}
                 aggr_fio_output[op] = Counter(aggr_fio_output[op]) + Counter(fio_output[i][op])
 
-        fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
+        # fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
         for op, stats in aggr_fio_output.items():
             for field, value in stats.items():
