@@ -118,11 +118,17 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
   }
 
   catalogNameChanged(name) {
-    this.releaseCatalog.name = name;
+    if (name !== this.releaseCatalog.name) {
+      this.releaseCatalog.name = name;
+      this.changeDetected = true;
+    }
   }
 
   catalogDescriptionChanged(description) {
-    this.releaseCatalog.description = description;
+    if (description !== this.releaseCatalog.description) {
+      this.releaseCatalog.description = description;
+      this.changeDetected = true;
+    }
   }
 
   submitClick() {
@@ -144,6 +150,13 @@ export class ReleaseCatalogEditorComponent implements OnInit, OnChanges {
     }
 
   }
+
+  /*
+  updateReleaseCatalog(silent: boolean = false) {
+    this.regressionService.updateReleaseCatalog(this.catalogId, this.releaseCatalog).subscribe(response => {
+      this.loggerService.
+    })
+  }*/
 
   back() {
     this.location.back();

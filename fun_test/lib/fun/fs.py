@@ -320,7 +320,7 @@ class Bmc(Linux):
             self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
 
         self.command("ps -ef | grep micro")
-        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        self.command("{} start".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -335,7 +335,7 @@ class Bmc(Linux):
         except Exception as ex:
             fun_test.critical(str(ex))
         self.command("ps -ef | grep micro")
-        self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
+        # self.command("{}".format(self.FUNOS_LOGS_SCRIPT))
         self.command("cat /tmp/f1_0_logpid")
         self.command("cat /tmp/f1_1_logpid")
 
@@ -368,8 +368,8 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
-        if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
-            s += " --disable-syslog-replay"
+        # if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
+        #    s += " --disable-syslog-replay"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -588,14 +588,17 @@ class Bmc(Linux):
         # self.u_boot_command(command="setenv loadaddr {}".format(self.ELF_ADDRESS), timeout=80, f1_index=index,
         #                    expected=self.U_BOOT_F1_PROMPT)
 
-        if not rich_input_boot_args:
+        is_custom_app = False
+        if "load_mods" not in boot_args and "hw_hsu_test" not in boot_args:
+            is_custom_app = True
+        if not rich_input_boot_args and not is_custom_app:
             if "load_mods" in boot_args and "hw_hsu_test" not in boot_args:
                 output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="FUNOS_INITIALIZED")
             else:
-                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="\"this space intentionally left blank.\"")
+                output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index)
 
         else:
-            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected="sending a HOST_BOOTED message")
+            output = self.u_boot_command(command="bootelf -p {}".format(load_address), timeout=80, f1_index=index, expected=None)
         """
         m = re.search(r'FunSDK Version=(\S+), ', output) # Branch=(\S+)', output)
         if m:
@@ -605,14 +608,14 @@ class Bmc(Linux):
             fun_test.set_version(version=version.replace("bld_", ""))
         """
 
-        if not rich_input_boot_args:
+        if not rich_input_boot_args and not is_custom_app:
             sections = ['Welcome to FunOS', 'NETWORK_START', 'DPC_SERVER_STARTED', 'PCI_STARTED']
             for section in sections:
                 fun_test.test_assert(expression=section in output,
                                      message="{} seen".format(section),
                                      context=self.context)
         else:
-            fun_test.sleep("Waiting for custom apps to finish", seconds=120)
+            fun_test.sleep("Waiting for custom apps to finish", seconds=10)
         self.set_boot_phase(index=index, phase=BootPhases.U_BOOT_COMPLETE)
 
         result = True
@@ -707,11 +710,18 @@ class Bmc(Linux):
         fun_test.simple_assert(expression=len(serial_proxy_ids) == 2,
                                message="2 serial proxies are alive",
                                context=self.context)
+        fun_test.sleep(message="Wait for serial proxies", seconds=10)
+        for f1_index in range(self.NUM_F1S):
+            if f1_index == self.disable_f1_index:
+                continue
+            self.nc[f1_index] = Netcat(ip=self.host_ip, port=self.SERIAL_PROXY_PORTS[f1_index])
+
 
     def initialize(self, reset=False):
         self.command("mkdir -p {}".format("{}".format(self.LOG_DIRECTORY)))
         self.command("cd {}".format(self.SCRIPT_DIRECTORY))
         output = self.command('gpiotool 8 --get-data | grep High >/dev/null 2>&1 && echo FS1600_REV2 || echo FS1600_REV1')
+        self.command("cat /tmp/F1_STATUS")
         return True
 
     def reset_come(self):
@@ -920,13 +930,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
-                try:
-                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
-                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
-                        rotated_log_filename = rotated_log_file["filename"]
-                        self.command('rm {}'.format(rotated_log_filename))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
+            try:
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    self.command('rm {}'.format(rotated_log_filename))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -1004,7 +1014,7 @@ class BootupWorker(Thread):
                     if f1_index == self.fs.disable_f1_index:
                         continue
 
-                    bmc.remove_uart_logs(f1_index=f1_index)
+                    # bmc.remove_uart_logs(f1_index=f1_index)
                 fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
                                      message="Bundle image installed",
                                      context=self.context)
@@ -1224,7 +1234,7 @@ class ComE(Linux):
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
     HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
-    HBM_COLLECT_MAX_TIMER = 40 * 60
+    HBM_COLLECT_MAX_TIMER = 60 * 60
 
     BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
@@ -1293,6 +1303,9 @@ class ComE(Linux):
         while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
+        if not expected_containers_running:
+            self.command("netstat -anpt")
+            self.command("ps -ef")
         return expected_containers_running
 
     def is_expected_containers_running(self):
@@ -1523,8 +1536,8 @@ class ComE(Linux):
     def diags(self):
         fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
         clone = self.clone()
-        clone.command("dmesg")
-        clone.command("cat /var/log/syslog")
+        clone.command("dmesg", timeout=120)
+        clone.command("cat /var/log/syslog", timeout=60)
 
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
@@ -1739,6 +1752,9 @@ class ComE(Linux):
 
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
+        if not devices:
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
+            self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
         f1_index = 0
@@ -1889,6 +1905,8 @@ class ComE(Linux):
                                                      timeout=240)
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
+                fun_test.report_message("SC log available at {}".format(uploaded_path))
+
             self.command("rm {}".format(sc_logs_path))
 
         # Fetch redis logs if they exist
@@ -1912,7 +1930,7 @@ class ComE(Linux):
 
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
-                fun_test.log("HBM dumping going on")
+                fun_test.add_checkpoint("HBM dumping going on")
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
                 while not hbm_dump_timer.is_expired(print_remaining_time=True):
                     fun_test.sleep("HBM Dump", seconds=60)
@@ -1937,7 +1955,8 @@ class ComE(Linux):
                                 fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
 
                         break
-
+                if hbm_dump_timer.is_expired():
+                    fun_test.log("HBM dump timer expired. Giving up ...")
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2274,7 +2293,14 @@ class Fs(object, ToDictMixin):
 
     def cleanup(self):
         self.cleanup_attempted = True
-        self.get_come().cleanup()
+        come = self.get_come()
+        try:
+            come.command("date")
+            if come.is_host_up():
+                self.get_come().cleanup()
+        except Exception as ex:
+            pass
+            
         self.get_bmc().cleanup()
 
         if self.errors_detected:
@@ -2284,9 +2310,10 @@ class Fs(object, ToDictMixin):
                         continue
                     if f1.hbm_dump_complete:
                         continue
-                    fun_test.log("Errors were detected. Starting HBM dump")
+                    fun_test.log("Errors were detected")
                     f1.hbm_dump_complete = True
                     if not self.bundle_compatible:
+                        fun_test.log("Starting HBM dump")
                         self.get_come().setup_hbm_tools()
                         self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:

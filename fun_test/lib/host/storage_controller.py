@@ -5,8 +5,8 @@ from lib.system import utils
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
     from swagger_client.api.topology_api import TopologyApi
-    from swagger_client.api.controller_api import ControllerApi
     from swagger_client.api.network_api import NetworkApi
+    from swagger_client.api.apigateway_api import ApigatewayApi
     from swagger_client.api_client import ApiClient
     from swagger_client.configuration import Configuration
 
@@ -27,10 +27,9 @@ class StorageController(NetworkController, DpcshClient):
             configuration.password = api_password
             configuration.verify_ssl = False
             api_client = ApiClient(configuration)
-
+            self.apigateway_api = ApigatewayApi(api_client)
             self.storage_api = StorageApi(api_client)
             self.topology_api = TopologyApi(api_client)
-            self.controller_api = ControllerApi(api_client)
             self.network_api = NetworkApi(api_client)
 
     def health(self):
@@ -38,7 +37,7 @@ class StorageController(NetworkController, DpcshClient):
         timer = FunTimer(max_time=120)
         while not timer.is_expired():
             try:
-                if self.controller_api.get_sc_health().status:
+                if self.apigateway_api.get_fc_health().status:
                     fun_test.log("Api Server is Healthy")
                     api_server_health = True
                     break
@@ -136,7 +135,8 @@ class StorageController(NetworkController, DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, command_duration=TIMEOUT):
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, host_nqn, subsys_nqn,
+                          command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",
@@ -146,7 +146,9 @@ class StorageController(NetworkController, DpcshClient):
                                   "name": name,
                                   "remote_ip": remote_ip,
                                   "port": port,
-                                  "remote_nsid": remote_nsid}}
+                                  "remote_nsid": remote_nsid,
+                                  "host_nqn": host_nqn,
+                                  "subsys_nqn": subsys_nqn}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
     def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, command_duration=TIMEOUT):
@@ -583,6 +585,6 @@ if __name__ == "__main__":
     sc = StorageController(target_ip="fs53-come", target_port=42220)
     # output = sc.command("peek stats")
     # sc.print_result(output)
-    result1 = sc.controller_api.get_sc_health()
+    result1 = sc.apigateway_api.get_fc_health()
     result2 = sc.storage_api.get_all_pools()
     result3 = sc.topology_api.get_hierarchical_topology()

@@ -407,6 +407,26 @@ class LastGoodBuild(FunModel):
     release_catalog_execution_id = models.IntegerField()
     updated_date = models.DateTimeField(default=datetime.now)
 
+    @staticmethod
+    def set(release_train, build_number, release_catalog_execution_id):
+        last_good_build = LastGoodBuild(release_train=release_train,
+                                        build_number=build_number,
+                                        release_catalog_execution_id=release_catalog_execution_id,
+                                        updated_date=get_current_time())
+        last_good_build.save()
+        return last_good_build
+
+    @staticmethod
+    def get(release_train):
+        result = None
+        try:
+            last_good_build = LastGoodBuild.objects.filter(release_train=release_train).order_by('-updated_date').first()
+            if last_good_build:
+                result = last_good_build
+        except ObjectDoesNotExist:
+            logger.error("Release train: {} last good build does not exist".format(release_train))
+        return result
+
 class ReleaseCatalogExecution(FunModel):
     release_catalog_id = models.IntegerField()
     created_date = models.DateTimeField(default=datetime.now)

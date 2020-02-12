@@ -263,10 +263,13 @@ class Rocetools:
                                          "RDMA_CM_EVENT_ESTABLISHED|destroy"
                     match_event_list = re.findall(r'{}'.format(list_client_events), content, re.IGNORECASE)
 
-                    for event in client_events:
-                        if event not in match_event_list:
-                            fun_test.critical("Event {} not found on client".format(event))
-                            return False
+                    if match_event_list:
+                        for event in client_events:
+                            if event not in match_event_list:
+                                fun_test.critical("Event {} not found on client".format(event))
+                                return False
+                    else:
+                        return False
                     return True
                 else:
                     server_events = ["RDMA_CM_EVENT_CONNECT_REQUEST", "RDMA_CM_EVENT_ESTABLISHED",
@@ -275,10 +278,13 @@ class Rocetools:
                                          "RDMA_CM_EVENT_DISCONNECTED|destroy"
                     match_event_list = re.findall(r'{}'.format(list_server_events), content, re.IGNORECASE)
 
-                    for event in server_events:
-                        if event not in match_event_list:
-                            fun_test.critical("Event {} not found on server".format(event))
-                            return False
+                    if match_event_list:
+                        for event in server_events:
+                            if event not in match_event_list:
+                                fun_test.critical("Event {} not found on server".format(event))
+                                return False
+                    else:
+                        return False
                     return True
             else:
                 return True
@@ -380,7 +386,9 @@ class Rocetools:
         self.host.disconnect()
 
     def build_rdma_repo(self, rdmacore_branch=None, rdmacore_commit=None, perftest_branch=None, perftest_commit=None,
-                        perf_build=True, ws="/mnt/ws"):
+                        perf_build=True, ws="/mnt/ws", threaded=False):
+        if threaded:
+            self.host = self.host.clone()
         self.rdmacore_branch = rdmacore_branch
         self.rdmacore_commit = rdmacore_commit
         self.perftest_branch = perftest_branch
@@ -448,3 +456,8 @@ class Rocetools:
             fun_test.log("Can reach {}".format(ip))
         else:
             fun_test.test_assert(False, "Cannot ping host {}".format(ip))
+
+    def dump_debug(self):
+        # Print dmesg
+        self.host.command("dmesg")
+        self.host.sudo_command("cat /sys/kernel/debug/funrdma/*/qps")

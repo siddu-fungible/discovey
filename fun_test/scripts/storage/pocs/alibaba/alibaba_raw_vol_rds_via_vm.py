@@ -264,10 +264,13 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                 print("Creating RDS Controller on DPU 1")
                 print("==================================\n")
                 command_result = storage_controller_dpu_1.create_controller(ctrlr_uuid=rds_controller_dpu_1,
+                                                                            ctrlr_type="BLOCK",
                                                                             transport=self.remote_transport,
                                                                             remote_ip=servers_with_vms[server]
                                                                             ["local_controller_ip"],
-                                                                            nqn="nqn" + str(i),
+                                                                            subsys_nqn="nqn" + str(i),
+                                                                            host_nqn=servers_with_vms[server]
+                                                                            ["local_controller_ip"],
                                                                             port=servers_with_vms[server]
                                                                             ["remote_controller_port"],
                                                                             command_duration=self.command_timeout)
@@ -319,6 +322,8 @@ class RawVolumeRemotePerfTestcase(FunTestCase):
                     remote_ip=servers_with_vms[server]["remote_controller_ip"],
                     port=servers_with_vms[server]["remote_controller_port"],
                     remote_nsid=int(i),
+                    subsys_nqn="nqn" + str(i),
+                    host_nqn=servers_with_vms[server]["local_controller_ip"],
                     command_duration=servers_with_vms[server]["vms"][vm]["storage"]["command_timeout"])
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"], "Creating RDS volume with uuid {}".
