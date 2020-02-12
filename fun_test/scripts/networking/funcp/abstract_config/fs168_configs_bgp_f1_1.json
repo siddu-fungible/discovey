@@ -1,0 +1,31 @@
+{
+    "Description": "FS168 F1-1 abstract cfg for FCP",
+    "F1Index" : 2,
+    "Interfaces" : [
+        {
+            "name" : "fpg0",
+            "mtu": 9000,
+            "address" : "14.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        },
+        {
+            "name" : "fpg4",
+            "mtu": 9000,
+            "enable" : true
+        },
+        {
+            "name" : "lo:0",
+            "address" : "4.4.4.4",
+            "prefix length" : 32,
+            "enable" : true
+        },
+        {
+            "name" : "vlan1",
+            "mtu": 9000,
+            "address" : "13.1.1.1",
+            "prefix length" : 24,
+            "enable" : true
+        }
+    ]
+}

@@ -252,6 +252,7 @@ api_v1_urls = [
     url(r'^regression/job_status_types$', regression.job_status_types),
     url(r'^regression/saved_configs/?(\d+)?$', regression.saved_configs),
     url(r'^regression/asset_health_states$', regression.asset_health_states),
+    url(r'^regression/last_good_build/(.*)$', regression.last_good_build),
     url(r'^login$', login),
     url(r'^logout$', logout),
     url(r'^user_profiles$', user_profiles)

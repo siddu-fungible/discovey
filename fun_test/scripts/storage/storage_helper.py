@@ -3,6 +3,8 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get
 import re
 from prettytable import PrettyTable
 import time
+from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit, FunPlatform
 from collections import OrderedDict
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
@@ -25,6 +27,23 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                        "fio_job_name"]
 
+blt_unit_dict = {
+            "write_iops_unit": PerfUnit.UNIT_OPS,
+            "read_iops_unit": PerfUnit.UNIT_OPS,
+            "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "write_90_latency_unit": PerfUnit.UNIT_USECS,
+            "write_95_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "read_90_latency_unit": PerfUnit.UNIT_USECS,
+            "read_95_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_99_latency_unit": PerfUnit.UNIT_USECS
+        }
+
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
 unpacked_stats = {}
@@ -41,7 +60,7 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 
-def single_fs_setup(obj):
+def single_fs_setup(obj, set_dataplane_ips=True):
     if obj.testbed_type != "suite-based":
         obj.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(obj.testbed_type)
         fun_test.log("{} Testbed Config: {}".format(obj.testbed_type, obj.testbed_config))
@@ -300,7 +319,7 @@ def single_fs_setup(obj):
                                       password=obj.api_server_password)
 
     # Polling for API Server status
-    fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
+    fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout, come_obj=obj.come_obj[0]),
                            message="Bundle Image boot: API server is up")
     fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
     # Check if bond interface status is Up and Running
@@ -329,87 +348,89 @@ def single_fs_setup(obj):
         fun_test.log("DPU nodes: {}".format(nodes))
         fun_test.test_assert(not dpu_id_ready_timer.is_expired(),
                              "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
-        for node_index, node in enumerate(nodes):
-            if node_index >= obj.num_f1_per_fs:
-                continue
-            # Extracting the DUT's bond interface details
-            ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
-            ip = ip.split('/')[0]
-            subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
-                str(node_index % 2)][str(0)]["subnet_mask"]
-            route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                str(0)]["route"][0]
-            next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-            obj.f1_ips.append(ip)
-            if not already_deployed:
-                # Configuring Dataplane IP
-                fun_test.log(
-                    "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
-                    "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-                dataplane_configuration_success = False
-                num_tries = 3
-
-                while not dataplane_configuration_success and num_tries:
-                    fun_test.log("Trials remaining {}".format(num_tries))
-                    num_tries -= 1
-                    result = obj.sc_api.configure_dataplane_ip(
-                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                        use_dhcp=False)
+        if set_dataplane_ips:
+            for node_index, node in enumerate(nodes):
+                if node_index >= obj.num_f1_per_fs:
+                    continue
+                # Extracting the DUT's bond interface details
+                ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
+                ip = ip.split('/')[0]
+                subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
+                    str(node_index % 2)][str(0)]["subnet_mask"]
+                route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                    str(0)]["route"][0]
+                next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
+                obj.f1_ips.append(ip)
+                if not already_deployed:
+                    # Configuring Dataplane IP
                     fun_test.log(
-                        "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
+                        "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
+                        "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
+                    dataplane_configuration_success = False
+                    num_tries = 3
 
-                    dataplane_configuration_success = result["status"]
-                    if not dataplane_configuration_success:
-                        fun_test.sleep("Wait for retry", seconds=10)
-                        try:
-                            fun_test.log("Just for debugging Start")
-                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                            container_handle.ping(ip[:- 1] + "1")
-                            container_handle.command("arp -n")
-                            container_handle.command("route -n")
-                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                            container_handle.command("ifconfig")
-                            fun_test.log("Just for debugging End")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-                        try:
-                            fun_test.log("Just for debugging Start:  On F1-1")
-                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
-                            container_handle.ping(ip[:- 1] + "1")
-                            container_handle.command("arp -n")
-                            container_handle.command("route -n")
-                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                            container_handle.command("ifconfig")
-                            fun_test.log("Just for debugging End")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-                    else:
-                        try:
-                            fun_test.log("Just for debugging Start: On F1-0")
-                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                            container_handle.ping(ip[:- 1] + "1")
-                            container_handle.command("arp")
-                            container_handle.command("route -n")
-                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                            container_handle.command("ifconfig")
-                            fun_test.log("Just for debugging End")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-                        try:
-                            fun_test.log("Just for debugging Start: On F1-1")
-                            container_handle = obj.funcp_obj[0].container_info["F1-1"]
-                            container_handle.ping(ip[:- 1] + "1")
-                            container_handle.command("arp")
-                            container_handle.command("route -n")
-                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                            container_handle.command("ifconfig")
-                            fun_test.log("Just for debugging End")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
+                    while not dataplane_configuration_success and num_tries:
+                        fun_test.log("Trials remaining {}".format(num_tries))
+                        num_tries -= 1
+                        result = obj.sc_api.configure_dataplane_ip(
+                            dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
+                            use_dhcp=False)
+                        fun_test.log(
+                            "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
 
-                fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
-                                     format(node, ip))
-                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index, obj=obj, dataplane_ip=ip), "Ensure DPU's are online")
+                        dataplane_configuration_success = result["status"]
+                        if not dataplane_configuration_success:
+                            fun_test.sleep("Wait for retry", seconds=10)
+                            try:
+                                fun_test.log("Just for debugging Start")
+                                container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp -n")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                            try:
+                                fun_test.log("Just for debugging Start:  On F1-1")
+                                container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp -n")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                        else:
+                            try:
+                                fun_test.log("Just for debugging Start: On F1-0")
+                                container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                            try:
+                                fun_test.log("Just for debugging Start: On F1-1")
+                                container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+
+                    fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
+                                         format(node, ip))
+                    fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index, obj=obj, dataplane_ip=ip),
+                                         "Ensure DPU's are online")
     else:
         # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
         pass
@@ -498,40 +519,75 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name):
+                 read_99_99_latency, fio_job_name, compression=False, encryption=False, compression_effort=-1,
+                 key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=log_time,
-                  volume=volume,
-                  test=test,
-                  block_size=block_size,
-                  io_depth=int(io_depth),
-                  size=size,
-                  operation=operation,
-                  num_ssd=num_ssd,
-                  num_volume=num_volumes,
-                  fio_job_name=fio_job_name,
-                  write_iops=write_iops,
-                  read_iops=read_iops,
-                  write_throughput=write_bw,
-                  read_throughput=read_bw,
-                  write_avg_latency=write_latency,
-                  read_avg_latency=read_latency,
-                  write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
+    if block_size.lower() == "4k":
+        blt = BltVolumePerformanceHelper()
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
+                      read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
+                      write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                      write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                      read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                      read_99_99_latency_unit="usecs")
+    else:
+        model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+        blt = ModelHelper(model_name=model_name)
+        blt.set_units(validate=True, **blt_unit_dict)
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency,
+                      compression=compression,
+                      encryption=encryption,
+                      compression_effort=compression_effort,
+                      key_size=key_size,
+                      xtweak=xtweak,
+                      io_size=io_size,
+                      platform=platform
+        )
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -546,6 +602,53 @@ def compare(actual, expected, threshold, operation):
         return actual < (expected * (1 - threshold)) and ((expected - actual) > 2)
     else:
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
+
+
+def fetch_nvme_list(host_obj):
+    result = {'status': False}
+    nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
+    if nvme_list_raw:
+        # This is used due to the error lines printed in json output
+        if not nvme_list_raw.startswith("{"):
+            nvme_list_raw = nvme_list_raw + "}"
+            temp1 = nvme_list_raw.replace('\n', '')
+            temp2 = re.search(r'{.*', temp1).group()
+            nvme_list_dict = json.loads(temp2, strict=False)
+        else:
+            try:
+                nvme_list_dict = json.loads(nvme_list_raw)
+            except:
+                nvme_list_raw = nvme_list_raw + "}"
+                nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+
+        try:
+            nvme_device_list = []
+            for device in nvme_list_dict["Devices"]:
+                if ("Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or "fs1600" in
+                        device["ModelNumber"].lower()):
+                    if "NameSpace" in device and device["NameSpace"] > 0:
+                        nvme_device_list.append(device["DevicePath"])
+                    elif "NameSpace" not in device:
+                        nvme_device_list.append(device["DevicePath"])
+                '''
+                Not required now as product name is defined
+                elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                    if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                        nvme_device_list.append(device["DevicePath"])
+                '''
+            if nvme_device_list:
+                fio_filename = str(':'.join(nvme_device_list))
+                result = {'status': True, 'nvme_device': fio_filename}
+            else:
+                result = {'status': False}
+        except:
+            fio_filename = None
+            result = {'status': False, 'nvme_device': fio_filename}
+    else:
+        result = {'status': False, 'nvme_device': None}
+
+    return result
 
 
 def fetch_nvme_device(end_host, nsid, size=None):
@@ -568,6 +671,23 @@ def fetch_nvme_device(end_host, nsid, size=None):
                 result['status'] = True
                 break
     return result
+
+
+def get_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+    return hosts
+
+
+def get_device_numa_node(end_host, ethernet_adapter):
+    numa_node = None
+    lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
+    fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+    adapter_id = lspci_output[0]['id']
+    fun_test.simple_assert(adapter_id, "Retrieve Ethernet Adapter Bus ID")
+    lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
+    numa_node = lspci_verbose_output[0]['numa_node']
+    return numa_node
 
 
 def fetch_numa_cpus(end_host, ethernet_adapter):
@@ -836,7 +956,7 @@ def cleanup_host(host_obj):
     return result
 
 
-def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
+def ensure_api_server_is_up(sc_api, timeout=180, come_obj=None):  #WORKAROUND: timeout == 240
     result = False
     try:
         # Polling for API Server status
@@ -850,8 +970,14 @@ def ensure_api_server_is_up(sc_api, timeout=180):  #WORKAROUND: timeout == 240
             else:
                 fun_test.sleep("Waiting for API server to be up", 10)
                 fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
+        if not api_server_up_timer.is_expired():
+            if come_obj:
+                come_obj.command("netstat -anpt")
+                come_obj.command("ps -ef")
+
     except Exception as ex:
         fun_test.critical(str(ex))
+
     return result
 
 
@@ -1123,6 +1249,49 @@ def disalbe_init_fs1600(come_obj):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout):
+    result = False
+    command_result = storage_controller.set_fcp_scheduler(fcp_sch_config=config_fcp_scheduler,
+                                                               command_timeout=command_timeout)
+    if not command_result["status"]:
+        fun_test.critical("Unable to set the fcp scheduler bandwidth...So proceeding the test with the "
+                          "default setting")
+    elif config_fcp_scheduler != command_result["data"]:
+        fun_test.critical("Unable to fetch the applied FCP scheduler config... So proceeding the test "
+                          "with the default setting")
+    else:
+        fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
+        result = True
+    return result
+
+
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
+    arg1.disconnect()
+
+
+def add_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["numa_cpus"][numa_node_to_use]
+    return hosts
+
+
+def post_final_test_results(fio_result, internal_result, fio_jobs_iodepth, fio_modes):
+    test_result = True
+    fun_test.log(fio_result)
+    fun_test.log(internal_result)
+    for combo in fio_jobs_iodepth:
+        for mode in fio_modes:
+            if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                test_result = False
+
+    fun_test.log("Test Result: {}".format(test_result))
+
+
 
 
 class CollectStats(object):
@@ -2350,6 +2519,57 @@ class CollectStats(object):
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
+    def populate_stats_to_file(self, stats_collect_details, mode, iodepth):
+        for index, value in enumerate(stats_collect_details):
+            for func, arg in value.iteritems():
+                filename = arg.get("output_file")
+                if filename:
+                    if func == "vp_utils":
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "per_vp":
+                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "resource_bam_args":
+                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vol_stats":
+                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vppkts_stats":
+                        fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "psw_stats":
+                        fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "fcp_stats":
+                        fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "wro_stats":
+                        fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "erp_stats":
+                        fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "etp_stats":
+                        fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "eqm_stats":
+                        fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "hu_stats":
+                        fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ddr_stats":
+                        fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ca_stats":
+                        fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "cdu_stats":
+                        fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+
 
 def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
     min_capacity = 0
@@ -2368,6 +2588,7 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
         fun_test.critical("Unable to get the individual drive status...")
 
     return min_capacity
+
 
 
 def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
@@ -2390,7 +2611,6 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["status"] = True
 
     return result
-
 
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
@@ -2417,7 +2637,8 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
 
     # Retrieve the rebuild start time
     if get_start_time:
-        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {}".format(ec_uuid, plex_count, log_file)
+        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {} | tail -1".\
+            format(ec_uuid, plex_count, log_file)
     # Retrieve the rebuild start time
     if get_completion_time:
         command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
@@ -2440,3 +2661,34 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
             fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result
+
+def get_plex_device_id(ec_info, storage_controller):
+    if "device_id" not in ec_info:
+        fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
+                     "So going to pull that info")
+        ec_info["drive_uuid"] = {}
+        ec_info["device_id"] = {}
+        for num in xrange(ec_info["num_volumes"]):
+            ec_info["drive_uuid"][num] = []
+            ec_info["device_id"][num] = []
+            for blt_uuid in ec_info["uuids"][num]["blt"]:
+                blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
+                                                         "stats")
+                blt_stats = storage_controller.peek(blt_props_tree)
+                fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
+                if "drive_uuid" in blt_stats["data"]:
+                    ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
+                else:
+                    fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
+                                           format(blt_uuid))
+                drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                           "drives", blt_stats["data"]["drive_uuid"])
+                drive_stats = storage_controller.peek(drive_props_tree)
+                fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
+                                       format(blt_stats["data"]["drive_uuid"]))
+                if "drive_id" in drive_stats["data"]:
+                    ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
+                else:
+                    fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
+                                           format(blt_stats["data"]["drive_uuid"]))
+    return ec_info

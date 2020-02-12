@@ -896,10 +896,69 @@ if __name__ == "__main2__":
         fun_test.critical(str(ex))
     print "used generic helper to add an entry"
 
-if __name__ == "__main__":
+if __name__ == "__main234__":
     fun_test.suite_execution_id = 320
     # print get_data_collection_time(tag="ec_inspur_fs_teramark_multi_f1")
     a = get_data_collection_time(tag="John1")
     print a
 
     print get_epoch_time_from_datetime(a)
+
+if __name__ == "__main__":
+    value_dict = {
+        "date_time": get_data_collection_time(),
+        "num_hosts": 1,
+        "num_ssd": 12,
+        "num_volume": 12,
+        "block_size": "8K",
+        "io_depth": 64,
+        "operation": "randread",
+        "compression": False,
+        "encryption": False,
+        "compression_effort": 1,
+        "key_size": 128,
+        "xtweak": 128,
+        "io_size": "128GB",
+        "platform": FunPlatform.F1,
+
+        "write_iops": 100,
+        "read_iops": 200,
+        "write_throughput": 300,
+        "read_throughput": 400,
+        "write_avg_latency": 500,
+        "write_90_latency": 600,
+        "write_95_latency": 700,
+        "write_99_latency": 900,
+        "write_99_99_latency": 800,
+        "read_avg_latency": 1000,
+        "read_90_latency": 1100,
+        "read_95_latency": 1200,
+        "read_99_latency": 1400,
+        "read_99_99_latency": 1300
+    }
+    unit_dict = {
+        "write_iops_unit": PerfUnit.UNIT_OPS,
+        "read_iops_unit": PerfUnit.UNIT_OPS,
+        "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+        "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "write_90_latency_unit": PerfUnit.UNIT_USECS,
+        "write_95_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_latency_unit": PerfUnit.UNIT_USECS,
+        "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+        "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+        "read_90_latency_unit": PerfUnit.UNIT_USECS,
+        "read_95_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_latency_unit": PerfUnit.UNIT_USECS,
+        "read_99_99_latency_unit": PerfUnit.UNIT_USECS
+    }
+    model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+    status = fun_test.PASSED
+    try:
+        generic_helper = ModelHelper(model_name=model_name)
+        generic_helper.set_units(validate=True, **unit_dict)
+        generic_helper.add_entry(**value_dict)
+        generic_helper.set_status(status)
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    print "used generic helper to add an entry"

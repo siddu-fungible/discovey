@@ -4,7 +4,8 @@ import sys
 
 FUN_TEST_DIR = dirname(abspath(__file__))
 INTEGRATION_DIR = dirname(abspath(FUN_TEST_DIR))
-FUN_TEST_LIB_UTILITIES_DIR = FUN_TEST_DIR + "/lib/utilities"
+FUN_TEST_LIB_DIR = FUN_TEST_DIR + "/lib"
+FUN_TEST_LIB_UTILITIES_DIR = "{}/utilities".format(FUN_TEST_LIB_DIR)
 DATA_STORE_DIR = dirname(abspath(INTEGRATION_DIR)) + "/data_store"   # Storage area for test-input files
 SCHEDULER_DIR = FUN_TEST_DIR + "/scheduler"
 WEB_DIR = FUN_TEST_DIR + "/web"
@@ -77,3 +78,8 @@ JENKINS_PASSWORD = "1199085daa5c095956f3c3fb5adcde0c3a"
 TESTRAIL_BACKUP_DIRECTORY = "{}/testrail_backup".format(DATA_STORE_DIR)
 TESTRAIL_URL = "http://qa-ubuntu-02/testrail/index.php"
 LARGE_FILE_STORE = "/project-fe/users/qa-admin/regression/large_files"
+
+FUN_TEST_THIRD_PARTY_LIBRARIES = "{}/third_party".format(FUN_TEST_LIB_DIR)
+ADDITIONAL_PYTHON_PATHS = [FUN_TEST_THIRD_PARTY_LIBRARIES]
+
+STORAGE_API_VERSION = "0.0.2"

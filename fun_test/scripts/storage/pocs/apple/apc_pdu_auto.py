@@ -112,6 +112,8 @@ class ApcPduTestcase(FunTestCase):
                 self.reboot_machine_test = job_inputs["reboot_machine_test"]
             if "reset_f1s_bmc" in job_inputs:
                 self.reset_f1s_bmc = job_inputs["reset_f1s_bmc"]
+            if "expected_come_uptime" in job_inputs:
+                self.expected_come_uptime = job_inputs["expected_come_uptime"]
 
 
     def run(self):
@@ -127,7 +129,6 @@ class ApcPduTestcase(FunTestCase):
             self.pc_no = pc_no
 
             fun_test.add_checkpoint(checkpoint="ITERATION : {} out of {}".format(pc_no + 1, self.iterations))
-
 
             self.come_handle = ComE(host_ip=self.fs['come']['mgmt_ip'],
                                     ssh_username=self.fs['come']['mgmt_ssh_username'],
@@ -162,7 +163,7 @@ class ApcPduTestcase(FunTestCase):
         self.bmc_handle.set_prompt_terminator(r'# $')
 
         fun_test.log("Checking if COMe is UP")
-        come_up = self.come_handle.ensure_host_is_up(max_wait_time=600)
+        come_up = self.come_handle.ensure_host_is_up(max_wait_time=self.expected_come_uptime)
         fun_test.test_assert(come_up, "COMe is UP")
 
         fun_test.log("Checking if BMC is UP")

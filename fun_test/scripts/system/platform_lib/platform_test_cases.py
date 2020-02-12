@@ -781,7 +781,6 @@ class BroadcomLoginVerification(PlatformGeneralTestCase):
                               test_rail_case_ids=["T23155"],
                               steps="""""")
 
-
     @run_decorator
     def run(self):
         result = False
@@ -801,9 +800,35 @@ class BroadcomLoginVerification(PlatformGeneralTestCase):
         bmc_handle_cloned.disconnect()
 
 
-class General(PlatformGeneralTestCase):
+class TftpImage(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=29,
+                              summary="boot any image",
+                              steps="""""")
+
+    def setup(self):
+        self.already_deployed = False
+        self.initialize_job_inputs()
+
+        topology_helper = TopologyHelper()
+        topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
+        self.topology = topology_helper.deploy()
+        fun_test.test_assert(self.topology, "Topology deployed")
+
+        self.fs_obj = self.topology.get_dut_instance(index=0)
+        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
+        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
+        self.come_handle = self.fs_obj.get_come()
+        self.bmc_handle = self.fs_obj.get_bmc()
+
+    @run_decorator
+    def run(self):
+        pass
+
+
+class General(PlatformGeneralTestCase):
+    def describe(self):
+        self.set_test_details(id=30,
                               summary="",
                               steps="""""")
 
@@ -839,13 +864,14 @@ if __name__ == "__main__":
         # PcieDiscoverySsdViaRc,
         # PcieDeviceDetection,
         # HostConnectionViaPcieBus,
-        ComeVolumeCreation,
+        # ComeVolumeCreation,
         # SnakeTest,
         # PortSplitTestCase,
         # FanSpeedVariations,
         # MultipleF1Reset,
         # BroadcomLoginVerification,
-        # BundleInstallWithDisable
+        # BundleInstallWithDisable,
+        TftpImage
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

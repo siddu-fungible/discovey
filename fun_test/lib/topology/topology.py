@@ -179,3 +179,22 @@ class ExpandedTopology(ToDictMixin):
                 cleanup_error_found = True
         self.cleaned_up = True
         fun_test.simple_assert(not cleanup_error_found, "Topology cleanup error found")
+
+    @fun_test.safe
+    def get_available_duts(self, pool_member_type=None):
+        duts = self.get_duts()
+        if pool_member_type is not None:
+            duts = filter(lambda x: x.get_pool_member_type() == pool_member_type, duts)
+        return duts
+
+    @fun_test.safe
+    def get_available_hosts(self):
+        return self.get_hosts()
+
+    @fun_test.safe
+    def get_available_host_instances(self):
+        result = None
+        available_hosts = self.get_hosts()
+        if available_hosts:
+            result = available_hosts.values()
+        return result

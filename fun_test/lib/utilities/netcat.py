@@ -32,6 +32,8 @@ class Netcat:
             self.socket.settimeout(timeout)
         return_from_function = False
         max_wait_timer = FunTimer(max_time=timeout)
+        if expected_data is None:
+            expected_data = "Billee0ns"
         while not self.stop_reading_trigger and not fun_test.closed and expected_data not in self.buffer and not self.terminate and not return_from_function and not max_wait_timer.is_expired():
             try:
                 readable, writable, exceptional = select.select(
