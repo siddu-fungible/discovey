@@ -150,7 +150,6 @@ class SharedVolumePerfTest(FunTestCase):
         vol_type = VolumeTypes().LOCAL_THIN
 
         self.hosts = self.topology.get_available_host_instances()
-        # Populating the linux handles of the hosts
 
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for i in range(self.blt_count):
@@ -162,18 +161,55 @@ class SharedVolumePerfTest(FunTestCase):
             fun_test.test_assert(expression=vol_uuid[0], message="Create Volume Successful")
             self.vol_uuid_list.append(vol_uuid[0])
 
+        for host in self.hosts:
+            host.nvme_connect_info = {}
+
+        attach_vol_result = {}
         for i in range(self.blt_count):
-            attach_vol_result = self.blt_template.attach_volume(self.fs_obj_list[0],
-                                                                self.vol_uuid_list[i],
-                                                                self.hosts,
-                                                                validate_nvme_connect=True,
-                                                                raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            attach_vol_result[i] = self.blt_template.attach_volume(self.fs_obj_list[0],
+                                                                   self.vol_uuid_list[i],
+                                                                   self.hosts,
+                                                                   validate_nvme_connect=False,
+                                                                   raw_api_call=self.raw_api_call)
+            fun_test.test_assert(expression=attach_vol_result[i], message="Attach Volume {} to {} hosts".
+                                 format(i+1, len(self.hosts)))
+            for j, result in enumerate(attach_vol_result[i]):
+                host = self.hosts[j]
+                if self.raw_api_call:
+                    fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
+                                         format(i, host.name))
+                    subsys_nqn = result["data"]["subsys_nqn"]
+                    host_nqn = result["data"]["host_nqn"]
+                    dataplane_ip = result["data"]["ip"]
+                else:
+                    subsys_nqn = result.subsys_nqn
+                    host_nqn = result.host_nqn
+                    dataplane_ip = result.ip
+
+                if subsys_nqn not in host.nvme_connect_info:
+                    host.nvme_connect_info[subsys_nqn] = []
+                host_nqn_ip = (host_nqn, dataplane_ip)
+                if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
+                    host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
+
+        for host in self.hosts:
+            for subsys_nqn in host.nvme_connect_info:
+                for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                    host_nqn, dataplane_ip = host_nqn_ip
+                    fun_test.test_assert(
+                        expression=self.blt_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                            host_nqn=host_nqn,
+                                                                            dataplane_ip=dataplane_ip),
+                        message="NVMe connect from host: {}".format(host.name))
+                    nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                    fun_test.test_assert(expression=nvme_filename,
+                                         message="Get NVMe drive from Host {} using lsblk".format(host.name))
 
         for host in self.hosts:
             host.num_volumes = self.blt_count
 
         # Populating the NVMe devices available to the hosts
+
         for host in self.hosts:
             host.nvme_block_device_list = []
             for namespace in self.blt_template.host_nvme_device[host]:
@@ -184,6 +220,7 @@ class SharedVolumePerfTest(FunTestCase):
                                           message="Expected NVMe devices are available")
             host.nvme_block_device_list.sort()
             host.fio_filename = ":".join(host.nvme_block_device_list)
+
 
         # Extracting the host CPUs
         # for host in self.hosts:
@@ -285,7 +322,7 @@ class SharedVolumePerfTest(FunTestCase):
                 if field == "runtime":
                     aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
 
-        fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
+        fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
     def run(self):
 
