@@ -368,8 +368,8 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
-        if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
-            s += " --disable-syslog-replay"
+        # if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
+        #    s += " --disable-syslog-replay"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
