@@ -34,6 +34,7 @@
     "api_server_up_timeout": 300
   },
   "DurVolSingleDriveFailRebuild": {
+    "test_rail_case_id": ["C19529"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -86,6 +87,7 @@
     "status_interval": 10
   },
   "DurVolmDriveFailRebuild": {
+    "test_rail_case_id": ["C19532"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -141,6 +143,7 @@
     "status_interval": 10
   },
   "DurVolmPlusOneDriveFailRebuild": {
+    "test_rail_case_id": ["C19169"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -196,6 +199,7 @@
     "status_interval": 10
   },
   "DurVolSingleDriveFailReSync": {
+    "test_rail_case_id": ["C19530"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -251,6 +255,7 @@
     "status_interval": 10
   },
   "DurVolmDriveFailReSync": {
+    "test_rail_case_id": ["C19531"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -306,6 +311,7 @@
     "status_interval": 10
   },
   "DurVolmPlusOneDriveFailReSync": {
+    "test_rail_case_id": ["C19454"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
