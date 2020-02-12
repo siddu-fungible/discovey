@@ -41,7 +41,8 @@ export class ReleaseSummaryWidgetComponent implements OnInit {
   prepareByReleaseTrain() {
     let setOfBuildNumbers = new Set();
     this.releaseCatalogExecutions.forEach(releaseCatalogExecution => {
-      if (!isNaN(releaseCatalogExecution.build_number)) {
+
+      if (!isNaN(releaseCatalogExecution.build_number) && !releaseCatalogExecution.deleted) {
         setOfBuildNumbers.add(releaseCatalogExecution.build_number);
         if (!this.byReleaseTrain.hasOwnProperty(releaseCatalogExecution.release_train)) {
           this.byReleaseTrain[releaseCatalogExecution.release_train] = {};

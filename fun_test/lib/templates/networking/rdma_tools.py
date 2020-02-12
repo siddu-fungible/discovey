@@ -18,7 +18,7 @@ class Rocetools:
         self.host.command("git describe")
         self.host.disconnect()
 
-    def rdma_setup(self):
+    def rdma_setup(self, path="/etc/security/limits.d/fungible-rdma.conf"):
         self.host.command("export LD_LIBRARY_PATH={}".format(LD_LIBRARY_PATH))
         self.host.command("export PATH={}".format(PATH))
         check_funeth = self.host.lsmod("funeth")
@@ -35,6 +35,12 @@ class Rocetools:
         else:
             self.host.modprobe("rdma_ucm")
             self.host.disconnect()
+        if not self.host.check_file_directory_exists(path):
+            self.host.sudo_command("echo \\\"* soft memlock unlimited\\\" > {}".format(path))
+            self.host.sudo_command("echo \\\"* hard memlock unlimited\\\" >> {}".format(path))
+            self.host.sudo_command("echo \\\"root soft memlock unlimited\\\" >> {}".format(path))
+            self.host.sudo_command("echo \\\"root hard memlock unlimited\\\" >> {}".format(path))
+
         return True
 
     def get_rdma_device(self):
