@@ -799,7 +799,8 @@ class NVMeConnectWithSpurious(FunTestCase):
         for i in range(1, self.repetition+1):
             spurious_connect_status = self.rogue_host_handle.sudo_command(command=spurious_connect_cmd, timeout=600)
             fun_test.test_assert_expected(expected=self.spurious_conn,
-                                          actual=spurious_connect_status.count("Connection refused"),
+                                          actual=spurious_connect_status.count("Connection refused") +
+                                                 spurious_connect_status.count("Input/output error"),
                                           message="{} spurious connection from {} rejected".format(self.spurious_conn,
                                                                                                    self.rogue_host))
             self.nvme_connect_disconect(self.genuine_host_handle, test_interface, nqn, i)
