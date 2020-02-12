@@ -1163,7 +1163,42 @@ class SingleVolumeWithBP(ECVolumeLevelTestcase):
         super(SingleVolumeWithBP, self).cleanup()
 
 
+class SingleVolumeWOBP(ECVolumeLevelTestcase):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Single Drive Failure Testing without back pressure",
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1
+        3. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test
+        4. Configure one more BLT volume to use it as spare volume during rebuild
+        5. Export (Attach) the above volume to the Remote Host
+        6. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        7. Create EXT3 filesystem in the volume2 and mount the same under /mnt/ssd<volume_num>.
+        8. Create test_file_size bytes file and copy it in volume (mount point) and record base file copy time, 
+        record and verify md5sum of file before and after copy
+        9. Create another test_file_size1 bytes file, record md5sum and copy it in volume (mount point)
+        10. While the copy is in progress, simulate plex/drive failure in one of the drives hosting the above 6 BLT 
+        volumes, verify file copy succeeds, record the file copy time. Verify md5sum after copy
+        11. Create another test_file_size2 bytes file, record md5sum and copy it in volume (mount point)
+        12. Instruct EC to use spare volume to rebuild the content of failed drive
+        13. Ensure that the file is copied successfully and the md5sum after copy matches.
+        14. Re-verify test_file_size1 md5sum
+        15. Record reconstruction time
+        """)
+
+    def setup(self):
+        super(SingleVolumeWOBP, self).setup()
+
+    def run(self):
+        super(SingleVolumeWOBP, self).run()
+
+    def cleanup(self):
+        super(SingleVolumeWOBP, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolumeLevelScript()
     ecscript.add_test_case(SingleVolumeWithBP())
+    ecscript.add_test_case(SingleVolumeWOBP())
     ecscript.run()
