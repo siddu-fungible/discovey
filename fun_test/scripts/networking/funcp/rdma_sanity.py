@@ -385,7 +385,7 @@ class NicEmulation(FunTestCase):
         for x in range(0, 1):
             fun_test.log("Sarting build_rdma_repo on F1_0 for host: {}".format(f10_hosts[x]["name"]))
             build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
-                func=f10_hosts[x]["roce_handle"].build_rdma_repo,
+                func=f10_host_roce.build_rdma_repo,
                 time_in_seconds=5,
                 rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                 rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
@@ -396,7 +396,7 @@ class NicEmulation(FunTestCase):
         for x in range(0, 1):
             fun_test.log("Sarting build_rdma_repo on F1_1 for host: {}".format(f11_hosts[x]["name"]))
             build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
-                func=f11_hosts[x]["roce_handle"].build_rdma_repo,
+                func=f11_host_roce.build_rdma_repo,
                 time_in_seconds=5,
                 rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
                 rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
@@ -806,24 +806,26 @@ class SrpingSeqIoTest(FunTestCase):
                     except:
                         fun_test.critical("NFCP counter issue")
             else:
-                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
-                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                fun_test.simple_assert(expression=(counter_diff == 0),
-                                       message="F10: Traffic is using FCP")
-                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
-                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                fun_test.simple_assert(expression=(counter_diff == 0),
-                                       message="F11: Traffic is using FCP")
-                counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                               f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                fun_test.simple_assert(expression=(counter_diff != 0),
-                                       message="F10 : NFCP counters not incrementing")
-                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                               f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                fun_test.simple_assert(expression=(counter_diff != 0),
-                                       message="F11 : NFCP counters not incrementing")
+                try:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                except:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
         fun_test.test_assert(True, "Srping {} IO test".format(test))
 
@@ -980,24 +982,26 @@ class RpingSeqIoTest(FunTestCase):
                     except:
                         fun_test.critical("NFCP counter issue")
             else:
-                counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
-                               f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                fun_test.simple_assert(expression=(counter_diff == 0),
-                                       message="F10: Traffic is using FCP")
-                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
-                               f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                fun_test.simple_assert(expression=(counter_diff == 0),
-                                       message="F11: Traffic is using FCP")
-                counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                               f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                fun_test.simple_assert(expression=(counter_diff != 0),
-                                       message="F10 : NFCP counters not incrementing")
-                counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                               f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                fun_test.simple_assert(expression=(counter_diff != 0),
-                                       message="F11 : NFCP counters not incrementing")
+                try:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                except:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
         fun_test.test_assert(True, "Rping {} IO test".format(test))
 
@@ -1164,24 +1168,26 @@ class IbBwSeqIoTest(FunTestCase):
                         except:
                             fun_test.critical("NFCP counter issue")
                 else:
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F10: Traffic is using FCP")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F11: Traffic is using FCP")
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F10 : NFCP counters not incrementing")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F11 : NFCP counters not incrementing")
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
@@ -1375,24 +1381,26 @@ class IbLatSeqIoTest(FunTestCase):
                         except:
                             fun_test.critical("NFCP counter issue")
                 else:
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F10: Traffic is using FCP")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F11: Traffic is using FCP")
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F10 : NFCP counters not incrementing")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F11 : NFCP counters not incrementing")
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_LAT {} test for {} IO".format(test, io_type))
 
@@ -1603,24 +1611,26 @@ class IbWriteScale(FunTestCase):
                         except:
                             fun_test.critical("NFCP counter issue")
                 else:
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F10: Traffic is using FCP")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    fun_test.simple_assert(expression=(counter_diff == 0),
-                                           message="F11: Traffic is using FCP")
-                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F10 : NFCP counters not incrementing")
-                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
-                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
-                    fun_test.simple_assert(expression=(counter_diff != 0),
-                                           message="F11 : NFCP counters not incrementing")
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
