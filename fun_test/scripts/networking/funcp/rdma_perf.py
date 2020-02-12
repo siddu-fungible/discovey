@@ -115,7 +115,8 @@ class BringupSetup(FunTestCase):
         else:
             deploy_setup = True
             fun_test.shared_variables["deploy_setup"] = deploy_setup
-        # Set test_speed to 1 for using single pair of hosts which tests 100G perf
+        # Set test_speed to 1 for using single pair of hosts which tests 100G perf,2 for 200G.
+        # when not set it picks based on min numbers of hosts on F10 & F11
         if "test_speed" in job_inputs:
             roce_speed = job_inputs["test_speed"]
             fun_test.shared_variables["test_speed"] = roce_speed
@@ -135,6 +136,18 @@ class BringupSetup(FunTestCase):
         else:
             qp_list = [1, 2, 4, 8, 16, 32]
             fun_test.shared_variables["qp_list"] = qp_list
+        if "funos_branch" in job_inputs:
+            fun_test.shared_variables["funos_branch"] = job_inputs["funos_branch"]
+        else:
+            fun_test.shared_variables["funos_branch"] = None
+        if "funsdk_branch" in job_inputs:
+            fun_test.shared_variables["funsdk_branch"] = job_inputs["funsdk_branch"]
+        else:
+            fun_test.shared_variables["funsdk_branch"] = None
+        if "funsdk_commit" in job_inputs:
+            fun_test.shared_variables["funsdk_commit"] = job_inputs["funsdk_commit"]
+        else:
+            fun_test.shared_variables["funsdk_commit"] = None
         if "fundrv_branch" in job_inputs:
             fun_test.shared_variables["fundrv_branch"] = job_inputs["fundrv_branch"]
         else:
@@ -358,7 +371,10 @@ class NicEmulation(FunTestCase):
             # install drivers on PCIE connected servers
             tb_config_obj = tb_configs.TBConfigs(str(fs_name))
             funeth_obj = Funeth(tb_config_obj, fundrv_branch=fun_test.shared_variables["fundrv_branch"],
-                                fundrv_commit=fun_test.shared_variables["fundrv_commit"])
+                                fundrv_commit=fun_test.shared_variables["fundrv_commit"],
+                                funsdk_branch=fun_test.shared_variables["funsdk_branch"],
+                                funsdk_commit=fun_test.shared_variables["funsdk_commit"],
+                                funos_branch=fun_test.shared_variables["funos_branch"])
             fun_test.shared_variables['funeth_obj'] = funeth_obj
             setup_hu_host(funeth_obj, update_driver=True, sriov=0, num_queues=1)
 
@@ -413,16 +429,41 @@ class NicEmulation(FunTestCase):
             fun_test.test_assert(False, "Not enough x16 servers for test")
         min_host = min(len(f10_hosts), len(f11_hosts))
 
+        if fun_test.shared_variables["test_speed"] == 2:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 4,
+                                   message="Not enough x16 servers for 200G test")
+        elif fun_test.shared_variables["test_speed"] == 1:
+            fun_test.simple_assert(expression=(len(f10_hosts) + len(f11_hosts)) >= 2,
+                                   message="Not enough x16 servers for 100G test")
+
+        build_rdma_threadid = {}
+        thread_count = 0
         for x in range(0, min_host):
-            f10_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
-        for x in range(0, fun_test.shared_variables["host_len_f11"]):
-            f11_hosts[x]["roce_handle"].build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                                        rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                                        perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                                        perftest_commit=fun_test.shared_variables["perftest_commit"])
+            fun_test.log("Sarting build_rdma_repo on F1_0 for host: {}".format(f10_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f10_hosts[x]["roce_handle"].build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
+        for x in range(0, min_host):
+            fun_test.log("Sarting build_rdma_repo on F1_1 for host: {}".format(f11_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f11_hosts[x]["roce_handle"].build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
+        for thread_id in range(thread_count):
+            fun_test.join_thread(build_rdma_threadid[thread_id])
+            fun_test.log("Joined thread: {}".format(build_rdma_threadid[thread_id]))
+
         fun_test.log("SETUP Done")
 
     def cleanup(self):
@@ -463,16 +504,19 @@ class BwTest(FunTestCase):
         if not roce_speed:
             total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
-            total_link_bw = 1
+            total_link_bw = fun_test.shared_variables["test_speed"]
         if total_link_bw > 1:
             link_capacity = "200G"
+            fun_test.log("Running {} test".format(link_capacity))
             # hosts used for populating charts, 4 for 200G & 2 for 100G
             hosts = 4
         else:
             link_capacity = "100G"
+            fun_test.log("Running {} test".format(link_capacity))
             hosts = 2
         for index in range(total_link_bw):
-            f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
+            command_result = f10_hosts[index]["handle"].ping(dst=f11_hosts[index]["ipaddr"])
+            fun_test.simple_assert(command_result, "HU -> HU ping")
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
             rdma_setup = f11_hosts[index]["roce_handle"].rdma_setup()
@@ -706,16 +750,19 @@ class LatencyTest(FunTestCase):
         if not roce_speed:
             total_link_bw = min(len(f10_hosts), len(f11_hosts))
         else:
-            total_link_bw = 1
+            total_link_bw = fun_test.shared_variables["test_speed"]
         if total_link_bw > 1:
             link_capacity = "200G"
+            lat_iterations = 100000
             # hosts used for populating charts, 4 for 200G & 2 for 100G
             hosts = 4
         else:
             link_capacity = "100G"
+            lat_iterations = 10000
             hosts = 2
         for index in range(total_link_bw):
-            f10_hosts[index]["roce_handle"].ping_check(ip=f11_hosts[index]["ipaddr"])
+            command_result = f10_hosts[index]["handle"].ping(dst=f11_hosts[index]["ipaddr"])
+            fun_test.simple_assert(command_result, "HU -> HU ping")
             rdma_setup = f10_hosts[index]["roce_handle"].rdma_setup()
             fun_test.simple_assert(rdma_setup, "RDMA setup on {}".format(f10_hosts[index]["name"]))
             rdma_setup = f11_hosts[index]["roce_handle"].rdma_setup()
@@ -774,7 +821,7 @@ class LatencyTest(FunTestCase):
             # Start servers on F1_0
             for index in range(total_link_bw):
                 f10_server = f10_hosts[index]["roce_handle"].ib_lat_test(test_type=self.rt, perf=True, size=size,
-                                                                         iteration=10000,
+                                                                         iteration=lat_iterations,
                                                                          timeout=300)
                 pid_dict = {f10_hosts[index]["roce_handle"]: f10_server}
                 f10_pid_list.append(pid_dict)
@@ -783,7 +830,7 @@ class LatencyTest(FunTestCase):
             # Start servers on F1_1
             for index in range(total_link_bw):
                 f11_client = f11_hosts[index]["roce_handle"].ib_lat_test(test_type=self.rt, perf=True, size=size,
-                                                                         iteration=10000,
+                                                                         iteration=lat_iterations,
                                                                          server_ip=f10_hosts[index]["ipaddr"],
                                                                          timeout=300)
                 pid_dict = {f11_hosts[index]["roce_handle"]: f11_client}

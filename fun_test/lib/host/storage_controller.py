@@ -5,8 +5,8 @@ from lib.system import utils
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
     from swagger_client.api.topology_api import TopologyApi
-    from swagger_client.api.controller_api import ControllerApi
     from swagger_client.api.network_api import NetworkApi
+    from swagger_client.api.apigateway_api import ApigatewayApi
     from swagger_client.api_client import ApiClient
     from swagger_client.configuration import Configuration
 
@@ -27,10 +27,9 @@ class StorageController(NetworkController, DpcshClient):
             configuration.password = api_password
             configuration.verify_ssl = False
             api_client = ApiClient(configuration)
-
+            self.apigateway_api = ApigatewayApi(api_client)
             self.storage_api = StorageApi(api_client)
             self.topology_api = TopologyApi(api_client)
-            self.controller_api = ControllerApi(api_client)
             self.network_api = NetworkApi(api_client)
 
     def health(self):
@@ -38,7 +37,7 @@ class StorageController(NetworkController, DpcshClient):
         timer = FunTimer(max_time=120)
         while not timer.is_expired():
             try:
-                if self.controller_api.get_sc_health().status:
+                if self.apigateway_api.get_fc_health().status:
                     fun_test.log("Api Server is Healthy")
                     api_server_health = True
                     break
@@ -260,6 +259,10 @@ class StorageController(NetworkController, DpcshClient):
             "opcode": "ERROR_INJECT_ENABLE",
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
+
+    def get_device_status(self, device_id, command_duration=TIMEOUT):
+        data = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", device_id)
+        return self.json_execute(verb="peek", data=data, command_duration=command_duration)
 
     def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
         data = ["output"]
@@ -572,6 +575,6 @@ if __name__ == "__main__":
     sc = StorageController(target_ip="fs53-come", target_port=42220)
     # output = sc.command("peek stats")
     # sc.print_result(output)
-    result1 = sc.controller_api.get_sc_health()
+    result1 = sc.apigateway_api.get_fc_health()
     result2 = sc.storage_api.get_all_pools()
     result3 = sc.topology_api.get_hierarchical_topology()

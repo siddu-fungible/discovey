@@ -241,7 +241,7 @@
     <ng-template #noCustomTestBedSpec>
       <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
       <div *ngIf="!customTestBedSpecPopulationStatus">
-        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options (suite-based)</span>
+        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize pool-selection options (suite-based)</span>
       </div>
     </ng-template>
 
