@@ -2773,22 +2773,6 @@ class Fs(object, ToDictMixin):
             result = result, error_message
         return result
 
-    def storage_devices_nvme_ssds(self, command_duration=2):
-        result = {"status": False}
-        f1_level_result = {}
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            dpc_client = self.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
-            cmd = "storage/devices/nvme/ssds"
-            dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=command_duration)
-            if dpc_result["status"]:
-                f1_level_result[f1_index] = dpc_result["data"]
-        result["data"] = f1_level_result
-        if f1_level_result:
-            result["status"] = True
-        return result
-
     def bam(self, command_duration=2):
         result = {"status": False}
         f1_level_result = {}
