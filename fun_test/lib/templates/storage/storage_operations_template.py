@@ -10,6 +10,7 @@ from swagger_client.models.node_update_op import NodeUpdateOp
 from lib.templates.storage.storage_controller_api import *
 import ipaddress
 import re
+import copy
 
 
 class StorageControllerOperationsTemplate():
@@ -299,8 +300,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = {}
         try:
-            final_volume_uuid_list = volume_uuid_list
-            final_host_obj_list = host_obj_list
+            final_volume_uuid_list = copy.deepcopy(volume_uuid_list)
+            final_host_obj_list = copy.deepcopy(host_obj_list)
             if volume_is_shared:
                 # when volumes are shared among hosts
                 final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
