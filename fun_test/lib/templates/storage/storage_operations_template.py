@@ -269,22 +269,22 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         The function attaches volume from param volume_uuid_list to host in param host_obj_list based on
         param volume_is_shared provided by user. If volume is to be shared among hosts then user needs to 
         set it to volume_is_shared true
-        
+
         case1: set volume_is_shared=False when one vol is attached to one host
         eg: 12 vol on 12 different host
-        
+
         case2: set volume_is_shared=True when one vol is shared among multiple hosts
         eg: 3 vols shared among 3 hosts
-        
+
         case3: set volume_is_shared=False when num hosts < num volumes and volumes are not shared
         eg: 8 vols on 2 hosts such that each host has 4 volumes attached
-        
+
         case4: set volume_is_shared=True when num hosts < num volumes and volumes are to be shared among hosts
         eg: 8 vols on 2 hosts such that each host has 8 volumes attached
-        
+
         return-type: dict
         :returns dictionary with host objects as keys with list as value containing API response
-        
+
         result = {<lib.topology.host.Host instance at 0x10e753d88>: 
             [{u'status': True, u'message': u'Attach Success', u'warning': u'', 
             u'data': {u'uuid': u'd2c3c947fef0480c', u'nsid': 1, u'host_nqn': 
@@ -300,42 +300,42 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = {}
         try:
-            final_volume_uuid_list = copy.deepcopy(volume_uuid_list)
-            final_host_obj_list = copy.deepcopy(host_obj_list)
+            temp_volume_uuid_list = copy.deepcopy(volume_uuid_list)
+            temp_host_obj_list = copy.deepcopy(host_obj_list)
             if volume_is_shared:
                 # when volumes are shared among hosts
-                final_volume_uuid_list = volume_uuid_list * len(host_obj_list)
-                final_host_obj_list = host_obj_list * len(volume_uuid_list)
+                volume_uuid_list = volume_uuid_list * len(host_obj_list)
+                host_obj_list = host_obj_list * len(volume_uuid_list)
             else:
                 if len(host_obj_list) < len(volume_uuid_list):
                     # when volumes are attached in round robin fashion
                     fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
-                                 "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
-                                                                              len(final_host_obj_list)))
+                                 "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
+                                                                                      len(temp_host_obj_list)))
                     for i in range(len(host_obj_list), len(volume_uuid_list)):
-                        final_host_obj_list.append(final_host_obj_list[i % len(host_obj_list)])
+                        host_obj_list.append(temp_host_obj_list[i % len(temp_host_obj_list)])
 
                 elif len(host_obj_list) > len(volume_uuid_list):
                     # when volumes are attached in round robin fashion
                     fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
-                                 "So attaching volumes in round robin fashion".format(len(final_volume_uuid_list),
-                                                                              len(final_host_obj_list)))
+                                 "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
+                                                                                      len(temp_host_obj_list)))
                     for i in range(len(volume_uuid_list), len(host_obj_list)):
-                        final_volume_uuid_list.append(final_volume_uuid_list[i % len(volume_uuid_list)])
+                        volume_uuid_list.append(temp_volume_uuid_list[i % len(temp_volume_uuid_list)])
 
-            for index in range(len(final_host_obj_list)):
-                if not final_host_obj_list[index] in result.keys():
-                    result[final_host_obj_list[index]] = []
-                fun_test.log("Attaching {} volume to {} host".format(final_volume_uuid_list[index],
-                                                                     final_host_obj_list[index].name))
-                output = self.attach_volume(fs_obj=fs_obj, volume_uuid=final_volume_uuid_list[index],
-                                            host_obj=final_host_obj_list[index],
+            for index in range(len(host_obj_list)):
+                if not host_obj_list[index] in result.keys():
+                    result[host_obj_list[index]] = []
+                fun_test.log("Attaching {} volume to {} host".format(volume_uuid_list[index],
+                                                                     host_obj_list[index].name))
+                output = self.attach_volume(fs_obj=fs_obj, volume_uuid=volume_uuid_list[index],
+                                            host_obj=host_obj_list[index],
                                             validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
                                             nvme_io_queues=nvme_io_queues)
                 fun_test.test_assert(output[0]["status"],
-                                     message="Attach volume {} to host {}".format(final_volume_uuid_list[index],
-                                                                                  final_host_obj_list[index].name))
-                result[final_host_obj_list[index]].append(output[0])
+                                     message="Attach volume {} to host {}".format(volume_uuid_list[index],
+                                                                                  host_obj_list[index].name))
+                result[host_obj_list[index]].append(output[0])
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
