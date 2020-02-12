@@ -41,7 +41,8 @@ class NvdimmTest1(FunTestCase):
         # fun_test.build_parameters["bundle_image_parameters"] = {"release_train": "rel_1_0a_aa", "build_number": -1}
         topology_helper = TopologyHelper()
         #topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods --dpc-uart --dpc-server --csr-replay --all_100g")
-        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods,nvdimm_demo nvdimm_arm_backup=1 demo-mode=backup syslog=6 --test-exit-fast")
+        #topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods,nvdimm_demo nvdimm_arm_backup=1 demo-mode=backup syslog=6 --test-exit-fast")
+        topology_helper.set_dut_parameters(dut_index=0, custom_boot_args="app=load_mods nvdimm_arm_backup=1 demo-mode=backup syslog=6 --test-exit-fast")
         topology = topology_helper.deploy()
         fun_test.test_assert(topology, "Topology deployed")
         fs = topology.get_dut_instance(index=0)
