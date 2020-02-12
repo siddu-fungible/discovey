@@ -403,7 +403,7 @@
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.20.38"
+      "mgmt_ip": "10.1.20.27"
     },
     "apc_info": {
       "username": "admin",

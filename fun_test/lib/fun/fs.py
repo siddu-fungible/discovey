@@ -368,8 +368,8 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
-        if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
-            s += " --disable-syslog-replay"
+        # if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
+        #    s += " --disable-syslog-replay"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -930,13 +930,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
-                try:
-                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
-                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
-                        rotated_log_filename = rotated_log_file["filename"]
-                        self.command('rm {}'.format(rotated_log_filename))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
+            try:
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    self.command('rm {}'.format(rotated_log_filename))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -1905,6 +1905,8 @@ class ComE(Linux):
                                                      timeout=240)
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
+                fun_test.report_message("SC log available at {}".format(uploaded_path))
+
             self.command("rm {}".format(sc_logs_path))
 
         # Fetch redis logs if they exist

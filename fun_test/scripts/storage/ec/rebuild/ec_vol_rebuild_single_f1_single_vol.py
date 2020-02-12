@@ -479,35 +479,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
-        if "device_id" not in self.ec_info:
-            fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
-                         "So going to pull that info")
-            self.ec_info["drive_uuid"] = {}
-            self.ec_info["device_id"] = {}
-            for num in xrange(self.ec_info["num_volumes"]):
-                self.ec_info["drive_uuid"][num] = []
-                self.ec_info["device_id"][num] = []
-                for blt_uuid in self.ec_info["uuids"][num]["blt"]:
-                    blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
-                                                             "stats")
-                    blt_stats = self.storage_controller.peek(blt_props_tree)
-                    fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
-                    if "drive_uuid" in blt_stats["data"]:
-                        self.ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
-                    else:
-                        fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
-                                               format(blt_uuid))
-                    drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
-                                                               "drives", blt_stats["data"]["drive_uuid"])
-                    drive_stats = self.storage_controller.peek(drive_props_tree)
-                    fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
-                                           format(blt_stats["data"]["drive_uuid"]))
-                    if "drive_id" in drive_stats["data"]:
-                        self.ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
-                    else:
-                        fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
-                                               format(blt_stats["data"]["drive_uuid"]))
-
+        self.ec_info = get_plex_device_id(self.ec_info, self.storage_controller)
         fun_test.log(
             "EC plex volumes UUID      : {}".format(self.ec_info["uuids"][self.test_volume_start_index]["blt"]))
         fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
