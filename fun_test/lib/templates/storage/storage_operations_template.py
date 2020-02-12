@@ -204,6 +204,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         else:
             host_obj_list = host_obj
         for host_obj in host_obj_list:
+            if host_obj not in self.host_nvme_device:
+                self.host_nvme_device[host_obj] = []
             fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj))
             storage_controller = fs_obj.get_storage_controller()
             host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
@@ -238,8 +240,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
                                                                             host_nqn=host_nqn, dataplane_ip=dataplane_ip),
                                      message="NVMe connect from host: {}".format(host_obj.name))
-                if host_obj not in self.host_nvme_device:
-                    self.host_nvme_device[host_obj] = []
                 nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
                 fun_test.test_assert(expression=nvme_filename,
                                      message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))

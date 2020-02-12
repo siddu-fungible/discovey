@@ -171,13 +171,13 @@ class SharedVolumePerfTest(FunTestCase):
                                                                    self.hosts,
                                                                    validate_nvme_connect=False,
                                                                    raw_api_call=self.raw_api_call)
-            fun_test.test_assert(expression=attach_vol_result[i], message="Attach Volume {} to {} hosts".
-                                 format(i+1, len(self.hosts)))
+            fun_test.simple_assert(expression=attach_vol_result[i], message="Attach Volume {} to {} hosts".
+                                   format(i+1, len(self.hosts)))
             for j, result in enumerate(attach_vol_result[i]):
                 host = self.hosts[j]
                 if self.raw_api_call:
-                    # fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
-                    #                     format(i, host.name))
+                    fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
+                                         format(i+1, host.name))
                     subsys_nqn = result["data"]["subsys_nqn"]
                     host_nqn = result["data"]["host_nqn"]
                     dataplane_ip = result["data"]["ip"]
@@ -415,7 +415,7 @@ class SharedVolumePerfTest(FunTestCase):
 
                 aggr_fio_output = {}
                 for index, host in enumerate(self.hosts):
-                    fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                    fun_test.simple_assert(fun_test.shared_variables["fio"][index],
                                          "FIO {} test with IO depth {} in host {}".format(mode, io_depth, host.name))
                     for op, stats in fun_test.shared_variables["fio"][index].items():
                         if op not in aggr_fio_output:
