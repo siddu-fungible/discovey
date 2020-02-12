@@ -211,7 +211,7 @@
               *ngIf="(!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))) && (testCaseExecution.result !== 'NOT_RUN')">
               <td>
                   <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
-                        (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
+                        (click)="clickTestCaseId(testCaseExecution.test_case_id)">{{ testCaseExecution.test_case_id }}
                   </span>
               </td>
               <td>{{ testCaseExecution.summary }}</td>
@@ -256,7 +256,8 @@
               </td>
               <td nowrap *ngIf="checkpoint.data.checkpoint != 'Start'" align="center">
                   <span class="fun-action-link" style="display: inline-block"
-                        (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
+                        (click)="clickCheckPointId(checkpoint.data.checkpoint_index, currentTestCaseExecution.test_case_id)">{{
+                    checkpoint.data.checkpoint_index }}
                   </span>
                 &nbsp;
                 <i tooltip [tooltipContentString]="'Logs are not downloaded yet'" placement="right"

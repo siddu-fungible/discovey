@@ -207,6 +207,7 @@ export class ScriptDetailComponent implements OnInit {
 
   timeSeriesTypes: any = null;
   baseUrl: string = null;
+  queryParams: any[] = [];
 
   ngOnInit() {
     this.baseUrl = '/regression/script_detail';
@@ -281,8 +282,74 @@ export class ScriptDetailComponent implements OnInit {
       } else {
         this.showingTablesPanel = false;
       }
+      if (params['test_case_id'] && params['checkpoint_id']) {
+            new Observable(observer => {
+      observer.next(true);
+      observer.complete();
+      return () => {
+      }
+    }).pipe(
+      switchMap(response => {
+        let testCaseId = params['test_case_id'];
+        // return this.expandTestCaseIdClick(testCaseId);
+        let index = this.getIndexFromTestCaseId(testCaseId);
+    if (index) {
+       return this.onTestCaseIdClick(index);
+    } else {
+      throwError("Index not found");
+    }
+      })).subscribe(response => {
+        let checkpointId = params['checkpoint_id'];
+        this.expandCheckpointIdClick(checkpointId);
+      console.log("opened edit modal");
+    }, error => {
+      this.loggerService.error("Unable to set test case and checkpoints");
+    });
+      } else if (params['test_case_id']) {
+        let testCaseId = params['test_case_id'];
+        this.expandTestCaseIdClick(testCaseId);
+      }
     });
     return of(true);
+  }
+
+  expandTestCaseIdClick(testCaseId): any {
+    let index = this.getIndexFromTestCaseId(testCaseId);
+    if (index) {
+       return this.onTestCaseIdClick(index);
+    }
+  }
+
+  expandCheckpointIdClick(checkpointId) {
+    let contextId = this.getContextIdFromCheckpointId(checkpointId);
+    this.onCheckpointClick(this.currentTestCaseExecution, checkpointId, contextId);
+  }
+
+  getContextIdFromCheckpointId(checkpointId) {
+    let contextId = 0;
+    this.currentTestCaseExecution.checkpoints.forEach(checkpoint => {
+      if (checkpoint.data.checkpoint_index === checkpointId) {
+        contextId = checkpoint.data.context_id;
+      }
+    });
+    // for (let checkpoint of this.currentTestCaseExecution.checkpoints) {
+    //   if (checkpoint.data.checkpoint_index === checkpointId) {
+    //     contextId = checkpoint.data.context_id;
+    //     break;
+    //   }
+    // }
+    return contextId;
+  }
+
+  getIndexFromTestCaseId(testCaseId): Number {
+    let index = null;
+    for (let i = 0; i < this.testCaseExecutions.length; i++) {
+      if (this.testCaseExecutions[i].test_case_id === Number(testCaseId)) {
+        index = i;
+        break;
+      }
+    }
+    return index;
   }
 
   clickedStatsTreeNode(flatNode): void {
@@ -381,7 +448,7 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  onTestCaseIdClick(testCaseExecutionIndex) {
+  onTestCaseIdClick(testCaseExecutionIndex): any {
     this.testLogs = null;
     this.currentCheckpointIndex = null;
     this.showLogsPanel = false;
@@ -389,10 +456,10 @@ export class ScriptDetailComponent implements OnInit {
     this.updateScriptExecutionInfo();
 
     this.checkpointPanelStatus = "Fetching checkpoints";
-    this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
+    return this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
       this.checkpointPanelStatus = null;
       this.showCheckpointPanel = true;
-
+      return of(true)
     }, error => {
       this.loggerService.error("Unable to fetch checkpoints");
       this.status = null;
@@ -419,7 +486,7 @@ export class ScriptDetailComponent implements OnInit {
     this.timeFilterMin = 0;
   }
 
-  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId=0) {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
@@ -692,12 +759,15 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  // deleteQueryParam(param) {
-  //   for (let i = 0; i < this.queryParams.length; i++) {
-  //     if (this.queryParams[i][0] === param) {
-  //       this.queryParams.splice(i, 1);
-  //     }
-  //   }
-  // }
+  clickTestCaseId(testCaseId) {
+    let param = {"name": "test_case_id", "value": testCaseId};
+    this.commonService.navigateByQuery(param, this.baseUrl, this.queryParams);
+  }
+
+  clickCheckPointId(checkpointId, testCaseId) {
+    this.queryParams.push(['test_case_id', testCaseId]);
+    let param = {"name": "checkpoint_id", "value": checkpointId};
+    this.commonService.navigateByQuery(param, this.baseUrl, this.queryParams);
+  }
 
 }
