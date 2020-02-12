@@ -63,7 +63,10 @@ export abstract class Api {
     return url;
   }
 
-  public get(url) {
+  public get(url?) {
+    if (!url) {
+      url = this.url;
+    }
     return this.apiService.get(url).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
@@ -104,7 +107,10 @@ export abstract class Api {
   public deleteAll() {
   }
 
-  public update(url) {
+  public update(url?) {
+    if (!url) {
+      url = this.url;
+    }
     return this.apiService.put(url, this.serialize()).pipe(switchMap(response => {
       this.deSerialize(response.data);
       return of(this);
