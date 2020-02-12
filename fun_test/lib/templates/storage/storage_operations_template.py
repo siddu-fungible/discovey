@@ -329,7 +329,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.log("Attaching {} volume to {} host".format(final_volume_uuid_list[index],
                                                                      final_host_obj_list[index].name))
                 output = self.attach_volume(fs_obj=fs_obj, volume_uuid=final_volume_uuid_list[index],
-                                            host_obj=host_obj_list[index],
+                                            host_obj=final_host_obj_list[index],
                                             validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
                                             nvme_io_queues=nvme_io_queues)
                 fun_test.test_assert(output[0]["status"],
