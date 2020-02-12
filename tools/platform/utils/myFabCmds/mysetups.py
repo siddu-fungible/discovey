@@ -5,12 +5,9 @@ from fabric.api import env
 # Set below values if you keep your image at same path after build
 # default kept this some dummy values to avoid booting from any-image
 ###################################################################################
-env.DEFAULT_NFSFILE   = "/home/users/tftpboot/funos-f1.stripped.gz"
-env.DEFAULT_TFTPFILE = "users/tftpboot/funos-f1.stripped.gz"
-#env.DEFAULT_BOOTARGS = "app=hw_hsu_test --memvol --csr-replay --all_100g --nofreeze --dpc-server --dpc-proxy syslog=6"
-#env.DEFAULT_BOOTARGS = 'app=mdt_test,load_mods,hw_hsu_test --serial --memvol --dis-stats --dpc-server --dpc-uart --csr-replay --all_100g --nofreeze'
-#env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-server retimer=0 --dpc-uart --csr-replay'
-env.DEFAULT_BOOTARGS = 'app=hw_hsu_test --serial --memvol --all_100g --dpc-server --dpc-uart --dis-stats --mgmt syslog=6'
+env.DEFAULT_NFSFILE   = "/home/user/tftpboot/funos-f1.signed"
+env.DEFAULT_TFTPFILE = "user/tftpboot/funos-f1.signed"
+env.DEFAULT_BOOTARGS = 'app=load_mods --serial --all_100g --dpc-server --dpc-uart syslog=6 workload=storage'
 
 ###################################################################################
 env.NFSSERVER = "10.1.20.54"
@@ -321,6 +318,20 @@ setups = {
         'ipmi' : [ '10.90.4.106', 'admin', 'admin' ],
         'fpga' : [ '10.90.4.108', 'root', '""' ],
         'come' : [ '10.90.4.107', 'fun', '123' ]
+   },
+   'FS142' : {
+        'bmc'  : [ '10.1.22.33', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.22.33', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.22.33', 'admin', 'admin' ],
+        'fpga' : [ '10.1.22.35', 'root', '""' ],
+        'come' : [ '10.1.22.33', 'fun', '123' ]
+   },
+   'FS143' : {
+        'bmc'  : [ '10.1.22.94', 'sysadmin', 'superuser' ],
+        'rf'   : [ '10.1.22.94', 'Administrator', 'superuser' ],
+        'ipmi' : [ '10.1.22.94', 'admin', 'admin' ],
+        'fpga' : [ '10.1.22.96', 'root', '""' ],
+        'come' : [ '10.1.22.95', 'fun', '123' ]
    },
 }
 

@@ -387,8 +387,10 @@ def get_fs_rev():
 def resetF(index=0):
     revstring = execute(get_fs_rev)
     if 'REV1' in revstring.values()[0] :
+        env.FS1600REV = 1
         execute(fpgaresetF, index=index)
     elif 'REV2' in revstring.values()[0] :
+        env.FS1600REV = 2
         execute(bmcresetF, index=index)
     else:
         raise('Unknown platform revision ...')
@@ -526,41 +528,70 @@ def _make_gateway(index=0):
     a,b,c,d = socket.gethostbyname(ip).split('.')
     return '.'.join([a, b, c, '1'])
 
-## flash image ##
+## flash image getting too complicated, keeping it hidden ##
 @roles('bmc')
-@task
-def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
-    """ flash image of chip[index] over type tftp with provided arguments """
+#@task
+def flashF(index=0, flags=False, type=None, image=None, rootpath='funsdk-release', version=None, old=None):
+    """ flash image of chip[index] over type tftp with provided arguments
+    If working on private drop confirm if the path is accessibale by HTTP and TFTP """
+
     global child
+    child = connectF(index, True)
+    child.sendline ('echo connected to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('setenv autoload no')
+    child.expect ('\nf1 # ')
+    child.sendline ('lmpg;lfw;ltrain;ls;')
+    child.expect ('\nf1 # ')
+
     CCHUID = 3 - int(index)
-    bootargs = 'cc_huid={} sku=SKU_FS1600_{} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(CCHUID, index)
-    #print bootargs
+    if env.FS1600REV == 1:
+        sku_string = "sku=SKU_FS1600_{}".format(index)
+        cchuid_string = "cc_huid={}".format(CCHUID)
+    else:
+        sku_string = ""
+        cchuid_string = ""
+
+    bootargs = '{} {} app=fw_upgrade syslog=6 boot-reserved=0x2000000@0x12000000 '.format(cchuid_string, sku_string)
+    print bootargs
 
     command = 'tftpboot'
+    if version:
+        rooturl='{}/{}'.format(rootpath, version)
+
     if image and version:
         sys.exit("image-path and version are multually exclusive ...")
 
     if version:
-        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'hbsb' ]:
-            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'hbsb' ] ..." % type)
+        if type not in [ 'pufr', 'frmw', 'eepr', 'host', 'emmc', 'sbpf', 'husd', 'husm', 'husb', 'husc', 'kbag' ]:
+            sys.exit("image-type %s not-supported only=['pufr', 'frmw', 'sbpf', 'eepr', 'host', 'emmc', 'husd', 'husm', 'husb', 'husc', 'kbag' ] ..." % type)
         elif type == 'eepr':
-            fimage='funsdk-release/{}/eeprom_fs1600_{}_packed.bin'.format(version, index)
+            if env.FS1600REV == 2:
+                fimage='{}/eeprom_fs1600r2_{}_packed.bin'.format(rooturl, index)
+            else:
+                fimage='{}/eeprom_fs1600_{}_packed.bin'.format(rooturl, index)
         elif type == 'host':
-            fimage='funsdk-release/{}/host_firmware_packed.bin'.format(version)
+            fimage='{}/host_firmware_packed.bin'.format(rooturl)
         elif type == 'emmc':
-            fimage='funsdk-release/{}/emmc_image.bin'.format(version)
+            fimage='{}/emmc_image.bin'.format(rooturl)
         elif type == 'sbpf':
-            fimage='funsdk-release/{}/esecure_firmware_all.bin'.format(version)
+            fimage='{}/esecure_firmware_all.bin'.format(rooturl)
         elif type == 'pufr':
-            fimage='funsdk-release/{}/esecure_puf_rom_packed.bin'.format(version)
+            fimage='{}/esecure_puf_rom_packed.bin'.format(rooturl)
         elif type == 'frmw':
-            fimage='funsdk-release/{}/esecure_firmware_packed.bin'.format(version)
+            fimage='{}/esecure_firmware_packed.bin'.format(rooturl)
         elif type == 'husd':
-            fimage='funsdk-release/{}/hu_sds.bin'.format(version)
+            fimage='{}/hu_sds.bin'.format(rooturl)
         elif type == 'husm':
-            fimage='funsdk-release/{}/hu_sbm.bin'.format(version)
-        elif type == 'hbsb':
-            fimage='funsdk-release/{}/hbm_sbus.bin'.format(version)
+            fimage='{}/hu_sbm.bin'.format(rooturl)
+        elif type == 'husb':
+            fimage='{}/hbm_sbus.bin'.format(rooturl)
+        elif type == 'hbsc':
+            fimage='{}/hu_sbm_serdes.bin'.format(rooturl)
+        elif type == 'kbag':
+            fimage='{}/key_bag.bin'.format(rooturl)
         else:
             sys.exit("image-type %s not-supported ..." % type)
     elif image:
@@ -578,15 +609,6 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
     bootargs += 'fw-upgrade-{}={}@0xa800000080000000{}'.format(type, fsize, FLAGS)
     print bootargs
 
-    child = connectF(index, True)
-    child.sendline ('echo connected to chip={} ...'.format(index))
-    child.expect ('\nf1 # ')
-    child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
-    child.expect ('\nf1 # ')
-    child.sendline ('setenv autoload no')
-    child.expect ('\nf1 # ')
-    child.sendline ('lmpg;lfw;ltrain;ls;')
-    child.expect ('\nf1 # ')
     child.sendline ('setenv gatewayip %s' % _make_gateway(index))
     child.expect ('\nf1 # ')
     child.sendline ('dhcp')
@@ -602,9 +624,9 @@ def flashF(index=0, flags=False, type=None, image=None, version=None, old=True):
     child.sendline('{} 0xa800000080000000 {}:{};'.format(command, env.TFTPSERVER, fimage))
     child.expect ('\nf1 # ')
     if old:
-        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos-f1.stripped;'.format(command, env.TFTPSERVER))
+        child.sendline('{} 0xffffffff99000000 {}:{}/funos-f1.stripped;'.format(command, env.TFTPSERVER, rooturl))
     else:
-        child.sendline('{} 0xffffffff99000000 {}:funsdk-release/latest/funos.signed.bin;authfw 0xffffffff99000000'.format(command, env.TFTPSERVER))
+        child.sendline('{} 0xffffffff99000000 {}:{}/funos.signed.bin;authfw 0xffffffff99000000'.format(command, env.TFTPSERVER, rooturl))
     child.expect ('\nf1 # ')
     child.sendline ('echo booting to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
@@ -733,8 +755,10 @@ def argsF(index=0, bootargs=BOOTARGS):
     """ set bootargs of chip[index] with provided arguments """
     global child
     CCHUID = 3 - int(index)
-    bootargs = 'cc_huid={} '.format(CCHUID) + bootargs
-    bootargs = 'sku=SKU_FS1600_{} '.format(index) + bootargs
+    if env.FS1600REV == 1:
+        sku_string = "SKU_FS1600_{}".format(index)
+        bootargs = 'cc_huid={} sku={} '.format(CCHUID, sku_string) + bootargs
+    print bootargs
     child = connectF(index, reset=False)
     child.sendline ('echo connected to chip={} ...'.format(index))
     child.expect ('\nf1 # ')
@@ -819,3 +843,24 @@ def redfish_generic(tag='Systems'):
         redfish_credentials = env.thissetup['rf'][0:3]
         rfcmd = "redfishtool -r {} -u {} -p {} -A Basic -S Always ".format(*redfish_credentials) + tag
         local(rfcmd)
+
+@roles('come')
+@task
+def get_and_build_drv(version=None, install=False):
+    if not version:
+        sys.exit('\nATTENTION !! please provide a valid bundle number to extract ...\n')
+    bundle_drops_directory = '/home/fun/bundle_drops'
+    with settings(hide('stdout', 'stderr'), warn_only=True):
+        if not exists(bundle_drops_directory):
+            run('mkdir -p {}'.format(bundle_drops_directory))
+        with cd (bundle_drops_directory):
+            run('wget http://vnc-shared-06.fungible.local:9669/fs1600-bundles/{}/install_funeth-bld-{}.sh'.format(version, version))
+            sudo('bash install_funeth-bld-{}.sh --noexec --target drivers_{}'.format(version, version))
+            with cd('drivers_{}/temp'.format(version)):
+                sudo('tar xzf fungible-host-drivers.src.tgz')
+                sudo('tar xzf generator-bin.tgz')
+                sudo('tar xzf hci.tgz')
+                with prefix('export WORKSPACE=$(pwd) && export SDKDIR=$(pwd)'):
+                    sudo('bash build_driver.sh')
+
+    print ("drivers should not be avaliable in {}/drivers_{}/temp/opt/fungible/drivers".format(bundle_drops_directory, version))

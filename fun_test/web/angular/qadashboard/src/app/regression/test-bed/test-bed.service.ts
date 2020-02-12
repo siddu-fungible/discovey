@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import {ApiService} from "../../services/api/api.service";
 import {catchError, switchMap} from "rxjs/operators";
 import {of} from "rxjs";
-import {error} from "util";
 import {LoggerService} from "../../services/logger/logger.service";
 
 @Injectable({
@@ -14,6 +13,9 @@ export class TestBedService {
 
   assets(name=null) {
     let url = "/api/v1/regression/assets";
+    if (name) {
+      url += `?test_bed_name=${name}`;
+    }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }));

@@ -49,9 +49,10 @@ def get_nvme_device(host_obj):
     return fio_filename
 
 
-# Disconnect linux objects
 def fio_parser(arg1, **kwargs):
-    arg1.pcie_fio(**kwargs)
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"] = fio_output
+    fun_test.simple_assert(fio_output, "Fio result")
     arg1.disconnect()
 
 
@@ -610,7 +611,10 @@ class BLTCryptoVolumeTestCase(FunTestCase):
                     fun_test.log("Loading nvme_tcp")
                     host_handle.modprobe("nvme_tcp")
                     host_handle.modprobe("nvme_fabrics")
-                host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+                filesuffix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+                nvme_connect_filename = "nvme_connect_auto_" + str(filesuffix)
+                host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w {}.pcap".
+                                             format(nvme_connect_filename))
                 if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
                     command_result = host_handle.sudo_command(
                         "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}".format(unicode.lower(self.transport_type),
@@ -1081,7 +1085,7 @@ class CreateDelete256(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=12,
-                              summary="Create, attach & delete 25 BLT's with encryption using 256 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 256 size key",
                               steps='''
                               1. Create BLT's with encryption with 256 size key.
                               2. Attach it to external linux/container.
@@ -1096,7 +1100,7 @@ class CreateDelete384(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=13,
-                              summary="Create, attach & delete 25 BLT's with encryption using 384 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 384 size key",
                               steps='''
                               1. Create BLT's with encryption with 384 size key.
                               2. Attach it to external linux/container.
@@ -1111,7 +1115,7 @@ class CreateDelete512(BLTCryptoVolumeTestCase):
 
     def describe(self):
         self.set_test_details(id=14,
-                              summary="Create, attach & delete 25 BLT's with encryption using 512 size key",
+                              summary="Create, attach & delete 100 BLT's with encryption using 512 size key",
                               steps='''
                               1. Create BLT's with encryption with 512 size key.
                               2. Attach it to external linux/container.

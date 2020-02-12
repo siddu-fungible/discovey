@@ -18,6 +18,7 @@ export class SectionHeaderComponent implements OnInit, OnChanges {
   @Input() titleStateLabel: string = null;
   @Input() titleResultLabel: string = null;
   @Input() titleActionLinks: FunActionLink [];
+  @Input() nextHeaderTitle: string = null;
   @Output() editingCallback = new EventEmitter<string>();
   editing: boolean = false;
   hoverHide: boolean = true;

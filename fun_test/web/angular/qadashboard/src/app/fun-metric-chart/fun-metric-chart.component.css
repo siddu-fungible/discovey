@@ -52,3 +52,9 @@ a {
   border: solid 1px black;
   background-color: #337ab7;
 }
+
+.highlight {
+  text-decoration: underline !important;
+  color: black !important;
+  font-weight: 600 !important;
+}

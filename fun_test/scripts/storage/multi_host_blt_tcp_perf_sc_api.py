@@ -145,6 +145,10 @@ class MultiHostVolumePerformanceScript(FunTestScript):
             self.disable_wu_watchdog = False
         if "syslog" in job_inputs:
             self.syslog = job_inputs["syslog"]
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
+        if "reboot_hosts" in job_inputs:
+            self.reboot_hosts = job_inputs["reboot_hosts"]
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
@@ -271,9 +275,9 @@ class MultiHostVolumePerformanceScript(FunTestScript):
                 fun_test.critical(str(ex))
                 fun_test.log("Clean-up of volumes failed.")
 
-        fun_test.log("FS cleanup")
-        for fs in fun_test.shared_variables["fs_objs"]:
-            fs.cleanup()
+        # fun_test.log("FS cleanup")  #Infra cleans'up the topology
+        # for fs in fun_test.shared_variables["fs_objs"]:
+        #    fs.cleanup()
 
 
 class MultiHostVolumePerformanceTestcase(FunTestCase):
@@ -294,7 +298,6 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
         benchmark_dict = {}
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
-        fun_test.shared_variables['benchmark_dict'] = benchmark_dict
 
         if testcase not in benchmark_dict or not benchmark_dict[testcase]:
             benchmark_parsing = False
@@ -470,9 +473,10 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
             for i in range(self.blt_count):
                 ctrlr_index = i % self.num_hosts
                 ns_id = (i / self.num_hosts) + 1
+                host_nqn = "nqn.2015-09.com.Fungible:{}".format(self.host_ips[ctrlr_index])
                 attach_volume = self.sc_api.volume_attach_remote(vol_uuid=self.thin_uuid_list[i],
                                                                  transport=self.transport_type.upper(),
-                                                                 remote_ip=self.host_ips[ctrlr_index])
+                                                                 host_nqn=host_nqn)
                 fun_test.log("Attach volume API response: {}".format(attach_volume))
                 fun_test.test_assert(attach_volume["status"], "Attaching BLT volume {} to the host {}".
                                      format(self.thin_uuid_list[i], self.host_ips[ctrlr_index]))
@@ -703,6 +707,8 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
+        if "test_bs" in job_inputs:
+            self.fio_bs = job_inputs["test_bs"]
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
@@ -1042,6 +1048,7 @@ class PreCommitSanity(MultiHostVolumePerformanceTestcase):
 
 
 class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
+    api_server_timeout = 240
     def describe(self):
         self.set_test_details(id=4,
                               summary="Bundle sanity. Run fio random read after COMe reboot on the same BLT attached",
@@ -1054,7 +1061,24 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
     def setup(self):
         # super(MultiHostFioRandReadAfterReboot, self).setup()
-        self.testcase = self.__class__.__name__
+        testcase = self.__class__.__name__
+
+        benchmark_parsing = True
+        benchmark_file = ""
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        benchmark_dict = {}
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in benchmark_dict or not benchmark_dict[testcase]:
+            benchmark_parsing = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
+
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
 
     def run(self):
         fun_test.log("Rebooting COMe")
@@ -1065,7 +1089,9 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         self.host_info = fun_test.shared_variables["host_info"]
         self.f1_ips = fun_test.shared_variables["f1_ips"]
 
-        reboot_timer = FunTimer(max_time=600)
+        total_reconnect_time = 600
+        add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time) #WORKAROUND, why do we need so much time
 
         # Reset COMe
         reset = self.fs[0].reset(hard=False)
@@ -1083,7 +1109,8 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         # Ensure API server is up
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api), "Ensure API server is up")
+        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout),
+                             "Ensure API server is up")
 
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
 
@@ -1094,51 +1121,83 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         nvme_device = self.host_info[self.host_info.keys()[0]]["nvme_block_device_list"][0]
         fun_test.log("Nvme device name is {}".format(nvme_device))
         nvme_device_name = nvme_device.split("/")[-1]
+        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
+
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
             if (vols['status'] and vols['data']) and not volume_found:
                 if vol_uuid in vols['data'].keys():
                     fun_test.test_assert(vols['data'][vol_uuid]['type'] == "raw volume",
-                                           "BLT Volume {} is persistent".format(vol_uuid))
+                                         "BLT Volume {} is persistent".format(vol_uuid))
                     volume_found = True
             if volume_found:
                 nvme_list_output = host_handle.sudo_command("nvme list")
                 if nvme_device in nvme_list_output and "FS1600" in nvme_list_output:
                     nvme_list_found = True
                     break
-            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid))
+            fun_test.log("Checking for routes on host and docker containers")
+            fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+            docker_f1_handle.command("arp -n")
+            docker_f1_handle.command("route -n")
+            docker_f1_handle.command("ifconfig")
+            fun_test.log("\nRoutes from host {}".format(host_handle))
+            host_handle.command("arp -n")
+            host_handle.command("route -n")
+            host_handle.command("ifconfig")
+            fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
 
+
+
+        if not nvme_list_found:
+            try:
+                # Check host F1 connectivity
+                fun_test.log("Checking host F1 connectivity")
+                for ip in self.f1_ips:
+                    ping_status = host_handle.ping(dst=ip)
+                    if not ping_status:
+                        fun_test.log("Routes from docker container {}".format(docker_f1_handle))
+                        docker_f1_handle.command("arp -n")
+                        docker_f1_handle.command("route -n")
+                        docker_f1_handle.command("ifconfig")
+                        fun_test.log("\nRoutes from host {}".format(host_handle))
+                        host_handle.command("arp -n")
+                        host_handle.command("route -n")
+                        host_handle.command("ifconfig")
+
+                    fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
+                                           format(host_handle.host_ip, ip))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            fun_test.log("Printing dmesg from host {}".format(host_handle))
+            host_handle.command("dmesg")
         fun_test.test_assert(nvme_list_found, "Check nvme device {} is found on host {}".format(nvme_device_name,
-                                                                                            host_handle))
+                                                                                                host_handle))
 
         # Check host F1 connectivity
-        docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Checking host F1 connectivity")
         for ip in self.f1_ips:
             ping_status = host_handle.ping(dst=ip)
             if not ping_status:
-                fun_test.log("Routes from docker container")
+                fun_test.log("Routes from docker container {}".format(docker_f1_handle))
                 docker_f1_handle.command("arp -n")
                 docker_f1_handle.command("route -n")
                 docker_f1_handle.command("ifconfig")
-                fun_test.log("Routes from host")
+                fun_test.log("\nRoutes from host {}".format(host_handle))
                 host_handle.command("arp -n")
                 host_handle.command("route -n")
                 host_handle.command("ifconfig")
 
             fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
-                                    format(host_handle.host_ip, ip))
+                                   format(host_handle.host_ip, ip))
 
         # Run fio
-        benchmark_dict = fun_test.shared_variables['benchmark_dict'][self.testcase]
-        cmd_args = benchmark_dict["fio_cmd_args"]
 
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
         fun_test.test_assert(fio_output, "Ensure fio reads are successful")
 
-        write_cmd_args = copy.deepcopy(cmd_args)
+        write_cmd_args = copy.deepcopy(self.fio_cmd_args)
         write_cmd_args.update({"rw": "randwrite"})
         write_cmd_args.update({"do_verify": 0})
 
@@ -1146,18 +1205,19 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         fun_test.test_assert(fio_output, "Ensure fio writes are successful reboot")
 
         # Reading the written output
-        fio_output = host_handle.pcie_fio(filename=nvme_device, **cmd_args)
+        fio_output = host_handle.pcie_fio(filename=nvme_device, **self.fio_cmd_args)
+        if not fio_output:
+            host_handle.command("dmesg")
         fun_test.test_assert(fio_output, "Ensure fio reads are successful for writes done after reboot")
 
     def cleanup(self):
         super(MultiHostFioRandReadAfterReboot, self).cleanup()
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     bltscript = MultiHostVolumePerformanceScript()
     bltscript.add_test_case(MultiHostFioRandRead())
     bltscript.add_test_case(MultiHostFioRandWrite())
     bltscript.add_test_case(PreCommitSanity())
     bltscript.add_test_case(MultiHostFioRandReadAfterReboot())
     bltscript.run()
-

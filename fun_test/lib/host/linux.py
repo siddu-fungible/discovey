@@ -1973,38 +1973,39 @@ class Linux(object, ToDictMixin):
         return fio_dict
 
     @fun_test.safe
-    def fio(self, destination_ip, timeout=60, **kwargs):
+    def fio(self, filename, timeout=65, ioengine="libaio", bs="4k", name="fio_job", numjobs=1, iodepth=1, rw="rw",
+            runtime=60, direct=1, group_reporting=1, randrepeat=0, time_based=True, output_format="json",
+            norandommap=True, verify=None, do_verify=None):
 
         fio_command = "fio"
         fio_result = ""
         fio_dict = {}
-
-        fun_test.debug(kwargs)
+        fio_command += " --name=%s" % name
+        fio_command += " --filename=%s" % filename
+        fio_command += " --ioengine=%s" % ioengine
+        fio_command += " --bs=%s" % bs
+        fio_command += " --numjobs=%s" % numjobs
+        fio_command += " --iodepth=%s" % iodepth
+        fio_command += " --output-format=%s" % output_format
+        fio_command += " --rw=%s" % rw
+        fio_command += " --runtime=%s" % runtime
+        fio_command += " --direct=%s" % direct
+        fio_command += " --group_reporting=%s" % group_reporting
+        fio_command += " --randrepeat=%s" % randrepeat
+        if verify:
+            fio_command += " --verify=%s" % verify
+        if do_verify:
+            fio_command += " --do_verify=%s" % do_verify
+        if time_based:
+            fio_command += " --time_based"
+        if norandommap:
+            fio_command += " --norandommap"
 
         # Building the fio command
-        if 'name' not in kwargs:
-            fio_command += " --name=fun_nvmeof"
-
-        if 'numjobs' not in kwargs:
-            fio_command += " --numjobs=1"
-
-        if 'io_queues' not in kwargs:
-            fio_command += " --io_queues=2"
-
-        if 'nrfiles' not in kwargs:
-            fio_command += " --nrfiles=1"
-
-        if 'output-format' not in kwargs:
-            fio_command += " --output-format=json"
-
-        if kwargs:
-            for key in kwargs:
-                fio_command += " --" + key + "=" + str(kwargs[key])
-
         fun_test.debug(fio_command)
 
         # Executing the fio command
-        fio_result = self.command(command=fio_command, timeout=timeout)
+        fio_result = self.sudo_command(command=fio_command, timeout=timeout)
         # fio_result += '\n'
         fun_test.debug(fio_result)
 
@@ -2453,6 +2454,8 @@ class Linux(object, ToDictMixin):
             mnt_out = self.sudo_command(mnt_cmd)
             if not mnt_out:
                 pattern = r'.*{}.*'.format(volume)
+                if directory:
+                    pattern = r'.*{}.*'.format(directory)
                 mnt_out = self.command("mount")
                 match = re.search(pattern, mnt_out, re.M)
                 if match:
@@ -2501,7 +2504,8 @@ class Linux(object, ToDictMixin):
             c.buffer = None
             c.context = self.context
             c.logger = self.logger
-            c.prompt_terminator = c.saved_prompt_terminator
+            c.prompt_terminator = self.prompt_terminator
+            c.saved_prompt_terminator = self.saved_prompt_terminator
         except:
             pass
         return c
@@ -2850,6 +2854,24 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    def nvme_disconnect(self, nvme_subsystem=None, device=None):
+        result = False
+        cmd = "nvme disconnect"
+        try:
+            if nvme_subsystem:
+                cmd += " -n {}".format(nvme_subsystem)
+            if device:
+                cmd += " -d {}".format(device)
+            output = self.sudo_command(cmd)
+            if output:
+                if "disconnect" in output:
+                    result = True
+        except Exception as ex:
+            fun_test.critical(ex)
+        return result
+
+
+
     @fun_test.safe
     def curl(self, url, output_file=None, timeout=60):
         command = "curl {}".format(url)
@@ -2981,7 +3003,7 @@ class Linux(object, ToDictMixin):
         output = self.command(cmd)
         lines = output.split("\n")
         for line in lines:
-            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>\w+)', line)
+            match_pattern = re.search(r'(?P<key>[-\w ]+):\s+(?P<value>[\w//]+)', line)
             if match_pattern:
                 key = match_pattern.group("key").lower()
                 key = key.replace(" ", "_")
@@ -3023,7 +3045,6 @@ class LinuxBackup:
                           ssh_port=self.linux_obj.ssh_port)
         linux_obj.prompt_terminator = self.prompt_terminator
         linux_obj.cp(source_file_name=self.backedup_file_name, destination_file_name=self.source_file_name)
-
 
 
 if __name__ == "__main__":

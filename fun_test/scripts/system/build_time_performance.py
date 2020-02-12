@@ -233,7 +233,7 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
             self.result = fun_test.FAILED
             self.timer1 = None
             self.timer2 = None
-            test_bed_type = "fs-118"
+            test_bed_type = ["fs-118"]
             time_zone = "PST"
             build_parameters = {"RELEASE_BUILD": True,
                                 "SKIP_DASM_C": True,
@@ -314,9 +314,57 @@ class IntegrationJobBuildTimePerformanceTc(PalladiumTc):
                                           message="Integration job submission status")
 
 
-class SetBuildTimeChartStatusTc(PalladiumTc):
+class FlakyTestsFailurePerformanceTc(PalladiumTc):
+    since_time = round(time.time()) - 86400
+    status = fun_test.FAILED
+    failure_percentage = -1.0
+    FUN_ON_DEMAND_DATABASE = {'host': 'grafana.fungible.local',
+                              'database': 'buildData',
+                              'user': 'builddata_reader',
+                              'password': 'pico80@Lhasa'}
+
     def describe(self):
         self.set_test_details(id=4,
+                              summary="Continuous flaky tests failure ratio performance",
+                              steps="""
+        1. Steps 1
+        2. Steps 2
+        3. Steps 3
+                              """)
+
+    def run(self):
+        try:
+            conn = psycopg2.connect(**self.FUN_ON_DEMAND_DATABASE)
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT count(distinct(build_id)) FROM \"buildTimes\" WHERE (job = 'scheduled/flaky_test') AND start_time > " + str(
+                    self.since_time))
+            total_builds = float(cur.fetchone()[0])
+            cur.execute(
+                "SELECT count(distinct(build_id)) FROM \"buildTimes\" WHERE (job = 'scheduled/flaky_test') AND start_time > " + str(
+                    self.since_time) + " AND build_status != 'Success'")
+            failed_builds = float(cur.fetchone()[0])
+            self.failure_percentage = float((failed_builds/total_builds)) * 100
+            self.status = fun_test.PASSED
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        finally:
+            model_name = "FlakyTestsFailurePerformance"
+
+            value_dict = {"date_time": get_data_collection_time(),
+                          "failure_percentage": self.failure_percentage}
+
+            unit_dict = {"failure_percentage_unit": PerfUnit.UNIT_NUMBER}
+            db_success = self.add_to_db(model_name=model_name, value_dict=value_dict, unit_dict=unit_dict,
+                                   status=self.status)
+            fun_test.test_assert_expected(expected=True, actual=db_success, message="Db entry successful")
+            fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.status,
+                                          message="Continuous flaky tests failure ratio status")
+
+
+class SetBuildTimeChartStatusTc(PalladiumTc):
+    def describe(self):
+        self.set_test_details(id=5,
                               summary="Set build failure details for build time performance",
                               steps="Steps 1")
 
@@ -339,6 +387,7 @@ if __name__ == "__main__":
     myscript.add_test_case(FunOnDemandBuildTimeTc())
     myscript.add_test_case(PrBuildTimeTc())
     myscript.add_test_case(IntegrationJobBuildTimePerformanceTc())
+    myscript.add_test_case(FlakyTestsFailurePerformanceTc())
     myscript.add_test_case(SetBuildTimeChartStatusTc())
 
     myscript.run()

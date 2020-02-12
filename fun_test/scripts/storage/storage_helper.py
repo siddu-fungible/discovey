@@ -3,6 +3,8 @@ from web.fun_test.analytics_models_helper import BltVolumePerformanceHelper, get
 import re
 from prettytable import PrettyTable
 import time
+from web.fun_test.analytics_models_helper import ModelHelper
+from fun_global import PerfUnit, FunPlatform
 from collections import OrderedDict
 from lib.topology.topology_helper import TopologyHelper
 from lib.host.storage_controller import StorageController
@@ -25,6 +27,23 @@ fio_perf_table_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "re
                        "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
                        "fio_job_name"]
 
+blt_unit_dict = {
+            "write_iops_unit": PerfUnit.UNIT_OPS,
+            "read_iops_unit": PerfUnit.UNIT_OPS,
+            "write_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "read_throughput_unit": PerfUnit.UNIT_MBYTES_PER_SEC,
+            "write_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "write_90_latency_unit": PerfUnit.UNIT_USECS,
+            "write_95_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_latency_unit": PerfUnit.UNIT_USECS,
+            "write_99_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_avg_latency_unit": PerfUnit.UNIT_USECS,
+            "read_90_latency_unit": PerfUnit.UNIT_USECS,
+            "read_95_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_latency_unit": PerfUnit.UNIT_USECS,
+            "read_99_99_latency_unit": PerfUnit.UNIT_USECS
+        }
+
 vp_stats_thread_stop_status = {}
 resource_bam_stats_thread_stop_status = {}
 unpacked_stats = {}
@@ -41,7 +60,7 @@ class Colors:
     UNDERLINE = '\033[4m'
 
 
-def single_fs_setup(obj):
+def single_fs_setup(obj, set_dataplane_ips=True):
     if obj.testbed_type != "suite-based":
         obj.testbed_config = fun_test.get_asset_manager().get_test_bed_spec(obj.testbed_type)
         fun_test.log("{} Testbed Config: {}".format(obj.testbed_type, obj.testbed_config))
@@ -111,12 +130,23 @@ def single_fs_setup(obj):
         if obj.disable_wu_watchdog:
             obj.bootargs[i] += " --disable-wu-watchdog"
 
+    already_deployed = False
+    if hasattr(obj, "already_deployed"):
+        already_deployed = obj.already_deployed
+    fun_test.log("Parameter already_deployed is set to: {}".format(already_deployed))
+
+    # Overriding default Number of F1 per FS value (Useful if only F1 needs to be brought up in setup)
+    if not hasattr(obj, "num_f1_per_fs"):
+        obj.num_f1_per_fs = 2
+
+    fun_test.log("Number of F1 per FS value is set to: {}".format(obj.num_f1_per_fs))
+
     # Deploying of DUTs
     for dut_index in obj.available_dut_indexes:
         obj.topology_helper.set_dut_parameters(dut_index=dut_index,
                                                f1_parameters={0: {"boot_args": obj.bootargs[0]},
                                                               1: {"boot_args": obj.bootargs[1]}})
-    obj.topology = obj.topology_helper.deploy()
+    obj.topology = obj.topology_helper.deploy(already_deployed=already_deployed)
     fun_test.test_assert(obj.topology, "Topology deployed")
 
     # Datetime required for daily Dashboard data filter
@@ -182,7 +212,8 @@ def single_fs_setup(obj):
             cpu_range = cpu_group.split("-")
             obj.host_info[host_name]["total_numa_cpus"] += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
         fun_test.log("Rebooting host: {}".format(host_name))
-        host_handle.reboot(non_blocking=True)
+        if getattr(obj,"reboot_hosts", True):          #Added for avoiding the reboot of hosts
+            host_handle.reboot(non_blocking=True)
     fun_test.log("Hosts info: {}".format(obj.host_info))
 
     # Getting FS, F1 and COMe objects, Storage Controller objects, F1 IPs
@@ -210,145 +241,8 @@ def single_fs_setup(obj):
     obj.funcp_obj = {}
     obj.funcp_spec = {}
     obj.funcp_obj[0] = StorageFsTemplate(obj.come_obj[0])
-    if obj.bundle_image_parameters:
-        fun_test.log("Bundle image installation")
-        if obj.install == "fresh":
-            # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
-            '''
-            # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
-            fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
-            path = "{}/{}".format(obj.sc_script_dir, obj.run_sc_script)
-            if obj.come_obj[0].check_file_directory_exists(path=path):
-                obj.come_obj[0].command("cd {}".format(obj.sc_script_dir))
-                # Restarting run_sc with -c option
-                obj.come_obj[0].command("sudo ./{} -c restart".format(obj.run_sc_script),
-                                        timeout=obj.run_sc_restart_timeout)
-                fun_test.test_assert_expected(
-                    expected=0, actual=obj.come_obj[0].exit_status(),
-                    message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
-            '''
-            # Check if run_sc container is running
-            run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-            timer = FunTimer(max_time=obj.container_up_timeout)
-            while not timer.is_expired():
-                run_sc_name = obj.come_obj[0].command(
-                    run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-                if run_sc_name:
-                    fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
-                    break
-                else:
-                    fun_test.sleep("for the run_sc docker container to start", 1)
-                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
-            else:
-                fun_test.critical(
-                    "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
-                    "after cleaning up the DB".format(obj.container_up_timeout))
-                fun_test.test_assert(
-                    False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
-        obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
-        obj.funcp_spec[0]["container_names"].sort()
-        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-        # chances are that it may die within few seconds after restart
-        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-        run_sc_name = obj.come_obj[0].command(run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-        fun_test.simple_assert(run_sc_name, "Bundle Image boot: run_sc: Container is up and running")
 
-        # Declaring SC API controller
-        obj.sc_api = StorageControllerApi(api_server_ip=obj.come_obj[0].host_ip,
-                                          api_server_port=obj.api_server_port,
-                                          username=obj.api_server_username,
-                                          password=obj.api_server_password)
-
-        # Polling for API Server status
-        fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
-                               message="Bundle Image boot: API server is up")
-        fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
-        # Check if bond interface status is Up and Running
-        for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
-            if container_name == "run_sc":
-                continue
-            bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(container_name=container_name,
-                                                                           name="bond0")
-            # If bond interface is still not in UP and RUNNING state, flip it
-            if not bond_interfaces_status:
-                fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
-                bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
-                    container_name=container_name, name="bond0", flip_interface=True)
-            fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
-                                          message="Bundle Image boot: Bond Interface is Up & Running")
-        # If fresh install, configure dataplane ip as database is cleaned up
-        if obj.install == "fresh":
-            # Getting all the DUTs of the setup
-            dpu_id_ready_timer = FunTimer(max_time=9 * 60)
-            nodes = obj.sc_api.get_dpu_ids()
-            while not nodes and not dpu_id_ready_timer.is_expired():
-                nodes = obj.sc_api.get_dpu_ids()
-                fun_test.sleep("Checking DPU IDs", seconds=20)
-                fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
-            fun_test.test_assert(nodes, "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
-            for node_index, node in enumerate(nodes):
-                # Extracting the DUT's bond interface details
-                ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
-                ip = ip.split('/')[0]
-                subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
-                    str(node_index % 2)][str(0)]["subnet_mask"]
-                route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                    str(0)]["route"][0]
-                next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
-                obj.f1_ips.append(ip)
-
-                fun_test.log(
-                    "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
-                    "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
-                # Configuring Dataplane IP
-
-                dataplane_configuration_success = False
-                num_tries = 3
-
-                while not dataplane_configuration_success and num_tries:
-                    fun_test.log("Trials remaining {}".format(num_tries))
-                    num_tries -= 1
-                    result = obj.sc_api.configure_dataplane_ip(
-                        dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
-                        use_dhcp=False)
-                    fun_test.log(
-                        "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
-
-                    dataplane_configuration_success = result["status"]
-                    if not dataplane_configuration_success:
-                        fun_test.sleep("Wait for retry", seconds=10)
-                        try:
-                            fun_test.log("Just for debugging Start")
-                            container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                            container_handle.ping(ip[:- 1] + "1")
-                            container_handle.command("arp -n")
-                            container_handle.command("route -n")
-                            container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                            container_handle.command("ifconfig")
-                            fun_test.log("Just for debugging End")
-                        except Exception as ex:
-                            fun_test.critical(str(ex))
-                    else:
-                        fun_test.log("Just for debugging Start")
-                        container_handle = obj.funcp_obj[0].container_info["F1-0"]
-                        container_handle.ping(ip[:- 1] + "1")
-                        container_handle.command("arp")
-                        container_handle.command("route -n")
-                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
-                        container_handle.command("ifconfig")
-                        fun_test.log("Just for debugging End")
-
-                    # fun_test.test_assert(
-                    #    result["status"],
-                    #    "Bundle Image boot: Configuring {} DUT with Dataplane IP {}".format(node, ip))
-                fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".format(node, ip))
-                fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index), "Ensure DPU's are online")
-
-        else:
-            # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
-            pass
-
-    elif obj.tftp_image_path:
+    if obj.tftp_image_path:
         fun_test.log("TFTP image installation")
         # Check the init-fs1600 service is running
         # If so check all the required dockers are running
@@ -375,186 +269,243 @@ def single_fs_setup(obj):
         # Asserting if expected containers are not UP status
         fun_test.simple_assert(not container_chk_timer.is_expired(),
                                "TFTP image boot: init-fs1600 enabled: Expected containers are running")
-        # Cleaning up DB by restarting run_sc.py script with -c option
-        if obj.install == "fresh":
-            # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
-            '''
-            fun_test.log("TFTP image boot: init-fs1600 enabled: It's a fresh install. Cleaning up the database")
-            path = "{}/{}".format(obj.sc_script_dir, obj.run_sc_script)
-            if obj.come_obj[0].check_file_directory_exists(path=path):
-                obj.come_obj[0].command("cd {}".format(obj.sc_script_dir))
-                # restarting run_sc with -c option
-                obj.come_obj[0].command("sudo ./{} -c restart".format(obj.run_sc_script),
-                                        timeout=obj.run_sc_restart_timeout)
-                fun_test.test_assert_expected(
-                    expected=0, actual=obj.come_obj[0].exit_status(),
-                    message="TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
-                            "restarted with cleanup")
-            '''
-            # Check if run_sc container is up and running
-            run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-            timer = FunTimer(max_time=obj.container_up_timeout)
-            while not timer.is_expired():
-                run_sc_name = obj.come_obj[0].command(
-                    run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-                if run_sc_name:
-                    fun_test.log("TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc: "
-                                 "Container is up and running")
-                    break
-                else:
-                    fun_test.sleep("for the run_sc docker container to start", 1)
-                    fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
-            else:
-                fun_test.critical(
-                    "TFTP Image boot: init-fs1600 enabled: Fresh Install: run_sc container is not "
-                    "restarted within {} seconds after cleaning up the DB".format(
-                        obj.container_up_timeout))
-                fun_test.test_assert(False, "TFTP Image boot: init-fs1600 enabled: Fresh Install: "
-                                            "Cleaning DB and restarting run_sc container")
-        obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
-        obj.funcp_spec[0]["container_names"].sort()
-        # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
-        # chances are that it may die within few seconds after restart
-        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
-        run_sc_name = obj.come_obj[0].command(run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
-        fun_test.simple_assert(run_sc_name, "TFTP Image boot: init-fs1600 enabled: run_sc: "
-                                            "Container is up and running")
 
-        # Declaring SC API controller
-        obj.sc_api = StorageControllerApi(api_server_ip=obj.come_obj[0].host_ip,
-                                          api_server_port=obj.api_server_port,
-                                          username=obj.api_server_username,
-                                          password=obj.api_server_password)
-
-        # Polling for API Server status
-        fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout),
-                               message="TFTP Image boot: init-fs1600 enabled: API server is up")
-        fun_test.sleep(
-            "TFTP Image boot: init-fs1600 enabled: waiting for API server to be ready", 60)
-        # Check if bond interface status is Up and Running
-        for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
-            if container_name == "run_sc":
-                continue
-            bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
-                container_name=container_name,
-                name="bond0")
-            # If bond interface is still not in UP and RUNNING state, flip it
-            if not bond_interfaces_status:
-                fun_test.log("TFTP Image boot: init-fs1600 enabled: bond0 interface is not up in "
-                             "speculated time, flipping it..")
-                bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
-                    container_name=container_name, name="bond0", flip_interface=True)
+    if obj.install == "fresh":
+        # Commenting run_sc restart with database cleanup as it is handled in FS bring-up in infra
+        '''
+        # For fresh install, cleanup cassandra DB by restarting run_sc container with cleanup
+        fun_test.log("Bundle Image boot: It's a fresh install. Cleaning up the database")
+        path = "{}/{}".format(obj.sc_script_dir, obj.run_sc_script)
+        if obj.come_obj[0].check_file_directory_exists(path=path):
+            obj.come_obj[0].command("cd {}".format(obj.sc_script_dir))
+            # Restarting run_sc with -c option
+            obj.come_obj[0].command("sudo ./{} -c restart".format(obj.run_sc_script),
+                                    timeout=obj.run_sc_restart_timeout)
             fun_test.test_assert_expected(
-                expected=True, actual=bond_interfaces_status,
-                message="TFTP Image boot: init-fs1600 enabled: Bond Interface is Up & Running")
-        if obj.install == "fresh":
-            # Configure dataplane ip as database is cleaned up
-            # Getting all the DUTs of the setup
+                expected=0, actual=obj.come_obj[0].exit_status(),
+                message="Bundle Image boot: Fresh Install: run_sc: restarted with cleanup")
+        '''
+        # Check if run_sc container is running
+        run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+        timer = FunTimer(max_time=obj.container_up_timeout)
+        while not timer.is_expired():
+            run_sc_name = obj.come_obj[0].command(
+                run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
+            if run_sc_name:
+                fun_test.log("Bundle Image boot: Fresh Install: run_sc: Container is up and running")
+                break
+            else:
+                fun_test.sleep("for the run_sc docker container to start", 1)
+                fun_test.log("Remaining Time: {}".format(timer.remaining_time()))
+        else:
+            fun_test.critical(
+                "Bundle Image boot: Fresh Install: run_sc container is not restarted within {} seconds "
+                "after cleaning up the DB".format(obj.container_up_timeout))
+            fun_test.test_assert(
+                False, "Bundle Image boot: Fresh Install: Cleaning DB and restarting run_sc container")
+
+    obj.funcp_spec[0] = obj.funcp_obj[0].get_container_objs()
+    obj.funcp_spec[0]["container_names"].sort()
+    # Ensuring run_sc is still up and running because after restarting run_sc with cleanup,
+    # chances are that it may die within few seconds after restart
+    run_sc_status_cmd = "docker ps -a --format '{{.Names}}' | grep run_sc"
+    run_sc_name = obj.come_obj[0].command(run_sc_status_cmd, timeout=obj.command_timeout).split("\n")[0]
+    fun_test.simple_assert(run_sc_name, "Bundle Image boot: run_sc: Container is up and running")
+
+    # Declaring SC API controller
+    obj.sc_api = StorageControllerApi(api_server_ip=obj.come_obj[0].host_ip,
+                                      api_server_port=obj.api_server_port,
+                                      username=obj.api_server_username,
+                                      password=obj.api_server_password)
+
+    # Polling for API Server status
+    fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout, come_obj=obj.come_obj[0]),
+                           message="Bundle Image boot: API server is up")
+    fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+    # Check if bond interface status is Up and Running
+    for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
+        if container_name == "run_sc":
+            continue
+        bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(container_name=container_name,
+                                                                       name="bond0")
+        # If bond interface is still not in UP and RUNNING state, flip it
+        if not bond_interfaces_status:
+            fun_test.log("Bundle Image boot: bond0 interface is not up in speculated time, flipping it..")
+            bond_interfaces_status = obj.funcp_obj[0].is_bond_interface_up(
+                container_name=container_name, name="bond0", flip_interface=True)
+        fun_test.test_assert_expected(expected=True, actual=bond_interfaces_status,
+                                      message="Bundle Image boot: Bond Interface is Up & Running")
+
+    # If fresh install, configure dataplane ip as database is cleaned up
+    if obj.install == "fresh":
+        # Getting all the DUTs of the setup
+        dpu_id_ready_timer = FunTimer(max_time=9 * 60)
+        nodes = obj.sc_api.get_dpu_ids()
+        while not nodes and (len(nodes) < obj.num_f1_per_fs) and not dpu_id_ready_timer.is_expired():
             nodes = obj.sc_api.get_dpu_ids()
-            fun_test.test_assert(nodes,
-                                 "TFTP Image boot: init-fs1600 enabled: Getting UUIDs of all DUTs "
-                                 "in the setup")
+            fun_test.sleep("Checking DPU IDs", seconds=20)
+            fun_test.log("Remaining time: {}".format(dpu_id_ready_timer.remaining_time()))
+        fun_test.log("DPU nodes: {}".format(nodes))
+        fun_test.test_assert(not dpu_id_ready_timer.is_expired(),
+                             "Bundle Image boot: Getting UUIDs of all DUTs in the setup")
+        if set_dataplane_ips:
             for node_index, node in enumerate(nodes):
+                if node_index >= obj.num_f1_per_fs:
+                    continue
                 # Extracting the DUT's bond interface details
-                ip = \
-                    obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                        str(0)]["ip"]
+                ip = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][str(0)]["ip"]
                 ip = ip.split('/')[0]
                 subnet_mask = obj.fs_spec[node_index / 2].spec["bond_interface_info"][
                     str(node_index % 2)][str(0)]["subnet_mask"]
-                route = \
-                    obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
-                        str(0)]["route"][0]
+                route = obj.fs_spec[node_index / 2].spec["bond_interface_info"][str(node_index % 2)][
+                    str(0)]["route"][0]
                 next_hop = "{}/{}".format(route["gateway"], route["network"].split("/")[1])
                 obj.f1_ips.append(ip)
+                if not already_deployed:
+                    # Configuring Dataplane IP
+                    fun_test.log(
+                        "Bundle Image boot: Current {} node's bond0 is going to be configured with {} IP address "
+                        "with {} subnet mask with next hop set to {}".format(node, ip, subnet_mask, next_hop))
+                    dataplane_configuration_success = False
+                    num_tries = 3
 
-                fun_test.log(
-                    "TFTP Image boot: init-fs1600 enabled: Current {} node's bond0 is going to be configured with "
-                    "{} IP address with {} subnet mask with next hop set to {}".format(
-                        node, ip, subnet_mask, next_hop))
-                result = obj.sc_api.configure_dataplane_ip(
-                    dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask,
-                    next_hop=next_hop,
-                    use_dhcp=False)
-                fun_test.log("TFTP Image boot: init-fs1600 enabled: Dataplane IP configuration "
-                             "result of {}: {}".format(node, result))
-                fun_test.test_assert(result["status"],
-                                     "TFTP Image boot: init-fs1600 enabled: Configuring {} DUT "
-                                     "with Dataplane IP {}".format(node, ip))
-        else:
-            # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
-            pass
-        # Commenting manual container bringup code as all FS moved to bundle image bringup
-        '''
-        if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
-            fun_test.log("TFTP Image boot: Expected containers are not up, bringing up containers")
-            if init_fs1600_service_status:
-                # Disable init-fs1600 service
-                fun_test.simple_assert(disalbe_init_fs1600(obj.come_obj[0]),
-                                       "TFTP Image boot: init-fs1600 service is disabled")
-                init_fs1600_service_status = False
+                    while not dataplane_configuration_success and num_tries:
+                        fun_test.log("Trials remaining {}".format(num_tries))
+                        num_tries -= 1
+                        result = obj.sc_api.configure_dataplane_ip(
+                            dpu_id=node, interface_name="bond0", ip=ip, subnet_mask=subnet_mask, next_hop=next_hop,
+                            use_dhcp=False)
+                        fun_test.log(
+                            "Bundle Image boot: Dataplane IP configuration result of {}: {}".format(node, result))
 
-            # Stopping containers and unloading the drivers
-            obj.come_obj[0].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
-
-            # kill run_sc health_check and all containers
-            health_check_pid = obj.come_obj[0].get_process_id_by_pattern("system_health_check.py")
-            if health_check_pid:
-                obj.come_obj[0].kill_process(process_id=health_check_pid)
-            else:
-                fun_test.critical("TFTP Image boot: init-fs1600 disabled:"
-                                  "system_health_check.py script is not running\n")
-
-            # Bring-up the containers
-            for index in xrange(obj.num_duts):
-                # Removing existing db directories for fresh setup
-                if obj.install == "fresh":
-                    for directory in obj.sc_db_directories:
-                        if obj.come_obj[index].check_file_directory_exists(path=directory):
-                            fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
-                                         "Removing Directory {}".format(directory))
-                            obj.come_obj[index].sudo_command("rm -rf {}".format(directory))
-                            fun_test.test_assert_expected(
-                                actual=obj.come_obj[index].exit_status(), expected=0,
-                                message="TFTP Image boot: init-fs1600 disabled: Fresh Install: "
-                                        "Directory {} is removed".format(directory))
+                        dataplane_configuration_success = result["status"]
+                        if not dataplane_configuration_success:
+                            fun_test.sleep("Wait for retry", seconds=10)
+                            try:
+                                fun_test.log("Just for debugging Start")
+                                container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp -n")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                            try:
+                                fun_test.log("Just for debugging Start:  On F1-1")
+                                container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp -n")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                         else:
-                            fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
-                                         "Directory {} does not exist skipping deletion".format(directory))
-                else:
-                    fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
-                                 "Skipping run_sc restart with cleanup")
-                obj.funcp_obj[index] = StorageFsTemplate(obj.come_obj[index])
-                obj.funcp_spec[index] = obj.funcp_obj[index].deploy_funcp_container(
-                    update_deploy_script=obj.update_deploy_script, update_workspace=obj.update_workspace,
-                    mode=obj.funcp_mode)
-                fun_test.test_assert(
-                    obj.funcp_spec[index]["status"], "TFTP Image boot: init-fs1600 disabled: Starting FunCP "
-                                                      "docker container in DUT {}".format(index))
-                obj.funcp_spec[index]["container_names"].sort()
-                for f1_index, container_name in enumerate(obj.funcp_spec[index]["container_names"]):
-                    if container_name == "run_sc":
-                        continue
-                    bond_interfaces = obj.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
-                    bond_name = "bond0"
-                    bond_ip = bond_interfaces[0].ip
-                    obj.f1_ips.append(bond_ip.split('/')[0])
-                    slave_interface_list = bond_interfaces[0].fpg_slaves
-                    slave_interface_list = [obj.fpg_int_prefix + str(i) for i in slave_interface_list]
-                    obj.funcp_obj[index].configure_bond_interface(
-                        container_name=container_name, name=bond_name, ip=bond_ip,
-                        slave_interface_list=slave_interface_list)
-                    # Configuring route
-                    route = obj.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)][
-                        "route"][0]
-                    cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"],
-                                                                      bond_name)
-                    route_add_status = obj.funcp_obj[index].container_info[container_name].command(cmd)
-                    fun_test.test_assert_expected(
-                        expected=0,
-                        actual=obj.funcp_obj[index].container_info[container_name].exit_status(),
-                        message="TFTP Image boot: init-fs1600 disabled: Configure Static route")
-        '''
+                            try:
+                                fun_test.log("Just for debugging Start: On F1-0")
+                                container_handle = obj.funcp_obj[0].container_info["F1-0"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+                            try:
+                                fun_test.log("Just for debugging Start: On F1-1")
+                                container_handle = obj.funcp_obj[0].container_info["F1-1"]
+                                container_handle.ping(ip[:- 1] + "1")
+                                container_handle.command("arp")
+                                container_handle.command("route -n")
+                                container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                                container_handle.command("ifconfig")
+                                fun_test.log("Just for debugging End")
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
+
+                    fun_test.test_assert(dataplane_configuration_success, "Configured {} DUT Dataplane IP {}".
+                                         format(node, ip))
+                    fun_test.test_assert(ensure_dpu_online(obj.sc_api, dpu_index=node_index, obj=obj, dataplane_ip=ip),
+                                         "Ensure DPU's are online")
+    else:
+        # TODO: Retrieve the dataplane IP and validate if dataplane ip is same as bond interface ip
+        pass
+
+    # Commenting manual container bringup code as all FS moved to bundle image bringup
+    '''
+    if not init_fs1600_service_status or (init_fs1600_service_status and not expected_containers_up):
+        fun_test.log("TFTP Image boot: Expected containers are not up, bringing up containers")
+        if init_fs1600_service_status:
+            # Disable init-fs1600 service
+            fun_test.simple_assert(disalbe_init_fs1600(obj.come_obj[0]),
+                                   "TFTP Image boot: init-fs1600 service is disabled")
+            init_fs1600_service_status = False
+
+        # Stopping containers and unloading the drivers
+        obj.come_obj[0].command("sudo /opt/fungible/cclinux/cclinux_service.sh --stop")
+
+        # kill run_sc health_check and all containers
+        health_check_pid = obj.come_obj[0].get_process_id_by_pattern("system_health_check.py")
+        if health_check_pid:
+            obj.come_obj[0].kill_process(process_id=health_check_pid)
+        else:
+            fun_test.critical("TFTP Image boot: init-fs1600 disabled:"
+                              "system_health_check.py script is not running\n")
+
+        # Bring-up the containers
+        for index in xrange(obj.num_duts):
+            # Removing existing db directories for fresh setup
+            if obj.install == "fresh":
+                for directory in obj.sc_db_directories:
+                    if obj.come_obj[index].check_file_directory_exists(path=directory):
+                        fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                     "Removing Directory {}".format(directory))
+                        obj.come_obj[index].sudo_command("rm -rf {}".format(directory))
+                        fun_test.test_assert_expected(
+                            actual=obj.come_obj[index].exit_status(), expected=0,
+                            message="TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                    "Directory {} is removed".format(directory))
+                    else:
+                        fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                                     "Directory {} does not exist skipping deletion".format(directory))
+            else:
+                fun_test.log("TFTP Image boot: init-fs1600 disabled: Fresh Install: "
+                             "Skipping run_sc restart with cleanup")
+            obj.funcp_obj[index] = StorageFsTemplate(obj.come_obj[index])
+            obj.funcp_spec[index] = obj.funcp_obj[index].deploy_funcp_container(
+                update_deploy_script=obj.update_deploy_script, update_workspace=obj.update_workspace,
+                mode=obj.funcp_mode)
+            fun_test.test_assert(
+                obj.funcp_spec[index]["status"], "TFTP Image boot: init-fs1600 disabled: Starting FunCP "
+                                                  "docker container in DUT {}".format(index))
+            obj.funcp_spec[index]["container_names"].sort()
+            for f1_index, container_name in enumerate(obj.funcp_spec[index]["container_names"]):
+                if container_name == "run_sc":
+                    continue
+                bond_interfaces = obj.fs_spec[index].get_bond_interfaces(f1_index=f1_index)
+                bond_name = "bond0"
+                bond_ip = bond_interfaces[0].ip
+                obj.f1_ips.append(bond_ip.split('/')[0])
+                slave_interface_list = bond_interfaces[0].fpg_slaves
+                slave_interface_list = [obj.fpg_int_prefix + str(i) for i in slave_interface_list]
+                obj.funcp_obj[index].configure_bond_interface(
+                    container_name=container_name, name=bond_name, ip=bond_ip,
+                    slave_interface_list=slave_interface_list)
+                # Configuring route
+                route = obj.fs_spec[index].spec["bond_interface_info"][str(f1_index)][str(0)][
+                    "route"][0]
+                cmd = "sudo ip route add {} via {} dev {}".format(route["network"], route["gateway"],
+                                                                  bond_name)
+                route_add_status = obj.funcp_obj[index].container_info[container_name].command(cmd)
+                fun_test.test_assert_expected(
+                    expected=0,
+                    actual=obj.funcp_obj[index].container_info[container_name].exit_status(),
+                    message="TFTP Image boot: init-fs1600 disabled: Configure Static route")
+    '''
     for host_name in obj.host_info:
         host_handle = obj.host_info[host_name]["handle"]
         ensure_all_hosts_up(host_handle=host_handle, reboot_timeout=obj.reboot_timeout,
@@ -568,40 +519,75 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name):
+                 read_99_99_latency, fio_job_name, compression=False, encryption=False, compression_effort=-1,
+                 key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
         if eval("type({}) is tuple".format(i)):
             exec ("{0} = {0}[0]".format(i))
 
-    blt = BltVolumePerformanceHelper()
-    blt.add_entry(date_time=log_time,
-                  volume=volume,
-                  test=test,
-                  block_size=block_size,
-                  io_depth=int(io_depth),
-                  size=size,
-                  operation=operation,
-                  num_ssd=num_ssd,
-                  num_volume=num_volumes,
-                  fio_job_name=fio_job_name,
-                  write_iops=write_iops,
-                  read_iops=read_iops,
-                  write_throughput=write_bw,
-                  read_throughput=read_bw,
-                  write_avg_latency=write_latency,
-                  read_avg_latency=read_latency,
-                  write_90_latency=write_90_latency,
-                  write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                  write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                  read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                  read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
-                  read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
-                  write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
-                  write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
-                  read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
-                  read_99_99_latency_unit="usecs")
+    if block_size.lower() == "4k":
+        blt = BltVolumePerformanceHelper()
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency, write_iops_unit="ops",
+                      read_iops_unit="ops", write_throughput_unit="MBps", read_throughput_unit="MBps",
+                      write_avg_latency_unit="usecs", read_avg_latency_unit="usecs", write_90_latency_unit="usecs",
+                      write_95_latency_unit="usecs", write_99_latency_unit="usecs", write_99_99_latency_unit="usecs",
+                      read_90_latency_unit="usecs", read_95_latency_unit="usecs", read_99_latency_unit="usecs",
+                      read_99_99_latency_unit="usecs")
+    else:
+        model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+        blt = ModelHelper(model_name=model_name)
+        blt.set_units(validate=True, **blt_unit_dict)
+        blt.add_entry(date_time=log_time,
+                      volume=volume,
+                      test=test,
+                      block_size=block_size,
+                      io_depth=int(io_depth),
+                      size=size,
+                      operation=operation,
+                      num_ssd=num_ssd,
+                      num_volume=num_volumes,
+                      fio_job_name=fio_job_name,
+                      write_iops=write_iops,
+                      read_iops=read_iops,
+                      write_throughput=write_bw,
+                      read_throughput=read_bw,
+                      write_avg_latency=write_latency,
+                      read_avg_latency=read_latency,
+                      write_90_latency=write_90_latency,
+                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      read_99_99_latency=read_99_99_latency,
+                      compression=compression,
+                      encryption=encryption,
+                      compression_effort=compression_effort,
+                      key_size=key_size,
+                      xtweak=xtweak,
+                      io_size=io_size,
+                      platform=platform
+        )
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -616,6 +602,53 @@ def compare(actual, expected, threshold, operation):
         return actual < (expected * (1 - threshold)) and ((expected - actual) > 2)
     else:
         return actual > (expected * (1 + threshold)) and ((actual - expected) > 2)
+
+
+def fetch_nvme_list(host_obj):
+    result = {'status': False}
+    nvme_list_raw = host_obj.sudo_command("nvme list -o json")
+    host_obj.disconnect()
+    if nvme_list_raw:
+        # This is used due to the error lines printed in json output
+        if not nvme_list_raw.startswith("{"):
+            nvme_list_raw = nvme_list_raw + "}"
+            temp1 = nvme_list_raw.replace('\n', '')
+            temp2 = re.search(r'{.*', temp1).group()
+            nvme_list_dict = json.loads(temp2, strict=False)
+        else:
+            try:
+                nvme_list_dict = json.loads(nvme_list_raw)
+            except:
+                nvme_list_raw = nvme_list_raw + "}"
+                nvme_list_dict = json.loads(nvme_list_raw, strict=False)
+
+        try:
+            nvme_device_list = []
+            for device in nvme_list_dict["Devices"]:
+                if ("Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or "fs1600" in
+                        device["ModelNumber"].lower()):
+                    if "NameSpace" in device and device["NameSpace"] > 0:
+                        nvme_device_list.append(device["DevicePath"])
+                    elif "NameSpace" not in device:
+                        nvme_device_list.append(device["DevicePath"])
+                '''
+                Not required now as product name is defined
+                elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
+                    if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
+                        nvme_device_list.append(device["DevicePath"])
+                '''
+            if nvme_device_list:
+                fio_filename = str(':'.join(nvme_device_list))
+                result = {'status': True, 'nvme_device': fio_filename}
+            else:
+                result = {'status': False}
+        except:
+            fio_filename = None
+            result = {'status': False, 'nvme_device': fio_filename}
+    else:
+        result = {'status': False, 'nvme_device': None}
+
+    return result
 
 
 def fetch_nvme_device(end_host, nsid, size=None):
@@ -638,6 +671,23 @@ def fetch_nvme_device(end_host, nsid, size=None):
                 result['status'] = True
                 break
     return result
+
+
+def get_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+    return hosts
+
+
+def get_device_numa_node(end_host, ethernet_adapter):
+    numa_node = None
+    lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
+    fun_test.simple_assert(lspci_output, "Ethernet Adapter Detected")
+    adapter_id = lspci_output[0]['id']
+    fun_test.simple_assert(adapter_id, "Retrieve Ethernet Adapter Bus ID")
+    lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
+    numa_node = lspci_verbose_output[0]['numa_node']
+    return numa_node
 
 
 def fetch_numa_cpus(end_host, ethernet_adapter):
@@ -813,28 +863,100 @@ def check_host_f1_connectivity(funcp_spec, host_handle, f1_ips, interface="enp21
                 if ip_match:
                     ip_assigned = True
                 break
-        fun_test.simple_assert(interface_up, "Interface {} is up and running on host {}".format(interface, host_handle.host_ip))
-        fun_test.simple_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".format(interface,
-                                                                          host_handle.host_ip))
+            host_handle.disconnect()
+        fun_test.simple_assert(interface_up, "Interface {} is up and running on host {}".format(interface,
+                                                                                                host_handle.host_ip))
+        fun_test.simple_assert(ip_assigned, "Ensure ip is assigned to interface {} on host {}".
+                               format(interface, host_handle.host_ip))
+    except Exception as ex:
+        fun_test.critical(str(ex))
 
-        for index, ip in enumerate(f1_ips):
-            if funcp_spec[0]["container_names"][index] == "run_sc":
-                continue
-            ping_status = host_handle.ping(dst=ip)
-            if not ping_status:
-                host_handle.command("arp -n")
-                host_handle.command("route -n")
-                host_handle.command("ifconfig")
+    for index, ip in enumerate(f1_ips):
+        if funcp_spec[0]["container_names"][index] == "run_sc":
+            continue
+        ping_status = host_handle.ping(dst=ip)
+        if not ping_status:
+            host_handle.command("arp -n")
+            host_handle.command("route -n")
+            host_handle.command("ifconfig")
+        host_handle.disconnect()
 
-            fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                    format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
-        result = True
+        fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
+                             format(host_handle.host_ip, funcp_spec[0]["container_names"][index], ip))
+    result = True
+
+    return result
+
+
+def get_all_nvme_devices(output_string):
+    return re.findall(r'/dev/nvme\w*n\w*[^\s]', output_string)
+
+
+def get_all_subnqn(output_string):
+    return re.findall(r'NQN=.*[^\s]', output_string)
+
+
+def umount_all_nvme_devices(host_obj):
+    result = True
+    try:
+        mount_output = host_obj.sudo_command("mount")
+        if mount_output:
+            output_list = get_all_nvme_devices(output_string=mount_output)
+            if output_list:
+                for device in output_list:
+                    res = host_obj.unmount_volume(volume=device)
+                    fun_test.critical("Umount {} failed on {}".format(device, host_obj))
+                    result = result and res
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
 
 
-def ensure_api_server_is_up(sc_api, timeout=120):
+def disconnect_all_nqn(host_obj):
+    result = True
+    try:
+        subnqn_output = host_obj.sudo_command("nvme list-subsys")
+        if subnqn_output:
+            output_list = get_all_subnqn(subnqn_output)
+            if output_list:
+                for nqn in output_list:
+                    res = host_obj.nvme_disconnect(nvme_subsystem=nqn[4:])
+                    fun_test.critical("Disconnect {} failed on {}".format(nqn, host_obj))
+                    result = result and res
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+def cleanup_host(host_obj):
+    result = {}
+    nvme_modules = ['nvme_tcp', 'nvme_fabrics', 'nvme', 'nvme_core']
+    try:
+        fun_test.log("Performing cleanup on host {}".format(host_obj))
+        result["umount"] = umount_all_nvme_devices(host_obj)
+        result["nvme_disconnect"] = disconnect_all_nqn(host_obj)
+        result["nvme_list"] = True
+        nvme_list_output = host_obj.sudo_command("nvme list")
+        if nvme_list_output:
+            output_list = get_all_nvme_devices(output_string=nvme_list_output)
+            if output_list:
+                result["nvme_list"] = False
+                fun_test.critical("Devices still found {}".format(output_list))
+        result["unload_nvme_modules"] = True
+        for module in nvme_modules:
+            if host_obj.lsmod(module=module):
+                if host_obj.rmmod(module=module):
+                    result["unload_nvme_modules"] = result["unload_nvme_modules"] and False
+        result["load_nvme_modules"] = True
+        nvme_modules.reverse()
+        for module in nvme_modules:
+            if host_obj.modprobe(module=module):
+                result["load_nvme_modules"] = result["load_nvme_modules"] and False
+    except Exception as ex:
+        fun_test.critical(str(ex))
+    return result
+
+
+def ensure_api_server_is_up(sc_api, timeout=180, come_obj=None):  #WORKAROUND: timeout == 240
     result = False
     try:
         # Polling for API Server status
@@ -848,11 +970,18 @@ def ensure_api_server_is_up(sc_api, timeout=120):
             else:
                 fun_test.sleep("Waiting for API server to be up", 10)
                 fun_test.log("Remaining Time: {}".format(api_server_up_timer.remaining_time()))
+        if not api_server_up_timer.is_expired():
+            if come_obj:
+                come_obj.command("netstat -anpt")
+                come_obj.command("ps -ef")
+
     except Exception as ex:
         fun_test.critical(str(ex))
+
     return result
 
-def ensure_dpu_online(sc_api, dpu_index, timeout=120):
+
+def ensure_dpu_online(sc_api, dpu_index, timeout=120, obj=None, dataplane_ip=None):
     result = False
     try:
         # Polling for API Server status
@@ -865,6 +994,19 @@ def ensure_dpu_online(sc_api, dpu_index, timeout=120):
                     fun_test.log("DPU {} is online".format(dpu_index))
                     result = True
                     break
+                else:
+                    try:
+                        fun_test.log("Just for debugging Start: On F1-{}".format(dpu_index))
+                        container_handle = obj.funcp_obj[0].container_info["F1-{}".format(dpu_index)]
+                        container_handle.ping(dataplane_ip[:- 1] + "1")
+                        container_handle.command("arp")
+                        container_handle.command("route -n")
+                        container_handle.command('/opt/fungible//frr/bin/vtysh -c "show ip route"')
+                        container_handle.command("ifconfig")
+                        fun_test.log("Just for debugging End")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+
             else:
                 fun_test.sleep("Waiting for DPU {} to be online".format(dpu_index), 10)
     except Exception as ex:
@@ -996,7 +1138,7 @@ def vol_stats_diff(initial_vol_stats, final_vol_stats, vol_details):
     stats_diff = {}
     total_diff = {}
     stats_exclude_list = ["drive_uuid", "extent_size", "fault_injection", "flvm_block_size", "flvm_vol_size_blocks",
-                          "se_size"]
+                          "se_size", "vol_state"]
     aggregated_diff_stats_list = ["write_bytes", "read_bytes"]
     try:
         # Forming a dictionary for provided vol_details
@@ -1107,6 +1249,49 @@ def disalbe_init_fs1600(come_obj):
     except Exception as ex:
         fun_test.critical(str(ex))
     return result
+
+
+def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout):
+    result = False
+    command_result = storage_controller.set_fcp_scheduler(fcp_sch_config=config_fcp_scheduler,
+                                                               command_timeout=command_timeout)
+    if not command_result["status"]:
+        fun_test.critical("Unable to set the fcp scheduler bandwidth...So proceeding the test with the "
+                          "default setting")
+    elif config_fcp_scheduler != command_result["data"]:
+        fun_test.critical("Unable to fetch the applied FCP scheduler config... So proceeding the test "
+                          "with the default setting")
+    else:
+        fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
+        result = True
+    return result
+
+
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
+    arg1.disconnect()
+
+
+def add_host_numa_cpus(hosts, numa_node_to_use):
+    for host in hosts:
+        host.host_numa_cpus = host.spec["numa_cpus"][numa_node_to_use]
+    return hosts
+
+
+def post_final_test_results(fio_result, internal_result, fio_jobs_iodepth, fio_modes):
+    test_result = True
+    fun_test.log(fio_result)
+    fun_test.log(internal_result)
+    for combo in fio_jobs_iodepth:
+        for mode in fio_modes:
+            if not fio_result[combo][mode] or not internal_result[combo][mode]:
+                test_result = False
+
+    fun_test.log("Test Result: {}".format(test_result))
+
+
 
 
 class CollectStats(object):
@@ -2334,6 +2519,57 @@ class CollectStats(object):
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
+    def populate_stats_to_file(self, stats_collect_details, mode, iodepth):
+        for index, value in enumerate(stats_collect_details):
+            for func, arg in value.iteritems():
+                filename = arg.get("output_file")
+                if filename:
+                    if func == "vp_utils":
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "per_vp":
+                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "resource_bam_args":
+                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vol_stats":
+                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "vppkts_stats":
+                        fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "psw_stats":
+                        fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "fcp_stats":
+                        fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "wro_stats":
+                        fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "erp_stats":
+                        fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "etp_stats":
+                        fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "eqm_stats":
+                        fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "hu_stats":
+                        fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ddr_stats":
+                        fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "ca_stats":
+                        fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+                    if func == "cdu_stats":
+                        fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
+                                                    format(mode, iodepth), filename=filename)
+
 
 def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
     min_capacity = 0
@@ -2352,3 +2588,107 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
         fun_test.critical("Unable to get the individual drive status...")
 
     return min_capacity
+
+
+
+def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
+    result = {"status": False, "drive_uuids": []}
+    # Fetching drive information
+    props_tree = "{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", "drives")
+    fetch_drives = storage_controller.peek(props_tree)
+    fun_test.simple_assert(fetch_drives["status"], "Fetch drive details")
+
+    id_uuid_mapping = {}
+    # Forming a dictionary of drive_id: drive_uuid
+    for drive in fetch_drives["data"]:
+        if fetch_drives["data"][drive]["drive_id"] not in id_uuid_mapping:
+            id_uuid_mapping[fetch_drives["data"][drive]["drive_id"]] = drive
+    fun_test.log("Drive id and drive uuid mapping: {}".format(id_uuid_mapping))
+
+    for drive_id in drive_ids_list:
+        result["drive_uuids"].append(id_uuid_mapping[drive_id])
+    if len(result["drive_uuids"]) != 0:
+        result["status"] = True
+
+    return result
+
+def extract_funos_log_time(log_string, get_plex_number=False):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Search for the log line
+    match = re.search(pattern=r'(\d+.\d+)', string=log_string)
+    if match:
+        result["time"] = float(match.group(0))
+        result["status"] = True
+        if get_plex_number:
+            # Check if plex number needs to be fetched
+            match1 = re.search(pattern=r'(plex:\s)(\d+)', string=log_string)
+            if match1:
+                result["plex_number"] = int(match1.group(2))
+            else:
+                result["status"] = False
+    return result
+
+
+def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, plex_number=None, get_start_time=None,
+                            get_completion_time=None, get_plex_number=False, rebuild_wait_time=60,
+                            status_interval=2, command_timeout=60):
+    result = {"status": False, "time": None, "plex_number": None}
+
+    # Retrieve the rebuild start time
+    if get_start_time:
+        command = "grep 'UUID: {} plex: .* under rebuild total failed:{}' {} | tail -1".\
+            format(ec_uuid, plex_count, log_file)
+    # Retrieve the rebuild start time
+    if get_completion_time:
+        command = "grep 'ecvol_rebuild_done_process_push() Rebuild operation complete for plex:{}' {} | tail -1".\
+            format(plex_number, log_file)
+    if (get_start_time and get_completion_time) or (not get_start_time and not get_completion_time):
+        fun_test.log("Only single fetch operation is allowed")
+    else:
+        search_timer = FunTimer(max_time=rebuild_wait_time)
+        while not search_timer.is_expired():
+            command_output = bmc_linux_handle.sudo_command(command=command, timeout=command_timeout)
+            if command_output:
+                get_log_info = extract_funos_log_time(log_string=command_output, get_plex_number=get_plex_number)
+                if get_log_info["status"]:
+                    result["time"] = get_log_info["time"]
+                    result["status"] = True
+                    if get_plex_number:
+                        result["plex_number"] = get_log_info["plex_number"]
+                break
+            fun_test.sleep("Waiting for operation log", status_interval)
+            fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
+
+    return result
+
+def get_plex_device_id(ec_info, storage_controller):
+    if "device_id" not in ec_info:
+        fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
+                     "So going to pull that info")
+        ec_info["drive_uuid"] = {}
+        ec_info["device_id"] = {}
+        for num in xrange(ec_info["num_volumes"]):
+            ec_info["drive_uuid"][num] = []
+            ec_info["device_id"][num] = []
+            for blt_uuid in ec_info["uuids"][num]["blt"]:
+                blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
+                                                         "stats")
+                blt_stats = storage_controller.peek(blt_props_tree)
+                fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
+                if "drive_uuid" in blt_stats["data"]:
+                    ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
+                else:
+                    fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
+                                           format(blt_uuid))
+                drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
+                                                           "drives", blt_stats["data"]["drive_uuid"])
+                drive_stats = storage_controller.peek(drive_props_tree)
+                fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
+                                       format(blt_stats["data"]["drive_uuid"]))
+                if "drive_id" in drive_stats["data"]:
+                    ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
+                else:
+                    fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
+                                           format(blt_stats["data"]["drive_uuid"]))
+    return ec_info

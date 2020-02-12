@@ -19,14 +19,15 @@ export class BamComponent implements OnInit, OnChanges {
   @Input() scriptExecutionInfo: any = null;
   @Input() selectedAsset: RegisteredAsset = null;
   @Input() title: string = null;
+  showTable: boolean = false;
   data: any = null;
   parsedData: any = {};
   suiteExecutionId: number = null;
   bmUsagePerClusterPoolNames: string [] = ["default_alloc_pool", "nu_erp_fcp_pool"];
   bmUsagePerClusterPoolKeys: string [] = ["usage_percent"];
-  clusterIndexes = Array.from(Array(9).keys());
+  clusterIndexes = Array.from(Array(8).keys());
   detectedF1Indexes = new Set();
-  showTable: boolean = false;
+  // showTable: boolean = false;
   showCharts: boolean = false;
   rawTableData: any[] = [];
   rawTableHeaders: any[] = [];
@@ -108,7 +109,11 @@ export class BamComponent implements OnInit, OnChanges {
           f1.clusters.forEach(cluster => {
             let name = `PC-${cluster.index}`;
             let oneSeries = new FunTimeSeries(name, {});
-            oneSeries.data = cluster.bamUsage[poolName][poolKey];
+            if (cluster.index !== 8) {
+              oneSeries.data = cluster.bamUsage[poolName][poolKey];
+            } else {
+              oneSeries.data = [];
+            }
             funTimeSeriesCollection.collection.push(oneSeries);
           });
           f1[poolName][poolKey]["timeSeries"] = funTimeSeriesCollection;

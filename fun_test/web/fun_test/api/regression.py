@@ -21,6 +21,7 @@ from web.fun_test.fun_serializer import model_instance_to_dict
 from web.fun_test.models_helper import _get_suite_executions, get_fun_test_time_series_collection_name
 from web.fun_test.models_helper import get_ts_test_case_context_info_collection_name
 from web.fun_test.models_helper import get_ts_script_run_time_collection_name
+from web.fun_test.models import LastGoodBuild
 from scheduler.scheduler_global import SuiteType
 from web.fun_test.models import Suite
 from fun_global import RESULTS
@@ -36,7 +37,9 @@ from web.fun_test.models import ReleaseCatalogExecution
 import time
 import datetime
 from asset.asset_global import AssetHealthStates
+
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -46,11 +49,13 @@ def test_beds(request, id):
     am = AssetManager()
     if request.method == "GET":
         minimal = request.GET.get("minimal", False)
-
+        name = request.GET.get("name", None)
+        q = Q()
         if not id:
             valid_test_beds = am.get_valid_test_beds()
-
-            all_test_beds = TestBed.objects.all().order_by('name')
+            if name:
+                q = q & Q(name=name)
+            all_test_beds = TestBed.objects.filter(q).order_by('name')
             all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
 
@@ -78,7 +83,8 @@ def test_beds(request, id):
                                                                "error_message": error_message,
                                                                "asset_level_manual_lock_user": manual_lock_user}
 
-                    test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name, all_test_bed_specs=all_test_bed_specs)
+                    test_bed_availability = am.get_test_bed_availability(test_bed_type=test_bed.name,
+                                                                         all_test_bed_specs=all_test_bed_specs)
 
                     t["automation_status"] = test_bed_availability
 
@@ -137,13 +143,15 @@ def test_beds(request, id):
             test_bed.manual_lock = request_json["manual_lock"]
 
         if test_bed.manual_lock:
-            manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(test_bed_name=test_bed.name)
+            manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
+                test_bed_name=test_bed.name)
             if manual_locked and not this_is_extension_request:
-                #raise Exception(error_message)
+                # raise Exception(error_message)
                 pass
             else:
                 if submitter_email:
-                    am.manual_lock_assets(user=submitter_email, assets=assets_required, expiration_time=test_bed.manual_lock_expiry_time)
+                    am.manual_lock_assets(user=submitter_email, assets=assets_required,
+                                          expiration_time=test_bed.manual_lock_expiry_time)
                 else:
                     pass  # TODO
         else:
@@ -153,19 +161,17 @@ def test_beds(request, id):
         test_bed.save()
 
         if test_bed.manual_lock_submitter:
-
             default_email_list = [x.email for x in TestbedNotificationEmails.objects.all()]
             to_addresses = [test_bed.manual_lock_submitter]
             to_addresses.extend(default_email_list)
 
             lock_or_unlock = "lock" if test_bed.manual_lock else "un-lock"
-            subject = "Manual {} for Test-bed: {} User: {} ".format(lock_or_unlock, test_bed.name, test_bed.manual_lock_submitter)
+            subject = "Manual {} for Test-bed: {} User: {} ".format(lock_or_unlock, test_bed.name,
+                                                                    test_bed.manual_lock_submitter)
             content = subject
             send_mail(to_addresses=to_addresses, subject=subject, content=content)
         pass
     return result
-
-
 
 
 @csrf_exempt
@@ -200,7 +206,7 @@ def suite_executions(request, id):
         else:
             suite_execution_objects = SuiteExecution.objects.filter(q).order_by('submitted_time')
 
-        is_completed = request.GET.get('is_job_completed', None) # used by qa_trigger.py
+        is_completed = request.GET.get('is_job_completed', None)  # used by qa_trigger.py
 
         records = []
         for suite_execution in suite_execution_objects:
@@ -237,7 +243,8 @@ def suite_executions(request, id):
             request_json = json.loads(request.body)
             if "disable_schedule" in request_json:
                 suite_execution.disable_schedule = request_json["disable_schedule"]
-                scheduled_suites = SuiteExecution.objects.filter(auto_scheduled_execution_id=int(id), state=JobStatusType.SCHEDULED)
+                scheduled_suites = SuiteExecution.objects.filter(auto_scheduled_execution_id=int(id),
+                                                                 state=JobStatusType.SCHEDULED)
                 for scheduled_suite in scheduled_suites:
                     scheduled_suite.delete()
             if "preserve_logs" in request_json:
@@ -249,6 +256,7 @@ def suite_executions(request, id):
             # TODO
             pass
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -275,7 +283,8 @@ def test_case_executions(request, id):
                 summary = "Script cleanup"
             else:
                 try:
-                    test_case_info = TestCaseInfo.objects.get(test_case_id=test_execution.test_case_id, script_path=test_execution.script_path)
+                    test_case_info = TestCaseInfo.objects.get(test_case_id=test_execution.test_case_id,
+                                                              script_path=test_execution.script_path)
                     summary = test_case_info.summary
                 except ObjectDoesNotExist:
                     pass
@@ -284,8 +293,9 @@ def test_case_executions(request, id):
                             "suite_execution_id": test_execution.suite_execution_id,
                             "execution_id": test_execution.execution_id,
                             "summary": summary,
-                            "started_epoch_time": get_epoch_time_from_datetime(test_execution.started_time)/1000})
+                            "started_epoch_time": get_epoch_time_from_datetime(test_execution.started_time) / 1000})
         return results
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -317,13 +327,18 @@ def script_infos(request, pk):
     manual_lock_user = models.TextField(default=None, null=True)
 """
 
+
 @csrf_exempt
 @api_safe_json_response
 def assets(request, name, asset_type):
     result = None
     if request.method == "GET":
+        test_bed_name = request.GET.get("test_bed_name", None)
+        q = Q()
         if not name:
-            all_assets = Asset.objects.all()
+            if test_bed_name:
+                q = q & Q(test_beds__contains=test_bed_name)
+            all_assets = Asset.objects.filter(q)
             result = []
             for one_asset in all_assets:
                 one_record = {"name": one_asset.name,
@@ -341,12 +356,25 @@ def assets(request, name, asset_type):
         request_json = json.loads(request.body)
         try:
             asset = Asset.objects.get(name=name, type=asset_type)
+
             original_manual_lock_user = asset.manual_lock_user
             if "manual_lock_user" in request_json:
+                associated_test_beds = asset.test_beds
+                if request_json.get("manual_lock_user", None) and associated_test_beds:
+                    for associated_test_bed in associated_test_beds:
+                        try:
+                            associated_test_bed_object = TestBed.objects.get(name=associated_test_bed)
+                            if associated_test_bed_object.manual_lock and associated_test_bed_object.manual_lock_submitter:
+                                raise Exception(
+                                    "Asset: {} is already locked at the Test-bed: {} level".format(asset.name,
+                                                                                                   associated_test_bed_object.name))
+                        except ObjectDoesNotExist:
+                            pass
+
                 asset.manual_lock_user = request_json.get("manual_lock_user")
                 lock_or_unlock = "lock" if asset.manual_lock_user else "un-lock"
                 to_addresses = [TEAM_REGRESSION_EMAIL]
-                if original_manual_lock_user:
+                if original_manual_lock_user or asset.manual_lock_user:
                     to_addresses.append(original_manual_lock_user)
                     if (original_manual_lock_user != asset.manual_lock_user) and asset.manual_lock_user:
                         to_addresses.append(asset.manual_lock_user)
@@ -360,7 +388,7 @@ def assets(request, name, asset_type):
             asset.save()
             result = True
         except Exception as ex:
-            pass #TODO
+            raise Exception(str(ex))
     return result
 
 
@@ -373,10 +401,12 @@ def categories(request):
         result.append(model_instance_to_dict(category))
     return result
 
+
 @csrf_exempt
 @api_safe_json_response
 def sub_categories(request):
     pass
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -454,7 +484,8 @@ def suites(request, id):
             search_by_name_text = request.GET.get("search_by_name", None)
             if search_by_name_text:
                 q &= Q(name__icontains=search_by_name_text)
-            all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by('case_insensitive_name')
+            all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by(
+                'case_insensitive_name')
             if get_count is None:
                 records_per_page = request.GET.get("records_per_page", None)
                 page = request.GET.get("page", None)
@@ -483,7 +514,7 @@ def suites(request, id):
         tags = request_json.get("tags", None)
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
-        type = request_json.get("type", "SUITE") # TODO
+        type = request_json.get("type", "SUITE")  # TODO
         s.type = type
         s.name = name
         s.short_description = short_description
@@ -499,6 +530,7 @@ def suites(request, id):
         s.delete()
         result = True
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -522,7 +554,8 @@ def re_run_job(request):
             log_prefix = int(test_case_execution.log_prefix)
             if log_prefix not in re_run_info:
                 re_run_info[log_prefix] = {}
-            re_run_info[log_prefix][test_case_execution.test_case_id] = {"test_case_execution_id": test_case_execution.execution_id}
+            re_run_info[log_prefix][test_case_execution.test_case_id] = {
+                "test_case_execution_id": test_case_execution.execution_id}
         suite_id = request_json.get("suite_id", None)
         re_use_build_image = request_json.get("re_use_build_image", None)
         original_suite_execution = SuiteExecution.objects.get(execution_id=original_suite_execution_id)
@@ -574,7 +607,8 @@ def test_case_time_series(request, suite_execution_id):
     if request.method == "GET":
         type = request.GET.get("type", None)
         checkpoint_index = request.GET.get("checkpoint_index", None)
-        collection_name = get_fun_test_time_series_collection_name(suite_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
+        collection_name = get_fun_test_time_series_collection_name(
+            suite_execution_id)  # "s_{}_{}".format(suite_execution_id, test_case_execution_id)
         mongo_db_manager = app_config.get_mongo_db_manager()
         collection = mongo_db_manager.get_collection(collection_name)
 
@@ -596,7 +630,7 @@ def test_case_time_series(request, suite_execution_id):
             query["te"] = int(test_case_execution_id)
         if checkpoint_index is not None:
             query["data.checkpoint_index"] = int(checkpoint_index)
-        t = request.GET.get("t", None)   # sub-type like statistics type
+        t = request.GET.get("t", None)  # sub-type like statistics type
         if t is not None:
             query["t"] = int(t)
 
@@ -623,8 +657,6 @@ def test_case_time_series(request, suite_execution_id):
         if collection:
             result = list(collection.find(query).sort('epoch_time'))
     return result
-
-
 
 
 @api_safe_json_response
@@ -661,9 +693,10 @@ def script_run_time(request, suite_execution_id, script_id):
             result = json.loads(json_util.dumps(collection.find_one(query)))
     return result
 
+
 @api_safe_json_response
 def release_trains(request):
-    releases = ["master", "1.0a_aa", "1.0a_ab"]
+    releases = ["master", "1.0a_aa", "1.0a_ab", "1.0b_bm"]
     result = None
     if request.method == "GET":
         result = releases
@@ -722,6 +755,7 @@ def time_series_types(request):
         result = TimeSeriesTypes().all_strings_to_code()
     return result
 
+
 @api_safe_json_response
 def job_status_types(request):
     result = None
@@ -730,6 +764,7 @@ def job_status_types(request):
         result["string_code_map"] = JobStatusType().all_strings_to_code()
         result["code_description_map"] = JobStatusType().get_code_to_description_map()
     return result
+
 
 @csrf_exempt
 @api_safe_json_response
@@ -813,6 +848,23 @@ def asset_health_states(request):
         result = AssetHealthStates().get_maps()
     return result
 
+@csrf_exempt
+@api_safe_json_response
+def last_good_build(request, release_train):
+    result = None
+    if request.method == "PUT":
+        request_json = json.loads(request.body)
+        last_good_build_object = LastGoodBuild.set(**request_json)
+        if last_good_build_object:
+            result = last_good_build.to_dict()
+    if request.method == "GET":
+        last_good_build_object = LastGoodBuild.get(release_train=release_train)
+        if last_good_build_object:
+            result = last_good_build_object.to_dict()
+    return result
+
+
 if __name__ == "__main__":
     from web.fun_test.django_interactive import *
+
     print categories(None)

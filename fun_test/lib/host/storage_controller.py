@@ -2,13 +2,49 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+if fun_test.storage_api_enabled:
+    from swagger_client.api.storage_api import StorageApi
+    from swagger_client.api.topology_api import TopologyApi
+    from swagger_client.api.network_api import NetworkApi
+    from swagger_client.api.apigateway_api import ApigatewayApi
+    from swagger_client.api_client import ApiClient
+    from swagger_client.configuration import Configuration
 
 
 class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
-    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True):
+    def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
+                 api_password="password", api_server_ip=None, api_server_port=9000):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
+        if fun_test.storage_api_enabled:
+            if not api_server_ip:
+                api_server_ip = target_ip
+
+            configuration = Configuration()
+            configuration.host = "https://%s:%s/FunCC/v1" % (api_server_ip, api_server_port)
+            configuration.username = api_username
+            configuration.password = api_password
+            configuration.verify_ssl = False
+            api_client = ApiClient(configuration)
+            self.apigateway_api = ApigatewayApi(api_client)
+            self.storage_api = StorageApi(api_client)
+            self.topology_api = TopologyApi(api_client)
+            self.network_api = NetworkApi(api_client)
+
+    def health(self):
+        api_server_health = False
+        timer = FunTimer(max_time=120)
+        while not timer.is_expired():
+            try:
+                if self.apigateway_api.get_fc_health().status:
+                    fun_test.log("Api Server is Healthy")
+                    api_server_health = True
+                    break
+            except:
+                fun_test.critical("API server not up yet")
+            fun_test.sleep("Waiting for API server, remaining time: %s" % timer.remaining_time(), seconds=15)
+        return api_server_health
 
     def ip_cfg(self, ip, port=None, command_duration=TIMEOUT):
         if port:
@@ -99,7 +135,8 @@ class StorageController(NetworkController, DpcshClient):
                        "params": {"huid": huid, "ctlid": ctlid, "fnid": fnid, "nsid": ns_id, "uuid": uuid}}
         return self.json_execute(verb=self.mode, data=detach_dict, command_duration=command_duration)
 
-    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, command_duration=TIMEOUT):
+    def create_rds_volume(self, capacity, block_size, uuid, name, remote_ip, port, remote_nsid, host_nqn, subsys_nqn,
+                          command_duration=TIMEOUT):
         create_dict = {"class": "volume",
                        "opcode": "VOL_ADMIN_OPCODE_CREATE",
                        "params": {"type": "VOL_TYPE_BLK_RDS",
@@ -109,7 +146,9 @@ class StorageController(NetworkController, DpcshClient):
                                   "name": name,
                                   "remote_ip": remote_ip,
                                   "port": port,
-                                  "remote_nsid": remote_nsid}}
+                                  "remote_nsid": remote_nsid,
+                                  "host_nqn": host_nqn,
+                                  "subsys_nqn": subsys_nqn}}
         return self.json_execute(verb=self.mode, data=create_dict, command_duration=command_duration)
 
     def create_replica_volume(self, capacity, block_size, uuid, name, pvol_id, command_duration=TIMEOUT):
@@ -221,6 +260,10 @@ class StorageController(NetworkController, DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
+    def get_device_status(self, device_id, command_duration=TIMEOUT):
+        data = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", device_id)
+        return self.json_execute(verb="peek", data=data, command_duration=command_duration)
+
     def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
         data = ["output"]
         params = {"slot": device_id, "type": "hotswap", "action": action}
@@ -265,6 +308,15 @@ class StorageController(NetworkController, DpcshClient):
             fun_test.log("Configuring encryption enabled EC volume with key size: {}, xtweak size: {}".format(
                 ec_info['key_size'], ec_info['xtweak_size']))
 
+        # Check if drive_uuid is provided to create volume
+        if "drive_uuids" in ec_info.keys():
+            if len(ec_info["drive_uuids"]) < ec_info["num_volumes"] * (ec_info["ndata"] + ec_info["nparity"]):
+                fun_test.log("Repeating drive uuids for rest of volume plexes")
+                ec_info["drive_uuids"] = ec_info["drive_uuids"] * ec_info["num_volumes"]
+                ec_info["drive_uuids"] = ec_info["drive_uuids"][
+                                        :ec_info["num_volumes"] * (ec_info["ndata"] + ec_info["nparity"])]
+            fun_test.log("Plex will be created in custom defined drives: {}".format(ec_info["drive_uuids"]))
+
         ec_info["uuids"] = {}
         ec_info["volume_capacity"] = {}
         ec_info["attach_uuid"] = {}
@@ -308,21 +360,43 @@ class StorageController(NetworkController, DpcshClient):
                                                          ec_info["volume_block"][vtype]
 
             # Configuring ndata and nparity number of BLT volumes
-            for vtype in ["ndata", "nparity"]:
-                ec_info["uuids"][num][vtype] = []
-                for i in range(ec_info[vtype]):
-                    this_uuid = utils.generate_uuid()
-                    ec_info["uuids"][num][vtype].append(this_uuid)
-                    ec_info["uuids"][num]["blt"].append(this_uuid)
-                    command_result = self.create_volume(
-                        type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
-                        block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
-                        group_id=num+3, command_duration=command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"],
-                                         "Creating {} {} {} {} {} bytes volume on DUT instance".
-                                         format(num, i, vtype, ec_info["volume_types"][vtype],
-                                                ec_info["volume_capacity"][num][vtype]))
+            if "drive_uuids" in ec_info:
+                plex_count = 0
+                for vtype in ["ndata", "nparity"]:
+                    ec_info["uuids"][num][vtype] = []
+                    for i in range(ec_info[vtype]):
+                        this_uuid = utils.generate_uuid()
+                        ec_info["uuids"][num][vtype].append(this_uuid)
+                        ec_info["uuids"][num]["blt"].append(this_uuid)
+                        command_result = self.create_volume(
+                            type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                            block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:],
+                            uuid=this_uuid,
+                            group_id=num + 3, drive_uuid=ec_info["drive_uuids"][plex_count],
+                            command_duration=command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"],
+                                             "Creating {} {} {} {} {} bytes volume on drive uuid {} DUT instance".
+                                             format(num, i, vtype, ec_info["volume_types"][vtype],
+                                                    ec_info["volume_capacity"][num][vtype],
+                                                    ec_info["drive_uuids"][plex_count]))
+                        plex_count += 1
+            else:
+                for vtype in ["ndata", "nparity"]:
+                    ec_info["uuids"][num][vtype] = []
+                    for i in range(ec_info[vtype]):
+                        this_uuid = utils.generate_uuid()
+                        ec_info["uuids"][num][vtype].append(this_uuid)
+                        ec_info["uuids"][num]["blt"].append(this_uuid)
+                        command_result = self.create_volume(
+                            type=ec_info["volume_types"][vtype], capacity=ec_info["volume_capacity"][num][vtype],
+                            block_size=ec_info["volume_block"][vtype], name=vtype + "_" + this_uuid[-4:], uuid=this_uuid,
+                            group_id=num+3, command_duration=command_timeout)
+                        fun_test.log(command_result)
+                        fun_test.test_assert(command_result["status"],
+                                             "Creating {} {} {} {} {} bytes volume on DUT instance".
+                                             format(num, i, vtype, ec_info["volume_types"][vtype],
+                                                    ec_info["volume_capacity"][num][vtype]))
 
             # Configuring EC volume on top of BLT volumes
             this_uuid = utils.generate_uuid()
@@ -498,6 +572,9 @@ class StorageController(NetworkController, DpcshClient):
 
 
 if __name__ == "__main__":
-    sc = StorageController(target_ip="10.1.20.67", target_port=42220)
-    output = sc.command("peek stats")
-    sc.print_result(output)
+    sc = StorageController(target_ip="fs53-come", target_port=42220)
+    # output = sc.command("peek stats")
+    # sc.print_result(output)
+    result1 = sc.apigateway_api.get_fc_health()
+    result2 = sc.storage_api.get_all_pools()
+    result3 = sc.topology_api.get_hierarchical_topology()

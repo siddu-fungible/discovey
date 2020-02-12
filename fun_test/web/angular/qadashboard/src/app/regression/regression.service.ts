@@ -121,11 +121,17 @@ export class RegressionService implements OnInit {
     }));
   }
 
-  fetchTestbeds(minimal = null) {
+  fetchTestbeds(minimal=null, name=null) {
     let url = "/api/v1/regression/test_beds";
+    let queryParams = [];
     if (minimal !== null) {
-      url += `?minimal=${minimal}`;
+      queryParams.push(['minimal', minimal]);
     }
+    if (name) {
+      queryParams.push(['name', name]);
+    }
+    let queryParamString = this.commonService.queryParamsToString(queryParams);
+    url = `${url}${queryParamString}`;
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);
     }))

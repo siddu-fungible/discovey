@@ -9,11 +9,16 @@
       [leftAlignedButtons]="headerLeftAlignedButtons"
       [titleStateLabel]="jobStatusTypes?.descriptionMap[releaseCatalogExecution.state]"
       [titleResultLabel]="releaseCatalogExecution.result"
-    >
+      [nextHeaderTitle]="'Options'">
     </app-section-header>
-    <div *ngIf="releaseCatalogExecution.master_execution_id">
+    <!--div *ngIf="releaseCatalogExecution.master_execution_id">
       <a [routerLink]="['/regression/release_detail/' + releaseCatalogExecution.master_execution_id]">Go to master instance</a>
-    </div>
+    </div-->
+
+    <input type="checkbox"
+                     name="update_last_good_build" (click)="updateLastGoodBuild()"
+                     [checked]="releaseCatalogExecution.update_last_good_build"> Update last good build
+    <app-section-horizontal-line></app-section-horizontal-line>
     <app-section-header [title]="'Suites'"
                         [subSection]="true"
                         [titleActionLinks]="suitesHeaderActionLinks"
