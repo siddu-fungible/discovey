@@ -243,6 +243,10 @@ class DurableVolumeTestcase(FunTestCase):
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "test_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = job_inputs["test_bs"]
+            self.fio_verify_cmd_args["bs"] = job_inputs["test_bs"]
+            fun_test.log("FIO block size is override by value: {}".format(self.fio_write_cmd_args["bs"]))
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -475,35 +479,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
-        if "device_id" not in self.ec_info:
-            fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
-                         "So going to pull that info")
-            self.ec_info["drive_uuid"] = {}
-            self.ec_info["device_id"] = {}
-            for num in xrange(self.ec_info["num_volumes"]):
-                self.ec_info["drive_uuid"][num] = []
-                self.ec_info["device_id"][num] = []
-                for blt_uuid in self.ec_info["uuids"][num]["blt"]:
-                    blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
-                                                             "stats")
-                    blt_stats = self.storage_controller.peek(blt_props_tree)
-                    fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
-                    if "drive_uuid" in blt_stats["data"]:
-                        self.ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
-                    else:
-                        fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
-                                               format(blt_uuid))
-                    drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
-                                                               "drives", blt_stats["data"]["drive_uuid"])
-                    drive_stats = self.storage_controller.peek(drive_props_tree)
-                    fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
-                                           format(blt_stats["data"]["drive_uuid"]))
-                    if "drive_id" in drive_stats["data"]:
-                        self.ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
-                    else:
-                        fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
-                                               format(blt_stats["data"]["drive_uuid"]))
-
+        self.ec_info = get_plex_device_id(self.ec_info, self.storage_controller)
         fun_test.log(
             "EC plex volumes UUID      : {}".format(self.ec_info["uuids"][self.test_volume_start_index]["blt"]))
         fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
@@ -552,6 +528,13 @@ class DurableVolumeTestcase(FunTestCase):
         self.fio_write_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
         self.fio_verify_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
 
+        # If FIO block size is not provided by user, setting FIO block size to the stripe length
+        if "bs" not in self.fio_write_cmd_args:
+            self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            self.fio_verify_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            fun_test.log(
+                "FIO block size is not defined, setting it to stripe length: {}".format(self.fio_write_cmd_args["bs"]))
+
         # Writing first 50% of volume size with buffer pattern file
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
@@ -580,7 +563,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Triggering drive failure
         if hasattr(self, "trigger_failure") and self.trigger_failure:
             # Sleep for sometime before triggering the drive failure
-            wait_time = 10
+            wait_time = 20
             fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                            seconds=wait_time)
             # Check whether the drive index to be failed is given or not. If not pick a random one
