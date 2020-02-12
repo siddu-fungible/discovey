@@ -494,7 +494,6 @@ class DurableVolumeTestcase(FunTestCase):
             host_handle = self.host_info[host_name]["handle"]
             nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
             volume_name_list = self.host_info[host_name]["volume_name_list"]
-
             # Check and remove file if exists
             if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
                 host_handle.remove_file(file_path=self.dd_create_file["output_file"])
@@ -502,7 +501,6 @@ class DurableVolumeTestcase(FunTestCase):
             return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
             fun_test.test_assert_expected(self.pattern_file_size, return_size, "Creating {} bytes for buffer pattern".
                                           format(self.pattern_file_size))
-
             # Start background load on other volume
             if hasattr(self, "back_pressure") and self.back_pressure:
                 try:
@@ -680,11 +678,15 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["iodepth"],
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
-
         fun_test.sleep("before starting write", 15)
         # Writing new data (buffer pattern) to whole volume of volume
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
                 # Creating buffer pattern file with new conent
                 if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
                     host_handle.remove_file(file_path=self.dd_create_file["output_file"])
@@ -693,11 +695,6 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.test_assert_expected(self.pattern_file_size, return_size,
                                               "Creating {} bytes for buffer pattern".
                                               format(self.pattern_file_size))
-                start_time = time.time()
-                host_handle = self.host_info[host_name]["handle"]
-                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-                wait_time = self.num_hosts - index
                 # self.fio_write_cmd_args["offset"] = "50%"
                 self.fio_write_cmd_args["filename"] = nvme_block_device_list[num]
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
@@ -884,7 +881,6 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["iodepth"],
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
-
         '''
         # After Data Reconstruction is completed, verifying 100% data integrity
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
@@ -1021,6 +1017,9 @@ class DurableVolumeTestcase(FunTestCase):
                 # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
                 for host_name in self.host_info:
                     host_handle = self.host_info[host_name]["handle"]
+                    # Remove the file after use
+                    if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
+                        host_handle.remove_file(file_path=self.dd_create_file["output_file"])
                     pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
 
