@@ -2751,12 +2751,10 @@ class Fs(object, ToDictMixin):
         result = True
         error_message = ""
         fun_test.log("Checking if SSD's are present and online")
-        # ssd_info = self.storage_devices_nvme_ssds()
         for f1_index in range(self.NUM_F1S):
             if f1_index == self.disable_f1_index:
                 continue
             expected_ssds = num_ssds.get("f1_{}".format(f1_index), 0)
-            # ssd_info_f1 = ssd_info["data"][f1_index]
             ssd_info_f1 = self.storage.nvme_ssds(f1_index)
             all_ssd_present = True
             for ssd in range(expected_ssds):
@@ -3021,9 +3019,7 @@ if __name__ == "__main_2_":
 if __name__ == "__main__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-143"))
-    topology = th.deploy(already_deployed=True)
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
+    topology = th.deploy(already_deployed=False)
     fs_obj = topology.get_dut_instance(index=0)
-    num_ssds = {"f1_0":12, "f1_1":12}
-    fs_obj.check_ssd_status(num_ssds, with_error_details=True)
     fs_obj.storage.nvme_ssds(f1_index=0)
