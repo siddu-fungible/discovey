@@ -3,7 +3,7 @@ import {RegressionService} from "../regression.service";
 import {forkJoin, Observable, of, throwError} from "rxjs";
 import {catchError, last, switchMap, windowWhen} from "rxjs/operators";
 import {LoggerService} from "../../services/logger/logger.service";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute} from "@angular/router";
 import {animate, state, style, transition, trigger} from "@angular/animations";
 import {CommonService} from "../../services/common/common.service";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
@@ -11,7 +11,6 @@ import {ScriptDetailService, ContextInfo, ScriptRunTime} from "./script-detail.s
 import {StatisticsService, StatisticsCategory, StatisticsSubCategory} from "../../statistics/statistics.service";
 import {RegisteredAsset} from "../definitions";
 import {TreeNode} from "../../ui-elements/tree/definitions";
-import {ViewChild, ElementRef} from '@angular/core';
 
 class DataModel {
   letter: string;
@@ -130,16 +129,13 @@ export class ScriptDetailComponent implements OnInit {
   sidePanelOpen: boolean = false;
   tree: TreeNode = null;
   selectedStatsSet: any = new Set();
-  queryParams: any[] = [];
-  @ViewChild('contextOptions') contextOptions: ElementRef;
 
   constructor(private regressionService: RegressionService,
               private loggerService: LoggerService,
               private route: ActivatedRoute,
               private commonService: CommonService,
               private modalService: NgbModal,
-              private service: ScriptDetailService,
-              private router: Router
+              private service: ScriptDetailService
   ) {
     this.selectedStatistics = [];
     let sc = new StatisticsCategory();
@@ -275,22 +271,12 @@ export class ScriptDetailComponent implements OnInit {
 
   getQueryParams() {
     this.route.queryParams.subscribe(params => {
-      if (params['show_context']) {
-        this.onContextOptionsClick(this.contextOptions);
-      } else {
-        this.modalService.dismissAll();
-      }
-      if (params['show_charts']) {
-        this.viewChartsClick();
-      } else {
-        this.sidePanelOpen = false;
-      }
       if (params['show_more_logs']) {
         this.openArtifactsPanelClick();
       } else {
         this.showingArtifactPanel = false;
       }
-      if (params['show_tables']) {
+      if (params['show_test_case_tables']) {
         this.openTestCaseTablesPanelClick();
       } else {
         this.showingTablesPanel = false;
@@ -576,7 +562,6 @@ export class ScriptDetailComponent implements OnInit {
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
     }, (reason) => {
       console.log("Rejected");
-      this.routeToMenu(null);
       //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
     this.selectedContexts = this.availableContexts.filter(availableContext => availableContext.selected);
@@ -637,9 +622,6 @@ export class ScriptDetailComponent implements OnInit {
     });*/
 
     this.sidePanelOpen = !this.sidePanelOpen;
-    if (!this.sidePanelOpen) {
-      this.routeToMenu(null);
-    }
   }
 
   addStatisticsCategory() {
@@ -699,22 +681,14 @@ export class ScriptDetailComponent implements OnInit {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
 
-  routeToMenu(param) {
-    this.queryParams = [];
-    if (param) {
-      this.queryParams.push([param, 1]);
-    }
-    let queryParamString = this.commonService.queryParamsToString(this.queryParams);
-    let url = `${this.baseUrl}${queryParamString}`;
-    this.router.navigateByUrl(url);
-  }
 
-  routeBasedOnBoolean(value, param) {
+  routeByOption(value, queryParam) {
+    let param = {"name": queryParam, "value": 1};
     if (value) {
       value = !value;
-      this.routeToMenu(null);
+      this.commonService.navigateByQuery(null, this.baseUrl);
     } else {
-      this.routeToMenu(param);
+      this.commonService.navigateByQuery(param, this.baseUrl);
     }
   }
 
