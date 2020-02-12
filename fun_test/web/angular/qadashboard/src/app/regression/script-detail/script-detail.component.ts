@@ -207,7 +207,7 @@ export class ScriptDetailComponent implements OnInit {
 
   timeSeriesTypes: any = null;
   baseUrl: string = null;
-  queryParams: any[] = [];
+  queryParams: any = {};
 
   ngOnInit() {
     this.baseUrl = '/regression/script_detail';
@@ -272,52 +272,82 @@ export class ScriptDetailComponent implements OnInit {
 
   getQueryParams() {
     this.route.queryParams.subscribe(params => {
+      this.queryParams = {};
       if (params['show_more_logs']) {
+        this.queryParams['show_more_logs'] = 1;
         this.openArtifactsPanelClick();
       } else {
         this.showingArtifactPanel = false;
       }
+
       if (params['show_test_case_tables']) {
+        this.queryParams['show_test_case_tables'] = 1;
         this.openTestCaseTablesPanelClick();
       } else {
         this.showingTablesPanel = false;
       }
+      // test_case_id and checkpoint_id
       if (params['test_case_id'] && params['checkpoint_id']) {
-            new Observable(observer => {
+        let testCaseId = Number(params['test_case_id']);
+        this.queryParams['test_case_id'] = testCaseId;
+        this.fetchTestCases(testCaseId).subscribe(response => {
+          let checkpointId = Number(params['checkpoint_id']);
+          this.queryParams['checkpoint_id'] = checkpointId;
+          this.expandCheckpointIdClick(checkpointId);
+        }, error => {
+          this.loggerService.error("Unable to fetch test case and checkpoints");
+          this.status = null;
+        });
+      } else if (params['test_case_id']) {
+        let testCaseId = Number(params['test_case_id']);
+        this.queryParams['test_case_id'] = testCaseId;
+        this.fetchTestCases(testCaseId).subscribe(response => {
+        }, error => {
+          this.loggerService.error("Unable to fetch test cases");
+          this.status = null;
+        });
+      }
+    });
+    return of(true);
+  }
+
+  fetchTestCases(testCaseId=null, testCaseIndex=null): any {
+    return new Observable(observer => {
       observer.next(true);
       observer.complete();
       return () => {
       }
     }).pipe(
       switchMap(response => {
-        let testCaseId = params['test_case_id'];
-        // return this.expandTestCaseIdClick(testCaseId);
-        let index = this.getIndexFromTestCaseId(testCaseId);
-    if (index) {
-       return this.onTestCaseIdClick(index);
-    } else {
-      throwError("Index not found");
-    }
-      })).subscribe(response => {
-        let checkpointId = params['checkpoint_id'];
-        this.expandCheckpointIdClick(checkpointId);
-      console.log("opened edit modal");
-    }, error => {
-      this.loggerService.error("Unable to set test case and checkpoints");
-    });
-      } else if (params['test_case_id']) {
-        let testCaseId = params['test_case_id'];
-        this.expandTestCaseIdClick(testCaseId);
-      }
-    });
-    return of(true);
-  }
+        let index = null;
+        if (testCaseId) {
+          let id = Number(testCaseId);
+          index = this.getIndexFromTestCaseId(id);
+        }
+        if (testCaseIndex) {
+          index = testCaseIndex;
+        }
+        if (index) {
+          this.testLogs = null;
+          this.currentCheckpointIndex = null;
+          this.showLogsPanel = false;
+          this.currentTestCaseExecution = this.testCaseExecutions[String(index)];
+          this.updateScriptExecutionInfo();
+        } else {
+          throwError("Index not found");
+        }
+        return of(true);
+      })).pipe(
+      switchMap(response => {
+        this.checkpointPanelStatus = "Fetching checkpoints";
+        return this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId);
+      })).pipe(
+      switchMap(response => {
+        this.checkpointPanelStatus = null;
+        this.showCheckpointPanel = true;
+        return of(true);
 
-  expandTestCaseIdClick(testCaseId): any {
-    let index = this.getIndexFromTestCaseId(testCaseId);
-    if (index) {
-       return this.onTestCaseIdClick(index);
-    }
+      }));
   }
 
   expandCheckpointIdClick(checkpointId) {
@@ -332,19 +362,13 @@ export class ScriptDetailComponent implements OnInit {
         contextId = checkpoint.data.context_id;
       }
     });
-    // for (let checkpoint of this.currentTestCaseExecution.checkpoints) {
-    //   if (checkpoint.data.checkpoint_index === checkpointId) {
-    //     contextId = checkpoint.data.context_id;
-    //     break;
-    //   }
-    // }
     return contextId;
   }
 
   getIndexFromTestCaseId(testCaseId): Number {
     let index = null;
     for (let i = 0; i < this.testCaseExecutions.length; i++) {
-      if (this.testCaseExecutions[i].test_case_id === Number(testCaseId)) {
+      if (this.testCaseExecutions[i].test_case_id === testCaseId) {
         index = i;
         break;
       }
@@ -448,30 +472,6 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  onTestCaseIdClick(testCaseExecutionIndex): any {
-    this.testLogs = null;
-    this.currentCheckpointIndex = null;
-    this.showLogsPanel = false;
-    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
-    this.updateScriptExecutionInfo();
-
-    this.checkpointPanelStatus = "Fetching checkpoints";
-    return this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
-      this.checkpointPanelStatus = null;
-      this.showCheckpointPanel = true;
-      return of(true)
-    }, error => {
-      this.loggerService.error("Unable to fetch checkpoints");
-      this.status = null;
-
-    });
-
-  }
-
-  onCheckpointClick2(testCaseExecution, checkpointIndex, contextId?: 0) {
-
-  }
-
   showContext(contextId) {
     for (let index = 0; index < this.availableContexts.length; index++) {
       if (contextId === this.availableContexts[index].context_id) {
@@ -486,7 +486,7 @@ export class ScriptDetailComponent implements OnInit {
     this.timeFilterMin = 0;
   }
 
-  onCheckpointClick(testCaseExecution, checkpointIndex, contextId=0) {
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId = 0) {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
@@ -659,7 +659,11 @@ export class ScriptDetailComponent implements OnInit {
     this.timeFilterMin = valueChanged;
     let testCaseIndex = this.findMatchingTestCase(this.timeFilterMin);
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
-      this.onTestCaseIdClick(testCaseIndex)
+      this.fetchTestCases(null, testCaseIndex).subscribe(response => {
+        }, error => {
+          this.loggerService.error("Unable to fetch test cases");
+          this.status = null;
+        });
     }
   }
 
@@ -679,15 +683,6 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   viewChartsClick(content?) {
-    /*
-    this.selectedStatisticsCategory = null;
-    this.selectedStatisticsSubCategory = null;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-    }, (reason) => {
-      console.log("Rejected");
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    });*/
-
     this.sidePanelOpen = !this.sidePanelOpen;
   }
 
@@ -727,7 +722,7 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openArtifactsPanelClick() {
-    this.showingArtifactPanel = !this.showingArtifactPanel;
+    this.showingArtifactPanel = true;
     this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
       this._parseArtifacts();
@@ -745,29 +740,41 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openTestCaseTablesPanelClick() {
-    this.showingTablesPanel = !this.showingTablesPanel;
+    this.showingTablesPanel = true;
   }
 
 
   routeByOption(value, queryParam) {
-    let param = {"name": queryParam, "value": 1};
+    if (queryParam === 'show_more_logs') {
+      this.deleteQueryParam('show_test_case_tables');
+    } else {
+      this.deleteQueryParam('show_more_logs');
+    }
     if (value) {
       value = !value;
-      this.commonService.navigateByQuery(null, this.baseUrl);
+      this.deleteQueryParam(queryParam);
     } else {
-      this.commonService.navigateByQuery(param, this.baseUrl);
+      this.queryParams[queryParam] = 1;
     }
+    this.commonService.navigateByQuery(this.queryParams, this.baseUrl);
   }
 
-  clickTestCaseId(testCaseId) {
-    let param = {"name": "test_case_id", "value": testCaseId};
-    this.commonService.navigateByQuery(param, this.baseUrl, this.queryParams);
+  clickTestCaseOrCheckpoint(testCaseId, checkpointId = null) {
+    this.queryParams["test_case_id"] = testCaseId;
+    if (checkpointId) {
+      this.queryParams['checkpoint_id'] = checkpointId;
+    } else {
+      this.deleteQueryParam('checkpoint_id');
+    }
+    this.commonService.navigateByQuery(this.queryParams, this.baseUrl);
   }
 
-  clickCheckPointId(checkpointId, testCaseId) {
-    this.queryParams.push(['test_case_id', testCaseId]);
-    let param = {"name": "checkpoint_id", "value": checkpointId};
-    this.commonService.navigateByQuery(param, this.baseUrl, this.queryParams);
+  deleteQueryParam(param) {
+    Object.keys(this.queryParams).forEach(p => {
+      if (p === param) {
+        delete this.queryParams[p];
+      }
+    });
   }
 
 }
