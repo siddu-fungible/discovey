@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable, of} from "rxjs";
 import {switchMap} from "rxjs/operators";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {UserProfile} from "../../login/definitions";
 
 @Injectable({
@@ -12,7 +12,7 @@ export class CommonService {
   announcementAvailable: boolean = false;
   TIMEZONE: string = "America/Los_Angeles";
   userProfile: UserProfile = null;
-  constructor(private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute, private router: Router) {
 
   }
 
@@ -196,6 +196,16 @@ export class CommonService {
 
     }
     return queryParamString;
+  }
+
+  navigateByQuery(queryParams, baseUrl) {
+    let query = [];
+    if (queryParams) {
+      query.push([queryParams.name, queryParams.value]);
+    }
+    let queryParamString = this.queryParamsToString(query);
+    let url = `${baseUrl}${queryParamString}`;
+    this.router.navigateByUrl(url);
   }
 
   milliSecondsElapsedToDays(milliSeconds: number) {

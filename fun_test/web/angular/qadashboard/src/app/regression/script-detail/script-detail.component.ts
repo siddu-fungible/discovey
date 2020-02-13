@@ -162,7 +162,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  suiteExecutionId: number = 10000;
+  suiteExecutionId: number = null;
   logPrefix: number = null;
   scriptId: number = null;
   scriptPath: string = null;
@@ -206,9 +206,10 @@ export class ScriptDetailComponent implements OnInit {
   registeredAssets: RegisteredAsset [];
 
   timeSeriesTypes: any = null;
+  baseUrl: string = null;
 
   ngOnInit() {
-
+    this.baseUrl = '/regression/script_detail';
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getTimeSeriesTypes();
     })).pipe(switchMap(response => {
@@ -246,6 +247,8 @@ export class ScriptDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this._parseTestCaseTables(response);
       return of(true);
+    })).pipe(switchMap(response => {
+      return this.getQueryParams();
     }));
 
     this.route.params.subscribe(params => {
@@ -258,11 +261,28 @@ export class ScriptDetailComponent implements OnInit {
       if (params["scriptId"]) {
         this.scriptId = parseInt(params["scriptId"]);
       }
+      if (this.scriptId && this.logPrefix && this.suiteExecutionId) {
+        this.baseUrl += "/" + this.scriptId + "/" + this.logPrefix + "/" + this.suiteExecutionId;
+      }
       this.refreshAll();
-
     });
 
+  }
 
+  getQueryParams() {
+    this.route.queryParams.subscribe(params => {
+      if (params['show_more_logs']) {
+        this.openArtifactsPanelClick();
+      } else {
+        this.showingArtifactPanel = false;
+      }
+      if (params['show_test_case_tables']) {
+        this.openTestCaseTablesPanelClick();
+      } else {
+        this.showingTablesPanel = false;
+      }
+    });
+    return of(true);
   }
 
   clickedStatsTreeNode(flatNode): void {
@@ -548,6 +568,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+
   findMatchingTestCase(time): number {
     let testCaseIndex = 0;
     let found = false;
@@ -660,5 +681,23 @@ export class ScriptDetailComponent implements OnInit {
     this.showingTablesPanel = !this.showingTablesPanel;
   }
 
+
+  routeByOption(value, queryParam) {
+    let param = {"name": queryParam, "value": 1};
+    if (value) {
+      value = !value;
+      this.commonService.navigateByQuery(null, this.baseUrl);
+    } else {
+      this.commonService.navigateByQuery(param, this.baseUrl);
+    }
+  }
+
+  // deleteQueryParam(param) {
+  //   for (let i = 0; i < this.queryParams.length; i++) {
+  //     if (this.queryParams[i][0] === param) {
+  //       this.queryParams.splice(i, 1);
+  //     }
+  //   }
+  // }
 
 }

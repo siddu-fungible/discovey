@@ -602,7 +602,7 @@ class BwTest(FunTestCase):
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Client process still there", seconds=wait_duration)
                         wait_time = test_case_failure_time
-                        while key.qp_check() > 1:
+                        while key.qp_check() > 0:
                             fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
                             wait_time -= 1
                             if wait_time == 0:
@@ -616,7 +616,7 @@ class BwTest(FunTestCase):
                         while key.process_check(pid=value["cmd_pid"]):
                             fun_test.sleep(message="Server process still there", seconds=wait_duration)
                         wait_time = test_case_failure_time
-                        while key.qp_check() > 1:
+                        while key.qp_check() > 0:
                             fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
                             wait_time -= 1
                             if wait_time == 0:
@@ -846,7 +846,7 @@ class LatencyTest(FunTestCase):
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Client process still there", seconds=wait_duration)
                     wait_time = test_case_failure_time
-                    while key.qp_check() > 1:
+                    while key.qp_check() > 0:
                         fun_test.sleep("Client : QP count {}".format(key.qp_check()), seconds=5)
                         wait_time -= 1
                         if wait_time == 0:
@@ -860,7 +860,7 @@ class LatencyTest(FunTestCase):
                     while key.process_check(pid=value["cmd_pid"]):
                         fun_test.sleep(message="Server process still there", seconds=wait_duration)
                     wait_time = test_case_failure_time
-                    while key.qp_check() > 1:
+                    while key.qp_check() > 0:
                         fun_test.sleep("Server : QP count {}".format(key.qp_check()), seconds=5)
                         wait_time -= 1
                         if wait_time == 0:

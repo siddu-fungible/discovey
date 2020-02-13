@@ -1152,6 +1152,14 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         if not nvme_list_found:
             try:
+                sc0 = fs_obj.get_storage_controller(f1_index=0)
+                sc0.json_execute(verb="peek", data="storage", command_duration=5)
+                
+                sc1 = fs_obj.get_storage_controller(f1_index=1)
+                sc1.json_execute(verb="peek", data="storage", command_duration=5)
+            except:
+                pass
+            try:
                 # Check host F1 connectivity
                 fun_test.log("Checking host F1 connectivity")
                 for ip in self.f1_ips:
