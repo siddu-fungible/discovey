@@ -313,7 +313,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(host_obj_list), len(volume_uuid_list)):
-                        host_obj_list.append(temp_host_obj_list[i % len(temp_host_obj_list)])
+                        host_obj_list.append(host_obj_list[i % len(temp_host_obj_list)])
 
                 elif len(host_obj_list) > len(volume_uuid_list):
                     # when volumes are attached in round robin fashion
@@ -321,7 +321,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(volume_uuid_list), len(host_obj_list)):
-                        volume_uuid_list.append(temp_volume_uuid_list[i % len(temp_volume_uuid_list)])
+                        volume_uuid_list.append(volume_uuid_list[i % len(temp_volume_uuid_list)])
 
             for index in range(len(host_obj_list)):
                 if not host_obj_list[index] in result.keys():
