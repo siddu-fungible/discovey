@@ -31,7 +31,7 @@
         <td class="fun-attribute">
           <!--<app-textarea-input [hoverHide]="false" [initialValue]="suite?.suite_owner" [required]="true"-->
                               <!--(valueChanged)="onShortDescriptionChangedEvent($event)"></app-textarea-input>-->
-          <select id="submitter" [(ngModel)]="suite.suite_owner" (ngModelChange)="onUserChange($event)">
+          <select id="submitter" [(ngModel)]="selectedUser">
           <option *ngFor="let user of users" [ngValue]="user">{{
             user.first_name }} {{
             user.last_name }}
