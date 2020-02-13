@@ -237,6 +237,7 @@ class MultiHostFioRandRead(FunTestCase):
                     host_nqn_ip = (host_nqn, dataplane_ip)
                     if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
                         host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
+                        host.nvme_connect_info[subsys_nqn] = list(set(host.nvme_connect_info[subsys_nqn]))
 
             for host in self.hosts:
                 for subsys_nqn in host.nvme_connect_info:
