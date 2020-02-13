@@ -300,42 +300,44 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = {}
         try:
-            temp_volume_uuid_list = copy.deepcopy(volume_uuid_list)
-            temp_host_obj_list = copy.deepcopy(host_obj_list)
+            temp_volume_uuid_list = []
+            temp_host_obj_list = []
+            temp_volume_uuid_list.extend(x for x in volume_uuid_list)
+            temp_host_obj_list.extend(x for x in host_obj_list)
             if volume_is_shared:
                 # when volumes are shared among hosts
-                volume_uuid_list = volume_uuid_list * len(host_obj_list)
-                host_obj_list = host_obj_list * len(volume_uuid_list)
+                temp_volume_uuid_list = temp_volume_uuid_list * len(temp_host_obj_list)
+                temp_host_obj_list = temp_host_obj_list * len(temp_volume_uuid_list)
             else:
-                if len(host_obj_list) < len(volume_uuid_list):
+                if len(temp_host_obj_list) < len(temp_volume_uuid_list):
                     # when volumes are attached in round robin fashion
                     fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(host_obj_list), len(volume_uuid_list)):
-                        host_obj_list.append(host_obj_list[i % len(temp_host_obj_list)])
+                        temp_host_obj_list.append(temp_host_obj_list[i % len(host_obj_list)])
 
-                elif len(host_obj_list) > len(volume_uuid_list):
+                elif len(temp_host_obj_list) > len(temp_volume_uuid_list):
                     # when volumes are attached in round robin fashion
                     fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(volume_uuid_list), len(host_obj_list)):
-                        volume_uuid_list.append(volume_uuid_list[i % len(temp_volume_uuid_list)])
+                        temp_volume_uuid_list.append(temp_volume_uuid_list[i % len(volume_uuid_list)])
 
-            for index in range(len(host_obj_list)):
-                if not host_obj_list[index] in result.keys():
-                    result[host_obj_list[index]] = []
-                fun_test.log("Attaching {} volume to {} host".format(volume_uuid_list[index],
-                                                                     host_obj_list[index].name))
-                output = self.attach_volume(fs_obj=fs_obj, volume_uuid=volume_uuid_list[index],
-                                            host_obj=host_obj_list[index],
+            for index in range(len(temp_host_obj_list)):
+                if not temp_host_obj_list[index] in result.keys():
+                    result[temp_host_obj_list[index]] = []
+                fun_test.log("Attaching {} volume to {} host".format(temp_volume_uuid_list[index],
+                                                                     temp_host_obj_list[index].name))
+                output = self.attach_volume(fs_obj=fs_obj, volume_uuid=temp_volume_uuid_list[index],
+                                            host_obj=temp_host_obj_list[index],
                                             validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
                                             nvme_io_queues=nvme_io_queues)
                 fun_test.test_assert(output[0]["status"],
-                                     message="Attach volume {} to host {}".format(volume_uuid_list[index],
-                                                                                  host_obj_list[index].name))
-                result[host_obj_list[index]].append(output[0])
+                                     message="Attach volume {} to host {}".format(temp_volume_uuid_list[index],
+                                                                                  temp_host_obj_list[index].name))
+                result[temp_host_obj_list[index]].append(output[0])
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
