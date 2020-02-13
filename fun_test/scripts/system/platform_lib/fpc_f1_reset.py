@@ -104,6 +104,6 @@ class MultipleF1Reset(PlatformGeneralTestCase):
 
 
 if __name__ == "__main__":
-    myscript = MyScript()
+    myscript = PlatformScriptSetup()
     myscript.add_test_case(MultipleF1Reset())
     myscript.run()

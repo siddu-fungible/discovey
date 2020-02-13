@@ -11,7 +11,7 @@ def run_decorator(func):
     return function_wrapper
 
 
-class MyScript(FunTestScript):
+class PlatformScriptSetup(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""""")
 
@@ -801,6 +801,7 @@ class BroadcomLoginVerification(PlatformGeneralTestCase):
 
 
 class TftpImage(PlatformGeneralTestCase):
+    # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"}
     def describe(self):
         self.set_test_details(id=29,
                               summary="boot any image",
@@ -814,12 +815,6 @@ class TftpImage(PlatformGeneralTestCase):
         topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
         self.topology = topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
-
-        self.fs_obj = self.topology.get_dut_instance(index=0)
-        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
-        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
-        self.come_handle = self.fs_obj.get_come()
-        self.bmc_handle = self.fs_obj.get_bmc()
 
     @run_decorator
     def run(self):
@@ -841,7 +836,7 @@ class General(PlatformGeneralTestCase):
 
 
 if __name__ == "__main__":
-    myscript = MyScript()
+    myscript = PlatformScriptSetup()
     test_case_list = [
         # DiscoverStaticIp,
         # DiscoverDhcpIp,
