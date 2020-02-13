@@ -329,7 +329,7 @@ export class ScriptDetailComponent implements OnInit {
           this.currentTestCaseExecution = this.testCaseExecutions[String(index)];
           this.updateScriptExecutionInfo();
         } else {
-          throw throwError("Test case index not found");
+          throw of("Test case index not found");
         }
         return of(true);
       })).pipe(
