@@ -1474,7 +1474,7 @@ class ComE(Linux):
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
             if self.fs.bundle_compatible:
                 fun_test.log("Clearing out HBM dump directory")
-                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
