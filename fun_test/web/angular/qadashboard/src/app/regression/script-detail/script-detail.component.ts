@@ -295,7 +295,7 @@ export class ScriptDetailComponent implements OnInit {
           this.queryParams['checkpoint_id'] = checkpointId;
           this.expandCheckpointIdClick(checkpointId);
         }, error => {
-          this.loggerService.error("Unable to fetch test case and checkpoints");
+          this.loggerService.error("Unable to fetch test case and checkpoints", error);
           this.status = null;
         });
       } else if (params['test_case_id']) {
@@ -303,7 +303,7 @@ export class ScriptDetailComponent implements OnInit {
         this.queryParams['test_case_id'] = testCaseId;
         this.fetchTestCases(testCaseId).subscribe(response => {
         }, error => {
-          this.loggerService.error("Unable to fetch test cases");
+          this.loggerService.error("Unable to fetch test cases", error);
           this.status = null;
         });
       }
@@ -312,12 +312,7 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   fetchTestCases(testCaseId=null, testCaseIndex=null): any {
-    return new Observable(observer => {
-      observer.next(true);
-      observer.complete();
-      return () => {
-      }
-    }).pipe(
+    return of(true).pipe(
       switchMap(response => {
         let index = null;
         if (testCaseId) {
@@ -334,7 +329,7 @@ export class ScriptDetailComponent implements OnInit {
           this.currentTestCaseExecution = this.testCaseExecutions[String(index)];
           this.updateScriptExecutionInfo();
         } else {
-          throwError("Index not found");
+          throwError("Test case index not found");
         }
         return of(true);
       })).pipe(
@@ -661,7 +656,7 @@ export class ScriptDetailComponent implements OnInit {
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
       this.fetchTestCases(null, testCaseIndex).subscribe(response => {
         }, error => {
-          this.loggerService.error("Unable to fetch test cases");
+          this.loggerService.error("Unable to fetch test cases", error);
           this.status = null;
         });
     }
@@ -746,13 +741,13 @@ export class ScriptDetailComponent implements OnInit {
 
   routeByOption(value, queryParam) {
     if (queryParam === 'show_more_logs') {
-      this.deleteQueryParam('show_test_case_tables');
+      this.removeQueryParam('show_test_case_tables');
     } else {
-      this.deleteQueryParam('show_more_logs');
+      this.removeQueryParam('show_more_logs');
     }
     if (value) {
       value = !value;
-      this.deleteQueryParam(queryParam);
+      this.removeQueryParam(queryParam);
     } else {
       this.queryParams[queryParam] = 1;
     }
@@ -764,12 +759,12 @@ export class ScriptDetailComponent implements OnInit {
     if (checkpointId) {
       this.queryParams['checkpoint_id'] = checkpointId;
     } else {
-      this.deleteQueryParam('checkpoint_id');
+      this.removeQueryParam('checkpoint_id');
     }
     this.commonService.navigateByQuery(this.queryParams, this.baseUrl);
   }
 
-  deleteQueryParam(param) {
+  removeQueryParam(param) {
     Object.keys(this.queryParams).forEach(p => {
       if (p === param) {
         delete this.queryParams[p];
