@@ -2735,7 +2735,7 @@ class Fs(object, ToDictMixin):
                         num_ssds = self.spec.get("num_ssds", None)
                         if num_ssds:
                             try:
-                                health_result, health_error_message = self.check_ssd_status(num_ssds, with_error_details=True)
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds, with_error_details=True)
                             except Exception as ex:
                                 fun_test.critical(str(ex))
                 result = health_result, health_error_message
@@ -2745,32 +2745,6 @@ class Fs(object, ToDictMixin):
             else:
                 bmc.disconnect()
 
-        return result
-
-    def check_ssd_status(self, num_ssds, with_error_details=False):
-        result = True
-        error_message = ""
-        fun_test.log("Checking if SSD's are present and online")
-        for f1_index in range(self.NUM_F1S):
-            if f1_index == self.disable_f1_index:
-                continue
-            expected_ssds = num_ssds.get("f1_{}".format(f1_index), 0)
-            ssd_info_f1 = self.storage.nvme_ssds(f1_index)
-            all_ssd_present = True
-            for ssd in range(expected_ssds):
-                ssd_str = str(ssd)
-                if ssd_str in ssd_info_f1 and ssd_info_f1[ssd_str]["device state"] == "DEV_ONLINE":
-                    pass
-                else:
-                    if all_ssd_present:
-                        error_message += "F1_{}:".format(f1_index)
-                    all_ssd_present = False
-                    error_message += ssd_str + ","
-            if not all_ssd_present:
-                error_message += " SSD(s) not present "
-                result = False
-        if with_error_details:
-            result = result, error_message
         return result
 
     def bam(self, command_duration=2):

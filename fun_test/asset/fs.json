@@ -911,10 +911,7 @@
       "password": "Precious1*",
       "host_ip": "cab02-pdu1"
     },
-    "num_ssds": {
-      "f1_0": 12,
-      "f1_1": 12
-    }
+    "num_ssds": 24
   },
   {
     "name": "fs-168",
