@@ -374,6 +374,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         result = None
         host_linux_handle = host_obj.get_instance()
         nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
+        result = nvme_volumes
         if len(nvme_volumes) > 0:
             if subsys_nqn:
                 for namespace in nvme_volumes:
@@ -383,8 +384,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
                         result = namespace
                         self.host_nvme_device[host_obj].append(namespace)
-            else:
-                result = nvme_volumes
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
