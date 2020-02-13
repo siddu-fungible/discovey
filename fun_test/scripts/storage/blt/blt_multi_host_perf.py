@@ -156,8 +156,7 @@ class MultiHostFioRandRead(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if (not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if (not fun_test.shared_variables["blt"]["setup_created"]):
 
             self.topology = fun_test.shared_variables["topology"]
             self.sc_template = fun_test.shared_variables["storage_controller_template"]
@@ -188,7 +187,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             self.create_volume_list = []
             for i in range(self.blt_count):
-                name = "blt_vol" + str(i + 1)
+                name = "blt6_vol" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -295,6 +294,7 @@ class MultiHostFioRandRead(FunTestCase):
             fun_test.shared_variables["hosts"] = self.hosts
             fun_test.shared_variables["dpcsh_obj"] = self.storage_controller_dpcsh_obj
 
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             thread_id = {}
             end_host_thread = {}
 
@@ -453,7 +453,6 @@ class MultiHostFioRandRead(FunTestCase):
                     elif int(fio_numjobs) > 4:
                         cpus_allowed = "{}-{}".format(starting_core, host.host_numa_cpus[2:])
 
-
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_tcp_{}_blt_{}_{}_vol_{}".format(mode, fio_numjobs, fio_iodepth, self.blt_count)
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
@@ -608,6 +607,7 @@ class PreCommitSanity(MultiHostFioRandRead):
 
     def cleanup(self):
         super(PreCommitSanity, self).cleanup()
+
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
