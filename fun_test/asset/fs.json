@@ -1411,12 +1411,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.108.115"
+      "mgmt_ip": "fs161-bmc"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.108.116"
+      "mgmt_ip": "fs161-come"
     },
     "name": "fs-161",
     "workarounds": {
@@ -1427,7 +1427,7 @@
     "fpga": {
       "mgmt_ssh_password": "",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.108.117",
+      "mgmt_ip": "fs161-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7014,
       "telnet_username": "root",
@@ -1444,12 +1444,12 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "10.1.108.120"
+      "mgmt_ip": "fs162-bmc"
     },
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.108.121"
+      "mgmt_ip": "fs162-come"
     },
     "name": "fs-162",
     "workarounds": {
@@ -1460,7 +1460,7 @@
     "fpga": {
       "mgmt_ssh_password": "",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.108.122",
+      "mgmt_ip": "fs162-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7015,
       "telnet_username": "root",
