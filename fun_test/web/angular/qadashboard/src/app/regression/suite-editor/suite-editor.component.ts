@@ -8,6 +8,9 @@ import {SuiteEditorService, Suite, SuiteEntry, SuiteMode} from "./suite-editor.s
 import {RegressionService} from "../regression.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {UserProfile} from "../../login/definitions";
+import {CommonService} from "../../services/common/common.service";
+import {ApiService} from "../../services/api/api.service";
 
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
@@ -24,6 +27,7 @@ export class SuiteEditorComponent implements OnInit {
   @Input() id: number = null;
   mode: SuiteMode = SuiteMode.SUITE;
   SuiteMode = SuiteMode;
+  userProfile: UserProfile = null;
 
   testCaseIds: number[] = null;
   inputs: any = null;
@@ -66,6 +70,7 @@ export class SuiteEditorComponent implements OnInit {
   tags: string = null;
   suite: Suite = null;
   driver = null;
+  users: any = null;
 
   editorPristine: boolean = true;
 
@@ -77,19 +82,26 @@ export class SuiteEditorComponent implements OnInit {
               private service: SuiteEditorService,
               private regressionService: RegressionService,
               private loggerService: LoggerService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private commonService: CommonService,
+              private apiService: ApiService) {
 
   }
 
 
   ngOnInit() {
-
-
+    this.userProfile = this.commonService.getUserProfile();
+    if (!this.userProfile) {
+      this.loggerService.error("Unable to fetch user profile");
+      return;
+    }
     this.driver = new Observable(observer => {
       observer.next(true);
       return () => {
       }
     }).pipe(switchMap(response => {
+      return this.fetchUsers();
+    })).pipe(switchMap(response => {
       return this.getRouterQueryParam();
     })).pipe(switchMap(response => {
       return this.getRouterParam();
@@ -578,6 +590,13 @@ export class SuiteEditorComponent implements OnInit {
   onShortDescriptionChangedEvent(shortDescription) {
     this.suite.short_description = shortDescription;
     this.editorPristine = false;
+  }
+
+  fetchUsers(): any {
+    return this.apiService.get("/api/v1/users").pipe(switchMap(response => {
+      this.users = response.data;
+      return of(true);
+    }));
   }
 
   onSubmitSuite() {
