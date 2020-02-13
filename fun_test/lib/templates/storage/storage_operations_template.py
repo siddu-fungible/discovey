@@ -386,6 +386,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
                         result = namespace
                         self.host_nvme_device[host_obj].append(namespace)
+
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
@@ -394,7 +395,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         host_linux_handle = host_obj.get_instance()
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
                                            filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                           timeout=runtime+15, time_based=time_based, norandommap=norandommap,
+                                           timeout=runtime + 15, time_based=time_based, norandommap=norandommap,
                                            verify=verify, do_verify=do_verify)
         return fio_result
 
