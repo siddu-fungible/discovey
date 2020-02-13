@@ -624,10 +624,9 @@ class DurableVolumeTestcase(FunTestCase):
 
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                         self.fio_write_cmd_args["iodepth"],
-                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
                                          host_name))
         fun_test.sleep("before starting read with data integrity", 15)
         # Verifying data integrity after Write is complete
@@ -673,10 +672,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                         self.fio_verify_cmd_args["iodepth"],
-                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
                                          host_name))
         fun_test.sleep("before starting write", 15)
         # Writing new data (buffer pattern) to whole volume of volume
@@ -827,10 +825,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                         self.fio_write_cmd_args["iodepth"],
-                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
                                          host_name))
 
         fun_test.sleep("before starting read with data integrity", 15)
@@ -876,10 +873,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                         self.fio_verify_cmd_args["iodepth"],
-                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
                                          host_name))
         '''
         # After Data Reconstruction is completed, verifying 100% data integrity
