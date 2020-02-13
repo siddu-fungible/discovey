@@ -36,10 +36,10 @@ class Rocetools:
             self.host.modprobe("rdma_ucm")
             self.host.disconnect()
         if not self.host.check_file_directory_exists(path):
-            self.host.sudo_command("echo \\\"* soft memlock unlimited\\\" > {}".format(path))
-            self.host.sudo_command("echo \\\"* hard memlock unlimited\\\" >> {}".format(path))
-            self.host.sudo_command("echo \\\"root soft memlock unlimited\\\" >> {}".format(path))
-            self.host.sudo_command("echo \\\"root hard memlock unlimited\\\" >> {}".format(path))
+            self.host.sudo_command("echo '* soft memlock unlimited' > {}".format(path))
+            self.host.sudo_command("echo '* hard memlock unlimited' >> {}".format(path))
+            self.host.sudo_command("echo 'root soft memlock unlimited' >> {}".format(path))
+            self.host.sudo_command("echo 'root hard memlock unlimited' >> {}".format(path))
 
         return True
 
@@ -384,7 +384,7 @@ class Rocetools:
         return self.host.process_exists(process_id=pid)
 
     def qp_check(self):
-        qp_count = int(self.host.sudo_command(command="cat /sys/kernel/debug/funrdma/*/qps | wc -l").strip())
+        qp_count = int(self.host.sudo_command(command="grep RC /sys/kernel/debug/funrdma/*/qps | wc -l").strip())
         return qp_count
 
     def cleanup(self):

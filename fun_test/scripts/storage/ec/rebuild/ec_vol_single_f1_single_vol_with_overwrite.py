@@ -496,7 +496,10 @@ class DurableVolumeTestcase(FunTestCase):
             volume_name_list = self.host_info[host_name]["volume_name_list"]
             # Check and remove file if exists
             if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
-                host_handle.remove_file(file_path=self.dd_create_file["output_file"])
+                try:
+                    host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                except Exception as ex:
+                    fun_test.critical(str(ex))
             # Creating buffer pattern file with random data
             return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
             fun_test.test_assert_expected(self.pattern_file_size, return_size, "Creating {} bytes for buffer pattern".
@@ -524,7 +527,7 @@ class DurableVolumeTestcase(FunTestCase):
         test_thread_id = {}
         host_clone = {}
         self.fio_write_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
-        self.fio_verify_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
+        self.fio_verify_cmd_args["verify_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
 
         # If FIO block size is not provided by user, setting FIO block size to the stripe length
         if "bs" not in self.fio_write_cmd_args:
@@ -624,10 +627,9 @@ class DurableVolumeTestcase(FunTestCase):
 
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                         self.fio_write_cmd_args["iodepth"],
-                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
                                          host_name))
         fun_test.sleep("before starting read with data integrity", 15)
         # Verifying data integrity after Write is complete
@@ -673,10 +675,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                         self.fio_verify_cmd_args["iodepth"],
-                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
                                          host_name))
         fun_test.sleep("before starting write", 15)
         # Writing new data (buffer pattern) to whole volume of volume
@@ -689,7 +690,10 @@ class DurableVolumeTestcase(FunTestCase):
                 wait_time = self.num_hosts - index
                 # Creating buffer pattern file with new conent
                 if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
-                    host_handle.remove_file(file_path=self.dd_create_file["output_file"])
+                    try:
+                        host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
                 # Write a file into the EC volume of size self.test_file_size bytes
                 return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
                 fun_test.test_assert_expected(self.pattern_file_size, return_size,
@@ -827,10 +831,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                         self.fio_write_cmd_args["iodepth"],
-                                         self.fio_write_cmd_args["numjobs"], self.fio_write_cmd_args["size"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
                                          host_name))
 
         fun_test.sleep("before starting read with data integrity", 15)
@@ -876,10 +879,9 @@ class DurableVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {}, Size: {} on {}"
+                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                         self.fio_verify_cmd_args["iodepth"],
-                                         self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
                                          host_name))
         '''
         # After Data Reconstruction is completed, verifying 100% data integrity
@@ -1019,7 +1021,10 @@ class DurableVolumeTestcase(FunTestCase):
                     host_handle = self.host_info[host_name]["handle"]
                     # Remove the file after use
                     if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
-                        host_handle.remove_file(file_path=self.dd_create_file["output_file"])
+                        try:
+                            host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
                     pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
                     pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
 

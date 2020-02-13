@@ -117,7 +117,7 @@
     // If 'fail_drive' is true, initiate drive failure else initiate plex failure
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
-    "rebuild_rate": 80,
+    "rebuild_rate": 100,
     "rebuild_timeout": 3600,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",

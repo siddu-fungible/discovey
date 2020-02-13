@@ -134,6 +134,9 @@ class SharedVolumePerfTest(FunTestCase):
             self.blt_count = job_inputs["blt_count"]
         if "num_hosts" in job_inputs:
             self.num_host = job_inputs["num_hosts"]
+        if "warmup_jobs" in job_inputs:
+            self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
+                replace("numjobs=1", "numjobs={}".format(job_inputs["warmup_jobs"]))
 
         """
         self.topology = fun_test.shared_variables["topology"]
@@ -416,7 +419,7 @@ class SharedVolumePerfTest(FunTestCase):
                 aggr_fio_output = {}
                 for index, host in enumerate(self.hosts):
                     fun_test.simple_assert(fun_test.shared_variables["fio"][index],
-                                         "FIO {} test with IO depth {} in host {}".format(mode, io_depth, host.name))
+                                           "FIO {} test with IO depth {} in host {}".format(mode, io_depth, host.name))
                     for op, stats in fun_test.shared_variables["fio"][index].items():
                         if op not in aggr_fio_output:
                             aggr_fio_output[op] = {}
@@ -437,6 +440,7 @@ class SharedVolumePerfTest(FunTestCase):
                         if field == "runtime":
                             aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
                         row_data_dict[op + field] = aggr_fio_output[op][field]
+                fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
 
                 row_data_list = []
@@ -450,13 +454,6 @@ class SharedVolumePerfTest(FunTestCase):
                 table_data = {"headers": table_data_headers, "rows": table_data_rows}
                 fun_test.add_table(panel_header="BLT Shared Volume Performance Table", table_name=self.summary,
                                    table_data=table_data)
-
-
-
-
-
-
-        fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
