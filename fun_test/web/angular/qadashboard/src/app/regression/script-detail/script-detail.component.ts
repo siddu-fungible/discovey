@@ -311,25 +311,25 @@ export class ScriptDetailComponent implements OnInit {
     return of(true);
   }
 
-  fetchTestCases(testCaseId=null, testCaseIndex=null): any {
+  fetchTestCases(testCaseId = null, testCaseIndex = null): any {
     return of(true).pipe(
       switchMap(response => {
         let index = null;
-        if (testCaseId) {
+        if (testCaseId != null) { //explicitly do a null check coz the test_case_id 0 exists
           let id = Number(testCaseId);
           index = this.getIndexFromTestCaseId(id);
         }
         if (testCaseIndex) {
           index = testCaseIndex;
         }
-        if (index) {
+        if (index != null) {
           this.testLogs = null;
           this.currentCheckpointIndex = null;
           this.showLogsPanel = false;
           this.currentTestCaseExecution = this.testCaseExecutions[String(index)];
           this.updateScriptExecutionInfo();
         } else {
-          throwError("Test case index not found");
+          throw throwError("Test case index not found");
         }
         return of(true);
       })).pipe(
@@ -352,11 +352,12 @@ export class ScriptDetailComponent implements OnInit {
 
   getContextIdFromCheckpointId(checkpointId) {
     let contextId = 0;
-    this.currentTestCaseExecution.checkpoints.forEach(checkpoint => {
+    for (let checkpoint of this.currentTestCaseExecution.checkpoints) {
       if (checkpoint.data.checkpoint_index === checkpointId) {
         contextId = checkpoint.data.context_id;
+        break;
       }
-    });
+    }
     return contextId;
   }
 
@@ -655,10 +656,10 @@ export class ScriptDetailComponent implements OnInit {
     let testCaseIndex = this.findMatchingTestCase(this.timeFilterMin);
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
       this.fetchTestCases(null, testCaseIndex).subscribe(response => {
-        }, error => {
-          this.loggerService.error("Unable to fetch test cases", error);
-          this.status = null;
-        });
+      }, error => {
+        this.loggerService.error("Unable to fetch test cases", error);
+        this.status = null;
+      });
     }
   }
 
@@ -756,7 +757,7 @@ export class ScriptDetailComponent implements OnInit {
 
   clickTestCaseOrCheckpoint(testCaseId, checkpointId = null) {
     this.queryParams["test_case_id"] = testCaseId;
-    if (checkpointId) {
+    if (checkpointId != null) {
       this.queryParams['checkpoint_id'] = checkpointId;
     } else {
       this.removeQueryParam('checkpoint_id');
