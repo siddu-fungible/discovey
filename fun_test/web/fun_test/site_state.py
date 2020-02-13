@@ -109,6 +109,13 @@ class SiteState():
                 if not asset_is_valid:
                     print asset.name + " is not valid"
                     asset.delete()
+
+                for test_bed_name in asset.test_beds:
+                    test_bed_spec = am.get_test_bed_spec(name=test_bed_name)
+                    if not test_bed_spec or not am.is_asset_in_test_bed(asset_name=asset.name, asset_type=asset.type, test_bed_name=test_bed_name):
+                        asset.remove_test_bed(test_bed_name=test_bed_name)
+
+
     def register_tags(self):
         for tag in self.site_base_data["tags"]:
             try:

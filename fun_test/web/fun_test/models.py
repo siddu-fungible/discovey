@@ -865,6 +865,9 @@ class Asset(FunModel):
             #    self.disabled = True
             self.save()
 
+    def remove_test_bed(self, test_bed_name):
+        self.test_beds = [x for x in self.test_beds if x != test_bed_name]
+        self.save()
 
 class SuiteItems(models.Model):
     script_path = models.TextField()
