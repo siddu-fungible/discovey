@@ -369,7 +369,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
         :param host_obj: host handle from topology
         :param subsys_nqn: subsys_nqn to find the correct nvme filename
-        :return: NVMe device name on Host
+        :return: NVMe device name on Host or list of devices if susys_nqn is None
         """
         result = None
         host_linux_handle = host_obj.get_instance()
@@ -383,8 +383,6 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
                         result = namespace
                         self.host_nvme_device[host_obj].append(namespace)
-            else:
-                result = nvme_volumes[-1:][0]
         return result
 
     def traffic_from_host(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
