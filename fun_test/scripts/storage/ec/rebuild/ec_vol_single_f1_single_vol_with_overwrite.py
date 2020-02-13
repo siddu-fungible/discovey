@@ -524,7 +524,7 @@ class DurableVolumeTestcase(FunTestCase):
         test_thread_id = {}
         host_clone = {}
         self.fio_write_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
-        self.fio_verify_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
+        self.fio_verify_cmd_args["verify_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
 
         # If FIO block size is not provided by user, setting FIO block size to the stripe length
         if "bs" not in self.fio_write_cmd_args:
