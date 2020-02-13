@@ -376,6 +376,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         result = None
         host_linux_handle = host_obj.get_instance()
         nvme_volumes = self.get_nvme_namespaces(host_handle=host_linux_handle)
+        result = nvme_volumes
         if len(nvme_volumes) > 0:
             if subsys_nqn:
                 for namespace in nvme_volumes:
