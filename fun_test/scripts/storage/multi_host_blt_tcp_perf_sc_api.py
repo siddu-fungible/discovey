@@ -1160,6 +1160,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
             except:
                 pass
             try:
+                fun_test.log("Getting volume ports")
+                self.sc_api.get_volume_ports(vol_uuid=vol_uuid)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            try:
                 # Check host F1 connectivity
                 fun_test.log("Checking host F1 connectivity")
                 for ip in self.f1_ips:
