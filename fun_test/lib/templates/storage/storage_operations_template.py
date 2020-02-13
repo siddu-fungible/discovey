@@ -369,8 +369,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
         :param host_obj: host handle from topology
         :param subsys_nqn: subsys_nqn to find the correct nvme filename
-        :param list_all: when all nvme namespaces is to be listed
-        :return: NVMe device name on Host
+        :return: NVMe device name on Host or list of devices if susys_nqn is None
         """
         result = None
         host_linux_handle = host_obj.get_instance()
