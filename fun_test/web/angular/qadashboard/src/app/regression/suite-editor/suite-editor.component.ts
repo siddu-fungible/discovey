@@ -146,6 +146,10 @@ export class SuiteEditorComponent implements OnInit {
     }));
   }
 
+  cloneSuite(id) {
+    window.location.href = "/regression/suite_editor?clone_id=" + String(id);
+  }
+
   fetchSuite() {
     let userEmail = this.userProfile.user.email;
     if (!this.id && !this.cloneId) {

@@ -3,7 +3,11 @@
 <div class="component" *ngIf="suite">
   <div class="fun-panel">
     <div class="fun-panel-header">
-      <span *ngIf="id">Editing suite</span>
+      <span *ngIf="id">Editing suite&nbsp;
+      <button class="fun-button-with-icon" style="border: solid 1px black; min-width: 0 !important"
+              (click)="cloneSuite(suite.id)">
+        <i class="fa fa-copy" title="copy"></i>
+      </button></span>
       <span *ngIf="(!cloneId && !id) || cloneId">Creating suite</span>
     </div>
 
@@ -31,12 +35,12 @@
         <td class="fun-attribute-label">Owner email:</td>
         <td class="fun-attribute">
           <select id="submitter" [(ngModel)]="selectedUser">
-          <option *ngFor="let user of users" [ngValue]="user">{{
-            user.first_name }} {{
-            user.last_name }}
-            ({{ user.email }})
-          </option>
-        </select>
+            <option *ngFor="let user of users" [ngValue]="user">{{
+              user.first_name }} {{
+              user.last_name }}
+              ({{ user.email }})
+            </option>
+          </select>
         </td>
       </tr>
 
