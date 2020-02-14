@@ -336,6 +336,7 @@ class Platform(RedFishTool, IpmiTool):
         self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
 
     def initialise(sel):
+        pass
 
     def get_platform_drop_information(self, system="come"):
         result = {"status": False, "data": {}}

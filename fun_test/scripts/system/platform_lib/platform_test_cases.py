@@ -853,7 +853,7 @@ if __name__ == "__main__":
         # FanSensorBootupIpmi,
         # TemperatureFanMeasurement,
         # InletExhasutThreshold,
-        # FanRedfishtool,
+        FanRedfishtool,
         # F1AsicTemperature,
         # BootComeUefiOrBios,
         # PcieDiscoverySsdViaRc,
@@ -866,7 +866,7 @@ if __name__ == "__main__":
         # MultipleF1Reset,
         # BroadcomLoginVerification,
         # BundleInstallWithDisable,
-        TftpImage
+        # TftpImage
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

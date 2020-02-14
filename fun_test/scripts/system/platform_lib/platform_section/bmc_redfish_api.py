@@ -100,8 +100,6 @@ if __name__ == "__main__":
         # ArrayOfTemperatureSensors,
         # ArrayOfFanSensors,
         ChassisPowerMonitoringAndControl
-
-
     ]
     for i in test_case_list:
         platform.add_test_case(i())
