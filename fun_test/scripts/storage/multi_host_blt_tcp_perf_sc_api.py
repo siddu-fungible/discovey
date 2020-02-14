@@ -1125,6 +1125,8 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
         docker_f1_handle = come.get_funcp_container(f1_index=0)
         fun_test.log("Will look for nvme {} on host {}".format(nvme_device_name, host_handle))
 
+        host_handle.start_bg_process(command="sudo tcpdump -i enp216s0 -w nvme_connect_auto.pcap")
+
         while not reboot_timer.is_expired():
             # Check whether EC vol is listed in storage/volumes
             vols = self.sc_api.get_volumes()
@@ -1148,7 +1150,17 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
             host_handle.command("route -n")
             host_handle.command("ifconfig")
             fun_test.sleep("Letting BLT volume {} be found".format(vol_uuid), seconds=10)
-
+        host_handle.sudo_command("for i in `pgrep tcpdump`;do kill -9 $i;done")
+        uploaded_path = fun_test.upload_artifact(local_file_name_post_fix="nvme_connect_after_reboot.pcap",
+                                                 linux_obj=self,
+                                                 source_file_path="nvme_connect_auto.pcap",
+                                                 display_name="nvme_connect_auto.pcap",
+                                                 asset_type="HOST",
+                                                 asset_id=host_handle.host_ip,
+                                                 artifact_category="RUN",
+                                                 artifact_sub_category="RUN",
+                                                 is_large_file=False,
+                                                 timeout=120)
 
 
         if not nvme_list_found:
