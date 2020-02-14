@@ -524,6 +524,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
+                host_handle.sudo_command("nvme disconnect-all")
                 irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
                 if "dead" in irq_bal_stat:
                     fun_test.log("IRQ balance stopped on {}".format(i))
@@ -1152,6 +1153,19 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         if not nvme_list_found:
             try:
+                sc0 = fs_obj.get_storage_controller(f1_index=0)
+                sc0.json_execute(verb="peek", data="storage", command_duration=5)
+                
+                sc1 = fs_obj.get_storage_controller(f1_index=1)
+                sc1.json_execute(verb="peek", data="storage", command_duration=5)
+            except:
+                pass
+            try:
+                fun_test.log("Getting volume ports")
+                self.sc_api.get_volume_ports(vol_uuid=vol_uuid)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            try:
                 # Check host F1 connectivity
                 fun_test.log("Checking host F1 connectivity")
                 for ip in self.f1_ips:
@@ -1165,7 +1179,6 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                         host_handle.command("arp -n")
                         host_handle.command("route -n")
                         host_handle.command("ifconfig")
-
                     fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
                                            format(host_handle.host_ip, ip))
             except Exception as ex:

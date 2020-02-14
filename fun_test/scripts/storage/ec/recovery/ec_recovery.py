@@ -355,7 +355,7 @@ class RecoveryWithFailures(FunTestCase):
                             fun_test.log("NVMe Block Device/s: {}".
                                          format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
+                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
 

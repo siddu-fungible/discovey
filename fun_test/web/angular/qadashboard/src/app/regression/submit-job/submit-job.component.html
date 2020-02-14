@@ -121,7 +121,7 @@
                   <div class="fun-flex-container">
                     <div class="bundle-image-input">
                       <label for="release-select">Select a release: </label>
-                      <select id="release-select" [(ngModel)]="bundleImageParameters.release_train">
+                      <select id="release-select" [(ngModel)]="bundleImageParameters.release_train" (change)="onReleaseTrainSelected()">
                         <option></option>
                         <option [ngValue]="releaseTrain" *ngFor="let releaseTrain of releaseTrains">
                         {{ releaseTrain }}
@@ -132,6 +132,7 @@
                       <label for="bundle-image-build">Specify build number: </label>
                       <input [ngClass]="{disabled: buildType !== BuildType.USE_BUNDLE_IMAGE}" id="bundle-image-build" name="bundle-image-build"
                              [(ngModel)]="bundleImageParameters.build_number" type="text" style="width: 100px"/>
+                      &nbsp;&nbsp;<ng-container *ngIf="stableBuildString">(Stable: {{ stableBuildString }})</ng-container>
                     </div>
                   </div>
                 </ng-container>

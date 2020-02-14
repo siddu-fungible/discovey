@@ -12,6 +12,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict
 from lib.templates.storage.storage_controller_api import *
 import random
+import datetime
 
 
 # Get NVMe device details

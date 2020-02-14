@@ -17,6 +17,7 @@ import {RegressionService} from "../regression.service";
 import {SavedJobConfigs} from "../definitions";
 import {showAnimation} from "../../animations/generic-animations";
 import {UserProfile} from "../../login/definitions";
+import {LastGoodBuild} from "../last-good-build/definitions";
 
 class Mode {
   static REGULAR = "REGULAR";
@@ -141,6 +142,10 @@ export class SubmitJobComponent implements OnInit {
 
   withStableMaster = {debug: false, stripped: true};
   bundleImageParameters = {release_train: null, build_number: "latest"};
+
+  lastGoodBuildMap: {[releaseTrain: string]: LastGoodBuild} = {};
+  stableBuildString: string = null;
+
   constructor(private apiService: ApiService, private logger: LoggerService,
               private title: Title, private route: ActivatedRoute,
               private triageService: TriageService,
@@ -191,6 +196,7 @@ export class SubmitJobComponent implements OnInit {
     this.selectedTags = [];
     this.tags = [];
     this.fetchUsers();
+    this.fetchLastGoodBuilds();
     this.fetchTags();
     this.fetchReleaseTrains();
     this.fetchTestBeds();
@@ -198,6 +204,19 @@ export class SubmitJobComponent implements OnInit {
     this.emailOnFailOnly = false;
     this.selectedTestBedType = [];//[this.DEFAULT_TEST_BED];
 
+  }
+
+  fetchLastGoodBuilds() {
+    let lgb = new LastGoodBuild();
+    lgb.getAll().subscribe(builds => {
+      builds.forEach(build => {
+        if (!this.lastGoodBuildMap.hasOwnProperty(build.release_train)) {
+          this.lastGoodBuildMap[build.release_train] = build;
+        }
+      })
+    }, error => {
+      this.logger.error('Unable to fetch last good build', error);
+    })
   }
 
   fetchSuites() {
@@ -760,6 +779,17 @@ export class SubmitJobComponent implements OnInit {
 
   dismissSavedJobUrl() {
     this.savedJobUrl = null;
+  }
+
+  onReleaseTrainSelected() {
+    this.stableBuildString = null;
+    if (!this.bundleImageParameters || this.bundleImageParameters.release_train == "") {
+      this.stableBuildString = null;
+    } else {
+      if (this.lastGoodBuildMap.hasOwnProperty(this.bundleImageParameters.release_train)) {
+        this.stableBuildString = this.lastGoodBuildMap[this.bundleImageParameters.release_train].build_number;
+      }
+    }
   }
 
   /*test() {
