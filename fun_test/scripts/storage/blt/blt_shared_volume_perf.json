@@ -39,17 +39,25 @@
   },
   "SharedVolumePerfTest":{
     "num_f1": 1,
-    "blt_count": 1,
+    "blt_count": 8,
     "num_hosts": 2,
     "capacity": 1099511627776,
     "compression_effort": "False",
     "encrypt": "False",
     "name": "raw_volume_",
+    "raw_api_call": true,
     "DUT":1,
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=128k --numjobs=16 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=0 --verify=md5",
+      "timeout": 3600
+    },
+    "fio_modes": ["randread"],
+    "fio_bs": "4k",
+    "fio_iodepth": [128,256,512],
+    "fio_cmd_args": {
+      "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 3600
     }
   }

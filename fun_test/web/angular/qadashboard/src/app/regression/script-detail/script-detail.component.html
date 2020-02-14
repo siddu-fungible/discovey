@@ -1,23 +1,24 @@
 <div class="fun-flex-container fun-action-nav">
-  <app-back></app-back>
-  <div class="fun-spacer"></div>
   <span class="script-name">{{ scriptPath }}</span>
   <div class="fun-spacer"></div>
   <button class="fun-button-with-icon" (click)="onContextOptionsClick(contextOptions)"><i class="fa fa-columns"></i>&nbsp;Context
     options
   </button>
-  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': viewingCharts}"
+  <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': sidePanelOpen}"
           (click)="viewChartsClick(chartSelectionOptions)"><i class="fa fa-bar-chart"></i>&nbsp;Select
     charts
   </button>
-  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i class="fa fa-file-text-o"></i>&nbsp;Console
+  <button class="fun-button-with-icon" (click)="openConsoleLogClick()"><i
+    class="fa fa-file-text-o"></i>&nbsp;Console
     log
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingArtifactPanel}"
-          (click)="openArtifactsPanelClick()"><i class="fa fa-files-o"></i>&nbsp;More logs
+          (click)="routeByOption(showingArtifactPanel, 'show_more_logs')"><i class="fa fa-files-o"></i>&nbsp;More
+    logs
   </button>
   <button class="fun-button-with-icon" [ngClass]="{'fun-button-with-icon-selected': showingTablesPanel}"
-          (click)="openTestCaseTablesPanelClick()"><i class="fa fa-table"></i> Show tables
+          (click)="routeByOption(showingTablesPanel, 'show_test_case_tables')"><i class="fa fa-table"></i> Show
+    tables
   </button>
   <!--button (click)="testClick()">Test</button-->
   <ng-template #contextOptions let-modal>
@@ -210,7 +211,7 @@
               *ngIf="(!showFailedTestCases || (showFailedTestCases && (testCaseExecution.result === 'FAILED'))) && (testCaseExecution.result !== 'NOT_RUN')">
               <td>
                   <span [ngClass]="{'pseudo-anchor': testCaseExecution.result !== 'NOT_RUN'}"
-                        (click)="onTestCaseIdClick(index, testCaseExecution.execution_id)">{{ testCaseExecution.test_case_id }}
+                        (click)="clickTestCaseOrCheckpoint(testCaseExecution.test_case_id)">{{ testCaseExecution.test_case_id }}
                   </span>
               </td>
               <td>{{ testCaseExecution.summary }}</td>
@@ -255,11 +256,12 @@
               </td>
               <td nowrap *ngIf="checkpoint.data.checkpoint != 'Start'" align="center">
                   <span class="fun-action-link" style="display: inline-block"
-                        (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)">{{ checkpoint.data.checkpoint_index }}
+                        (click)="clickTestCaseOrCheckpoint(currentTestCaseExecution.test_case_id, checkpoint.data.checkpoint_index)">{{
+                    checkpoint.data.checkpoint_index }}
                   </span>
                 &nbsp;
                 <i tooltip [tooltipContentString]="'Logs are not downloaded yet'" placement="right"
-                   (click)="onCheckpointClick(currentTestCaseExecution, checkpoint.data.checkpoint_index, checkpoint.data.context_id)"
+                   (click)="clickTestCaseOrCheckpoint(currentTestCaseExecution.test_case_id, checkpoint.data.checkpoint_index)"
                    class="fa fa-download" *ngIf="!checkpoint?.timeSeries"></i>
               </td>
               <td>{{ checkpoint.data.context_id }}</td>

@@ -156,8 +156,7 @@ class MultiHostFioRandRead(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if (not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if (not fun_test.shared_variables["blt"]["setup_created"]):
 
             self.topology = fun_test.shared_variables["topology"]
             self.sc_template = fun_test.shared_variables["storage_controller_template"]
@@ -188,7 +187,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             self.create_volume_list = []
             for i in range(self.blt_count):
-                name = "blt_vol" + str(i + 1)
+                name = "blt6_vol" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -212,10 +211,46 @@ class MultiHostFioRandRead(FunTestCase):
                                                                           volume_uuid_list=self.create_volume_list,
                                                                           host_obj_list=self.hosts,
                                                                           volume_is_shared=False,
-                                                                          raw_api_call=True)
+                                                                          raw_api_call=self.raw_api_call,
+                                                                          validate_nvme_connect=False)
             fun_test.test_assert(expression=self.attach_vol_result, message="Attached volumes to hosts")
             fun_test.shared_variables["volumes_list"] = self.create_volume_list
             fun_test.shared_variables["attach_volumes_list"] = self.attach_vol_result
+
+            for host in self.hosts:
+                host.nvme_connect_info = {}
+                for result in self.attach_vol_result[host]:
+                    if self.raw_api_call:
+                        # fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
+                        #                     format(i, host.name))
+                        subsys_nqn = result["data"]["subsys_nqn"]
+                        host_nqn = result["data"]["host_nqn"]
+                        dataplane_ip = result["data"]["ip"]
+                    else:
+                        subsys_nqn = result.subsys_nqn
+                        host_nqn = result.host_nqn
+                        dataplane_ip = result.ip
+
+                    if subsys_nqn not in host.nvme_connect_info:
+                        host.nvme_connect_info[subsys_nqn] = []
+                    host_nqn_ip = (host_nqn, dataplane_ip)
+                    if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
+                        host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
+                        host.nvme_connect_info[subsys_nqn] = list(set(host.nvme_connect_info[subsys_nqn]))
+
+            for host in self.hosts:
+                for subsys_nqn in host.nvme_connect_info:
+                    for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                        host_nqn, dataplane_ip = host_nqn_ip
+                        fun_test.test_assert(
+                            expression=self.sc_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                                host_nqn=host_nqn,
+                                                                                dataplane_ip=dataplane_ip),
+                            message="NVMe connect from host: {}".format(host.name))
+                        nvme_filename = self.sc_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                        fun_test.test_assert(expression=nvme_filename,
+                                             message="Get NVMe drive from Host {} using lsblk".format(host.name))
+
 
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
@@ -259,6 +294,7 @@ class MultiHostFioRandRead(FunTestCase):
             fun_test.shared_variables["hosts"] = self.hosts
             fun_test.shared_variables["dpcsh_obj"] = self.storage_controller_dpcsh_obj
 
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             thread_id = {}
             end_host_thread = {}
 
@@ -417,7 +453,6 @@ class MultiHostFioRandRead(FunTestCase):
                     elif int(fio_numjobs) > 4:
                         cpus_allowed = "{}-{}".format(starting_core, host.host_numa_cpus[2:])
 
-
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_tcp_{}_blt_{}_{}_vol_{}".format(mode, fio_numjobs, fio_iodepth, self.blt_count)
                     # Executing the FIO command for the current mode, parsing its out and saving it as dictionary
@@ -572,6 +607,7 @@ class PreCommitSanity(MultiHostFioRandRead):
 
     def cleanup(self):
         super(PreCommitSanity, self).cleanup()
+
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()

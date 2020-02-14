@@ -1228,7 +1228,7 @@ class ComE(Linux):
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
     DPC_CSI_PERF_LOG_PATH = "/tmp/f1_{}_dpc_csi_perf.txt"
     NUM_F1S = 2
-    NVME_CMD_TIMEOUT = 600000
+    NVME_CMD_TIMEOUT = 60000
 
     HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
@@ -1474,7 +1474,7 @@ class ComE(Linux):
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
             if self.fs.bundle_compatible:
                 fun_test.log("Clearing out HBM dump directory")
-                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
