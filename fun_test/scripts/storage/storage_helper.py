@@ -2590,7 +2590,6 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
     return min_capacity
 
 
-
 def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
     result = {"status": False, "drive_uuids": []}
     # Fetching drive information
@@ -2611,6 +2610,7 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["status"] = True
 
     return result
+
 
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
@@ -2661,6 +2661,7 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
             fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result
+
 
 def get_plex_device_id(ec_info, storage_controller):
     if "device_id" not in ec_info:

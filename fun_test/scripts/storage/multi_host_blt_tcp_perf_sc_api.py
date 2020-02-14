@@ -524,6 +524,7 @@ class MultiHostVolumePerformanceTestcase(FunTestCase):
 
                 host_handle.sudo_command("iptables -F && ip6tables -F && dmesg -c > /dev/null")
                 host_handle.sudo_command("/etc/init.d/irqbalance stop")
+                host_handle.sudo_command("nvme disconnect-all")
                 irq_bal_stat = host_handle.command("/etc/init.d/irqbalance status")
                 if "dead" in irq_bal_stat:
                     fun_test.log("IRQ balance stopped on {}".format(i))
@@ -1178,7 +1179,6 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
                         host_handle.command("arp -n")
                         host_handle.command("route -n")
                         host_handle.command("ifconfig")
-
                     fun_test.simple_assert(ping_status, "Host {} is able to ping to bond interface IP {}".
                                            format(host_handle.host_ip, ip))
             except Exception as ex:
