@@ -3,7 +3,8 @@
 <div class="component" *ngIf="suite">
   <div class="fun-panel">
     <div class="fun-panel-header">
-      {{ !suite.name? 'Creating ': 'Editing' }} suite
+      <span *ngIf="id">Editing suite</span>
+      <span *ngIf="(!cloneId && !id) || cloneId">Creating suite</span>
     </div>
 
   </div>

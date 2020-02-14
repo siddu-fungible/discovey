@@ -539,7 +539,6 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _hasKey(o, key) {
-    console.log(o);
     return Object.keys(o).indexOf(key) > -1;
   }
 
@@ -605,7 +604,7 @@ export class SuiteEditorComponent implements OnInit {
     suiteEntry.script_path = this.currentScriptPath;
     suiteEntry.inputs = this.inputs;
     suiteEntry.test_case_ids = this.testCaseIds;
-    console.log(suiteEntry);
+    // console.log(suiteEntry);
     this.suite.addEntry(suiteEntry);
     this._clearNewSuiteEntry();
   }
@@ -668,7 +667,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _getPoolMemberOptions(flatName) {
-    console.log(this.poolMemberOptions[flatName]);
+    // console.log(this.poolMemberOptions[flatName]);
   }
 
   submitEnter(enter) {
