@@ -66,7 +66,10 @@
     <tr *ngFor="let suite of suites; let suiteIndex=index">
       <td *ngIf="multiSelect"><input type="checkbox" [checked]="suite.selected" [(ngModel)]="suite.selected"/></td>
       <td>{{ suite.id }}</td>
-      <td><a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a></td>
+      <td>
+        <a [routerLink]="'/regression/suite_editor/' + suite.id">{{ suite.name }}</a>
+        <label class="badge badge-warning" style="cursor: pointer; float: right" (click)="cloneSuite(suite.id)">clone</label>
+      </td>
       <td>
         <app-textarea-input [hoverHide]="mode !== Mode.DEFAULT" [initialValue]="suite?.short_description"
                             [editable]="mode === Mode.DEFAULT"

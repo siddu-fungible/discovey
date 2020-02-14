@@ -28,6 +28,7 @@ export class SuiteEditorComponent implements OnInit {
   mode: SuiteMode = SuiteMode.SUITE;
   SuiteMode = SuiteMode;
   userProfile: UserProfile = null;
+  cloneId: number = null;
 
   testCaseIds: number[] = null;
   inputs: any = null;
@@ -147,14 +148,18 @@ export class SuiteEditorComponent implements OnInit {
 
   fetchSuite() {
     let userEmail = this.userProfile.user.email;
-    if (!this.id) {
+    if (!this.id && !this.cloneId) {
       this.suite = new Suite();
       this.suite.type = this.mode;
       this.setSelectedUser(userEmail);
       return of(this.suite)
 
     } else {
-      return this.service.suite(this.id).pipe(switchMap(response => {
+      let id = this.cloneId;
+      if (this.id) {
+        id = this.id;
+      }
+      return this.service.suite(id).pipe(switchMap(response => {
         this.suite = response;
         userEmail = this.suite.suite_owner;
         this.setSelectedUser(userEmail);
@@ -177,6 +182,9 @@ export class SuiteEditorComponent implements OnInit {
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('mode')) {
         this.mode = params["mode"];
+      }
+      if (params.hasOwnProperty('clone_id')) {
+        this.cloneId = params['clone_id'];
       }
       return of(params);
     }))
@@ -624,7 +632,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onSubmitSuite() {
-    if (!this.id) {
+    if (!this.id || this.cloneId) {
       this.service.add(this.suite).subscribe(response => {
         this.loggerService.success("Added suite");
         this.editorPristine = true;
