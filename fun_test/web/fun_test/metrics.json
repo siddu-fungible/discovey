@@ -7924,6 +7924,12 @@
             "name": "multi_host_raw_block_nvmetcp",
             "label": "NVMe/TCP - Multi host",
             "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
+            "label": "NVMe/TCP - Single host",
+            "reference": true
           }
         ]
       }
