@@ -27,10 +27,8 @@
       </tr>
 
       <tr>
-        <td class="fun-attribute-label">Suite owner:</td>
+        <td class="fun-attribute-label">Owner email:</td>
         <td class="fun-attribute">
-          <!--<app-textarea-input [hoverHide]="false" [initialValue]="suite?.suite_owner" [required]="true"-->
-                              <!--(valueChanged)="onShortDescriptionChangedEvent($event)"></app-textarea-input>-->
           <select id="submitter" [(ngModel)]="selectedUser">
           <option *ngFor="let user of users" [ngValue]="user">{{
             user.first_name }} {{
@@ -38,9 +36,6 @@
             ({{ user.email }})
           </option>
         </select>
-        &nbsp;
-        <a href="/users" target="_blank">Can't find your name? Add user</a>
-
         </td>
       </tr>
 

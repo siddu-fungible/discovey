@@ -887,7 +887,7 @@ class Suite(models.Model):
     entries = JSONField(default=None)
     created_date = models.DateTimeField(default=timezone.now)
     modified_date = models.DateTimeField(default=timezone.now)
-    suite_owner = models.EmailField(max_length=60, default="john.abraham@fungible.com")
+    owner_email = models.EmailField(max_length=60, default="john.abraham@fungible.com")
 
     def to_dict(self):
         result = {}

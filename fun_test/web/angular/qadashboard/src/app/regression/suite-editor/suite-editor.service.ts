@@ -27,7 +27,7 @@ interface SuiteInterface {
   entries: SuiteEntry[];
   type: SuiteMode;
   selected: boolean;
-  suite_owner: string;
+  owner_email: string;
 }
 
 
@@ -42,7 +42,7 @@ export class Suite implements SuiteInterface {
   entries: SuiteEntry[] = null;
   type: SuiteMode = SuiteMode.SUITE;
   selected: boolean = false;
-  suite_owner: string = null;
+  owner_email: string = null;
 
   constructor(obj?: any) {
     Object.assign(this, obj);
