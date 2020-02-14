@@ -8,6 +8,9 @@ import {SuiteEditorService, Suite, SuiteEntry, SuiteMode} from "./suite-editor.s
 import {RegressionService} from "../regression.service";
 import {LoggerService} from "../../services/logger/logger.service";
 import {ActivatedRoute} from "@angular/router";
+import {UserProfile} from "../../login/definitions";
+import {CommonService} from "../../services/common/common.service";
+import {ApiService} from "../../services/api/api.service";
 
 enum CustomAssetSelection {  // used by the Custom test-bed spec modal
   NUM,
@@ -24,6 +27,7 @@ export class SuiteEditorComponent implements OnInit {
   @Input() id: number = null;
   mode: SuiteMode = SuiteMode.SUITE;
   SuiteMode = SuiteMode;
+  userProfile: UserProfile = null;
 
   testCaseIds: number[] = null;
   inputs: any = null;
@@ -66,6 +70,8 @@ export class SuiteEditorComponent implements OnInit {
   tags: string = null;
   suite: Suite = null;
   driver = null;
+  users: any = null;
+  selectedUser: any = null;
 
   editorPristine: boolean = true;
 
@@ -77,19 +83,26 @@ export class SuiteEditorComponent implements OnInit {
               private service: SuiteEditorService,
               private regressionService: RegressionService,
               private loggerService: LoggerService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private commonService: CommonService,
+              private apiService: ApiService) {
 
   }
 
 
   ngOnInit() {
-
-
+    this.userProfile = this.commonService.getUserProfile();
+    if (!this.userProfile) {
+      this.loggerService.error("Unable to fetch user profile");
+      return;
+    }
     this.driver = new Observable(observer => {
       observer.next(true);
       return () => {
       }
     }).pipe(switchMap(response => {
+      return this.fetchUsers();
+    })).pipe(switchMap(response => {
       return this.getRouterQueryParam();
     })).pipe(switchMap(response => {
       return this.getRouterParam();
@@ -133,17 +146,30 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   fetchSuite() {
+    let userEmail = this.userProfile.user.email;
     if (!this.id) {
-        this.suite = new Suite();
-        this.suite.type = this.mode;
-        return of(this.suite)
+      this.suite = new Suite();
+      this.suite.type = this.mode;
+      this.setSelectedUser(userEmail);
+      return of(this.suite)
 
-      } else {
-        return this.service.suite(this.id).pipe(switchMap(response => {
-          this.suite = response;
-          console.log(this.suite.constructor.name);
-          return of(this.suite)
-        }));
+    } else {
+      return this.service.suite(this.id).pipe(switchMap(response => {
+        this.suite = response;
+        userEmail = this.suite.owner_email;
+        this.setSelectedUser(userEmail);
+        console.log(this.suite.constructor.name);
+        return of(this.suite)
+      }));
+    }
+  }
+
+  setSelectedUser(userEmail) {
+    for (let user of this.users) {
+      if (user.email === userEmail) {
+        this.selectedUser = user;
+        break;
+      }
     }
   }
 
@@ -261,7 +287,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _getPoolMemberOptionsString(assetType, options) {
-    let s =``;
+    let s = ``;
     Object.keys(options).forEach(option => {
       s += `${this.poolMemberOptions[this._flattenName(assetType)][option]}: ${options[option].num}, `;
     });
@@ -360,12 +386,12 @@ export class SuiteEditorComponent implements OnInit {
           } else if (assetRequest[assetTypeValue].hasOwnProperty('pool_member_type_options')) {
             group[assetSelectionKey].setValue(CustomAssetSelection.NUM);
             let poolMemberTypeOptions = assetRequest[assetTypeValue]['pool_member_type_options'];
-              Object.keys(poolMemberTypeOptions).forEach(poolMemberType => {
-                let value = poolMemberTypeOptions[poolMemberType]["num"];
-                let poolMemberTypeKey = this._getPoolMemberSelectionKey(flatName, this.poolMemberOptions[flatName][parseInt(poolMemberType)]);
-                group[poolMemberTypeKey].setValue(value);
-              });
-            
+            Object.keys(poolMemberTypeOptions).forEach(poolMemberType => {
+              let value = poolMemberTypeOptions[poolMemberType]["num"];
+              let poolMemberTypeKey = this._getPoolMemberSelectionKey(flatName, this.poolMemberOptions[flatName][parseInt(poolMemberType)]);
+              group[poolMemberTypeKey].setValue(value);
+            });
+
           }
           if (names) {
             group[assetSelectionKey].setValue(CustomAssetSelection.SPECIFIC);
@@ -437,7 +463,7 @@ export class SuiteEditorComponent implements OnInit {
 
     }
 
-    return valid? null: {'errorMessage': errorMessage};
+    return valid ? null : {'errorMessage': errorMessage};
   }
 
   _flattenName(name: string): string {  /* flatten DUT to dut, Perf Listener to "perf_listener"*/
@@ -454,13 +480,15 @@ export class SuiteEditorComponent implements OnInit {
 
 
   filterAssetsBySelectedTestBed(selectedTestBed, allAssets) {  // Only choose assets that belong to the selected test-bed
-    return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => { return o.name });
+    return allAssets.filter(asset => asset.test_beds.indexOf(selectedTestBed) > -1).map(o => {
+      return o.name
+    });
   }
 
   test() {
     //console.log(this.customTestBedSpecForm.get(this._getAssetSelectionKey("dut")).value);
     //console.log(this.selectedTestBed.value);
-     //console.log(this.selectedTestBed);
+    //console.log(this.selectedTestBed);
     //console.log(this.customTestBedSpecForm.get("selectedTestBed").value);
     // console.log(this.customTestBedSpecForm.get("customDutSelection").value);
     // console.log(this.customTestBedSpecForm.get("numDuts").value);
@@ -508,7 +536,11 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onAddCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
+    this.modalService.open(content, {
+      ariaLabelledBy: 'modal-basic-title',
+      size: 'lg',
+      backdrop: 'static'
+    }).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
@@ -520,7 +552,11 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onEditCustomTestBedSpec(content) {
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', size: 'lg', backdrop: 'static'}).result.then((dontCare) => {
+    this.modalService.open(content, {
+      ariaLabelledBy: 'modal-basic-title',
+      size: 'lg',
+      backdrop: 'static'
+    }).result.then((dontCare) => {
       console.log("Ready to submit");
       let customTestBedSpec = {};
       this.prepareCustomTestBedSpecValidated();
@@ -578,6 +614,13 @@ export class SuiteEditorComponent implements OnInit {
   onShortDescriptionChangedEvent(shortDescription) {
     this.suite.short_description = shortDescription;
     this.editorPristine = false;
+  }
+
+  fetchUsers(): any {
+    return this.apiService.get("/api/v1/users").pipe(switchMap(response => {
+      this.users = response.data;
+      return of(true);
+    }));
   }
 
   onSubmitSuite() {
