@@ -1037,7 +1037,7 @@ class BootupWorker(Thread):
                 # Wait for BMC to come up
                 bmc = self.fs.get_bmc()
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
-                fs.get_bundle_version()
+                # fs.get_bundle_version()
 
             if not fs.bundle_image_parameters:
                 bmc = fs.get_bmc()
@@ -1120,6 +1120,7 @@ class BootupWorker(Thread):
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
+            self.fs.get_bundle_version()
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
