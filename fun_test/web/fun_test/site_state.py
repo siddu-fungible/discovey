@@ -56,13 +56,38 @@ class SiteState():
             self.register_model_mapping(model=model, model_name=model.__name__)
 
     def register_test_beds(self):
-        testbeds = self.site_base_data["testbeds"]
-        for testbed in testbeds:
-            try:
-                TestBed.objects.get(name=testbed)
-            except ObjectDoesNotExist:
-                t = TestBed(name=testbed)
+        fun_test_was_disabled = False
+        if "DISABLE_FUN_TEST" in os.environ:
+            fun_test_was_disabled = True
+            del os.environ["DISABLE_FUN_TEST"]
+        from asset.asset_manager import AssetManager
+        am = AssetManager()
+        all_test_beds = TestBed.objects.all()
+        all_test_bed_names = [x.name for x in all_test_beds]
+        valid_test_beds = am.get_valid_test_beds()
+        for valid_test_bed in valid_test_beds:
+            if valid_test_bed not in all_test_bed_names:
+                t = TestBed(name=valid_test_bed)
                 t.save()
+
+        if fun_test_was_disabled:
+            os.environ["DISABLE_FUN_TEST"] = "1"
+
+    def cleanup_test_beds(self):
+        fun_test_was_disabled = False
+        if "DISABLE_FUN_TEST" in os.environ:
+            fun_test_was_disabled = True
+            del os.environ["DISABLE_FUN_TEST"]
+        from asset.asset_manager import AssetManager
+        am = AssetManager()
+        all_test_beds = TestBed.objects.all()
+        valid_test_beds = am.get_valid_test_beds()
+        for test_bed in all_test_beds:
+            if test_bed.name not in valid_test_beds:
+                test_bed.delete()
+
+        if fun_test_was_disabled:
+            os.environ["DISABLE_FUN_TEST"] = "1"
 
     def register_assets(self):
         fun_test_was_disabled = False

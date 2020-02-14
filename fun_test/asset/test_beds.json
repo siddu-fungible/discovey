@@ -3895,7 +3895,7 @@
       "cab04-qa-05"
     ]
   },
-  "fs-bundle-sanity": {
+  "fs-regression2": {
     "switch_info": {
       "cab04-arista-100g": {
         "interface_info": {

@@ -1539,6 +1539,8 @@ class ComE(Linux):
         clone.command("dmesg", timeout=120)
         clone.command("cat /var/log/syslog", timeout=60)
 
+
+
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
         health_check_processes = self.get_process_id_by_pattern(system_health_check_script, multiple=True)
