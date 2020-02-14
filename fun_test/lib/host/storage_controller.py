@@ -570,6 +570,16 @@ class StorageController(NetworkController, DpcshClient):
             fun_test.critical(str(ex))
         return command_result
 
+    def format_drive(self, device_id, label, command_timeout=TIMEOUT):
+        try:
+            format_cmd = {}
+            format_cmd["class"] = "device"
+            format_cmd["opcode"] = "FORMAT"
+            format_cmd["params"] = {"device_id": device_id, "label": label}
+            command_result = self.json_execute(verb="storage", data=format_cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
 
 if __name__ == "__main__":
     sc = StorageController(target_ip="fs53-come", target_port=42220)
