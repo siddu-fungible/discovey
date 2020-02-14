@@ -635,7 +635,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onSubmitSuite() {
-    if (!this.id || this.cloneId) {
+    if ((!this.id && !this.cloneId) || this.cloneId) {
       this.service.add(this.suite).subscribe(response => {
         this.loggerService.success("Added suite");
         this.editorPristine = true;
