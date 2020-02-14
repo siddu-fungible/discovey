@@ -19,8 +19,12 @@ class RdmaClient(Linux):
         self.server_ip = server_ip
         self.rdma_port = rdma_port
         self.client_id = client_id
-        self.add_path(additional_path=PATH)
+        # self.add_path(additional_path=PATH)
         self.set_ld_library_path()
+        self.set_tool_path()
+
+    def set_tool_path(self):
+        self.command(command="export PATH=%s" % PATH)
 
     def set_ld_library_path(self):
         self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
@@ -40,8 +44,12 @@ class RdmaServer(Linux):
         self.server_id = server_id
         self.rdma_server_port = server_port
         self.interface_ip = interface_ip
-        self.add_path(additional_path=PATH)
+        # self.add_path(additional_path=PATH)
         self.set_ld_library_path()
+        self.set_tool_path()
+
+    def set_tool_path(self):
+        self.command(command="export PATH=%s" % PATH)
 
     def set_ld_library_path(self):
         self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
@@ -251,9 +259,11 @@ class RdmaTemplate(object):
             client_obj.rdma_port = port_no
             client_obj.server_ip = server_obj.interface_ip
             if set_paths:
-                client_obj.add_path(additional_path=PATH)
+                # client_obj.add_path(additional_path=PATH)
+                client_obj.set_tool_path()
                 client_obj.set_ld_library_path()
-                server_obj.add_path(additional_path=PATH)
+                # server_obj.add_path(additional_path=PATH)
+                server_obj.set_tool_path()
                 server_obj.set_ld_library_path()
             res = self._setup_server(server_obj=server_obj, **cmd_args)
             fun_test.simple_assert(res, "Ensure on %s server process started" % str(server_obj))
@@ -423,11 +433,13 @@ class RdmaLatencyUnderLoadTemplate(object):
                                               test_type=lat_test_type, is_parallel=True,
                                               connection_type=connection_type, size=lat_test_size,
                                               inline_size=inline_size, duration=duration,
+                                              qpairs=qpairs,
                                               iterations=iterations, run_infinitely=run_infinitely)
         self.bw_test_template = RdmaTemplate(client_server_objs=self.bw_client_server_objs, hosts=hosts,
                                              test_type=bw_test_type, is_parallel=True,
                                              connection_type=connection_type, size=bw_test_size,
                                              inline_size=inline_size, duration=duration,
+                                             qpairs=qpairs,
                                              iterations=iterations, run_infinitely=run_infinitely)
 
     def setup_test(self):
@@ -518,9 +530,11 @@ class RdmaLatencyUnderLoadTemplate(object):
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
             client_obj.server_ip = server_obj.interface_ip
-            client_obj.add_path(additional_path=PATH)
+            # client_obj.add_path(additional_path=PATH)
+            client_obj.set_tool_path()
             client_obj.set_ld_library_path()
-            server_obj.add_path(additional_path=PATH)
+            # server_obj.add_path(additional_path=PATH)
+            server_obj.set_tool_path()
             server_obj.set_ld_library_path()
             fun_test.simple_assert(self.setup_server(test_type=test_type, server_obj=server_obj, **cmd_args),
                                    "Ensure on %s server process started" % str(server_obj))
