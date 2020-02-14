@@ -28,10 +28,11 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300,
     "reboot_hosts": false,
-    "already_deployed": false,
-    "space_savings": 80
+    "already_deployed": true,
+    "space_savings": 25
   },
   "RecoveryWithMFailure": {
+    "test_rail_case_id": ["C18803"],
     "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {
@@ -79,6 +80,7 @@
     "plex_failure_combination": "random"
   },
   "RecoveryWithMplus1Failure": {
+    "test_rail_case_id": ["C18804"],
     "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {
@@ -122,11 +124,12 @@
     "collect_network_stats": false,
     "mplusfailure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
   "RecoveryWithMConcurrentFailure": {
+    "test_rail_case_id": ["C18805"],
     "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {
@@ -175,6 +178,7 @@
     "plex_failure_combination": "random"
   },
   "RecoveryWithMplusConcurrentFailure": {
+    "test_rail_case_id": ["C18806"],
     "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {
@@ -219,11 +223,12 @@
     "m_concurrent_failure": true,
     "m_plus_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
   "RecoveryWithKplusMConcurrentFailure": {
+    "test_rail_case_id": ["C18807"],
     "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {

@@ -357,7 +357,7 @@ class RecoveryWithFailures(FunTestCase):
                             fun_test.log("NVMe Block Device/s: {}".
                                          format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
+                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
                     self.host_info[host_name]["nvme_block_device_list"].sort()
@@ -403,7 +403,11 @@ class RecoveryWithFailures(FunTestCase):
                     # Compare with configured space savings
                     # Note: Factoring in a tolerance of 5%
                     if abs(self.space_savings - compression_savings) > 5:
-                        fun_test.log("Data not compressed as per the configured {} %".format(compression_savings))
+                        fun_test.critical("Data not compressed as per the configured {} %".format(compression_savings))
+                    else:
+                        fun_test.add_checkpoint(checkpoint="Compression savings as expected",
+                                                expected=self.space_savings,
+                                                actual=compression_savings)
 
                     write_initial_vol_stats = self.storage_controller.peek(
                         props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(
@@ -434,9 +438,11 @@ class RecoveryWithFailures(FunTestCase):
                     self.device_id_failed = []
                     for index, plex in enumerate(plex_fail_pattern):
                         if self.plex_fail_method == "ssd_power_off":
-                            fun_test.log("Initiating drive failure for device id {} by powering off ssd".format(plex))
+                            fun_test.log("Initiating drive failure for device id {} by powering off ssd".
+                                         format(self.ec_info["device_id"][num][plex]))
                             device_fail_status = self.storage_controller.power_toggle_ssd("off",
-                                                                                          device_id=plex,
+                                                                                          device_id=
+                                                                                          self.ec_info["device"][num][plex],
                                                                                           command_duration=
                                                                                           self.command_timeout)
                             fun_test.test_assert(device_fail_status["status"],
@@ -452,20 +458,23 @@ class RecoveryWithFailures(FunTestCase):
                                                               plex))
                             self.device_id_failed.append(plex)
                         elif self.plex_fail_method == "drive_pull":
-                            fun_test.log("Initiating drive failure for device id {} by injecting fault".format(plex))
+                            fun_test.log("Initiating drive failure for device id {} by injecting fault".
+                                         format(self.ec_info["device_id"][num][plex]))
                             device_fail_status = self.storage_controller.disable_device(
-                                device_id=plex, command_duration=self.command_timeout)
+                                device_id=self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
                             fun_test.test_assert(device_fail_status["status"],
-                                                 "Injecting fault on Device ID {}".format(plex))
+                                                 "Injecting fault on Device ID {}".
+                                                 format(self.ec_info["device_id"][num][plex]))
                             # Validate if Device is marked Failed
                             device_stats = self.storage_controller.get_device_status(
-                                device_id=plex, command_duration=self.command_timeout)
+                                device_id=self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
                             fun_test.simple_assert(device_stats["status"],
-                                                   "Device {} stats command".format(plex))
+                                                   "Device {} stats command".
+                                                   format(self.ec_info["device_id"][num][plex]))
                             fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
                                                           actual=device_stats["data"]["device state"],
                                                           message="Device ID {} is marked as Failed".format(
-                                                              plex))
+                                                              self.ec_info["device_id"][num][plex]))
                             self.device_id_failed.append(plex)
 
                         # Perform read if concurrent plex failure is not set
@@ -661,6 +670,7 @@ class RecoveryWithFailures(FunTestCase):
 class RecoveryWithMFailure(RecoveryWithFailures):
     def describe(self):
         self.set_test_details(id=1,
+                              test_rail_case_ids=["C18803"],
                               summary="EC recovery with M plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -687,6 +697,7 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=2,
+                              test_rail_case_ids=["C18804"],
                               summary="EC recovery with M+1 plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -713,6 +724,7 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=3,
+                              test_rail_case_ids=["C18805"],
                               summary="EC recovery with M concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -739,6 +751,7 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=4,
+                              test_rail_case_ids=["C18806"],
                               summary="EC recovery with M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
@@ -765,6 +778,7 @@ class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
     def describe(self):
         self.set_test_details(id=5,
+                              test_rail_case_ids=["C18807"],
                               summary="EC recovery with K plus M plus concurrent plex failure",
                               steps="""
         1. Bring up F1 in FS1600
