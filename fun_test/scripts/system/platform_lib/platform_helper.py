@@ -191,6 +191,15 @@ class RedFishTool:
         fun_test.log("Fan Readings: {}".format(result["data"])) if (result["status"]) else None
         return result
 
+    def chassis(self):
+        result = {"status": False, "data": {}}
+        sub_command = "Chassis -1"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
     def chassis_power(self):
         result = {"status": False, "data":{}}
         sub_command = "Chassis -1 Power"
@@ -320,14 +329,14 @@ class Platform(RedFishTool, IpmiTool):
         self.f1_1_dpc = DpcshClient(target_ip=self.come_handle.host_ip,
                                     target_port=self.come_handle.get_dpc_port(1, statistics=True),
                                     verbose=False)
-        fs = Fs.get(self.fs)
-        fs.cleanup_attempted = True
-        self.fpga_console_handle = fs.get_terminal()
 
         service_host_spec = fun_test.get_asset_manager().get_regression_service_host_spec()
         fun_test.simple_assert(service_host_spec, "Service host spec")
         self.qa_02 = Linux(**service_host_spec)
         self.handles_list = {"come": self.come_handle, "bmc": self.bmc_handle, "fpga": self.fpga_handle}
+
+    def initialise(sel):
+        pass
 
     def get_platform_drop_information(self, system="come"):
         result = {"status": False, "data": {}}

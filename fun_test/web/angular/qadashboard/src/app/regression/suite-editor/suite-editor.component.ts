@@ -161,7 +161,7 @@ export class SuiteEditorComponent implements OnInit {
       }
       return this.service.suite(id).pipe(switchMap(response => {
         this.suite = response;
-        userEmail = this.suite.suite_owner;
+        userEmail = this.suite.owner_email;
         this.setSelectedUser(userEmail);
         console.log(this.suite.constructor.name);
         return of(this.suite)

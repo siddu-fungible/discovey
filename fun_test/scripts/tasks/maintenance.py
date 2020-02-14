@@ -220,7 +220,7 @@ class RemoveOldImagesOnTftpServer(FunTestCase):
         fun_test.simple_assert(service_host_spec, "Service host spec")
         service_host = Linux(**service_host_spec)
         service_host.command("cd {}".format(TFTP_DIRECTORY))
-        service_host.command("find . -type f -name 's_*gz' -mtime +30 -exec rm {} \;")
+        service_host.command("find . -type f -maxdepth 1 -name 's_*gz' -mtime +30 -exec rm {} \;")
 
     def cleanup(self):
         pass

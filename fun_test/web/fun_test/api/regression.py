@@ -516,14 +516,14 @@ def suites(request, id):
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
         type = request_json.get("type", "SUITE")  # TODO
-        suite_owner = request_json.get("suite_owner", "john.abraham@fungible.com")
+        owner_email = request_json.get("owner_email", "john.abraham@fungible.com")
         s.type = type
         s.name = name
         s.short_description = short_description
         s.categories = categories
         s.tags = tags
         s.custom_test_bed_spec = custom_test_bed_spec
-        s.suite_owner = suite_owner
+        s.owner_email = owner_email
         if suite_entries is not None:
             s.entries = suite_entries
         s.save()

@@ -12,6 +12,7 @@ class Command(BaseCommand):
         site_state.register_tags()
         site_state.register_modules()
         site_state.register_test_beds()
+        site_state.cleanup_test_beds()
         site_state.register_assets()
         site_state.cleanup_assets()
 
