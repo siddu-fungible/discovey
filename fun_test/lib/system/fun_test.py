@@ -392,18 +392,23 @@ class FunTest:
             # if self.log_prefix:
             #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
         self.html_log_file = html_log_file
+        console_log_path = None
+        if self.suite_execution_id:
+            console_log_path = html_log_file.replace(".html", ".logs.txt")
 
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=self.logs_dir,
                                           log_file=html_log_file,
-                                          full_script_path=self.absolute_script_file_name)
+                                          full_script_path=self.absolute_script_file_name,
+                                          console_log_path=console_log_path)
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
-        console_log_path = html_log_file.replace(".html", ".logs.txt")
         if self.suite_execution_id:
             # print "Console log at: {}".format(console_log_path)
             fun_test.add_auxillary_file(description="Console log",
                                         filename=console_log_path)
+            if self.fun_xml_obj:
+                self.fun_xml_obj.set_console_log_path(console_log_path=console_log_path)
 
     def enable_profiling(self):
         self.profiling = True

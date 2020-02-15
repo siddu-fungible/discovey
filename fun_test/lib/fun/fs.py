@@ -1181,6 +1181,10 @@ class ComEInitializationWorker(Thread):
                                      message="ComE initialized",
                                      context=self.fs.context)
                 if (self.fs.bundle_compatible):  # and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
+                    if self.fs.bundle_upgraded:
+                        # Validate bundle_version
+                        self.fs.get_bundle_version()
+
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
@@ -2075,7 +2079,8 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_username=None,
                  fpga_telnet_password=None,
                  check_expected_containers_running=True,
-                 initial_version_options=None):
+                 initial_version_options=None,
+                 post_bundle_validation=False):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2125,6 +2130,7 @@ class Fs(object, ToDictMixin):
         self.apc_info = apc_info
         self.original_context_description = None
         self.fun_cp_callback = fun_cp_callback
+        self.post_bundle_validation = post_bundle_validation
 
         self.asset_name = "FS"
         if self.spec:
