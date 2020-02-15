@@ -230,6 +230,8 @@ class CloneTestCase(FunTestCase):
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
 
+        fun_test.shared_variables["end_host"] = self.end_host
+
         # contrller, base and clone uids
         self.ctrlr_uuid1 = utils.generate_uuid()
         fun_test.shared_variables["ctrlr_uuid1"] = self.ctrlr_uuid1
@@ -354,7 +356,7 @@ class CloneTestCase(FunTestCase):
     def run(self):
         testcase = self.__class__.__name__
         self.test_method = testcase[:]
-
+        self.end_host =   fun_test.shared_variables["end_host"]
 
 
         if self.test_method == 'CloneRead':
