@@ -543,11 +543,11 @@ class SnapVolumeTestCase(FunTestCase):
                 fio_numjobs = 1
                 if "write" in mode:
                     if self.snap_write:
-                        self.device_details = self.vol_to_device_map["snap_vol"]
+                        self.fio_device = self.vol_to_device_map["snap_vol"]
                     else:
-                        self.device_details = self.vol_to_device_map["base_vol"]
+                        self.fio_device = self.vol_to_device_map["base_vol"]
                 elif "read" in mode:
-                    self.device_details = self.vol_to_device_map["snap_vol"]
+                    self.fio_device = self.vol_to_device_map["snap_vol"]
 
                 for x in range(1, self.host_count + 1, 1):
                     if mode == "rw" or mode == "randrw":
@@ -557,7 +557,7 @@ class SnapVolumeTestCase(FunTestCase):
                         thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                      func=fio_parser,
                                                                      arg1=self.linux_host_inst[x],
-                                                                     filename=self.device_details,
+                                                                     filename=self.fio_device,
                                                                      rw=mode,
                                                                      rwmixread=self.fio_rwmixread,
                                                                      bs=fio_block_size,
@@ -572,7 +572,7 @@ class SnapVolumeTestCase(FunTestCase):
                         thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                      func=fio_parser,
                                                                      arg1=self.linux_host_inst[x],
-                                                                     filename=self.device_details,
+                                                                     filename=self.fio_device,
                                                                      rw=mode,
                                                                      bs=fio_block_size,
                                                                      iodepth=fio_iodepth,
@@ -675,6 +675,18 @@ class SnapVolumeTestCase(FunTestCase):
                                                    "NVMe connect from host to Snap Volume")
                             fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                             self.device_details = nvme_connect_result["device_details"]
+                        else:
+                            self.device_details = get_nvme_device(self.linux_host)
+                            # Add the snapvolume disk
+                            temp_device = self.device_details.split(":")
+                            for temp_dev in temp_device:
+                                if temp_dev in self.vol_to_device_map.values():
+                                    continue
+                                else:
+                                    self.vol_to_device_map["snap_vol"] = temp_dev
+                            fun_test.log_section("The Devices are {}".format(self.vol_to_device_map))
+                            fun_test.log("Base Volume is {}".format(self.vol_to_device_map["base_vol"]))
+                            fun_test.log("Snap Volume is {}".format(self.vol_to_device_map["snap_vol"]))
 
     def cleanup(self):
         self.linux_host = fun_test.shared_variables["host_handle"]
