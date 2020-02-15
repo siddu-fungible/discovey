@@ -604,7 +604,8 @@ class SnapVolumeTestCase(FunTestCase):
                         temp1 = re.search('nvme(.[0-9]*)', temp)
                         nvme_disconnect_device = temp1.group()
                         if nvme_disconnect_device:
-                            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
+                            command_result = self.linux_host.nvme_disconnect(device=nvme_disconnect_device)
+                            fun_test.simple_assert(command_result, "NVMe disconnect")
                             nvme_dev_output = get_nvme_device(self.linux_host)
                             if nvme_dev_output:
                                 fun_test.critical(False, "NVMe disconnect failed")
@@ -684,7 +685,8 @@ class SnapVolumeTestCase(FunTestCase):
         temp1 = re.search('nvme(.[0-9]*)', temp)
         nvme_disconnect_device = temp1.group()
         if nvme_disconnect_device:
-            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
+            command_result = self.linux_host.nvme_disconnect(device=nvme_disconnect_device)
+            fun_test.test_assert(command_result, "Cleanup : NVMe disconnect")
             nvme_dev_output = get_nvme_device(self.linux_host)
             if nvme_dev_output:
                 fun_test.critical(False, "NVMe disconnect failed")
