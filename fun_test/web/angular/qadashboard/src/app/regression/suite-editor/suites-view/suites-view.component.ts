@@ -4,6 +4,7 @@ import {Observable, of, Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {PagerService} from "../../../services/pager/pager.service";
+import {ActivatedRoute, Router} from "@angular/router";
 
 
 enum Mode {
@@ -38,7 +39,8 @@ export class SuitesViewComponent implements OnInit {
   showScriptPath: boolean = true;
   showAllSuites: boolean = false;
 
-  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
+  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService,
+              private router: Router) {
     this.recordsPerPage = this.DEFAULT_RECORDS_PER_PAGE;
 
   }
@@ -83,6 +85,11 @@ export class SuitesViewComponent implements OnInit {
     }
     this.currentPage = page;
     this.refreshAll();
+  }
+
+  cloneSuite(id) {
+    let url = "/regression/suite_editor?clone_id=" + String(id);
+    this.router.navigateByUrl(url);
   }
 
   refreshAll() {

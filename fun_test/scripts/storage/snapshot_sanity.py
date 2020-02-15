@@ -375,6 +375,8 @@ class SnapVolumeTestCase(FunTestCase):
         # command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
         #                                               format(self.thin_uuid))
 
+        self.vol_to_device_map = {}
+
         # Attach Base volume to controller before creating SNAP volume
         if not self.bv_attach:
             if hasattr(self, "attach_basevol") and self.attach_basevol:
@@ -392,6 +394,7 @@ class SnapVolumeTestCase(FunTestCase):
                 fun_test.test_assert(nvme_connect_result["status"], "NVMe connect from host to Base Volume")
                 fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                 self.device_details = nvme_connect_result["device_details"]
+                self.vol_to_device_map["base_vol"] = self.device_details
 
         # Create SNAP
         for x in range(1, self.snap_count + 1, 1):
@@ -469,6 +472,13 @@ class SnapVolumeTestCase(FunTestCase):
                         fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host to Snap Volume")
                         fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                         self.device_details = nvme_connect_result["device_details"]
+                        # Add the snapvolume disk
+                        temp_device = self.device_details.split(":")
+                        for temp_dev in temp_device:
+                            if temp_dev in self.vol_to_device_map.values():
+                                continue
+                            else:
+                                self.vol_to_device_map["snap_vol"] = temp_dev
 
     def run(self):
         testcase = self.__class__.__name__
@@ -526,10 +536,18 @@ class SnapVolumeTestCase(FunTestCase):
                 thread_id = {}
                 wait_time = 0
                 self.host_count = 1
-                if "write" not in mode:
-                    fio_numjobs = len(self.device_details.split(":")) * 1
-                else:
-                    fio_numjobs = 1
+                # if "write" not in mode:
+                #     fio_numjobs = len(self.device_details.split(":")) * 1
+                # else:
+                #     fio_numjobs = 1
+                fio_numjobs = 1
+                if "write" in mode:
+                    if self.snap_write:
+                        self.device_details = self.vol_to_device_map["snap_vol"]
+                    else:
+                        self.device_details = self.vol_to_device_map["base_vol"]
+                elif "read" in mode:
+                    self.device_details = self.vol_to_device_map["snap_vol"]
 
                 for x in range(1, self.host_count + 1, 1):
                     if mode == "rw" or mode == "randrw":

@@ -966,7 +966,8 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
-                come.get_build_properties()
+                # come.get_build_properties()
+                fs.get_bundle_version()
                 come_initialized = False
                 fs_health = False
                 expected_containers_running = False
@@ -1036,6 +1037,7 @@ class BootupWorker(Thread):
                 # Wait for BMC to come up
                 bmc = self.fs.get_bmc()
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
+                # fs.get_bundle_version()
 
             if not fs.bundle_image_parameters:
                 bmc = fs.get_bmc()
@@ -1118,6 +1120,7 @@ class BootupWorker(Thread):
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
+            self.fs.get_bundle_version()
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
@@ -1293,7 +1296,14 @@ class ComE(Linux):
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
     def get_build_properties(self):
-        self.command("cat {}".format(self.BLD_PROPS_PATH))
+        result = None
+        build_properties_output = self.command("cat {};echo".format(self.BLD_PROPS_PATH))
+        try:
+            if build_properties_output:
+                result = fun_test.parse_string_to_json(build_properties_output.strip())
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
@@ -2064,7 +2074,8 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_port=None,
                  fpga_telnet_username=None,
                  fpga_telnet_password=None,
-                 check_expected_containers_running=True):
+                 check_expected_containers_running=True,
+                 initial_version_options=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2170,6 +2181,18 @@ class Fs(object, ToDictMixin):
         fun_test.register_fs(self)
 
         self.storage = FsStorage(fs_obj=self)
+
+    def get_bundle_version(self):
+        result = None
+        come = self.get_come()
+        if come:
+            build_properties = come.get_build_properties()
+            if build_properties:
+                result = {"release_train": None, "build_number": None}
+                result["build_number"] = build_properties.get('bldNum', None)
+                result["release_train"] = build_properties.get('devLine', None)
+                fun_test.add_checkpoint(checkpoint="Current bundle version is: {}/{}".format(result["release_train"], result["build_number"]))
+        return result
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2944,10 +2967,11 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main2__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
-    come = fs.get_come()
-    come.cleanup_redis()
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    print fs.get_bundle_version()
+    # come = fs.get_come()
+    # come.cleanup_redis()
 
 
     i = 0
@@ -2972,10 +2996,12 @@ if __name__ == "__main_2_":
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
 
-if __name__ == "__main__":
+if __name__ == "__main3__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
-    topology = th.deploy(already_deployed=False)
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-118"))
+    topology = th.deploy(already_deployed=True)
     fs_obj = topology.get_dut_instance(index=0)
-    fs_obj.storage.nvme_ssds(f1_index=0)
+    # fs_obj.storage.nvme_ssds(f1_index=0)
+    fs_obj.get_bundle_version()
+
