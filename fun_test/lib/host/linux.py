@@ -1552,9 +1552,16 @@ class Linux(object, ToDictMixin):
 
         cmd = "nvme list"
         if json_output:
-            cmd += "-o json"
+            cmd += " -o json"
         output = self.sudo_command(cmd)
         return output
+
+    @fun_test.safe
+    def nvme_get_ns_id(self, device):
+        cmd = "nvme get-ns-id {}".format(device)
+        output = self.sudo_command(cmd)
+        nsid = output.strip().split("namespace-id:")[1]
+        return nsid
 
     @fun_test.safe
     def lsblk(self, options=None):
