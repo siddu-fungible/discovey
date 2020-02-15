@@ -12,8 +12,11 @@ import re
 import copy
 
 
-class DutState:
-    f1_states = [{"dataplane_ips": {}}, {}]
+class DutsState:
+    def __init__(self):
+        pass
+
+    f1_states = [{"dataplane_ips": {}}, {"dataplane_ips": {}}]
 
     def add_dataplane_ip(self, ip, f1_index, interface_name="bond0"):
         self.f1_states[f1_index]["dataplane_ips"][interface_name] = ip
@@ -22,11 +25,21 @@ class DutState:
         return self.f1_states[f1_index][interface_name]
 
 
-class HostState:
+class HostsState:
+    def __init__(self):
+        pass
 
-    nvme_namespaces = [{"name": None, "subsys_nqn": None, "host_nqn": None, "target_ip": None}]
+    hosts_states = {}
 
-    host_name = None
+    def add_host_nvme_namespace(self, hostname, nvme_namespace):
+        if hostname in self.hosts_states:
+            self.hosts_states[hostname].append(nvme_namespace)
+        else:
+            self.hosts_states[hostname] = [nvme_namespace]
+            # nvme get-ns-id /dev/nvme0n1
+
+    def get_host_nvme_namespaces(self, hostname):
+        return self.hosts_states[hostname]
 
 
 class StorageControllerOperationsTemplate:
@@ -36,6 +49,8 @@ class StorageControllerOperationsTemplate:
     def __init__(self, topology):
         self.topology = topology
         self.node_ids = []
+        self.duts_state_object = DutsState()
+        self.hosts_state_object = HostsState()
 
     def get_health(self):
         for dut_index in self.topology.get_available_duts().keys():
@@ -87,6 +102,7 @@ class StorageControllerOperationsTemplate:
 
                     fun_test.test_assert(expression=assign_dataplane_ip.status,
                                          message="Dataplane IP assignment on %s" % dpu_id)
+                    self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
                     fun_test.critical("Exception while updating Dataplane IP %s\n" % e)
@@ -236,6 +252,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :param host_obj: host handle or list of host handles from topology to which the volume needs to be attached
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
+        :param nvme_io_queues: No of IO queues for NVMe connect command
         :return: Attach volume result in case of 1 host_obj
                  If multiple host_obj are provided, the result is a list of attach operation results,
                  in the same order of host_obj
@@ -275,24 +292,65 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     subsys_nqn = result["data"]["subsys_nqn"]
                     host_nqn = result["data"]["host_nqn"]
                     dataplane_ip = result["data"]["ip"]
+                    nsid = result["data"]["nsid"]
                 else:
                     subsys_nqn = result.subsys_nqn
                     host_nqn = result.host_nqn
                     dataplane_ip = result.ip
+                    nsid = result.nsid
+                if not self._check_host_target_existing_connection(fs_obj=fs_obj, volume_uuid=volume_uuid,
+                                                                   subsys_nqn=subsys_nqn, host_nqn=host_nqn,
+                                                                   host_obj=host_obj):
+                    fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj,
+                                                                                subsys_nqn=subsys_nqn,
+                                                                                host_nqn=host_nqn,
+                                                                                dataplane_ip=dataplane_ip,
+                                                                                nvme_io_queues=nvme_io_queues),
+                                         message="NVMe connect from host: {}".format(host_obj.name))
 
-                fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
-                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip,
-                                                                            nvme_io_queues=nvme_io_queues),
-                                     message="NVMe connect from host: {}".format(host_obj.name))
                 if host_obj not in self.host_nvme_device:
                     self.host_nvme_device[host_obj] = []
-                nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
+                nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn, nsid=nsid)
                 fun_test.test_assert(expression=nvme_filename,
-                                     message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
+                                     message="Get NVMe drive from Host {} using nvme list".format(host_obj.name))
+                self.hosts_state_object.add_host_nvme_namespace(hostname=host_obj.name, nvme_namespace=nvme_filename)
         if isinstance(host_obj, list):
             result = result_list[0]
         else:
             result = result_list
+        return result
+
+    def _check_host_target_existing_connection(self, fs_obj, volume_uuid, subsys_nqn, host_nqn, host_obj):
+        result = False
+        storage_controller = fs_obj.get_storage_controller()
+        # get_volume_result = storage_controller.storage_api.get_volumes()
+        # WORKAROUND : get_volumes errors out.
+        raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+        get_volume_result = raw_sc_api.get_volumes()
+        fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
+        for vol_uuid in get_volume_result['data']:
+            if result:
+                break
+            if vol_uuid == volume_uuid:
+                continue
+            if subsys_nqn == get_volume_result['data'][vol_uuid]['subsys_nqn']:
+                for port in get_volume_result["data"][vol_uuid]["ports"]:
+                    if result:
+                        break
+                    port_details = storage_controller.storage_api.get_port(port_uuid=port)
+                    if port_details.data.host_nqn == host_nqn:
+
+                        host_handle = host_obj.get_instance()
+                        nvme_volumes = self._get_fungible_nvme_namespace(host_handle=host_obj.get_instance())
+                        if nvme_volumes:
+                            if len(nvme_volumes) > 0:
+                                for namespace in nvme_volumes:
+                                    nvme_device = namespace[:-2].split('/dev/')[1]
+                                    namespace_subsys_nqn = host_handle.command(
+                                        "cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
+                                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                                        result = True
+                                        break
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
@@ -409,7 +467,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                                               nvme_io_queues=nvme_io_queues, hostnqn=host_nqn)
         return nvme_connect_command
 
-    def get_host_nvme_device(self, host_obj, subsys_nqn=None):
+    def get_host_nvme_device(self, host_obj, subsys_nqn=None, nsid=None):
         """
 
         :param host_obj: host handle from topology
@@ -421,15 +479,20 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         self.get_nvme_namespaces_lsblk(host_handle=host_linux_handle)
         nvme_volumes = self._get_fungible_nvme_namespace(host_handle=host_linux_handle)
         result = nvme_volumes
-        if len(nvme_volumes) > 0:
-            if subsys_nqn:
-                for namespace in nvme_volumes:
-                    nvme_device = namespace[:-2]
-                    namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                        nvme_device))
-                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                        result = namespace
-                        self.host_nvme_device[host_obj].append(namespace)
+        if nvme_volumes:
+            if len(nvme_volumes) > 0:
+                if subsys_nqn:
+                    for namespace in nvme_volumes:
+                        nvme_device = namespace[:-2].split('/dev/')[1]
+                        namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
+                            nvme_device))
+                        if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                            if nsid:
+                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                                    result = namespace
+                            else:
+                                result = namespace
+                                self.host_nvme_device[host_obj].append(namespace)
 
         return result
 
@@ -503,7 +566,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 fun_test.add_checkpoint(expected=True, actual=host_obj.ping(dataplane_ip),
                                         checkpoint="{host} can ping FS {fs_name} F1_{f1_index} dataplane IP"
-                                        .format(host=host_obj, fs_name=fs_obj.name, f1_index=f1_index))
+                                        .format(host=host_obj, fs_name=fs_obj, f1_index=f1_index))
 
         artifact_file_name = fun_test.get_test_case_artifact_file_name(
             "host_{}_dmesg.txt".format(host_obj))
@@ -515,7 +578,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def fs_diagnostics(self, fs_obj):
         for f1_index in range(fs_obj.NUM_F1S):
-            f1_container = fs_obj.get_funcp_container(f1_index=f1_index)
+            f1_container = fs_obj.get_funcp_container(f1_index=f1_index)  # Get funcp container is not working
             ifconfig = f1_container.ifconfig()
             arp = f1_container.command("arp -n")
             route = f1_container.command("route -n")
@@ -539,7 +602,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            self.fs_diagnostics(fs_obj=fs_obj)
+            # self.fs_diagnostics(fs_obj=fs_obj)
 
     def cleanup(self, test_result_failed=False):
         """
@@ -551,14 +614,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :return:
         """
         if test_result_failed:
-            self.diagnostics()
 
-        for host_obj in self.host_nvme_device:
+            self.diagnostics()
+        for host_obj in self.topology.get_available_host_instances():
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
-            for nvme_namespace in self.host_nvme_device[host_obj]:
-                nvme_device = nvme_namespace[:-2]
+            for nvme_namespace in self.hosts_state_object.get_host_nvme_namespaces(hostname=host_obj.name):
+                nvme_device = nvme_namespace[:-2].split('/dev/')[1]
                 if nvme_device:
                     host_handle.nvme_disconnect(device=nvme_device)
                     fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
@@ -570,7 +633,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
             for driver in self.NVME_HOST_MODULES:
                 host_handle.modprobe(driver)
-            fun_test.add_checkpoint(checkpoint="Reload all NVMe drivers")
+                fun_test.add_checkpoint(checkpoint="Reload all NVMe drivers")
 
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
