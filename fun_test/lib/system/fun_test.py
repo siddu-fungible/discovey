@@ -338,24 +338,9 @@ class FunTest:
 
     def enable_storage_api(self):   # Only needed for transition
         self.storage_api_enabled = True
-        api_path = STASH_DIR + "/swagger_client"
-        if os.path.exists(api_path):
-            shutil.rmtree(api_path)
-        """
-        api_path = STASH_DIR + "/swagger_client"
-        if not os.path.exists(api_path):
-            fun_test.log("Swagger client does not exist. Fetching ...")
-            self.download_storage_api()
-        else:
-            version_file_path = "{}/swagger_client/version.txt"
-            if os.path.exists(version_file_path):
-                with open(version_file_path, "r") as version_file:
-                    content = version_file.read()
-                    api_version = content.strip()
-                    if api_version != STORAGE_API_VERSION:
-                        pass
-        """
-
+        # api_path = STASH_DIR + "/swagger_client"
+        # if os.path.exists(api_path):
+        #    shutil.rmtree(api_path)
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
@@ -414,6 +399,11 @@ class FunTest:
                                           full_script_path=self.absolute_script_file_name)
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
+        console_log_path = html_log_file.replace(".html", ".logs.txt")
+        if self.suite_execution_id:
+            # print "Console log at: {}".format(console_log_path)
+            fun_test.add_auxillary_file(description="Console log",
+                                        filename=console_log_path)
 
     def enable_profiling(self):
         self.profiling = True
