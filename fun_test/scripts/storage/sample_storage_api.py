@@ -30,6 +30,7 @@ class BootupSetup(FunTestScript):
 class RunStorageApiCommands(FunTestCase):
     topology = None
     storage_controller_template = None
+    attach_result = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -60,8 +61,8 @@ class RunStorageApiCommands(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
+        vol_uuid_list = self.storage_controller_template.\
+            create_volume(fs_obj=fs_obj_list, body_volume_intent_create=body_volume_intent_create)
         fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
         for index, fs_obj in enumerate(fs_obj_list):
@@ -70,14 +71,19 @@ class RunStorageApiCommands(FunTestCase):
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            self.attach_result = attach_vol_result
 
     def run(self):
         hosts = self.topology.get_available_hosts()
         for host_id in hosts:
             host_obj = hosts[host_id]
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
+                                                                                     subsys_nqn=self.attach_result[0][
+                                                                                         'data']['subsys_nqn'],
+                                                                                     nsid=self.attach_result[0][
+                                                                                         'data']['nsid'])
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
-                                                                                filename="/dev/" + nvme_device_name[0])
+                                                                                filename=nvme_device_name)
             fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
