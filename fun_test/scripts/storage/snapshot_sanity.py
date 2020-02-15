@@ -644,7 +644,7 @@ class SnapVolumeTestCase(FunTestCase):
                             self.snap_ctrlr = utils.generate_uuid()
                             self.ctrlr_uuid = self.snap_ctrlr
                             self.nqn_list = []
-                            nqn = "nqn.2017-05.com.fungible:nss-uuid1"
+                            nqn = "nqn.2017-05.com.fungible:nss-uuid2"
                             self.nqn_list.append(nqn)
 
                             command_result = self.storage_controller.create_controller(ctrlr_id=2,
