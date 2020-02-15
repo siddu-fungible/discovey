@@ -636,15 +636,17 @@ export class SuiteEditorComponent implements OnInit {
 
   onSubmitSuite() {
     if ((!this.id && !this.cloneId) || this.cloneId) {
-      this.service.add(this.suite).subscribe(response => {
-        this.loggerService.success("Added suite");
-        this.editorPristine = true;
-        setTimeout(() => {
-          window.location.href = "/regression/suites_view";
-        }, 1000);
+        this.suite.owner_email = this.selectedUser.email;
+        this.service.add(this.suite).subscribe(response => {
+          this.loggerService.success("Added suite");
+          this.editorPristine = true;
+          setTimeout(() => {
+            window.location.href = "/regression/suites_view";
+          }, 1000);
 
-      })
+        })
     } else {
+      this.suite.owner_email = this.selectedUser.email;
       this.service.replace(this.suite, this.id).subscribe(response => {
         this.loggerService.success("Updated suite");
         setTimeout(() => {
