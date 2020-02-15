@@ -28,6 +28,7 @@ export class SuiteEditorComponent implements OnInit {
   mode: SuiteMode = SuiteMode.SUITE;
   SuiteMode = SuiteMode;
   userProfile: UserProfile = null;
+  cloneId: number = null;
 
   testCaseIds: number[] = null;
   inputs: any = null;
@@ -145,16 +146,24 @@ export class SuiteEditorComponent implements OnInit {
     }));
   }
 
+  cloneSuite(id) {
+    window.location.href = "/regression/suite_editor?clone_id=" + String(id);
+  }
+
   fetchSuite() {
     let userEmail = this.userProfile.user.email;
-    if (!this.id) {
+    if (!this.id && !this.cloneId) {
       this.suite = new Suite();
       this.suite.type = this.mode;
       this.setSelectedUser(userEmail);
       return of(this.suite)
 
     } else {
-      return this.service.suite(this.id).pipe(switchMap(response => {
+      let id = this.cloneId;
+      if (this.id) {
+        id = this.id;
+      }
+      return this.service.suite(id).pipe(switchMap(response => {
         this.suite = response;
         userEmail = this.suite.owner_email;
         this.setSelectedUser(userEmail);
@@ -177,6 +186,9 @@ export class SuiteEditorComponent implements OnInit {
     return this.route.queryParams.pipe(switchMap(params => {
       if (params.hasOwnProperty('mode')) {
         this.mode = params["mode"];
+      }
+      if (params.hasOwnProperty('clone_id')) {
+        this.cloneId = params['clone_id'];
       }
       return of(params);
     }))
@@ -531,7 +543,6 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _hasKey(o, key) {
-    console.log(o);
     return Object.keys(o).indexOf(key) > -1;
   }
 
@@ -597,7 +608,7 @@ export class SuiteEditorComponent implements OnInit {
     suiteEntry.script_path = this.currentScriptPath;
     suiteEntry.inputs = this.inputs;
     suiteEntry.test_case_ids = this.testCaseIds;
-    console.log(suiteEntry);
+    // console.log(suiteEntry);
     this.suite.addEntry(suiteEntry);
     this._clearNewSuiteEntry();
   }
@@ -624,7 +635,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   onSubmitSuite() {
-    if (!this.id) {
+    if ((!this.id && !this.cloneId) || this.cloneId) {
       this.service.add(this.suite).subscribe(response => {
         this.loggerService.success("Added suite");
         this.editorPristine = true;
@@ -660,7 +671,7 @@ export class SuiteEditorComponent implements OnInit {
   }
 
   _getPoolMemberOptions(flatName) {
-    console.log(this.poolMemberOptions[flatName]);
+    // console.log(this.poolMemberOptions[flatName]);
   }
 
   submitEnter(enter) {
