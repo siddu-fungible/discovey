@@ -78,6 +78,10 @@ Django will be installed via the instructions mentioned in the Quick-start secti
 # python scripts/examples/sanity.py (this will generate a link to the report on the web-server)
 ````
 
+#### 3. Running tests
+The preferred approach is to run tests using PyCharm
+https://github.com/fungible-inc/Integration/blob/master/fun_test/documentation/running_tests.md
+
 
 ## Notes for advanced users
 https://github.com/fungible-inc/Integration/blob/master/fun_test/documentation/advanced_users.md

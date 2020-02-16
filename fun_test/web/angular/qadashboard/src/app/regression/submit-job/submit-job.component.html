@@ -108,8 +108,11 @@
                 <ng-container *ngIf="buildType === BuildType.WITH_STABLE_MASTER">
                   <input type="radio" name="stable-master-debug-radio" [(ngModel)]="withStableMaster.debug" [value]="true"> Debug
                   <input type="radio" name="stable-master-debug-radio" [(ngModel)]="withStableMaster.debug" [value]="false"> Release
+                  &nbsp;&nbsp;
+                  <input (change)="toggleStartWithStableBundle()" type="checkbox"
+                     name="start-with-stable-bundle"
+                     [checked]="startWithStableBundle"> Start with stable (master) bundle
                 </ng-container>
-
               </td>
             </tr>
             <tr>

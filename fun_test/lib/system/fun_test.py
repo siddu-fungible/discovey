@@ -455,6 +455,7 @@ class FunTest:
         with_stable_master = self.get_job_environment_variable("with_stable_master")
         bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
         pre_built_artifacts = self.get_job_environment_variable("pre_built_artifacts")
+        start_with_bundle_options = self.get_job_environment_variable("start_with_bundle_options")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
@@ -468,6 +469,8 @@ class FunTest:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        if start_with_bundle_options:
+            self.build_parameters["start_with_bundle_options"] = start_with_bundle_options
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
             if "BOOTARGS" in user_supplied_build_parameters:
@@ -1548,6 +1551,7 @@ class FunTest:
         checkpoint_for_time_series = checkpoint
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
+        self.log("CHECKPOINT: {}".format(checkpoint), context=context)
         if self.fun_xml_obj:
             self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
                                             result=result,

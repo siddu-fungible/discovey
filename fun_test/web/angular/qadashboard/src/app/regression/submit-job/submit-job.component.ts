@@ -116,6 +116,7 @@ export class SubmitJobComponent implements OnInit {
   richBootArgs: string = null;
   csiPerf: boolean = false;
   csiCacheMiss: boolean = false;
+  startWithStableBundle: boolean = true;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   pauseOnFailure: boolean = false;
@@ -313,6 +314,10 @@ export class SubmitJobComponent implements OnInit {
         if (buildParameters.hasOwnProperty('BRANCH_fungible_host_drivers')) {
           this.branchFungibleHostDrivers = buildParameters.BRANCH_fungible_host_drivers;
         }
+      }
+
+      if (payloadEnvironment.hasOwnProperty('start_with_bundle_options')) {
+        this.startWithStableBundle = true;
       }
 
       if (payloadEnvironment.hasOwnProperty('private_funos_tgz_url')) {
@@ -590,6 +595,10 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["with_stable_master"] = this.withStableMaster;
       }
 
+      if (this.startWithStableBundle) {
+        payload["environment"]["start_with_bundle_options"] = {"release_train": "master", "build_number": this.lastGoodBuildMap["master"].build_number};
+      }
+
       if (payload["environment"]["with_jenkins_build"]) {
         payload["environment"]["build_parameters"] = {};
         if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
@@ -795,5 +804,9 @@ export class SubmitJobComponent implements OnInit {
   /*test() {
     console.log(this.selectedTestBedType);
   }*/
+
+  toggleStartWithStableBundle() {
+    this.startWithStableBundle = !this.startWithStableBundle;
+  }
 
 }
