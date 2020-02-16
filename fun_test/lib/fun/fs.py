@@ -1033,6 +1033,9 @@ class BootupWorker(Thread):
                                                            target_build_number=build_number)
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
+                    fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
+                                                                current_bundle_version["build_number"]))
+
                 else:
                     fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
                                                                      {"release_train": release_train,
