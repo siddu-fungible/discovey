@@ -53,10 +53,15 @@ class StorageControllerOperationsTemplate:
         self.hosts_state_object = HostsState()
 
     def get_health(self):
+        result = True
         for dut_index in self.topology.get_available_duts().keys():
             fs = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs.get_storage_controller()
-            return storage_controller.health()
+            dut_health = storage_controller.health()
+            fun_test.add_checkpoint(expected=True, actual=dut_health,
+                                    checkpoint="Check health of DUT: {}".format(dut_index))
+            result &= dut_health
+        return result
 
     def set_dataplane_ips(self, dut_index, dpu_indexes=None):
         if dpu_indexes is None:
@@ -315,9 +320,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                      message="Get NVMe drive from Host {} using nvme list".format(host_obj.name))
                 self.hosts_state_object.add_host_nvme_namespace(hostname=host_obj.name, nvme_namespace=nvme_filename)
         if isinstance(host_obj, list):
-            result = result_list[0]
-        else:
             result = result_list
+        else:
+            result = result_list[0]
         return result
 
     def _check_host_target_existing_connection(self, fs_obj, volume_uuid, subsys_nqn, host_nqn, host_obj):
