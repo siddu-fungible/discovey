@@ -1558,10 +1558,12 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def nvme_get_ns_id(self, device):
+        result = None
         cmd = "nvme get-ns-id {}".format(device)
         output = self.sudo_command(cmd)
-        nsid = output.strip().split("namespace-id:")[1]
-        return nsid
+        if "namespace-id:" in output:
+            result = output.strip().split("namespace-id:")[1]
+        return result
 
     @fun_test.safe
     def lsblk(self, options=None):
