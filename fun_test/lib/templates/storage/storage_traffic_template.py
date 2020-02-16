@@ -9,20 +9,6 @@ class StorageTrafficTemplate:
         self.storage_operations_template = storage_operations_template
         self.topology = self.storage_operations_template.topology
 
-    def basic_rw_traffic(self, host_obj):
-        host_obj_list = []
-        if not isinstance(host_obj, list):
-            host_obj_list.append(host_obj)
-        else:
-            host_obj_list = host_obj
-
-        for host_obj in host_obj_list:
-            nvme_device_name = self.storage_operations_template.get_host_nvme_device(host_obj=host_obj)
-            traffic_result = self.fio_basic(host_obj=host_obj, filename="/dev/" + nvme_device_name)
-            fun_test.test_assert(expression=traffic_result,
-                                 message="Host : {} FIO traffic result".format(host_obj.name))
-            fun_test.log(traffic_result)
-
     def fio_with_integrity_check(self, host_linux_handle, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1,
                                  runtime=600, bs="4k", ioengine="libaio", direct=1, time_based=False, norandommap=True,
                                  verify="md5", verify_fatal=1,offset="0kb", verify_state_save=1, verify_dump=1,
