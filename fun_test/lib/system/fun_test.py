@@ -377,6 +377,14 @@ class FunTest:
     def is_at_least_one_failed(self):
         return self.at_least_one_failed
 
+    def get_stable_build_number(self, release_train):
+        result = "latest"
+        if self.suite_execution_id:
+            stable = models_helper.get_stable_build_number(release_train=release_train)
+            if stable:
+                result = stable.build_number
+        return result
+
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
         #    inspect.getouterframes(inspect.currentframe())[2]

@@ -948,8 +948,8 @@ class BootupWorker(Thread):
         self.worker = None
 
     def _is_upgrade_required(self, current_bundle_version,
-                            target_release_train,
-                            target_build_number):
+                             target_release_train,
+                             target_build_number):
         # return True
         current_bundle_version_release_train = current_bundle_version.get("release_train", None)
         fun_test.simple_assert(current_bundle_version_release_train, "Current bundle release train")
@@ -1016,10 +1016,13 @@ class BootupWorker(Thread):
                     build_number = fs.bundle_image_parameters.get("build_number", 70)
                     release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
                 else:
-                    build_number = fs.start_with_bundle_options.get("build_number", None)  # TODO: Is there a latest?
                     release_train = fs.start_with_bundle_options.get("release_train", None)
-                fun_test.simple_assert(build_number, "Unable to determine target bundle build number")
-                fun_test.simple_assert(release_train, "Unable to determine target bundle release number")
+                    fun_test.simple_assert(release_train, "Unable to determine target bundle release number")
+                    build_number = fs.start_with_bundle_options.get("build_number", None)  # TODO: Is there a latest?
+                    fun_test.simple_assert(build_number, "Unable to determine target bundle build number")
+                    if build_number == "stable":
+                        build_number = fun_test.get_stable_build_number(release_train=release_train)
+
 
                 current_bundle_version = fs.get_bundle_version()
                 if self.fs.force_bundle_install:
@@ -1053,26 +1056,27 @@ class BootupWorker(Thread):
                                                                "build_number": build_number}
                     bmc.bundle_upgraded = True
 
-                    come.cleanup_databases()
+                come = fs.get_come()
+                come.cleanup_databases()
 
-                    fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
-                    try:
-                        come.fs_reset()
-                    except Exception as ex:
-                        pass
+                fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
+                try:
+                    come.fs_reset()
+                except Exception as ex:
+                    pass
 
-                    fs.bmc = None
-                    fs.come = None
-                    come = None
+                fs.bmc = None
+                fs.come = None
+                come = None
 
-                    # Wait for BMC to come up
-                    bmc = self.fs.get_bmc()
-                    fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
-                    fun_test.test_assert(
-                        expression=bmc.ensure_come_is_up(come=self.fs.get_come(), max_wait_time=300, power_cycle=True),
-                        message="Ensure ComE is up",
-                        context=self.fs.context)
-                    fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
+                # Wait for BMC to come up
+                bmc = self.fs.get_bmc()
+                fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
+                fun_test.test_assert(
+                    expression=bmc.ensure_come_is_up(come=self.fs.get_come(), max_wait_time=300, power_cycle=True),
+                    message="Ensure ComE is up",
+                    context=self.fs.context)
+                fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
                 bmc = fs.get_bmc()
