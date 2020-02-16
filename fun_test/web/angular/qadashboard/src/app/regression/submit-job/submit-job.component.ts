@@ -116,7 +116,7 @@ export class SubmitJobComponent implements OnInit {
   richBootArgs: string = null;
   csiPerf: boolean = false;
   csiCacheMiss: boolean = false;
-  startWithStableBundle: boolean = true;
+  startWithStableBundle: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   pauseOnFailure: boolean = false;
