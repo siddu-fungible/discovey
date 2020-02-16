@@ -187,7 +187,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             self.create_volume_list = []
             for i in range(self.blt_count):
-                name = "blt6_vol" + str(i + 1)
+                name = "blt_vol" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -236,7 +236,6 @@ class MultiHostFioRandRead(FunTestCase):
                     host_nqn_ip = (host_nqn, dataplane_ip)
                     if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
                         host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
-                        host.nvme_connect_info[subsys_nqn] = list(set(host.nvme_connect_info[subsys_nqn]))
 
             for host in self.hosts:
                 for subsys_nqn in host.nvme_connect_info:
@@ -541,7 +540,8 @@ class MultiHostFioRandRead(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
 
-            table_data_rows.append(row_data_list)
+            table_data_list = copy.deepcopy(row_data_list)
+            table_data_rows.append(table_data_list)
 
             row_data_list.insert(0, self.blt_count)
             row_data_list.insert(0, self.num_ssd)

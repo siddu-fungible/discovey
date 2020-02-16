@@ -22,6 +22,8 @@ from django.utils import timezone
 import logging
 from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_save
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)

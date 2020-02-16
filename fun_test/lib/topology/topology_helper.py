@@ -500,10 +500,10 @@ class TopologyHelper:
         ##### Let us print out the topology
         asset_manager.describe()  # TODO Just for debugging
 
-        d = topology.to_dict()
-        topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
-                                                                         contents=json.dumps(d, indent=4))
-        fun_test.set_topology_json_filename(filename=topology_json_artifact)
+        # d = topology.to_dict()
+        # topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
+        #                                                                 contents=json.dumps(d, indent=4))
+        # fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
 
     @fun_test.safe
