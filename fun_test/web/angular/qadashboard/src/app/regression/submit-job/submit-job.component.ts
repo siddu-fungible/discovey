@@ -596,7 +596,7 @@ export class SubmitJobComponent implements OnInit {
       }
 
       if (this.startWithStableBundle) {
-        payload["environment"]["start_with_bundle_options"] = {"release_train": "master", "build_number": this.lastGoodBuildMap["master"].build_number};
+        payload["environment"]["start_with_bundle_options"] = {"release_train": "master", "build_number": "stable"};
       }
 
       if (payload["environment"]["with_jenkins_build"]) {
