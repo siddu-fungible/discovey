@@ -66,7 +66,7 @@ class RunStorageApiCommands(FunTestCase):
         fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
         for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid_list[index],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
@@ -78,9 +78,9 @@ class RunStorageApiCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
-                                                                                     subsys_nqn=self.attach_result[0][
+                                                                                     subsys_nqn=self.attach_result[
                                                                                          'data']['subsys_nqn'],
-                                                                                     nsid=self.attach_result[0][
+                                                                                     nsid=self.attach_result[
                                                                                          'data']['nsid'])
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
                                                                                 filename=nvme_device_name)
