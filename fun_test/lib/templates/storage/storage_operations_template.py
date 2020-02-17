@@ -110,7 +110,7 @@ class StorageControllerOperationsTemplate:
                     self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
-                    fun_test.critical("Exception while updating Dataplane IP %s\n" % e)
+                    fun_test.critical("Exception while updating dataplane IP %s\n" % e)
                     result = False
 
         return result
@@ -182,7 +182,11 @@ class StorageControllerOperationsTemplate:
                     fun_test.test_assert(expression=result_api["status"], message="Fetch dataplane IP using Raw API")
                     result &= (str(result_api["data"]["dataplane_ip"]) == str(dataplane_ip))
                 else:
-                    get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
+                    get_dpu = None
+                    try:
+                        get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
+                    except ApiException as e:
+                        fun_test.critical("Exception while getting DPU info: {}".format(e))
                     fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IP")
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
@@ -338,7 +342,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         # WORKAROUND : get_volumes errors out.
         raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
         get_volume_result = raw_sc_api.get_volumes()
-        fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
+        fun_test.test_assert(message="Get volume details", expression=get_volume_result["status"])
         for vol_uuid in get_volume_result['data']:
             if result:
                 break
@@ -645,12 +649,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_handle = host_obj.get_instance()
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
+            disconnected_nvme_devices = []
             for nvme_namespace in self.hosts_state_object.get_host_nvme_namespaces(hostname=host_obj.name):
-                nvme_device = nvme_namespace[:-2].split('/dev/')[1]
-                if nvme_device:
+                nvme_device = self._get_nvme_device_from_namespace(namespace=nvme_namespace)
+                if nvme_device and nvme_device not in disconnected_nvme_devices:
                     host_handle.nvme_disconnect(device=nvme_device)
                     fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
                                             format(nvme_device, host_obj.name))
+                    disconnected_nvme_devices.append(nvme_device)
 
             for driver in self.NVME_HOST_MODULES[::-1]:
                 host_handle.sudo_command("rmmod {}".format(driver))
