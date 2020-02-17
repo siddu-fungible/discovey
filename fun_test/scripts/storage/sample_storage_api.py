@@ -3,6 +3,7 @@ fun_test.enable_storage_api()
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
+from lib.templates.storage.storage_traffic_template import StorageTrafficTemplate
 from swagger_client.models.volume_types import VolumeTypes
 
 
@@ -74,17 +75,17 @@ class RunStorageApiCommands(FunTestCase):
             self.attach_result = attach_vol_result
 
     def run(self):
-        hosts = self.topology.get_available_hosts()
-        for host_id in hosts:
-            host_obj = hosts[host_id]
+        hosts = self.topology.get_available_host_instances()
+        for host_obj in hosts:
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
                                                                                      subsys_nqn=self.attach_result[
                                                                                          'data']['subsys_nqn'],
                                                                                      nsid=self.attach_result[
                                                                                          'data']['nsid'])
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
-                                                                                filename=nvme_device_name)
-            fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
+            storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
+            traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
+            fun_test.test_assert(expression=traffic_result,
+                                 message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
     def cleanup(self):
