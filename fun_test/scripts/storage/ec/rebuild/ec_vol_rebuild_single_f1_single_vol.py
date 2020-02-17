@@ -1165,6 +1165,44 @@ class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase, ECVolScript):
         super(ECVolmPlusOneDriveFailReSync, self).cleanup()
 
 
+class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase, ECVolScript):
+    def __init__(self):
+        testcase = self.__class__.__name__
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1
+        3. Configure a LSV (on 4:2 EC volume1 on top of the 6 BLT volumes) for back-pressure (If enabled)
+        4. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test
+        5. Configure spare BLT volume/s to use it as spare volume during rebuild
+        6. Export (Attach) the above volume to the Remote Host
+        7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        8. Perform 50% write on test volume with --verify=md5 option & during write trigger Single Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
+        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
+        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        12. After data reconstruction is completed, verify data integrity for 100% volume size
+        """)
+
+    def setup(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).setup()
+
+    def run(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).run()
+
+    def cleanup(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).cleanup()
+
+
 if __name__ == "__main__":
     ecscript = ECVolScript()
     ecscript.add_test_case(ECVolSingleDriveFailRebuild())
@@ -1173,4 +1211,5 @@ if __name__ == "__main__":
     ecscript.add_test_case(ECVolSingleDriveFailReSync())
     ecscript.add_test_case(ECVolmDriveFailReSync())
     ecscript.add_test_case(ECVolmPlusOneDriveFailReSync())
+    ecscript.add_test_case(ECVolSingleDriveFailRebuildMultiWriter())
     ecscript.run()

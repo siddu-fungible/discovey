@@ -396,5 +396,68 @@
     "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
+  },
+  "ECVolSingleDriveFailRebuildMultiWriter": {
+    "test_rail_case_id": ["C36934"],
+    "ec_info": {
+      "volume_types": {
+        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
+        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+        "ec": "VOL_TYPE_BLK_EC",
+        "lsv": "VOL_TYPE_BLK_LSV",
+        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
+      },
+      "volume_block": {
+        "ndata": 4096,
+        "nparity": 4096,
+        "ec": 4096,
+        "lsv": 4096,
+        "jvol": 512
+      },
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 137438953472,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1,
+      "compress": true,
+      "zip_effort": "ZIP_EFFORT_64Gbps",
+      "zip_filter": "FILTER_TYPE_DEFLATE",
+      "encrypt": true,
+      "key_size": 32,
+      "xtweak_size": 8,
+      "encrypt": true,
+      "key_size": 32,
+      "xtweak_size": 8
+    },
+    // timeout used for the storage controller
+    "command_timeout": 10,
+    "ns_id": 1,
+    "nvme_io_queues": 1,
+    "back_pressure": false,
+    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
+    "nvme_device": "/dev/nvme",
+    "trigger_failure": true,
+    "plex_failure_count": 1,
+    // If 'fail_drive' is true, initiate drive failure else initiate plex failure
+    "fail_drive": true,
+    "rebuild_on_spare_volume": true,
+    "rebuild_rate": 80,
+    "rebuild_timeout": 3600,
+    // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
+    "failure_mode": "random",
+    "failure_start_time_ratio": 0.05,
+    "test_volume_start_index": 0,
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "buffer_compress_percentage": 35, "buffer_pattern": "0xdeadface", "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_job_name": "inspur_8k_random_read_write",
+    "status_interval": 10
   }
 }
