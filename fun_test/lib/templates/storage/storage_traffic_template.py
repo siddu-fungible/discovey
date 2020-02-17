@@ -22,7 +22,8 @@ class StorageTrafficTemplate:
                                                timeout=1500, fill_device=1, do_verify=0,
                                                verify=verify, verify_fatal=verify_fatal, offset=offset,
                                                verify_state_save=verify_state_save, verify_dump=verify_dump)
-            result &= fio_result
+            if not fio_result:
+                result &= False
 
         host_linux_handle.command("cd /tmp/test_fio_with_integrity; ls")
         fio_result = host_linux_handle.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw="read",
@@ -30,7 +31,8 @@ class StorageTrafficTemplate:
                                            timeout=1500, offset=offset, fill_device=1,
                                            verify=verify, do_verify=1, verify_fatal=verify_fatal,
                                            verify_state_load=verify_state_load, verify_dump=verify_dump)
-        result &= fio_result
+        if not fio_result:
+            result &= False
         return result
 
     def fio_basic(self, host_obj, filename, job_name="Fungible_nvmeof", numjobs=1, iodepth=1, rw="readwrite",
@@ -38,6 +40,6 @@ class StorageTrafficTemplate:
                   do_verify=None):
         fio_result = host_obj.fio(name=job_name, numjobs=numjobs, iodepth=iodepth, bs=bs, rw=rw,
                                   filename=filename, runtime=runtime, ioengine=ioengine, direct=direct,
-                                  timeout=runtime+15, time_based=time_based, norandommap=norandommap,
+                                  timeout=runtime + 15, time_based=time_based, norandommap=norandommap,
                                   verify=verify, do_verify=do_verify)
         return fio_result
