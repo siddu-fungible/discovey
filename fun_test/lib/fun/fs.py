@@ -1023,8 +1023,15 @@ class BootupWorker(Thread):
                     if build_number == "stable":
                         build_number = fun_test.get_stable_build_number(release_train=release_train)
 
+                if build_number == "latest":
+                    build_number = get_build_number_for_latest(release_train=release_train)
 
                 current_bundle_version = fs.get_bundle_version()
+                fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
+                                                                 {"release_train": release_train,
+                                                                  "build_number": build_number})
+                fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
+                                                            current_bundle_version["build_number"]))
                 if self.fs.force_bundle_install:
                     do_upgrade = True
                 else:
@@ -1033,14 +1040,7 @@ class BootupWorker(Thread):
                                                            target_build_number=build_number)
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
-                    fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
-                                                                current_bundle_version["build_number"]))
-
                 else:
-                    fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
-                                                                     {"release_train": release_train,
-                                                                      "build_number": build_number})
-                    fun_test.set_version(version="{}/{}".format(release_train, build_number))
                     bmc = fs.get_bmc()
                     come = fs.get_come()
                     for f1_index in range(2):
@@ -1229,6 +1229,9 @@ class ComEInitializationWorker(Thread):
                                                           actual=current_bundle_version["release_train"], message="Post-install expected release train")
                             fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
                                                           actual=current_bundle_version["build_number"], message="Post-install expected build number")
+
+                        fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
+                                                                    current_bundle_version["build_number"]))
 
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     expected_containers_running = self.is_expected_containers_running(come)
