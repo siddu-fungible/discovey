@@ -1,4 +1,4 @@
-from lib.system import fun_test
+from lib.system.fun_test import fun_test
 
 class FsPlatform:
     #images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag', 'emmc']
@@ -20,6 +20,8 @@ class FsPlatform:
         dpc_client = self.fs_obj.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
         cmd = "config/chip_info"
         dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=3)
+        if not dpc_result["status"]:
+            return None
         result = dpc_result["data"]
         return result['images']
 
@@ -31,10 +33,12 @@ class FsPlatform:
 
         sdk_version = self.get_funsdk_flash_version_from_props(bld_props)
         images = self.get_active_funsdk_version_from_dpu(f1_index)
+        if not images:
+            return False
         TF = []
         for name in self.images_to_check:
             running_version = images[name]['active']['version']
-            print("Comparing ... image={}, running_version={}, should have version={}"
+            fun_test.log("Comparing ... image={}, running_version={}, should have version={}"
                 .format(name, running_version, sdk_version))
             TF.append(running_version == int(sdk_version))
 
