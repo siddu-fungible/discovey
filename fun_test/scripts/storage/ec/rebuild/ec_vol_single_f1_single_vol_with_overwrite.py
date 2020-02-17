@@ -802,7 +802,7 @@ class ECVolumeTestcase(FunTestCase):
                                                                    fun_test.shared_variables["fio"][index]))
         for index, host_name in enumerate(self.host_info):
             fun_test.test_assert(fun_test.shared_variables["fio"][index],
-                                 "FIO Mode: {}, BS: {}, Offset: {}, IOdepth: {}, Numjobs: {} on {}"
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
                                  .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
                                          self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
                                          host_name))
