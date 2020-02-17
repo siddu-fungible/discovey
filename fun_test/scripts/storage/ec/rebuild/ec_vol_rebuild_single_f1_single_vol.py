@@ -1165,8 +1165,9 @@ class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase, ECVolScript):
         super(ECVolmPlusOneDriveFailReSync, self).cleanup()
 
 
-class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase, ECVolScript):
+class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).__init__()
         testcase = self.__class__.__name__
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
