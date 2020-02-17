@@ -1235,6 +1235,7 @@ class ComEInitializationWorker(Thread):
                                                                     current_bundle_version["build_number"]))
 
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
+                    """
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
@@ -1242,7 +1243,10 @@ class ComEInitializationWorker(Thread):
                         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
-                    fun_test.test_assert(expected_containers_running, "Expected containers running", context=self.fs.context)
+                    """
+                    fun_test.test_assert(come.ensure_expected_containers_running(),
+                                         message="Expected containers running",
+                                         context=self.fs.context)
 
                 self.fs.come_initialized = True
         except Exception as ex:
