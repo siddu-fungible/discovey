@@ -2764,6 +2764,8 @@ class Fs(object, ToDictMixin):
                                      set_term_settings=True,
                                      disable_f1_index=self.disable_f1_index,
                                      context=self.context)
+                    if not self.fpga_mgmt_ssh_username:
+                        self.fpga = None
             result = self.fpga
         else:
             telnet_object = Fpga(host_ip=self.fpga_telnet_ip,
@@ -3041,8 +3043,10 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
     print fs.get_bundle_version()
+    health = fs.health(only_reachability=True)
+    print health
     # come = fs.get_come()
     # come.cleanup_redis()
 
@@ -3072,9 +3076,11 @@ if __name__ == "__main_2_":
 if __name__ == "__main3__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-118"))
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-171"))
     topology = th.deploy(already_deployed=True)
     fs_obj = topology.get_dut_instance(index=0)
     # fs_obj.storage.nvme_ssds(f1_index=0)
     fs_obj.get_bundle_version()
+    health = fs_obj.health()
+    print health
 

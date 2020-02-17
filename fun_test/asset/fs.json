@@ -1392,7 +1392,7 @@
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "",
-      "mgmt_ssh_username": "root",
+      "mgmt_ssh_username": "",
       "mgmt_ip": "10.1.20.177",
       "telnet_ip": "fs-terminal",
       "telnet_port": 2020,
