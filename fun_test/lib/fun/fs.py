@@ -8,13 +8,12 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
-from fun_global import Codes, get_current_epoch_time
+from fun_global import Codes, get_current_epoch_time, get_build_number_for_latest
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
 from lib.fun.storage.fs_storage import FsStorage
-from lib.fun.platform.fs_platform import FsPlatform
-import json
+
 from threading import Thread, Lock
 from datetime import datetime
 import re
@@ -369,8 +368,8 @@ class Bmc(Linux):
         if csi_cache_miss_enabled:
             if "csi_cache_miss" not in s:
                 s += " --csi-cache-miss"
-        if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
-            s += " --disable-syslog-replay"
+        # if self.fs.tftp_image_path:  # do it for rev1 system too and self.fs.get_revision() in ["2"]:
+        #    s += " --disable-syslog-replay"
         return s
 
     def setup_serial_proxy_connection(self, f1_index, auto_boot=False):
@@ -931,13 +930,13 @@ class Bmc(Linux):
                 # self.start_bundle_f1_logs()
                 file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
                 self.command("echo 'Cleared' > {}".format(file_name))
-                try:
-                    rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
-                    for rotated_index, rotated_log_file in enumerate(rotated_log_files):
-                        rotated_log_filename = rotated_log_file["filename"]
-                        self.command('rm {}'.format(rotated_log_filename))
-                except Exception as ex:
-                    fun_test.critical(str(ex))
+            try:
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    self.command('rm {}'.format(rotated_log_filename))
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 class BootupWorker(Thread):
     def __init__(self, fs, power_cycle_come=True, non_blocking=False, context=None):
@@ -947,6 +946,32 @@ class BootupWorker(Thread):
         self.non_blocking = non_blocking
         self.context = context
         self.worker = None
+
+    def _is_upgrade_required(self, current_bundle_version,
+                             target_release_train,
+                             target_build_number):
+        # return True
+        current_bundle_version_release_train = current_bundle_version.get("release_train", None)
+        fun_test.simple_assert(current_bundle_version_release_train, "Current bundle release train")
+        current_bundle_version_build_number = current_bundle_version.get("build_number", None)
+        fun_test.simple_assert(current_bundle_version_build_number, "Current bundle build number")
+        result = current_bundle_version_release_train != target_release_train
+        if not result:
+            if target_build_number == "latest":
+                target_build_number = get_build_number_for_latest(release_train=target_release_train)
+
+            m = re.search(r'(\d+)', current_bundle_version_build_number)
+            if m:
+                current_bundle_version_build_number = int(m.group(1))
+            if type(target_build_number) is str or type(target_build_number) is unicode:
+                m2 = re.search(r'(\d+)', target_build_number)
+                if m2:
+                    target_build_number = int(m2.group(1))
+            result = current_bundle_version_build_number < target_build_number
+
+            if not result:
+                fun_test.log("Current version: {}/{}, Target version: {}".format(current_bundle_version_release_train, current_bundle_version_build_number, target_release_train, target_build_number))
+        return result
 
     def run(self):
         fs = self.fs
@@ -967,68 +992,82 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 come = fs.get_come()
-                come.get_build_properties()
-                come_initialized = False
+                fs.get_bundle_version()
                 fs_health = False
-                expected_containers_running = False
-                if True:
+                try:
+                    fs_health = self.fs.health(check_expected_containers=True)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+                if not fs_health:
+                    fun_test.critical("FS not healthy. Trying to reset now")
                     fs.reset()
                     fs.come = None
                     fs.bmc = None
                     fs.ensure_is_up(validate_uptime=True)
                     come = fs.get_come()
                     come.setup_workspace()
-                    # come.initialize()
-                    # try:
-                    #    fs_health = self.fs.health()
-                    # except:
-                    #    pass
-
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
 
-            if fs.bundle_image_parameters:
+            if fs.bundle_image_parameters or fs.start_with_bundle_options:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
-                build_number = fs.bundle_image_parameters.get("build_number", 70)  # TODO: Is there a latest?
-                release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
+                if fs.bundle_image_parameters:
+                    build_number = fs.bundle_image_parameters.get("build_number", 70)
+                    release_train = fs.bundle_image_parameters.get("release_train", "1.0a_aa")
+                else:
+                    release_train = fs.start_with_bundle_options.get("release_train", None)
+                    fun_test.simple_assert(release_train, "Unable to determine target bundle release number")
+                    build_number = fs.start_with_bundle_options.get("build_number", None)  # TODO: Is there a latest?
+                    fun_test.simple_assert(build_number, "Unable to determine target bundle build number")
+                    if build_number == "stable":
+                        build_number = fun_test.get_stable_build_number(release_train=release_train)
+
+                if build_number == "latest":
+                    build_number = get_build_number_for_latest(release_train=release_train)
+
+                current_bundle_version = fs.get_bundle_version()
                 fun_test.set_suite_run_time_environment_variable("bundle_image_parameters",
                                                                  {"release_train": release_train,
                                                                   "build_number": build_number})
-                fun_test.set_version(version="{}/{}".format(release_train, build_number))
+                fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
+                                                            current_bundle_version["build_number"]))
+                if self.fs.force_bundle_install:
+                    do_upgrade = True
+                else:
+                    do_upgrade = self._is_upgrade_required(current_bundle_version=current_bundle_version,
+                                                           target_release_train=release_train,
+                                                           target_build_number=build_number)
+                if not do_upgrade:
+                    fun_test.add_checkpoint("Upgrade skipped")
+                else:
+                    bmc = fs.get_bmc()
+                    come = fs.get_come()
+                    for f1_index in range(2):
+                        if f1_index == self.fs.disable_f1_index:
+                            continue
+
+                        # bmc.remove_uart_logs(f1_index=f1_index)
+                    if build_number == "latest":
+                        build_number = get_build_number_for_latest(release_train=release_train)
+                        fun_test.simple_assert(build_number, "Getting latest build number for release: {}".format(release_train))
+                    fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
+                                         message="Bundle image installed",
+                                         context=self.context)
+                    fs.bundle_upgraded = True
+                    fs.post_install_expected_bundle_version = {"release_train": release_train,
+                                                               "build_number": build_number}
+                    bmc.bundle_upgraded = True
+
                 come = fs.get_come()
-                # try:
-                #    come.detect_pfs()
-                #    # fun_test.test_assert(self.fs.health(), "FS is healthy")
-                # except Exception as ex:
-                #    fun_test.add_checkpoint("PFs were not detected or FS is unhealthy. Doing a full power-cycle now")
-                #    fun_test.test_assert(self.fs.reset(hard=False), "FS reset complete. Devices are up")
-                #    fs.come = None
-                #    fs.bmc = None
-                #    come = fs.get_come()
-                #    come.initialize()
-                #    come.detect_pfs()
-                #    bmc = fs.get_bmc()
-
-                bmc = fs.get_bmc()
-                come = fs.get_come()
-                for f1_index in range(2):
-                    if f1_index == self.fs.disable_f1_index:
-                        continue
-
-                    # bmc.remove_uart_logs(f1_index=f1_index)
-                fun_test.test_assert(expression=come.install_build_setup_script(build_number=build_number, release_train=release_train),
-                                     message="Bundle image installed",
-                                     context=self.context)
-                fs.bundle_upgraded = True
-                bmc.bundle_upgraded = True
-
                 come.cleanup_databases()
 
-                fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
-                try:
-                    come.fs_reset()
-                except Exception as ex:
-                    pass
+                if fs.bundle_image_parameters:
+                    fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
+                    try:
+                        come.fs_reset()
+                    except Exception as ex:
+                        pass
 
                 fs.bmc = None
                 fs.come = None
@@ -1036,6 +1075,11 @@ class BootupWorker(Thread):
 
                 # Wait for BMC to come up
                 bmc = self.fs.get_bmc()
+                fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
+                fun_test.test_assert(
+                    expression=bmc.ensure_come_is_up(come=self.fs.get_come(), max_wait_time=300, power_cycle=True),
+                    message="Ensure ComE is up",
+                    context=self.fs.context)
                 fun_test.test_assert(expression=bmc.ensure_host_is_up(), message="BMC is up", context=self.context)
 
             if not fs.bundle_image_parameters:
@@ -1088,8 +1132,6 @@ class BootupWorker(Thread):
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
-                    # else:
-                    #    bmc.start_bundle_f1_logs()
 
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_U_BOOT_COMPLETE)
                 fs.u_boot_complete = True
@@ -1119,6 +1161,7 @@ class BootupWorker(Thread):
             for f1_index, f1 in fs.f1s.iteritems():
                 f1.set_dpc_port(come.get_dpc_port(f1_index))
             self.fs.set_boot_phase(BootPhases.FS_BRING_UP_COME_INITIALIZED)
+            self.fs.get_bundle_version()
             try:
                 fs.get_bmc().disconnect()
                 fun_test.log(message="BMC disconnect", context=self.context)
@@ -1179,7 +1222,20 @@ class ComEInitializationWorker(Thread):
                                      message="ComE initialized",
                                      context=self.fs.context)
                 if (self.fs.bundle_compatible):  # and not self.fs.tftp_image_path): # or (come.list_files(ComE.BOOT_UP_LOG)):
+                    if self.fs.bundle_upgraded:
+                        # Validate bundle_version
+                        current_bundle_version = self.fs.get_bundle_version()
+                        if self.fs.post_install_expected_bundle_version:
+                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
+                                                          actual=current_bundle_version["release_train"], message="Post-install expected release train")
+                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
+                                                          actual=current_bundle_version["build_number"], message="Post-install expected build number")
+
+                        fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
+                                                                    current_bundle_version["build_number"]))
+
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
+                    """
                     expected_containers_running = self.is_expected_containers_running(come)
                     expected_containers_running_timer = FunTimer(max_time=self.CONTAINERS_BRING_UP_TIME_MAX)
 
@@ -1187,7 +1243,10 @@ class ComEInitializationWorker(Thread):
                         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                         expected_containers_running = self.is_expected_containers_running(come)
 
-                    fun_test.test_assert(expected_containers_running, "Expected containers running", context=self.fs.context)
+                    """
+                    fun_test.test_assert(come.ensure_expected_containers_running(),
+                                         message="Expected containers running",
+                                         context=self.fs.context)
 
                 self.fs.come_initialized = True
         except Exception as ex:
@@ -1229,13 +1288,13 @@ class ComE(Linux):
     DPC_STATISTICS_LOG_PATH = "/tmp/f1_{}_dpc_statistics.txt"
     DPC_CSI_PERF_LOG_PATH = "/tmp/f1_{}_dpc_csi_perf.txt"
     NUM_F1S = 2
-    NVME_CMD_TIMEOUT = 600000
+    NVME_CMD_TIMEOUT = 60000
 
     HBM_DUMP_DIRECTORY = "/home/fun/hbm_dumps"
     HBM_TOOL_DIRECTORY = "/home/fun/hbm_dump_tool"
     HBM_TOOL = "hbm_dump_pcie"
     HBM_COLLECT_NOTIFY = "/tmp/HBM_Dump_Collection_In_Progress"
-    HBM_COLLECT_MAX_TIMER = 40 * 60
+    HBM_COLLECT_MAX_TIMER = 60 * 60
 
     BUNDLE_HBM_DUMP_DIRECTORY = "/var/log/hbm_dumps"
 
@@ -1293,17 +1352,15 @@ class ComE(Linux):
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
 
-    def get_build_props(self):
-        try:
-            output = self.command("cat {}".format(self.BLD_PROPS_PATH))
-            output += '}'
-            jO = json.loads(output)
-        except:
-            fun_test.critical("Come file: {} seem corrupt".format(self.BLD_PROPS_PATH))
-        return jO
-
     def get_build_properties(self):
-        self.command("cat {}".format(self.BLD_PROPS_PATH))
+        result = None
+        build_properties_output = self.command("cat {};echo".format(self.BLD_PROPS_PATH))
+        try:
+            if build_properties_output:
+                result = fun_test.parse_string_to_json(build_properties_output.strip())
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
@@ -1313,6 +1370,9 @@ class ComE(Linux):
         while not expected_containers_running and not expected_containers_running_timer.is_expired(print_remaining_time=True):
             fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
             expected_containers_running = self.is_expected_containers_running()
+        if not expected_containers_running:
+            self.command("netstat -anpt")
+            self.command("ps -ef")
         return expected_containers_running
 
     def is_expected_containers_running(self):
@@ -1481,7 +1541,7 @@ class ComE(Linux):
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
             if self.fs.bundle_compatible:
                 fun_test.log("Clearing out HBM dump directory")
-                self.command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1546,6 +1606,8 @@ class ComE(Linux):
         clone.command("dmesg", timeout=120)
         clone.command("cat /var/log/syslog", timeout=60)
 
+
+
     def stop_cc_health_check(self):
         system_health_check_script = "system_health_check.py"
         health_check_processes = self.get_process_id_by_pattern(system_health_check_script, multiple=True)
@@ -1589,7 +1651,8 @@ class ComE(Linux):
         self.stop_health_monitors()
 
         if type(build_number) == str or type(build_number) == unicode and "latest" in build_number:
-            build_number = self._get_build_number_for_latest(release_train=release_train)
+            # build_number = self._get_build_number_for_latest(release_train=release_train)
+            build_number = get_build_number_for_latest(release_train=release_train)
             fun_test.simple_assert(build_number, "Getting latest build number")
         if "master" not in release_train:
             parts = release_train.split("_")
@@ -1912,6 +1975,8 @@ class ComE(Linux):
                                                      timeout=240)
             if uploaded_path:
                 fun_test.log("sc log uploaded to {}".format(uploaded_path))
+                fun_test.report_message("SC log available at {}".format(uploaded_path))
+
             self.command("rm {}".format(sc_logs_path))
 
         # Fetch redis logs if they exist
@@ -1935,7 +2000,7 @@ class ComE(Linux):
 
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
-                fun_test.log("HBM dumping going on")
+                fun_test.add_checkpoint("HBM dumping going on")
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
                 while not hbm_dump_timer.is_expired(print_remaining_time=True):
                     fun_test.sleep("HBM Dump", seconds=60)
@@ -1960,7 +2025,8 @@ class ComE(Linux):
                                 fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
 
                         break
-
+                if hbm_dump_timer.is_expired():
+                    fun_test.log("HBM dump timer expired. Giving up ...")
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2066,7 +2132,10 @@ class Fs(object, ToDictMixin):
                  fpga_telnet_port=None,
                  fpga_telnet_username=None,
                  fpga_telnet_password=None,
-                 check_expected_containers_running=True):
+                 check_expected_containers_running=True,
+                 start_with_bundle_options=None,
+                 post_bundle_validation=False,
+                 force_bundle_install=False):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2116,6 +2185,8 @@ class Fs(object, ToDictMixin):
         self.apc_info = apc_info
         self.original_context_description = None
         self.fun_cp_callback = fun_cp_callback
+        self.post_bundle_validation = post_bundle_validation
+        self.start_with_bundle_options = start_with_bundle_options
 
         self.asset_name = "FS"
         if self.spec:
@@ -2169,10 +2240,22 @@ class Fs(object, ToDictMixin):
         self.dpc_for_csi_perf_ready = False
 
         self.errors_detected = []
+        self.force_bundle_install = force_bundle_install
         fun_test.register_fs(self)
 
         self.storage = FsStorage(fs_obj=self)
-        self.platform = FsPlatform(fs_obj=self)
+
+    def get_bundle_version(self):
+        result = None
+        come = self.get_come()
+        if come:
+            build_properties = come.get_build_properties()
+            if build_properties:
+                result = {"release_train": None, "build_number": None}
+                result["build_number"] = build_properties.get('bldNum', None)
+                result["release_train"] = build_properties.get('devLine', None)
+                fun_test.add_checkpoint(checkpoint="Current bundle version is: {}/{}".format(result["release_train"], result["build_number"]))
+        return result
 
     def enable_statistics(self, enable):
         self.statistics_enabled = enable
@@ -2315,9 +2398,10 @@ class Fs(object, ToDictMixin):
                         continue
                     if f1.hbm_dump_complete:
                         continue
-                    fun_test.log("Errors were detected. Starting HBM dump")
+                    fun_test.log("Errors were detected")
                     f1.hbm_dump_complete = True
                     if not self.bundle_compatible:
+                        fun_test.log("Starting HBM dump")
                         self.get_come().setup_hbm_tools()
                         self.get_come().hbm_dump(f1_index=f1_index)
                 except Exception as ex:
@@ -2379,7 +2463,9 @@ class Fs(object, ToDictMixin):
             already_deployed=False,
             skip_funeth_come_power_cycle=None,
             bundle_image_parameters=None,
-            fs_parameters=None):  #TODO
+            fs_parameters=None,
+            start_with_bundle_options=None,
+            force_bundle_install=False):  #TODO
         if not fs_spec:
             am = fun_test.get_asset_manager()
             test_bed_type = fun_test.get_job_environment_variable("test_bed_type")
@@ -2416,6 +2502,11 @@ class Fs(object, ToDictMixin):
             if not boot_args:
                 boot_args = Fs.DEFAULT_BOOT_ARGS
         fun_test.simple_assert(fs_spec, "Test-bed spec available", context=context)
+        if not start_with_bundle_options:
+            start_with_bundle_options = fun_test.get_build_parameter("start_with_bundle_options")
+
+        if not force_bundle_install:
+            force_bundle_install = fun_test.get_build_parameter("force_bundle_install")
         bmc_spec = fs_spec["bmc"]
         fpga_spec = fs_spec["fpga"]
         come_spec = fs_spec["come"]
@@ -2426,32 +2517,34 @@ class Fs(object, ToDictMixin):
 
         apc_info = fs_spec.get("apc_info", None)  # Used for power-cycling the entire FS
         fs_obj = Fs(bmc_mgmt_ip=bmc_spec["mgmt_ip"],
-                  bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
-                  bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
-                  fpga_mgmt_ip=fpga_spec["mgmt_ip"],
-                  fpga_mgmt_ssh_username=fpga_spec["mgmt_ssh_username"],
-                  fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"],
-                  come_mgmt_ip=come_spec["mgmt_ip"],
-                  come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
-                  come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
-                  tftp_image_path=tftp_image_path,
-                  boot_args=boot_args,
-                  disable_f1_index=disable_f1_index,
-                  disable_uart_logger=disable_uart_logger,
-                  gateway_ip=gateway_ip,
-                  f1_parameters=f1_parameters,
-                  retimer_workaround=retimer_workaround,
-                  non_blocking=non_blocking,
-                  context=context,
-                  setup_bmc_support_files=setup_bmc_support_files,
-                  apc_info=apc_info,
-                  fun_cp_callback=fun_cp_callback,
-                  power_cycle_come=power_cycle_come,
-                  skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
-                  spec=fs_spec,
-                  bundle_image_parameters=bundle_image_parameters,
-                  already_deployed=already_deployed,
-                  fs_parameters=fs_parameters)
+                    bmc_mgmt_ssh_username=bmc_spec["mgmt_ssh_username"],
+                    bmc_mgmt_ssh_password=bmc_spec["mgmt_ssh_password"],
+                    fpga_mgmt_ip=fpga_spec["mgmt_ip"],
+                    fpga_mgmt_ssh_username=fpga_spec["mgmt_ssh_username"],
+                    fpga_mgmt_ssh_password=fpga_spec["mgmt_ssh_password"],
+                    come_mgmt_ip=come_spec["mgmt_ip"],
+                    come_mgmt_ssh_username=come_spec["mgmt_ssh_username"],
+                    come_mgmt_ssh_password=come_spec["mgmt_ssh_password"],
+                    tftp_image_path=tftp_image_path,
+                    boot_args=boot_args,
+                    disable_f1_index=disable_f1_index,
+                    disable_uart_logger=disable_uart_logger,
+                    gateway_ip=gateway_ip,
+                    f1_parameters=f1_parameters,
+                    retimer_workaround=retimer_workaround,
+                    non_blocking=non_blocking,
+                    context=context,
+                    setup_bmc_support_files=setup_bmc_support_files,
+                    apc_info=apc_info,
+                    fun_cp_callback=fun_cp_callback,
+                    power_cycle_come=power_cycle_come,
+                    skip_funeth_come_power_cycle=skip_funeth_come_power_cycle,
+                    spec=fs_spec,
+                    bundle_image_parameters=bundle_image_parameters,
+                    already_deployed=already_deployed,
+                    fs_parameters=fs_parameters,
+                    start_with_bundle_options=start_with_bundle_options,
+                    force_bundle_install=force_bundle_install)
 
         if "telnet_ip" in fpga_spec:
             fs_obj.fpga_telnet_ip = fpga_spec["telnet_ip"]
@@ -2671,6 +2764,8 @@ class Fs(object, ToDictMixin):
                                      set_term_settings=True,
                                      disable_f1_index=self.disable_f1_index,
                                      context=self.context)
+                    if not self.fpga_mgmt_ssh_username:
+                        self.fpga = None
             result = self.fpga
         else:
             telnet_object = Fpga(host_ip=self.fpga_telnet_ip,
@@ -2708,7 +2803,7 @@ class Fs(object, ToDictMixin):
         self.come.initialize(disable_f1_index=self.disable_f1_index)
         return True
 
-    def health(self, only_reachability=False):
+    def health(self, only_reachability=False, check_expected_containers=False):
         result = None
         if not only_reachability:
             bam_result = self.bam()
@@ -2722,6 +2817,10 @@ class Fs(object, ToDictMixin):
                     try:
                         come = self.get_come()
                         health_result, health_error_message = come.is_host_up(max_wait_time=60, with_error_details=True)
+                        if health_result and check_expected_containers and self.bundle_compatible:
+                            health_result = come.ensure_expected_containers_running(max_time=15)
+                            if not health_result:
+                                fun_test.critical("Expected container not running")
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     else:
@@ -2742,9 +2841,6 @@ class Fs(object, ToDictMixin):
                 fun_test.critical(str(ex))
             else:
                 bmc.disconnect()
-
-
-
         return result
 
     def bam(self, command_duration=2):
@@ -2946,10 +3042,13 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main2__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-121"))
-    come = fs.get_come()
-    come.cleanup_redis()
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
+    print fs.get_bundle_version()
+    health = fs.health(only_reachability=True)
+    print health
+    # come = fs.get_come()
+    # come.cleanup_redis()
 
 
     i = 0
@@ -2974,14 +3073,14 @@ if __name__ == "__main_2_":
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
 
-if __name__ == "__main__":
+if __name__ == "__main3__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-168"))
-    topology = th.deploy(already_deployed=False)
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-171"))
+    topology = th.deploy(already_deployed=True)
     fs_obj = topology.get_dut_instance(index=0)
-    #fs_obj.storage.nvme_ssds(f1_index=0)
-    ## test invoke code 
-    bld_props = fs_obj.get_come().get_build_props()
-    fs_obj.platform.validate_firmware(f1_index=0, bld_props=bld_props)
-    fs_obj.platform.validate_firmware(f1_index=1, bld_props=bld_props)
+    # fs_obj.storage.nvme_ssds(f1_index=0)
+    fs_obj.get_bundle_version()
+    health = fs_obj.health()
+    print health
+

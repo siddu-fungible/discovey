@@ -7924,6 +7924,12 @@
             "name": "multi_host_raw_block_nvmetcp",
             "label": "NVMe/TCP - Multi host",
             "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
+            "label": "NVMe/TCP - Single host",
+            "reference": true
           }
         ]
       }
@@ -7955,6 +7961,12 @@
             "metric_model_name": "IntegrationJobBuildTimePerformance",
             "name": "integration_job_run_time",
             "label": "Integration job run time",
+            "children": []
+          },
+          {
+            "metric_model_name": "FlakyTestsFailurePerformance",
+            "name": "flaky_tests_failure_ratio",
+            "label": "Flaky tests failure ratio",
             "children": []
           }
         ]

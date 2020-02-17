@@ -1,48 +1,65 @@
-<app-back></app-back>
-
 <div class="component" *ngIf="suite">
   <div class="fun-panel">
     <div class="fun-panel-header">
-      {{ !suite.name? 'Creating ': 'Editing' }} suite
+      <span *ngIf="id">Editing suite&nbsp;
+      <button class="fun-button-with-icon" style="border: solid 1px black; min-width: 0 !important"
+              (click)="cloneSuite(suite.id)">
+        <i class="fa fa-copy" title="copy"></i>
+      </button></span>
+      <span *ngIf="(!cloneId && !id) || cloneId">Creating suite</span>
     </div>
 
   </div>
   <div class="fun-panel-body">
     <table>
-    <tr>
-      <td class="fun-attribute-label">Suite name:</td>
-      <td class="fun-attribute">
-        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" [required]="true"
-                            (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
-      </td>
-    </tr>
+      <tr>
+        <td class="fun-attribute-label">Suite name:</td>
+        <td class="fun-attribute">
+          <app-textarea-input [hoverHide]="false" [initialValue]="suite?.name" [required]="true"
+                              (valueChanged)="onNameChangedEvent($event)"></app-textarea-input>
+        </td>
+      </tr>
 
-    <tr>
-      <td class="fun-attribute-label">Short description:</td>
-      <td class="fun-attribute">
-        <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description"
-                            (valueChanged)="onShortDescriptionChangedEvent($event)" [numRows]="4"></app-textarea-input>
-      </td>
-    </tr>
+      <tr>
+        <td class="fun-attribute-label">Short description:</td>
+        <td class="fun-attribute">
+          <app-textarea-input [hoverHide]="false" [initialValue]="suite?.short_description"
+                              (valueChanged)="onShortDescriptionChangedEvent($event)"
+                              [numRows]="4"></app-textarea-input>
+        </td>
+      </tr>
 
-    <tr>
-      <td class="fun-attribute-label">Categories:</td>
-      <td class="fun-attribute" style="width: 200px">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
-                                 [(ngModel)]="suite.categories">
-        </ng-multiselect-dropdown>
-      </td>
-    </tr>
+      <tr>
+        <td class="fun-attribute-label">Owner email:</td>
+        <td class="fun-attribute">
+          <select id="submitter" [(ngModel)]="selectedUser">
+            <option *ngFor="let user of users" [ngValue]="user">{{
+              user.first_name }} {{
+              user.last_name }}
+              ({{ user.email }})
+            </option>
+          </select>
+        </td>
+      </tr>
 
-    <tr>
-      <td class="fun-attribute-label">Tags:</td>
-      <td class="fun-attribute" style="width: 200px">
-        <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableTags" [settings]="dropDownSettings"
-                                 [(ngModel)]="suite.tags">
-        </ng-multiselect-dropdown>
-      </td>
-    </tr>
-  </table>
+      <tr>
+        <td class="fun-attribute-label">Categories:</td>
+        <td class="fun-attribute" style="width: 200px">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableCategories" [settings]="dropDownSettings"
+                                   [(ngModel)]="suite.categories">
+          </ng-multiselect-dropdown>
+        </td>
+      </tr>
+
+      <tr>
+        <td class="fun-attribute-label">Tags:</td>
+        <td class="fun-attribute" style="width: 200px">
+          <ng-multiselect-dropdown [placeholder]="'Select'" [data]="availableTags" [settings]="dropDownSettings"
+                                   [(ngModel)]="suite.tags">
+          </ng-multiselect-dropdown>
+        </td>
+      </tr>
+    </table>
 
 
     <div *ngIf="!addingScript" style="display: flex; flex-direction: row;">
@@ -94,7 +111,7 @@
     <ng-template #customTestBedSpecModalContent let-modal>
       <div style="margin: 10px">
         <div class="modal-header">
-          Custom test-bed selection options
+          Pool-selection options
         </div>
         <div style="display: flex">
           <form *ngIf="customTestBedSpecForm" class="fun-form" [formGroup]="customTestBedSpecForm">
@@ -109,7 +126,8 @@
             <ng-container *ngIf="customTestBedSpecForm.controls.selectedTestBed?.value">
               <ng-container *ngFor="let flattenedAssetTypeName of flattenedAssetTypeNames">
                 <br>
-                <app-section-horizontal-line [text]="flattenedAssetTypeNameMap[flattenedAssetTypeName].name"></app-section-horizontal-line>
+                <app-section-horizontal-line
+                  [text]="flattenedAssetTypeNameMap[flattenedAssetTypeName].name"></app-section-horizontal-line>
 
                 <div class="fun-card">
                   <div class="fun-form-field">
@@ -133,18 +151,23 @@
                   <ng-container
                     *ngIf="customTestBedSpecForm.controls[_getAssetSelectionKey(flattenedAssetTypeName)].value == CustomAssetSelection.NUM">
 
-                    <input *ngIf="!_hasPoolMemerOptions(flattenedAssetTypeName); else showPoolMemberOptions" formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
+                    <input *ngIf="!_hasPoolMemerOptions(flattenedAssetTypeName); else showPoolMemberOptions"
+                           formControlName="{{ _getNumAssetsKey(flattenedAssetTypeName) }}" type="number"
                            class="fun-form-field fun-form-input">
                     <ng-template #showPoolMemberOptions>
                       <div class="fun-form-field">
-                      <ng-container *ngFor="let poolMemberOption of poolMemberOptions[flattenedAssetTypeName]; let index=index">
-                        <label class="fun-form-input-field-label" for="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName)}}">
-                          Type: {{ poolMemberOption }}
-                        </label>
-                        <input formControlName="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName, poolMemberOption)}}" type="number"
-                           class="fun-form-field fun-form-input">
+                        <ng-container
+                          *ngFor="let poolMemberOption of poolMemberOptions[flattenedAssetTypeName]; let index=index">
+                          <label class="fun-form-input-field-label"
+                                 for="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName)}}">
+                            Type: {{ poolMemberOption }}
+                          </label>
+                          <input
+                            formControlName="{{ _getPoolMemberSelectionKey(flattenedAssetTypeName, poolMemberOption)}}"
+                            type="number"
+                            class="fun-form-field fun-form-input">
 
-                      </ng-container>
+                        </ng-container>
                       </div>
                     </ng-template>
 
@@ -196,7 +219,8 @@
             <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.inputs | json }}</td>
             <td *ngIf="mode == SuiteMode.SUITE">{{ suiteEntry.test_case_ids | json }}</td>
             <td>
-              <i style="display: inline; color: red" class="fun-icon fa fa-trash" (click)="onDeleteSuiteEntry(index)"></i>
+              <i style="display: inline; color: red" class="fun-icon fa fa-trash"
+                 (click)="onDeleteSuiteEntry(index)"></i>
             </td>
           </tr>
 
@@ -206,9 +230,8 @@
     </ng-container>
 
 
-
     <ng-container *ngIf="mode == SuiteMode.SUITE && customTestBedValidated; else noCustomTestBedSpec">
-      <app-section-horizontal-line [text]="'Custom test-bed spec'"></app-section-horizontal-line>
+      <app-section-horizontal-line [text]="'Pool selection options'"></app-section-horizontal-line>
       <div style="display: flex">
         <table>
           <tr>
@@ -221,7 +244,7 @@
               <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}
               </td>
               <td *ngIf="_hasKey(asset_request.value, 'pool_member_type_options')">
-                  {{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}
+                {{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}
               </td>
               <td *ngIf="_hasKey(asset_request.value, 'names')">Specific
                 instances: {{ asset_request.value.names | json }}
@@ -241,23 +264,26 @@
     <ng-template #noCustomTestBedSpec>
       <fun-spinner [status]="customTestBedSpecPopulationStatus"></fun-spinner>
       <div *ngIf="!customTestBedSpecPopulationStatus">
-        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link" (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize test-bed options (suite-based)</span>
+        <span *ngIf="suite?.entries?.length > 0" class="fun-action-link"
+              (click)="onAddCustomTestBedSpec(customTestBedSpecModalContent)">Customize pool-selection options (suite-based)</span>
       </div>
     </ng-template>
 
 
     <!--button (click)="test()">Test</button-->
 
-     <br>
+    <br>
     <span (mouseenter)="submitEnter(true)" (mouseover)="submitEnter(true)" (mouseleave)="submitEnter(false)">
-      <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }" class="fun-button-submit"
+      <button [ngClass]="{'fun-button-disabled' : suite?.entries?.length < 1 || !suite?.name }"
+              class="fun-button-submit"
               (click)="onSubmitSuite()">Submit
       </button>
     </span>
     <ng-container *ngIf="userWantsToSubmit">
       <app-messages-panel *ngIf="suite?.entries?.length < 1"
-                                [messages]="['Atleast one script must be selected']" [type]="'INFO'"></app-messages-panel>
-      <app-messages-panel *ngIf="!suite?.name" [messages]="['Please set the suite name']" [type]="'INFO'"></app-messages-panel>
+                          [messages]="['Atleast one script must be selected']" [type]="'INFO'"></app-messages-panel>
+      <app-messages-panel *ngIf="!suite?.name" [messages]="['Please set the suite name']"
+                          [type]="'INFO'"></app-messages-panel>
 
     </ng-container>
 

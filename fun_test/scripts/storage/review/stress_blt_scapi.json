@@ -1,0 +1,14 @@
+{
+  // this is for stress, create/attach/detach/delete in loop
+  "BLTScaleNVolumes1Host1FSStress": {
+    "capacity": 1073741824, //1GB
+    "volume_count": 200,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 2,
+    "encrypt": "Y",
+    "attach" : "Y",
+    "detach" : "Y",
+    "delete": "Y"
+  }
+}

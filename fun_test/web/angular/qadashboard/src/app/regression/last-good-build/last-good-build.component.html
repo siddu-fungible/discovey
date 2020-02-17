@@ -1,0 +1,12 @@
+<div class="component">
+  <ng-container *ngFor="let releaseTrain of releaseTrainSet">
+    <ng-container *ngIf="buildMap[releaseTrain]">
+      <h6 style="display: inline">{{ releaseTrain }}</h6>
+      Last good build: <app-textarea-input [hoverHide]="false" [initialValue]="buildMap[releaseTrain]?.build_number"
+                          [editable]="true"
+                          (valueChanged)="onBuildNumberChanged($event, releaseTrain)"
+                          [numRows]="1"></app-textarea-input>
+    </ng-container>
+  </ng-container>
+
+</div>

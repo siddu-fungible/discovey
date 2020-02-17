@@ -353,11 +353,15 @@ class NicEmulation(FunTestCase):
             for handle in host_objs[objs]:
                 handle.sudo_command("rm -rf /tmp/*bw* && rm -rf /tmp/*rping* /tmp/*lat*")
                 hostname = handle.command("hostname").strip()
-                iface_name = handle.command(
-                    "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
-                    strip()
-                iface_addr = handle.command(
-                    "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(iface_name)).strip()
+                if handle.lsmod("funeth"):
+                    iface_name = handle.command(
+                        "ip link ls up | awk '{print $2}' | grep -e '00:f1:1d' -e '00:de:ad' -B 1 | head -1 | tr -d :"). \
+                        strip()
+                    iface_addr = handle.command(
+                        "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
+                            iface_name)).strip()
+                else:
+                    fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
                 if objs == "f1_0":
                     f10_host_dict = {"name": hostname, "iface_name": iface_name, "ipaddr": iface_addr,
                                      "handle": handle}
@@ -376,14 +380,33 @@ class NicEmulation(FunTestCase):
         fun_test.shared_variables["f10_host_roce"] = f10_host_roce
         fun_test.shared_variables["f11_host_roce"] = f11_host_roce
 
-        f10_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
-        f11_host_roce.build_rdma_repo(rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
-                                      rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
-                                      perftest_branch=fun_test.shared_variables["perftest_branch"],
-                                      perftest_commit=fun_test.shared_variables["perftest_commit"])
+        build_rdma_threadid = {}
+        thread_count = 0
+        for x in range(0, 1):
+            fun_test.log("Sarting build_rdma_repo on F1_0 for host: {}".format(f10_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f10_host_roce.build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
+        for x in range(0, 1):
+            fun_test.log("Sarting build_rdma_repo on F1_1 for host: {}".format(f11_hosts[x]["name"]))
+            build_rdma_threadid[thread_count] = fun_test.execute_thread_after(
+                func=f11_host_roce.build_rdma_repo,
+                time_in_seconds=5,
+                rdmacore_branch=fun_test.shared_variables["rdmacore_branch"],
+                rdmacore_commit=fun_test.shared_variables["rdmacore_commit"],
+                perftest_branch=fun_test.shared_variables["perftest_branch"],
+                perftest_commit=fun_test.shared_variables["perftest_commit"],
+                threaded=True)
+            thread_count += 1
+        for thread_id in range(thread_count):
+            fun_test.join_thread(build_rdma_threadid[thread_id])
+            fun_test.log("Joined thread: {}".format(build_rdma_threadid[thread_id]))
         fun_test.log("Config done")
 
     def cleanup(self):
@@ -426,8 +449,10 @@ class SrpingLoopBack(FunTestCase):
         f11_host_roce.cleanup()
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         if self.random_io:
             io_list = []
@@ -454,22 +479,29 @@ class SrpingLoopBack(FunTestCase):
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f10_host_client = f10_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
                                                         server_ip=f10_hosts[0]["ipaddr"], timeout=120)
-            f10_server_pid = 0
-            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
-                fun_test.sleep("Srping server on f10_host", 2)
-                f10_server_pid += 1  # Counter to check before initiating kill
-                if f10_server_pid == 60:
-                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+
+            # Kill client process then server process
             f10_client_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f10_host", 2)
                 f10_client_pid += 1  # Counter to check before initiating kill
                 if f10_client_pid == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_client["cmd_pid"])
-            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping")
+                    f10_host_roce.dump_debug()
+                    break
+            f10_server_pid = 0
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
+                fun_test.sleep("Srping server on f10_host", 2)
+                f10_server_pid += 1  # Counter to check before initiating kill
+                if f10_server_pid == 10:  # Reduce this time as client should have exited by now
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+                    f10_host_roce.dump_debug()
+                    break
+            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="srping",
+                                                             debug=tool_debug)
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="srping",
+                                                             debug=tool_debug,
                                                              client_cmd=True)
-
             fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
@@ -478,18 +510,25 @@ class SrpingLoopBack(FunTestCase):
             fun_test.sleep("Started srping server for size {}".format(size), seconds=1)
             f11_host_client = f11_host_roce.srping_test(size=size, count=test_count, debug=tool_debug,
                                                         server_ip=f11_hosts[0]["ipaddr"], timeout=120)
-            f11_server_pid = 0
-            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
-                fun_test.sleep("Srping server on f11_host", 2)
-                f11_server_pid += 1  # Counter to check before initiating kill
-                if f11_server_pid == 60:
-                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
+
             f11_client_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Srping client on f11_host", 2)
                 f11_client_pid += 1  # Counter to check before initiating kill
                 if f11_client_pid == 60:
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_client["cmd_pid"])
+                    f11_host_roce.dump_debug()
+                    break
+
+            f11_server_pid = 0
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
+                fun_test.sleep("Srping server on f11_host", 2)
+                f11_server_pid += 1  # Counter to check before initiating kill
+                if f11_server_pid == 10:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
+                    f11_host_roce.dump_debug()
+                    break
+
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="srping",
                                                              debug=tool_debug)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="srping",
@@ -540,8 +579,10 @@ class RpingLoopBack(FunTestCase):
         f11_host_roce.cleanup()
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         if self.random_io:
             io_list = []
@@ -568,21 +609,29 @@ class RpingLoopBack(FunTestCase):
             fun_test.sleep("Started Rping server for size {}".format(size), seconds=1)
             f10_host_client = f10_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
                                                        server_ip=f10_hosts[0]["ipaddr"], timeout=120)
-            f10_server_pid = 0
-            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
-                fun_test.sleep("Rping server on f10_host", 2)
-                f10_server_pid += 1  # Counter to check before initiating kill
-                if f10_server_pid == 60:
-                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+
             f10_client_pid = 0
             while f10_hosts[0]["handle"].process_exists(process_id=f10_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f10_host", 2)
                 f10_client_pid += 1  # Counter to check before initiating kill
                 if f10_client_pid == 60:
                     f10_hosts[0]["handle"].kill_process(process_id=f10_host_client["cmd_pid"])
-            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping")
+                    f10_host_roce.dump_debug()
+                    break
+
+            f10_server_pid = 0
+            while f10_hosts[0]["handle"].process_exists(process_id=f10_host_server["cmd_pid"]):
+                fun_test.sleep("Rping server on f10_host", 2)
+                f10_server_pid += 1  # Counter to check before initiating kill
+                if f10_server_pid == 10:
+                    f10_hosts[0]["handle"].kill_process(process_id=f10_host_server["cmd_pid"])
+                    f10_host_roce.dump_debug()
+                    break
+
+            f10_server_result = f10_host_roce.parse_test_log(f10_host_server["output_file"], tool="rping",
+                                                             debug=tool_debug)
             f10_client_result = f10_host_roce.parse_test_log(f10_host_client["output_file"], tool="rping",
-                                                             client_cmd=True)
+                                                             debug=tool_debug, client_cmd=True)
             fun_test.simple_assert(f10_server_result, "F10_host server result for size {}".format(size))
             fun_test.simple_assert(f10_client_result, "F10_host client result for size {}".format(size))
 
@@ -591,18 +640,23 @@ class RpingLoopBack(FunTestCase):
             fun_test.sleep("Started rping server for size {}".format(size), seconds=1)
             f11_host_client = f11_host_roce.rping_test(size=size, count=test_count, debug=tool_debug,
                                                        server_ip=f11_hosts[0]["ipaddr"], timeout=120)
-            f11_server_pid = 0
-            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
-                fun_test.sleep("Rping server on f11_host", 2)
-                f11_server_pid += 1  # Counter to check before initiating kill
-                if f11_server_pid == 60:
-                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
             f11_client_pid = 0
             while f11_hosts[0]["handle"].process_exists(process_id=f11_host_client["cmd_pid"]):
                 fun_test.sleep("Rping client on f11_host", 2)
                 f11_client_pid += 1  # Counter to check before initiating kill
                 if f11_client_pid == 60:
                     f11_hosts[0]["handle"].kill_process(process_id=f11_host_client["cmd_pid"])
+                    f11_host_roce.dump_debug()
+                    break
+            f11_server_pid = 0
+            while f11_hosts[0]["handle"].process_exists(process_id=f11_host_server["cmd_pid"]):
+                fun_test.sleep("Rping server on f11_host", 2)
+                f11_server_pid += 1  # Counter to check before initiating kill
+                if f11_server_pid == 10:
+                    f11_hosts[0]["handle"].kill_process(process_id=f11_host_server["cmd_pid"])
+                    f11_host_roce.dump_debug()
+                    break
+
             f11_server_result = f11_host_roce.parse_test_log(f11_host_server["output_file"], tool="rping",
                                                              debug=tool_debug,)
             f11_client_result = f11_host_roce.parse_test_log(f11_host_client["output_file"], tool="rping",
@@ -657,8 +711,10 @@ class SrpingSeqIoTest(FunTestCase):
         f11_host_roce.cleanup()
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         if self.mtu != 0:
             f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
@@ -727,14 +783,13 @@ class SrpingSeqIoTest(FunTestCase):
                     fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                 counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                 counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                 # NFCP counters check
                 counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -742,14 +797,35 @@ class SrpingSeqIoTest(FunTestCase):
                     try:
                         counter_diff = f10_fcp_stats_after["data"][cname] - \
                                        f10_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                         counter_diff = f11_fcp_stats_after["data"][cname] - \
                                        f11_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                     except:
                         fun_test.critical("NFCP counter issue")
+            else:
+                try:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                except:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
         fun_test.test_assert(True, "Srping {} IO test".format(test))
 
@@ -811,8 +887,10 @@ class RpingSeqIoTest(FunTestCase):
         f11_host_roce.cleanup()
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         if self.mtu != 0:
             f10_hosts[0]["handle"].sudo_command("ifconfig {} mtu {}".format(f10_hosts[0]["iface_name"],
@@ -881,14 +959,13 @@ class RpingSeqIoTest(FunTestCase):
                     fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                 counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                 counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                if counter_diff == 0:
-                    fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                 # NFCP counters check
                 counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -896,14 +973,35 @@ class RpingSeqIoTest(FunTestCase):
                     try:
                         counter_diff = f10_fcp_stats_after["data"][cname] - \
                                        f10_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                         counter_diff = f11_fcp_stats_after["data"][cname] - \
                                        f11_fcp_stats_before["data"][cname]
-                        if counter_diff != 0 and counter_diff > 500:
+                        if counter_diff != 0 and counter_diff > 2000:
                             fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                     except:
                         fun_test.critical("NFCP counter issue")
+            else:
+                try:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                    fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F10: Traffic is using FCP")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                    fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff == 0),
+                                           message="F11: Traffic is using FCP")
+                except:
+                    counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F10 : NFCP counters not incrementing")
+                    counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                   f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                    fun_test.simple_assert(expression=(counter_diff != 0),
+                                           message="F11 : NFCP counters not incrementing")
 
         fun_test.test_assert(True, "Rping {} IO test".format(test))
 
@@ -958,8 +1056,10 @@ class IbBwSeqIoTest(FunTestCase):
         self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -1045,14 +1145,13 @@ class IbBwSeqIoTest(FunTestCase):
                         fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                     counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                    f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                     counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                    f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                    fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                     # NFCP counters check
                     counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -1060,14 +1159,35 @@ class IbBwSeqIoTest(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")
+                else:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 
@@ -1151,8 +1271,10 @@ class IbLatSeqIoTest(FunTestCase):
         self.fcp = fun_test.shared_variables["enable_fcp"]
 
         # Check if ping works before running tests
-        f10_host_roce.ping_check(ip=f11_hosts[0]["ipaddr"])
-        f11_host_roce.ping_check(ip=f10_hosts[0]["ipaddr"])
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
 
         # Load RDMA modules
         f10_host_roce.rdma_setup()
@@ -1236,14 +1358,13 @@ class IbLatSeqIoTest(FunTestCase):
                         fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                     counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                    f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                     counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                    f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                    fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                     # NFCP counters check
                     counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -1251,14 +1372,35 @@ class IbLatSeqIoTest(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")
+                else:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_LAT {} test for {} IO".format(test, io_type))
 
@@ -1446,14 +1588,13 @@ class IbWriteScale(FunTestCase):
                         fun_test.log("FCP rcvd & xmtd stat : {}".format(f10_fcb_dst_fcp_pkt_rcvd))
                     counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
                                    f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
-                    fun_test.log("F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F10 : Traffic is not FCP")
+                    fun_test.log("FCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F10 : Traffic is not FCP")
+
                     counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
                                    f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
-                    fun_test.log("F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
-                    if counter_diff == 0:
-                        fun_test.simple_assert(False, "F11 : Traffic is not FCP")
+                    fun_test.log("FCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                    fun_test.simple_assert(expression=(counter_diff != 0), message="F11 : Traffic is not FCP")
 
                     # NFCP counters check
                     counter_names = ["tdp0_nonfcp", "tdp1_nonfcp", "tdp2_nonfcp"]
@@ -1461,14 +1602,35 @@ class IbWriteScale(FunTestCase):
                         try:
                             counter_diff = f10_fcp_stats_after["data"][cname] - \
                                            f10_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F10 {} counter diff : {}".format(cname, counter_diff))
                             counter_diff = f11_fcp_stats_after["data"][cname] - \
                                            f11_fcp_stats_before["data"][cname]
-                            if counter_diff != 0 and counter_diff > 500:
+                            if counter_diff != 0 and counter_diff > 2000:
                                 fun_test.simple_assert(False, "F11 {} counter diff : {}".format(cname, counter_diff))
                         except:
                             fun_test.critical("NFCP counter issue")
+                else:
+                    try:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_DST_FCP_PKT_RCVD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_DST_FCP_PKT_RCVD"]
+                        fun_test.log("NFCP : F10 FCP_PKT_RCVD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F10: Traffic is using FCP")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_FCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_FCP_PKT_XMTD"]
+                        fun_test.log("NFCP : F11 FCP_PKT_XMTD diff count : {}".format(counter_diff))
+                        fun_test.simple_assert(expression=(counter_diff == 0),
+                                               message="F11: Traffic is using FCP")
+                    except:
+                        counter_diff = f10_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f10_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F10 : NFCP counters not incrementing")
+                        counter_diff = f11_fcp_stats_after["data"]["FCB_SRC_NFCP_PKT_XMTD"] - \
+                                       f11_fcp_stats_before["data"]["FCB_SRC_NFCP_PKT_XMTD"]
+                        fun_test.simple_assert(expression=(counter_diff != 0),
+                                               message="F11 : NFCP counters not incrementing")
 
             fun_test.test_assert(True, "IB_BW {} test with {} IO".format(test, io_type))
 

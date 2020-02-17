@@ -38,7 +38,7 @@ def add_to_data_base(value_dict):
         fun_test.critical(str(ex))
 
 
-class DurableVolScript(FunTestScript):
+class ECVolScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Start 1 POSIXs and allocate a Linux instance 
@@ -95,6 +95,8 @@ class DurableVolScript(FunTestScript):
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
             self.disable_wu_watchdog = True
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
 
         # Deploying of DUTs
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
@@ -118,59 +120,24 @@ class DurableVolScript(FunTestScript):
         fun_test.shared_variables["host_info"] = self.host_info
 
     def cleanup(self):
-        if fun_test.shared_variables["ec"]["setup_created"]:
-            self.fs = self.fs_objs[0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            try:
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+        # Cleaning up host
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
+            host_cleanup = cleanup_host(host_obj=host_handle)
+            host_cleanup = cleanup_host(host_obj=host_handle)
+            fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_list"],
+                                          message="Host {} cleanup: Fetch NVMe list".format(host_name))
+            fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_disconnect"],
+                                          message="Host {} cleanup: NVMe disconnect".format(host_name))
+            fun_test.test_assert_expected(expected=True, actual=host_cleanup["load_nvme_modules"],
+                                          message="Host {} cleanup: Load NVMe modules".format(host_name))
+            fun_test.test_assert_expected(expected=True, actual=host_cleanup["umount"],
+                                          message="Host {} cleanup: Umount".format(host_name))
+            fun_test.test_assert_expected(expected=True, actual=host_cleanup["unload_nvme_modules"],
+                                          message="Host {} cleanup: Unload NVMe modules".format(host_name))
+        fun_test.log("Rest is Handled in Test case level cleanup section")
 
-                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
-                for host_name in self.host_info:
-                    host_handle = self.host_info[host_name]["handle"]
-                    pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
-                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
-
-                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
-                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
-                                 source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
-                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
-                                                filename=pcap_artifact_file)
-
-                # Executing NVMe disconnect from all the hosts
-                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-                for host_name in self.host_info:
-                    host_handle = self.host_info[host_name]["handle"]
-                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-                    nvme_disconnect_exit_status = host_handle.exit_status()
-                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                  message="{} - NVME Disconnect Status".format(host_name))
-
-                # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
-
-                # Unconfiguring all the LSV/EC and it's plex volumes
-                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
-                                                              command_timeout=self.command_timeout)
-
-                # Deleting all the storage controller
-                for index in xrange(len(self.host_info)):
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
-                                                                               command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
-                                         format(self.ctrlr_uuid[index]))
-                self.storage_controller.disconnect()
-            except Exception as ex:
-                fun_test.critical(str(ex))
-
-
-class DurableVolumeTestcase(FunTestCase):
+class ECVolumeTestcase(FunTestCase):
 
     def describe(self):
         pass
@@ -213,12 +180,14 @@ class DurableVolumeTestcase(FunTestCase):
             self.ec_info["num_volumes"] = job_inputs["num_volumes"]
         if "vol_size" in job_inputs:
             self.ec_info["capacity"] = job_inputs["vol_size"]
-            if self.test_file_size > int(self.ec_info["capacity"] / 2):
-                self.test_file_size = int(self.ec_info["capacity"] / 2)
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         else:
             self.post_results = False
+        if "test_bs" in job_inputs:
+            self.fio_write_cmd_args["bs"] = job_inputs["test_bs"]
+            self.fio_verify_cmd_args["bs"] = job_inputs["test_bs"]
+            fun_test.log("FIO block size is override by value: {}".format(self.fio_write_cmd_args["bs"]))
 
         self.nvme_block_device = self.nvme_device + "0n" + str(self.ns_id)
         self.volume_name = self.nvme_block_device.replace("/dev/", "")
@@ -355,15 +324,15 @@ class DurableVolumeTestcase(FunTestCase):
                 host_handle = self.host_info[host_name]["handle"]
                 if not fun_test.shared_variables["ec"]["nvme_connect"]:
                     # Checking nvme-connect status
-                    if not hasattr(self, "io_queues") or (hasattr(self, "io_queues") and self.io_queues == 0):
+                    if hasattr(self, "nvme_io_queues") and self.nvme_io_queues != 0:
+                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
+                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
+                                   str(self.transport_port), self.nvme_subsystem, str(self.nvme_io_queues),
+                                   self.host_info[host_name]["ip"])
+                    else:
                         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -q {}". \
                             format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
                                    str(self.transport_port), self.nvme_subsystem,
-                                   self.host_info[host_name]["ip"])
-                    else:
-                        nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {} -i {} -q {}". \
-                            format(self.attach_transport.lower(), self.test_network["f1_loopback_ip"],
-                                   str(self.transport_port), self.nvme_subsystem, str(self.io_queues),
                                    self.host_info[host_name]["ip"])
 
                     try:
@@ -436,65 +405,35 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.log("Default syslog level is requested...So not going to modify the syslog settings")
 
     def run(self):
-
         testcase = self.__class__.__name__
-        test_method = testcase[4:]
-
-        table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
-                              "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
-                              "Plex Rebuild Time (sec)", "Job Name"]
-        table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_plex_fail",
-                           "copy_time_during_rebuild", "plex_rebuild_time", "fio_job_name"]
-        table_data_rows = []
-
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
         # Else going to extract the same
-        if "device_id" not in self.ec_info:
-            fun_test.log("Drive and Device ID of the EC volume's plex volumes are not available in the ec_info..."
-                         "So going to pull that info")
-            self.ec_info["drive_uuid"] = {}
-            self.ec_info["device_id"] = {}
-            for num in xrange(self.ec_info["num_volumes"]):
-                self.ec_info["drive_uuid"][num] = []
-                self.ec_info["device_id"][num] = []
-                for blt_uuid in self.ec_info["uuids"][num]["blt"]:
-                    blt_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN", blt_uuid,
-                                                             "stats")
-                    blt_stats = self.storage_controller.peek(blt_props_tree)
-                    fun_test.simple_assert(blt_stats["status"], "Stats of BLT Volume {}".format(blt_uuid))
-                    if "drive_uuid" in blt_stats["data"]:
-                        self.ec_info["drive_uuid"][num].append(blt_stats["data"]["drive_uuid"])
-                    else:
-                        fun_test.simple_assert(blt_stats["data"].get("drive_uuid"), "Drive UUID of BLT volume {}".
-                                               format(blt_uuid))
-                    drive_props_tree = "{}/{}/{}/{}/{}".format("storage", "volumes", "VOL_TYPE_BLK_LOCAL_THIN",
-                                                               "drives", blt_stats["data"]["drive_uuid"])
-                    drive_stats = self.storage_controller.peek(drive_props_tree)
-                    fun_test.simple_assert(drive_stats["status"], "Stats of the drive {}".
-                                           format(blt_stats["data"]["drive_uuid"]))
-                    if "drive_id" in drive_stats["data"]:
-                        self.ec_info["device_id"][num].append(drive_stats["data"]["drive_id"])
-                    else:
-                        fun_test.simple_assert(drive_stats["data"].get("drive_id"), "Device ID of the drive {}".
-                                               format(blt_stats["data"]["drive_uuid"]))
-
+        self.ec_info = get_plex_device_id(self.ec_info, self.storage_controller)
         fun_test.log(
             "EC plex volumes UUID      : {}".format(self.ec_info["uuids"][self.test_volume_start_index]["blt"]))
         fun_test.log("EC plex volumes drive UUID: {}".format(self.ec_info["drive_uuid"][self.test_volume_start_index]))
         fun_test.log("EC plex volumes device ID : {}".format(self.ec_info["device_id"][self.test_volume_start_index]))
 
-        iostat_pid = {}
-        iostat_artifact_file = {}
-        start_stats = True
+        fun_test.shared_variables["fio"] = {}
         row_data_dict = {}
         row_data_dict["num_hosts"] = self.num_hosts
+        self.dd_create_file["count"] = self.pattern_file_size / self.dd_create_file["block_size"]
 
         for index, host_name in enumerate(self.host_info):
             host_handle = self.host_info[host_name]["handle"]
             nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
             volume_name_list = self.host_info[host_name]["volume_name_list"]
-
+            # Check and remove file if exists
+            if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
+                try:
+                    host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+            # Creating buffer pattern file with random data
+            return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
+            fun_test.test_assert_expected(self.pattern_file_size, return_size, "Creating {} bytes for buffer pattern".
+                                          format(self.pattern_file_size))
             # Start background load on other volume
             if hasattr(self, "back_pressure") and self.back_pressure:
                 try:
@@ -517,29 +456,33 @@ class DurableVolumeTestcase(FunTestCase):
         fio_output = {}
         test_thread_id = {}
         host_clone = {}
-        # Writing first 50% of volume with --verify=md5
+        self.fio_write_cmd_args["buffer_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
+        self.fio_verify_cmd_args["verify_pattern"] = "\\\'{}\\\'".format(self.dd_create_file["output_file"])
+
+        # If FIO block size is not provided by user, setting FIO block size to the stripe length
+        if "bs" not in self.fio_write_cmd_args:
+            self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            self.fio_verify_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
+            fun_test.log(
+                "FIO block size is not defined, setting it to stripe length: {}".format(self.fio_write_cmd_args["bs"]))
+
+        # Writing first 50% of volume size with buffer pattern file
         for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
             for index, host_name in enumerate(self.host_info):
                 start_time = time.time()
-                fio_job_args = ""
                 host_handle = self.host_info[host_name]["handle"]
                 nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-                self.fio_write_cmd_args["offset"] = "0%"
+                # self.fio_write_cmd_args["offset"] = "0%"
                 self.fio_write_cmd_args["filename"] = nvme_block_device_list[num]
                 wait_time = self.num_hosts - index
                 host_clone[host_name] = self.host_info[host_name]["handle"].clone()
                 fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
                              format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
                                     self.fio_write_cmd_args["iodepth"]))
-
                 test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                       func=fio_parser,
                                                                       arg1=host_clone[host_name],
                                                                       host_index=index,
-                                                                      iodepth=self.fio_write_cmd_args[
-                                                                          "iodepth"],
-                                                                      rw=self.fio_write_cmd_args["rw"],
-                                                                      bs=self.fio_write_cmd_args["bs"],
                                                                       name="{}_{}".format(
                                                                           host_name,
                                                                           self.fio_write_cmd_args["rw"]),
@@ -551,7 +494,7 @@ class DurableVolumeTestcase(FunTestCase):
         # Triggering drive failure
         if hasattr(self, "trigger_failure") and self.trigger_failure:
             # Sleep for sometime before triggering the drive failure
-            wait_time = 2
+            wait_time = 20
             fun_test.sleep(message="Sleeping for {} seconds before inducing a drive failure".format(wait_time),
                            seconds=wait_time)
             # Check whether the drive index to be failed is given or not. If not pick a random one
@@ -568,7 +511,7 @@ class DurableVolumeTestcase(FunTestCase):
                     fail_device = self.ec_info["device_id"][num][
                         self.failure_drive_index[num - self.test_volume_start_index][i]]
                     if self.fail_drive:
-                        ''' Marking drive as failed '''
+                        # ## ''' Marking drive as failed ''' ## #
                         # Inducing failure in drive
                         fun_test.log("Initiating drive failure")
                         device_fail_status = self.storage_controller.disable_device(
@@ -581,9 +524,9 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected="DEV_ERR_INJECT_ENABLED",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is marked as Failed".format(fail_device))
-                        ''' Marking drive as failed '''
+                        # ## ''' Marking drive as failed ''' ## #
                     else:
-                        ''' Marking Plex as failed '''
+                        # ## ''' Marking plex as failed ''' ## #
                         # Inducing failure in one of the Plex of the volume
                         fun_test.log("Initiating Plex failure")
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
@@ -595,7 +538,7 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(
                             expected=1, actual=volume_stats["data"]["stats"]["fault_injection"],
                             message="Plex is marked as Failed")
-                        ''' Marking Plex as failed '''
+                        # ## ''' Marking plex as failed ''' ## #
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -611,36 +554,40 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
+                                 .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
+                                         host_name))
+        fun_test.sleep("before starting read with data integrity", 15)
         # Verifying data integrity after Write is complete
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                wait_time = self.num_hosts - index
+                # Verifying Data Integrity for 50% data written to the volume with --verify=md5
+                # self.fio_verify_cmd_args["offset"] = "0%"
+                self.fio_verify_cmd_args["filename"] = nvme_block_device_list[num]
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                    self.fio_verify_cmd_args["iodepth"]))
 
-            # Verifying Data Integrity for 50% data written to the volume with --verify=md5
-            self.fio_verify_cmd_args["offset"] = "0%"
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
-
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args[
-                                                                      "iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_verify_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_verify_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -656,38 +603,60 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
-
-        # Writing remaining 50% of volume with --verify=md5
         for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_write_cmd_args["offset"] = "50%"
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
-                                self.fio_write_cmd_args["iodepth"]))
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
+                                         host_name))
+        fun_test.sleep("before starting write", 15)
+        # Writing new data (buffer pattern) to whole volume of volume
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
+                # Creating buffer pattern file with new conent
+                if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
+                    try:
+                        host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                # Write a file into the EC volume of size self.test_file_size bytes
+                return_size = host_handle.dd(timeout=self.dd_create_file["count"], sudo=True, **self.dd_create_file)
+                fun_test.test_assert_expected(self.pattern_file_size, return_size,
+                                              "Creating {} bytes for buffer pattern".
+                                              format(self.pattern_file_size))
+                # self.fio_write_cmd_args["offset"] = "50%"
+                self.fio_write_cmd_args["filename"] = nvme_block_device_list[num]
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                    self.fio_write_cmd_args["iodepth"]))
 
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  iodepth=self.fio_write_cmd_args[
-                                                                      "iodepth"],
-                                                                  rw=self.fio_write_cmd_args["rw"],
-                                                                  bs=self.fio_write_cmd_args["bs"],
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_write_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_write_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_write_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_write_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+
+        bmc_handle = self.fs_obj[0].get_bmc()
+        uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
+        fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
+        rebuild_time = {}
+        rebuild_time["start"] = {}
+        rebuild_time["complete"] = {}
+        rebuild_time["rebuild_time"] = {}
 
         fun_test.sleep(message="Sleeping for {} seconds before before bringing up the failed device(s) & "
-                               "plex rebuild".format(wait_time), seconds=wait_time)
+                               "plex rebuild".format(wait_time), seconds=15)
         for i in xrange(self.plex_failure_count):
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 fail_uuid = self.ec_info["uuids"][num]["blt"][
@@ -697,7 +666,7 @@ class DurableVolumeTestcase(FunTestCase):
 
                 if not self.rebuild_on_spare_volume:
                     if self.fail_drive:
-                        ''' Marking drive as online '''
+                        # ## ''' Marking drive as online ''' ## #
                         device_up_status = self.storage_controller.enable_device(device_id=fail_device,
                                                                                  command_duration=self.command_timeout)
                         fun_test.test_assert(device_up_status["status"], "Enabling Device ID {}".format(fail_device))
@@ -708,9 +677,9 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected="DEV_ONLINE",
                                                       actual=device_stats["data"]["device state"],
                                                       message="Device ID {} is Enabled again".format(fail_device))
-                        ''' Marking drive as online '''
+                        # ## ''' Marking drive as online ''' ## #
                     else:
-                        ''' Marking Plex as online '''
+                        # ## ''' Marking plex as online ''' ## #
                         volume_fail_status = self.storage_controller.fail_volume(uuid=fail_uuid)
                         fun_test.test_assert(volume_fail_status["status"], "Re-enabling Volume UUID {}".
                                              format(fail_uuid))
@@ -721,8 +690,7 @@ class DurableVolumeTestcase(FunTestCase):
                         fun_test.test_assert_expected(expected=0,
                                                       actual=volume_stats["data"]["stats"]["fault_injection"],
                                                       message="Plex is marked as online")
-                        ''' Marking Plex as online '''
-
+                        # ## ''' Marking plex as online ''' ## #
                 # Rebuild failed plex
                 if self.rebuild_on_spare_volume:
                     spare_uuid = self.spare_vol_uuid[i]
@@ -737,6 +705,40 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.test_assert(rebuild_device["status"], "Rebuild failed Plex {}".format(fail_uuid))
                 fun_test.log("Rebuild failed Plex {} status {}".format(fail_uuid, rebuild_device["status"]))
 
+            # Parsing f1 uart log file to search rebuild start and finish time
+            for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                rebuild_time["start"][num] = {}
+                rebuild_time["complete"][num] = {}
+                rebuild_time["rebuild_time"][num] = {}
+                rebuild_time["start"][num][i] = []
+                rebuild_time["complete"][num][i] = []
+                rebuild_time["rebuild_time"][num][i] = []
+                ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
+                rebuild_start_time = get_plex_operation_time(
+                    bmc_linux_handle=bmc_handle, log_file=uart_log_file,
+                    ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True, plex_count=self.plex_failure_count,
+                    status_interval=self.status_interval * 5)
+                fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
+                fun_test.test_assert(rebuild_start_time["status"], "EC UUID: {} started at: {}".format(
+                    ec_uuid, rebuild_start_time))
+                rebuild_time["start"][num][i] = rebuild_start_time
+                rebuild_completion_time = get_plex_operation_time(
+                    bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
+                    get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
+                    status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
+                fun_test.log(
+                    "Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
+                fun_test.test_assert(rebuild_completion_time["status"], "EC UUID: {} completed at: {}".format(
+                    ec_uuid, rebuild_completion_time))
+                rebuild_time["complete"][num][i] = rebuild_completion_time
+
+                plex_rebuild_time = rebuild_completion_time["time"] - rebuild_start_time["time"]
+                fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
+                fun_test.test_assert(plex_rebuild_time, "EC UUID: {} Rebuild time: {}".format(
+                    ec_uuid, plex_rebuild_time))
+                row_data_dict["plex_rebuild_time"] = plex_rebuild_time
+                rebuild_time["rebuild_time"][num][i] = plex_rebuild_time
+
         # Waiting for all the FIO test threads to complete
         try:
             fun_test.log("Test Thread IDs: {}".format(test_thread_id))
@@ -750,34 +752,40 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
+        for index, host_name in enumerate(self.host_info):
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
+                                 .format(self.fio_write_cmd_args["rw"], self.fio_write_cmd_args["bs"],
+                                         self.fio_write_cmd_args["iodepth"], self.fio_write_cmd_args["numjobs"],
+                                         host_name))
+
+        fun_test.sleep("before starting read with data integrity", 15)
         # Verifying data integrity after Write is complete
-        for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_verify_cmd_args["offset"] = "50%"
-            # Writing 50% of volume with --verify=md5
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
+        for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+            for index, host_name in enumerate(self.host_info):
+                start_time = time.time()
+                host_handle = self.host_info[host_name]["handle"]
+                host_clone[host_name] = self.host_info[host_name]["handle"].clone()
+                nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
+                wait_time = self.num_hosts - index
+                # self.fio_verify_cmd_args["offset"] = "50%"
+                self.fio_verify_cmd_args["filename"] = nvme_block_device_list[num]
+                # Writing 50% of volume with --verify=md5
+                fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
+                             format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                    self.fio_verify_cmd_args["iodepth"]))
 
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args["iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
+                test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                      func=fio_parser,
+                                                                      arg1=host_clone[host_name],
+                                                                      host_index=index,
+                                                                      name="{}_{}".format(host_name,
+                                                                                          self.fio_verify_cmd_args[
+                                                                                              "rw"]),
+                                                                      **self.fio_verify_cmd_args)
+                end_time = time.time()
+                time_taken = end_time - start_time
+                fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
 
         # Waiting for all the FIO test threads to complete
         try:
@@ -792,130 +800,12 @@ class DurableVolumeTestcase(FunTestCase):
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
                                                                    fun_test.shared_variables["fio"][index]))
-
-        # Parsing f1 uart log file to search rebuild start and finish time
-        '''
-        log file output:
-        [2537.762236 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 under rebuild total failed:1"
-        [2774.291395 2.2.3] ALERT ecvol "storage/flvm/ecvol/ecvol.c:3312:ecvol_rebuild_done_process_push() 
-        Rebuild operation complete for plex:5"
-        [2774.292149 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 marked active total failed:0"
-        '''
-        try:
-            bmc_handle = self.fs_obj[0].get_bmc()
-            uart_log_file = self.fs_obj[0].get_bmc().get_f1_uart_log_file_name(f1_index=self.f1_in_use)
-            fun_test.log("F1 UART Log file used to check Rebuild operation status: {}".format(uart_log_file))
-            search_pattern = "'under rebuild total failed'"
-            output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
-                                                               timeout=self.command_timeout))
-            fun_test.test_assert_expected(expected=1, actual=int(output.rstrip()),
-                                          message="Rebuild operation is started")
-            rebuild_start_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".format(
-                search_pattern, uart_log_file, timeout=self.command_timeout))
-            rebuild_start_time = int(round(float(rebuild_start_time.rstrip())))
-            fun_test.log("Rebuild operation started at : {}".format(rebuild_start_time))
-
-            timer = FunTimer(max_time=self.rebuild_timeout)
-            while not timer.is_expired():
-                search_pattern = "'Rebuild operation complete for plex'"
-                fun_test.sleep("Waiting for plex rebuild to complete", seconds=(self.status_interval * 5))
-                output = bmc_handle.command("grep -c {} {}".format(search_pattern, uart_log_file,
-                                                                   timeout=self.command_timeout))
-                if int(output.rstrip()) == 1:
-                    rebuild_stop_time = bmc_handle.command("grep {} {} | cut -d ' ' -f 1 | cut -d '[' -f 2".
-                                                           format(search_pattern, uart_log_file,
-                                                                  timeout=self.command_timeout))
-                    rebuild_stop_time = int(round(float(rebuild_stop_time.rstrip())))
-                    fun_test.log("Rebuild operation completed at: {}".format(rebuild_stop_time))
-                    fun_test.log("Rebuild operation on plex {} is completed".format(spare_uuid))
-                    break
-            else:
-                fun_test.test_assert(False, "Rebuild operation on plex {} completed".format(spare_uuid))
-            plex_rebuild_time = rebuild_stop_time - rebuild_start_time
-            fun_test.log("Time taken to rebuild plex: {}".format(plex_rebuild_time))
-            row_data_dict["plex_rebuild_time"] = plex_rebuild_time
-        except Exception as ex:
-            fun_test.critical(str(ex))
-
-        # After Data Reconstruction is completed, verifying 100% data integrity
         for index, host_name in enumerate(self.host_info):
-            start_time = time.time()
-            fio_job_args = ""
-            host_handle = self.host_info[host_name]["handle"]
-            nvme_block_device_list = self.host_info[host_name]["nvme_block_device_list"]
-            wait_time = self.num_hosts - index
-            host_clone[host_name] = self.host_info[host_name]["handle"].clone()
-            self.fio_verify_cmd_args["size"] = "100%"
-            self.fio_verify_cmd_args["offset"] = "0%"
-            # After Data Reconstruction is completed, verifying 100% data integrity
-            fun_test.log("Running FIO {} test with the block size: {} and IO depth: {} for the EC".
-                         format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
-                                self.fio_verify_cmd_args["iodepth"]))
-
-            test_thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                  func=fio_parser,
-                                                                  arg1=host_clone[host_name],
-                                                                  host_index=index,
-                                                                  iodepth=self.fio_verify_cmd_args["iodepth"],
-                                                                  rw=self.fio_verify_cmd_args["rw"],
-                                                                  bs=self.fio_verify_cmd_args["bs"],
-                                                                  name="{}_{}".format(host_name,
-                                                                                      self.fio_verify_cmd_args[
-                                                                                          "rw"]),
-                                                                  **self.fio_verify_cmd_args)
-            end_time = time.time()
-            time_taken = end_time - start_time
-            fun_test.log("Time taken to start an FIO job on a host {}: {}".format(host_name, time_taken))
-
-        # Waiting for all the FIO test threads to complete
-        try:
-            fun_test.log("Test Thread IDs: {}".format(test_thread_id))
-            for index, host_name in enumerate(self.host_info):
-                fio_output[host_name] = {}
-                fun_test.log("Joining fio thread {}".format(index))
-                fun_test.join_thread(fun_test_thread_id=test_thread_id[index], sleep_time=1)
-                fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
-                                                                       fun_test.shared_variables["fio"][index]))
-        except Exception as ex:
-            fun_test.critical(str(ex))
-            fun_test.log("FIO Command Output from {}:\n {}".format(host_name,
-                                                                   fun_test.shared_variables["fio"][index]))
-        # Building the table raw for this variation
-        row_data_list = []
-        for i in table_data_cols:
-            if i not in row_data_dict:
-                row_data_list.append(-1)
-            else:
-                row_data_list.append(row_data_dict[i])
-        table_data_rows.append(row_data_list)
-
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
-                           table_data=table_data)
-
-        '''
-        # Datetime required for daily Dashboard data filter
-        try:
-            # Building value_dict for dashboard update
-            value_dict = {
-                "date_time": self.db_log_time,
-                "platform": FunPlatform.F1,
-                "version": fun_test.get_version(),
-                "num_hosts": self.num_hosts,
-                "num_f1s": self.num_f1s,
-                "base_file_copy_time": base_file_copy_time,
-                "copy_time_during_plex_fail": copy_time_during_plex_fail,
-                "file_copy_time_during_rebuild": file_copy_time_during_rebuild,
-                "plex_rebuild_time": plex_rebuild_time
-            }
-            if self.post_results:
-                fun_test.log("Posting results on dashboard")
-                add_to_data_base(value_dict)
-                post_results("Inspur Performance Test", test_method, *row_data_list)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        '''
-
+            fun_test.test_assert(fun_test.shared_variables["fio"][index],
+                                 "FIO Mode: {}, BS: {}, IOdepth: {}, Numjobs: {} on {}"
+                                 .format(self.fio_verify_cmd_args["rw"], self.fio_verify_cmd_args["bs"],
+                                         self.fio_verify_cmd_args["iodepth"], self.fio_verify_cmd_args["numjobs"],
+                                         host_name))
         try:
             if hasattr(self, "back_pressure") and self.back_pressure:
                 # Check if back pressure is still running, if yes, stop it
@@ -923,20 +813,106 @@ class DurableVolumeTestcase(FunTestCase):
                 if check_pid:
                     fun_test.log("Back pressure is still running, stopping it")
                     host_handle.pkill(process_name="fio")
-                    # fun_test.test_assert_expected(expected=0, actual=host_handle.exit_status(),
-                    #                               message="Back pressure is stopped")
                     fun_test.log("Back pressure is stopped")
         except Exception as ex:
             fun_test.critical(str(ex))
 
     def cleanup(self):
-        pass
+        if fun_test.shared_variables["ec"]["setup_created"]:
+            # Marking failure injected drive as online
+            for i in xrange(self.plex_failure_count):
+                for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
+                    fail_uuid = self.ec_info["uuids"][num]["blt"][
+                        self.failure_drive_index[num - self.test_volume_start_index][i]]
+                    fail_device = self.ec_info["device_id"][num][
+                        self.failure_drive_index[num - self.test_volume_start_index][i]]
+                    if self.fail_drive:
+                        # ## ''' Marking drive as online ''' ## #
+                        device_up_status = self.storage_controller.enable_device(
+                            device_id=fail_device, command_duration=self.command_timeout)
+                        fun_test.test_assert(device_up_status["status"],
+                                             "Enabling Device ID {}".format(fail_device))
+
+                        device_props_tree = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds",
+                                                                    fail_device)
+                        device_stats = self.storage_controller.peek(device_props_tree)
+                        fun_test.simple_assert(device_stats["status"],
+                                               "Device {} stats command".format(fail_device))
+                        fun_test.test_assert_expected(expected="DEV_ONLINE",
+                                                      actual=device_stats["data"]["device state"],
+                                                      message="Device ID {} is Enabled again".format(fail_device))
+                        # ## ''' Marking drive as online ''' ## #
+
+            try:
+                self.ec_info = fun_test.shared_variables["ec_info"]
+                self.attach_transport = fun_test.shared_variables["attach_transport"]
+                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
+                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
+
+                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    # Remove the file after use
+                    if host_handle.check_file_directory_exists(path=self.dd_create_file["output_file"]):
+                        try:
+                            host_handle.remove_file(file_name=self.dd_create_file["output_file"])
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                    pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
+                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
+
+                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
+                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
+                                 source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
+                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
+                                                filename=pcap_artifact_file)
+
+                # Executing NVMe disconnect from all the hosts
+                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
+                for host_name in self.host_info:
+                    host_handle = self.host_info[host_name]["handle"]
+                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
+                    nvme_disconnect_exit_status = host_handle.exit_status()
+                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+                                                  message="{} - NVME Disconnect Status".format(host_name))
+
+                # Detaching all the EC/LS volumes to the external server
+                for num in xrange(self.ec_info["num_volumes"]):
+                    command_result = self.storage_controller.detach_volume_from_controller(
+                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
+                    fun_test.log(command_result)
+                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
+
+                # Unconfiguring all the LSV/EC and it's plex volumes
+                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                              command_timeout=self.command_timeout)
+
+                # Deleting all the storage controller
+                for index in xrange(len(self.host_info)):
+                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
+                                                                               command_duration=self.command_timeout)
+                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
+                                         format(self.ctrlr_uuid[index]))
+
+                # Setting setup_created shared variable as False
+                fun_test.shared_variables["ec"]["setup_created"] = False
+            except Exception as ex:
+                fun_test.critical(str(ex))
 
 
-class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
+class ECVolSingleDriveFailRebuild(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolSingleDriveFailRebuild, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=1,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -945,27 +921,36 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger Single Plex failure
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        8. Perform write on test volume with particular buffer_pattern & during write trigger Single Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & during write trigger Rebuild on spare plex
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolSingleDriveFailRebuild, self).setup()
+        super(ECVolSingleDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolSingleDriveFailRebuild, self).run()
+        super(ECVolSingleDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolSingleDriveFailRebuild, self).cleanup()
+        super(ECVolSingleDriveFailRebuild, self).cleanup()
 
 
-class DurVolmDriveFailRebuild(DurableVolumeTestcase):
+class ECVolmDriveFailRebuild(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolmDriveFailRebuild, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=2,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -974,27 +959,36 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m Plex failures
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        8. Perform write on test volume with particular buffer_pattern & during write trigger m Plex failures
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & during write trigger Rebuild on spare plex
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolmDriveFailRebuild, self).setup()
+        super(ECVolmDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolmDriveFailRebuild, self).run()
+        super(ECVolmDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolmDriveFailRebuild, self).cleanup()
+        super(ECVolmDriveFailRebuild, self).cleanup()
 
 
-class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
+class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolmPlusOneDriveFailRebuild, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=3,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1003,27 +997,36 @@ class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
         5. Configure spare BLT volume/s to use it as spare volume during rebuild
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & during write trigger Rebuild on spare plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        8. Perform write on test volume with buffer_pattern option & during write trigger m+1 Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & during write trigger Rebuild on spare plex
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).setup()
+        super(ECVolmPlusOneDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).run()
+        super(ECVolmPlusOneDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).cleanup()
+        super(ECVolmPlusOneDriveFailRebuild, self).cleanup()
 
 
-class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
+class ECVolSingleDriveFailReSync(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolSingleDriveFailReSync, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=4,
                               summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1032,28 +1035,37 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger Single Plex failure
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option & Recover the failed plex and 
+        8. Perform write on test volume with particular buffer_pattern option & during write trigger Single Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolSingleDriveFailReSync, self).setup()
+        super(ECVolSingleDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolSingleDriveFailReSync, self).run()
+        super(ECVolSingleDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolSingleDriveFailReSync, self).cleanup()
+        super(ECVolSingleDriveFailReSync, self).cleanup()
 
 
-class DurVolmDriveFailReSync(DurableVolumeTestcase):
+class ECVolmDriveFailReSync(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolmDriveFailReSync, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=5,
                               summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1062,28 +1074,37 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m Plex failures
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option  & Recover the failed plex and 
+        8. Perform write on test volume with particular buffer_pattern option & during write trigger m Plex failures
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolmDriveFailReSync, self).setup()
+        super(ECVolmDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolmDriveFailReSync, self).run()
+        super(ECVolmDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolmDriveFailReSync, self).cleanup()
+        super(ECVolmDriveFailReSync, self).cleanup()
 
 
-class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
+class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolmPlusOneDriveFailReSync, self).__init__()
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=6,
                               summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1
@@ -1092,30 +1113,30 @@ class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
         5. -
         6. Export (Attach) the above volume to the Remote Host
         7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
-        8. Perform 50% write on test volume with --verify=md5 option & during write trigger m+1 Plex failure
-        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
-        10. Perform remaining 50% write on test volume with --verify option  & Recover the failed plex and 
+        8. Perform write on test volume with particular buffer_pattern option & during write trigger m+1 Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with buffer_pattern
+        10. Perform re-write on test volume with new buffer_pattern & Recover the failed plex and 
         during write trigger Rebuild on recovered plex
-        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        11. After Write is completed, verify data integrity with read mode IO and with new buffer_pattern of #10
         12. After data reconstruction is completed, verify data integrity for 100% volume size
         """)
 
     def setup(self):
-        super(DurVolmPlusOneDriveFailReSync, self).setup()
+        super(ECVolmPlusOneDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolmPlusOneDriveFailReSync, self).run()
+        super(ECVolmPlusOneDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolmPlusOneDriveFailReSync, self).cleanup()
+        super(ECVolmPlusOneDriveFailReSync, self).cleanup()
 
 
 if __name__ == "__main__":
-    ecscript = DurableVolScript()
-    ecscript.add_test_case(DurVolSingleDriveFailRebuild())
-    ecscript.add_test_case(DurVolmDriveFailRebuild())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
-    ecscript.add_test_case(DurVolSingleDriveFailReSync())
-    ecscript.add_test_case(DurVolmDriveFailReSync())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
+    ecscript = ECVolScript()
+    ecscript.add_test_case(ECVolSingleDriveFailRebuild())
+    ecscript.add_test_case(ECVolmDriveFailRebuild())
+    # ecscript.add_test_case(ECVolmPlusOneDriveFailRebuild())
+    ecscript.add_test_case(ECVolSingleDriveFailReSync())
+    ecscript.add_test_case(ECVolmDriveFailReSync())
+    # ecscript.add_test_case(ECVolmPlusOneDriveFailReSync())
     ecscript.run()

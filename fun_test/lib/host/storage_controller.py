@@ -260,6 +260,10 @@ class StorageController(NetworkController, DpcshClient):
             "params": {"device_id": device_id}}
         return self.json_execute(verb=self.mode, data=device_dict, command_duration=command_duration)
 
+    def get_device_status(self, device_id, command_duration=TIMEOUT):
+        data = "{}/{}/{}/{}/{}".format("storage", "devices", "nvme", "ssds", device_id)
+        return self.json_execute(verb="peek", data=data, command_duration=command_duration)
+
     def power_toggle_ssd(self, action, device_id, command_duration=TIMEOUT):
         data = ["output"]
         params = {"slot": device_id, "type": "hotswap", "action": action}
@@ -565,6 +569,16 @@ class StorageController(NetworkController, DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return command_result
+
+    def format_drive(self, device_id, label, command_timeout=TIMEOUT):
+        try:
+            format_cmd = {}
+            format_cmd["class"] = "device"
+            format_cmd["opcode"] = "FORMAT"
+            format_cmd["params"] = {"device_id": device_id, "label": label}
+            command_result = self.json_execute(verb="storage", data=format_cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
 
 if __name__ == "__main__":

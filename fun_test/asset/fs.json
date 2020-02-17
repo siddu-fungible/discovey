@@ -57,8 +57,10 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs6-fpga"
     },
-    "mpg_ips": ["10.1.21.168", "10.1.21.169"],
-
+    "mpg_ips": [
+      "10.1.21.168",
+      "10.1.21.169"
+    ],
     "name": "fs-6"
   },
   {
@@ -79,7 +81,7 @@
       "mgmt_ip": "fs15-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 13,
       "password": "Precious1*",
@@ -126,7 +128,7 @@
       "mgmt_ip": "fs20-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 7,
       "password": "Precious1*",
@@ -151,7 +153,7 @@
       "mgmt_ip": "fs21-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 20,
       "password": "Precious1*",
@@ -403,7 +405,7 @@
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.20.38"
+      "mgmt_ip": "10.1.20.27"
     },
     "apc_info": {
       "username": "admin",
@@ -550,7 +552,7 @@
       "mgmt_ip": "fs8-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 11,
       "password": "Precious1*",
@@ -575,7 +577,7 @@
       "mgmt_ip": "fs52-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 20,
       "password": "Precious1*",
@@ -600,7 +602,7 @@
       "mgmt_ip": "fs38-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 11,
       "password": "Precious1*",
@@ -643,8 +645,8 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs39-fpga"
     },
-        "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "gateway_ip": "10.80.4.1",
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 5,
       "password": "Precious1*",
@@ -668,8 +670,8 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs51-fpga"
     },
-        "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "gateway_ip": "10.80.4.1",
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 4,
       "password": "Precious1*",
@@ -693,8 +695,8 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs37-fpga"
     },
-        "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "gateway_ip": "10.80.4.1",
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 3,
       "password": "Precious1*",
@@ -719,7 +721,7 @@
       "mgmt_ip": "fs32-fpga"
     },
     "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 2,
       "password": "Precious1*",
@@ -743,8 +745,8 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs67-fpga"
     },
-        "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "gateway_ip": "10.80.4.1",
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 1,
       "password": "Precious1*",
@@ -768,8 +770,8 @@
       "mgmt_ssh_username": "root",
       "mgmt_ip": "fs40-fpga"
     },
-        "gateway_ip": "10.80.4.1",
-     "apc_info": {
+    "gateway_ip": "10.80.4.1",
+    "apc_info": {
       "username": "localadmin",
       "outlet_number": 6,
       "password": "Precious1*",
@@ -861,7 +863,10 @@
     },
     "name": "fs-144",
     "revision": "2",
-    "mpg_ips": ["10.1.105.88", "10.1.105.89"],
+    "mpg_ips": [
+      "10.1.105.88",
+      "10.1.105.89"
+    ],
     "gateway_ip": "10.1.105.1",
     "bundle_compatible": true,
     "fpga": {
@@ -999,7 +1004,10 @@
     "name": "fs-118",
     "revision": "2",
     "bundle_compatible": true,
-    "mpg_ips": ["10.1.108.15", "10.1.108.16"],
+    "mpg_ips": [
+      "10.1.108.15",
+      "10.1.108.16"
+    ],
     "gateway_ip": "10.1.108.1",
     "workarounds": {
       "skip_funeth_come_power_cycle": true
@@ -1073,7 +1081,10 @@
     },
     "elcom_info": {
       "username": "admin",
-      "outlet_list": [1, 4],
+      "outlet_list": [
+        1,
+        4
+      ],
       "password": "Precious1*",
       "host_ip": "192.168.8.125"
     }
@@ -1371,7 +1382,7 @@
     "come": {
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
-      "mgmt_ip": "10.1.21.21"
+      "mgmt_ip": "10.1.20.177"
     },
     "name": "fs-171",
     "workarounds": {
@@ -1381,8 +1392,8 @@
     "bundle_compatible": true,
     "fpga": {
       "mgmt_ssh_password": "",
-      "mgmt_ssh_username": "root",
-      "mgmt_ip": "10.1.21.117",
+      "mgmt_ssh_username": "",
+      "mgmt_ip": "10.1.20.177",
       "telnet_ip": "fs-terminal",
       "telnet_port": 2020,
       "telnet_username": "root",
@@ -1394,6 +1405,72 @@
       "outlet_number": 7,
       "password": "Precious1*",
       "host_ip": "r9-pdu3"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs161-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs161-come"
+    },
+    "name": "fs-161",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs161-fpga",
+      "telnet_ip": "cab01-terminal.fungible.local",
+      "telnet_port": 7014,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+   "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 21,
+      "password": "Precious1*",
+      "host_ip": "cab04-pdu1.fungible.local"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs162-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs162-come"
+    },
+    "name": "fs-162",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs162-fpga",
+      "telnet_ip": "cab01-terminal.fungible.local",
+      "telnet_port": 7015,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 22,
+      "password": "Precious1*",
+      "host_ip": "cab04-pdu1.fungible.local"
     }
   }
 ]
