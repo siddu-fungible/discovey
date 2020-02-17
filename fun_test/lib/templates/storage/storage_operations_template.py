@@ -32,11 +32,7 @@ class HostsState:
     hosts_states = {}
 
     def add_host_nvme_namespace(self, hostname, nvme_namespace):
-        if hostname in self.hosts_states:
-            self.hosts_states[hostname].append(nvme_namespace)
-        else:
-            self.hosts_states[hostname] = [nvme_namespace]
-            # nvme get-ns-id /dev/nvme0n1
+        self.hosts_states.setdefault(hostname, []).append(nvme_namespace)
 
     def get_host_nvme_namespaces(self, hostname):
         return self.hosts_states[hostname]
@@ -52,14 +48,18 @@ class StorageControllerOperationsTemplate:
         self.duts_state_object = DutsState()
         self.hosts_state_object = HostsState()
 
-    def get_health(self):
+    def get_health(self, fs_obj):
         result = True
-        for dut_index in self.topology.get_available_duts().keys():
-            fs = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs.get_storage_controller()
+        fs_obj_list = []
+        if not isinstance(fs_obj, list):
+            fs_obj_list.append(fs_obj)
+        else:
+            fs_obj_list = fs_obj
+        for fs_obj in fs_obj_list:
+            storage_controller = fs_obj.get_storage_controller()
             dut_health = storage_controller.health()
             fun_test.add_checkpoint(expected=True, actual=dut_health,
-                                    checkpoint="Check health of DUT: {}".format(dut_index))
+                                    checkpoint="Check health of DUT: {}".format(fs_obj))
             result &= dut_health
         return result
 
@@ -191,8 +191,9 @@ class StorageControllerOperationsTemplate:
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
             # pass fs_obj instead of dut info | Cant get bond interface using fs_obj..
-            fun_test.test_assert(self.get_health(),
+            fun_test.test_assert(self.get_health(fs_obj=fs_obj),
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before sending dataplane IP commands", seconds=60)  # WORKAROUND
@@ -312,6 +313,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                                                                 dataplane_ip=dataplane_ip,
                                                                                 nvme_io_queues=nvme_io_queues),
                                          message="NVMe connect from host: {}".format(host_obj.name))
+                else:
+                    fun_test.log("Skipping NVMe connect, because connection from host: {host} exists for "
+                                 "subsys-nqn: {subsys_nqn} and host-nqn: {host_nqn}".format(host=host_obj.name,
+                                                                                            subsys_nqn=subsys_nqn,
+                                                                                            host_nqn=host_nqn))
 
                 if host_obj not in self.host_nvme_device:
                     self.host_nvme_device[host_obj] = []
@@ -348,14 +354,14 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                         host_handle = host_obj.get_instance()
                         nvme_volumes = self._get_fungible_nvme_namespace(host_handle=host_obj.get_instance())
                         if nvme_volumes:
-                            if len(nvme_volumes) > 0:
                                 for namespace in nvme_volumes:
-                                    nvme_device = namespace[:-2].split('/dev/')[1]
-                                    namespace_subsys_nqn = host_handle.command(
-                                        "cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
-                                    if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                                        result = True
-                                        break
+                                    nvme_device = self._get_nvme_device_from_namespace(namespace=namespace)
+                                    if nvme_device:
+                                        namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
+                                            host_handle=host_handle, nvme_device=nvme_device)
+                                        if namespace_subsys_nqn == str(subsys_nqn):
+                                            result = True
+                                            break
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
@@ -518,6 +524,20 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if re.search("nvme", volume_name):
                 nvme_volumes.append(volume_name)
         return nvme_volumes
+
+    def _get_nvme_subsysnqn_by_device(self, host_handle, nvme_device):
+        namespace_subsys_nqn = host_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
+        return str(namespace_subsys_nqn).strip()
+
+    def _get_nvme_device_from_namespace(self, namespace):
+        result = None
+        if "/dev/" in namespace:
+            nvme_device = namespace[:-2].split('/dev/')[1]
+        else:
+            nvme_device = namespace[:-2]
+        if nvme_device.split("nvme")[0] == '' and nvme_device.split("nvme")[1].isdigit():
+            result = nvme_device
+        return result
 
     def _get_fungible_nvme_namespace(self, host_handle):
         # WORKAROUND - SWOS-8804
