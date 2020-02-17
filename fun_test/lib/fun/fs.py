@@ -1062,11 +1062,12 @@ class BootupWorker(Thread):
                 come = fs.get_come()
                 come.cleanup_databases()
 
-                fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
-                try:
-                    come.fs_reset()
-                except Exception as ex:
-                    pass
+                if fs.bundle_image_parameters:
+                    fs.set_boot_phase(BootPhases.FS_BRING_UP_FS_RESET)
+                    try:
+                        come.fs_reset()
+                    except Exception as ex:
+                        pass
 
                 fs.bmc = None
                 fs.come = None
