@@ -929,8 +929,9 @@ class ECVolumeTestcase(FunTestCase):
                 fun_test.critical(str(ex))
 
 
-class ECVolSingleDriveFailRebuild(ECVolumeTestcase, ECVolScript):
+class ECVolSingleDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -967,8 +968,9 @@ class ECVolSingleDriveFailRebuild(ECVolumeTestcase, ECVolScript):
         super(ECVolSingleDriveFailRebuild, self).cleanup()
 
 
-class ECVolmDriveFailRebuild(ECVolumeTestcase, ECVolScript):
+class ECVolmDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1006,8 +1008,9 @@ class ECVolmDriveFailRebuild(ECVolumeTestcase, ECVolScript):
         super(ECVolmDriveFailRebuild, self).cleanup()
 
 
-class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase, ECVolScript):
+class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmPlusOneDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1045,8 +1048,9 @@ class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase, ECVolScript):
         super(ECVolmPlusOneDriveFailRebuild, self).cleanup()
 
 
-class ECVolSingleDriveFailReSync(ECVolumeTestcase, ECVolScript):
+class ECVolSingleDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1085,8 +1089,9 @@ class ECVolSingleDriveFailReSync(ECVolumeTestcase, ECVolScript):
         super(ECVolSingleDriveFailReSync, self).cleanup()
 
 
-class ECVolmDriveFailReSync(ECVolumeTestcase, ECVolScript):
+class ECVolmDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1125,8 +1130,9 @@ class ECVolmDriveFailReSync(ECVolumeTestcase, ECVolScript):
         super(ECVolmDriveFailReSync, self).cleanup()
 
 
-class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase, ECVolScript):
+class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmPlusOneDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1165,8 +1171,9 @@ class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase, ECVolScript):
         super(ECVolmPlusOneDriveFailReSync, self).cleanup()
 
 
-class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase, ECVolScript):
+class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).__init__()
         testcase = self.__class__.__name__
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
