@@ -33,7 +33,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "DurVolSingleDriveFailRebuild": {
+  "ECVolSingleDriveFailRebuild": {
     "test_rail_case_id": ["C19529"],
     "ec_info": {
       "volume_types": {
@@ -86,7 +86,7 @@
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
-  "DurVolmDriveFailRebuild": {
+  "ECVolmDriveFailRebuild": {
     "test_rail_case_id": ["C19532"],
     "ec_info": {
       "volume_types": {
@@ -142,7 +142,7 @@
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
-  "DurVolmPlusOneDriveFailRebuild": {
+  "ECVolmPlusOneDriveFailRebuild": {
     "test_rail_case_id": ["C19169"],
     "ec_info": {
       "volume_types": {
@@ -198,7 +198,7 @@
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
-  "DurVolSingleDriveFailReSync": {
+  "ECVolSingleDriveFailReSync": {
     "test_rail_case_id": ["C19530"],
     "ec_info": {
       "volume_types": {
@@ -254,7 +254,7 @@
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
-  "DurVolmDriveFailReSync": {
+  "ECVolmDriveFailReSync": {
     "test_rail_case_id": ["C19531"],
     "ec_info": {
       "volume_types": {
@@ -310,7 +310,7 @@
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
-  "DurVolmPlusOneDriveFailReSync": {
+  "ECVolmPlusOneDriveFailReSync": {
     "test_rail_case_id": ["C19454"],
     "ec_info": {
       "volume_types": {
