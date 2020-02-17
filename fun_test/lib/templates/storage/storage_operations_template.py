@@ -306,8 +306,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             temp_host_obj_list.extend(x for x in host_obj_list)
             if volume_is_shared:
                 # when volumes are shared among hosts
-                temp_volume_uuid_list = temp_volume_uuid_list * len(temp_host_obj_list)
                 temp_host_obj_list = temp_host_obj_list * len(temp_volume_uuid_list)
+                for i in range(1, len(host_obj_list)):
+                    temp_volume_uuid_list.extend(volume_uuid_list[i:] + volume_uuid_list[:i])
             else:
                 if len(temp_host_obj_list) < len(temp_volume_uuid_list):
                     # when volumes are attached in round robin fashion

@@ -690,6 +690,14 @@ def get_device_numa_node(end_host, ethernet_adapter):
     return numa_node
 
 
+def get_total_numa_cpus(host_numa_cpu_range):
+    total_numa_cpus = 0
+    for cpu_group in host_numa_cpu_range.split(","):
+        cpu_range = cpu_group.split("-")
+        total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+    return total_numa_cpus
+
+
 def fetch_numa_cpus(end_host, ethernet_adapter):
     numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
