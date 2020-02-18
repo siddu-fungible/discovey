@@ -146,7 +146,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
             break
 
     def cleanup(self):
-        self.storage_controller_template.cleanup(test_result=fun_test.is_current_test_case_failed())
+        self.storage_controller_template.cleanup(test_result_failed=fun_test.is_current_test_case_failed())
         if not fun_test.is_current_test_case_failed():
             hosts = self.topology.get_available_host_instances()
             for host_obj in hosts:

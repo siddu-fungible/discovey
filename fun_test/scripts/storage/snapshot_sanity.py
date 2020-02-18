@@ -54,7 +54,7 @@ def nvme_connect_method(host_info, nqn_list, transport_type, test_network, trans
                 result = {"status": False}
             else:
                 fun_test.shared_variables["nvme_discovery"] = True
-                result = {"status": True, "device_details": device_details, "host_handle": host_handle}
+                result = {"status": True, "device_details": device_details["nvme_device"], "host_handle": host_handle}
         else:
             result = {"status": False}
 
@@ -514,7 +514,7 @@ class SnapVolumeTestCase(FunTestCase):
                 #     fio_numjobs = 1
                 fio_numjobs = 1
                 if "write" in mode:
-                    if self.snap_write:
+                    if hasattr(self, "snap_write") and self.snap_write:
                         self.fio_device = self.vol_to_device_map["snap_vol"]
                     else:
                         self.fio_device = self.vol_to_device_map["base_vol"]
