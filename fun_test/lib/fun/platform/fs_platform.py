@@ -20,10 +20,9 @@ class FsPlatform:
         dpc_client = self.fs_obj.get_dpc_client(f1_index=f1_index, auto_disconnect=True, statistics=True)
         cmd = "config/chip_info"
         dpc_result = dpc_client.json_execute(verb="peek", data=cmd, command_duration=3)
-        if not dpc_result["status"]:
-            return None
-        result = dpc_result["data"]
-        return result['images']
+        if dpc_result["status"]:
+            result = dpc_result["data"]["images"]
+        return result
 
     #should return True or False
     def validate_firmware(self, f1_index=0, bld_props=None):
