@@ -213,7 +213,7 @@
     "fio_run_timeout": 150,
     "fio_size_timeout": 7200,
     "fio_modes": ["randwrite"],
-    "fio_iodepth": [8, 16, 32, 64, 96, 128],
+    "fio_iodepth": [8],
     "full_run_iodepth": [8, 16],
     "fio_job_name": "inspur_8k_random_write",
     "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},

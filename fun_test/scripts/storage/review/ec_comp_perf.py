@@ -332,6 +332,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
         if "warmup_size" in job_inputs:
             self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
+        if "buffer_compress_percentage" in job_inputs:
+            self.warm_up_fio_cmd_args["buffer_compress_percentage"] = job_inputs["buffer_compress_percentage"]
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
             if not isinstance(self.csi_perf_iodepth, list):
