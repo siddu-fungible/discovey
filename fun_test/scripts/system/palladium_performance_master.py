@@ -8,6 +8,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metrics_parser import MetricParser
 from fun_global import FunPlatform
+from glob import glob
 
 F1 = FunPlatform.F1
 
@@ -195,7 +196,7 @@ class MyScript(FunTestScript):
                 SOAK_FLOWS_MEMCPY_S1, VOLTEST_BLT_1,
                 VOLTEST_BLT_8, VOLTEST_BLT_12, TERAMARK_EC_S1, TERAMARK_JPEG_S1, TERAMARK_ZIP_DEFLATE_S1,
                 TERAMARK_ZIP_LZMA_S1, TERAMARK_PKE_S1, TERAMARK_DFA_S1, TERAMARK_NFA_S1, TERAMARK_CRYPTO_RAW_S1, CRYPTO_FAST_PATH]
-        self.lsf_status_server.workaround(tags=tags)
+        # self.lsf_status_server.workaround(tags=tags)
         fun_test.shared_variables["lsf_status_server"] = self.lsf_status_server
 
     def cleanup(self):
@@ -1011,62 +1012,100 @@ class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class DataPlaneOperationsPerformanceTc(PalladiumPerformanceTc):
+    file_paths = ["attach_raw_volumes", "create_raw_volumes", "detach_raw_volumes", "delete_raw_volumes"]
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=65,
+                              summary="Data plane operations Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            self.lines = []
+            for names in self.file_paths:
+                file_path = SHARED_TEST_RESULTS_DIR + "/" + names
+                current_date = get_current_time()
+                current_date = datetime(year=current_date.year, month=current_date.month, day=14)
+                localMonthString = str(current_date.month) if current_date.month > 10 else '0' + str(current_date.month)
+                localDayString = str(current_date.day) if current_date.day > 10 else '0' + str(current_date.day)
+                current_date_string = str(current_date.year) + localMonthString + localDayString
+                file_directories = glob(file_path + "/*/")
+                for directory in file_directories:
+                    splits = directory.split('/')
+                    date_time_splits = splits[len(splits) - 2].split('_')
+                    date_time = date_time_splits[len(date_time_splits) - 1].split('-')[0]
+                    if date_time == current_date_string:
+                        fun_test.test_assert(os.access(directory + "/results.json", os.R_OK), "Ensure read access for "
+                                                                                            "the file")
+                        with open(directory + "/results.json") as fp:
+                            data = json.loads(fp.read())
+                            print json.dumps(data)
+            self.result = fun_test.PASSED
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
-    myscript.add_test_case(AllocSpeedPerformanceTc())
-    myscript.add_test_case(BcopyPerformanceTc())
-    myscript.add_test_case(BcopyFloodPerformanceTc())
-    myscript.add_test_case(EcPerformanceTc())
-    myscript.add_test_case(WuDispatchTestPerformanceTc())
-    myscript.add_test_case(WuSendSpeedTestPerformanceTc())
-    myscript.add_test_case(FunMagentPerformanceTestTc())
-    myscript.add_test_case(WuStackSpeedTestPerformanceTc())
-    myscript.add_test_case(SoakFunMallocPerformanceTc())
-    myscript.add_test_case(SoakClassicMallocPerformanceTc())
-    myscript.add_test_case(BootTimingPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
-    myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
-    myscript.add_test_case(TeraMarkCryptoPerformanceTc())
-    myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
-    myscript.add_test_case(FlowTestPerformanceTc())
-    myscript.add_test_case(TeraMarkZipPerformanceTc())
-    myscript.add_test_case(TeraMarkDfaPerformanceTc())
-    myscript.add_test_case(TeraMarkJpegPerformanceTc())
-    myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
-    myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
-    myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
-    myscript.add_test_case(SoakDmaMemsetPerformanceTc())
-    myscript.add_test_case(F1FlowTestPerformanceTc())
-    myscript.add_test_case(TeraMarkNfaPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
-    myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
-    myscript.add_test_case(RcnvmeReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
-    myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
-    myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
-    myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
-    myscript.add_test_case(WuLatencyUngatedPerformanceTc())
-    myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
-    myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
-    myscript.add_test_case(SetNetworkingStatusTc())
-    myscript.add_test_case(VoltestLsvPerformanceTc())
-    myscript.add_test_case(VoltestLsv4PerformanceTc())
-    myscript.add_test_case(ChannelParallPerformanceTc())
-    myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
-    myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
-    myscript.add_test_case(VoltestBlt1PerformanceTc())
-    myscript.add_test_case(VoltestBlt8PerformanceTc())
-    myscript.add_test_case(VoltestBlt12PerformanceTc())
-    myscript.add_test_case(CryptoFastPathPerformanceTc())
+    # myscript.add_test_case(AllocSpeedPerformanceTc())
+    # myscript.add_test_case(BcopyPerformanceTc())
+    # myscript.add_test_case(BcopyFloodPerformanceTc())
+    # myscript.add_test_case(EcPerformanceTc())
+    # myscript.add_test_case(WuDispatchTestPerformanceTc())
+    # myscript.add_test_case(WuSendSpeedTestPerformanceTc())
+    # myscript.add_test_case(FunMagentPerformanceTestTc())
+    # myscript.add_test_case(WuStackSpeedTestPerformanceTc())
+    # myscript.add_test_case(SoakFunMallocPerformanceTc())
+    # myscript.add_test_case(SoakClassicMallocPerformanceTc())
+    # myscript.add_test_case(BootTimingPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsaPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeRsa4kPerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh256PerformanceTc())
+    # myscript.add_test_case(TeraMarkPkeEcdh25519PerformanceTc())
+    # myscript.add_test_case(TeraMarkCryptoPerformanceTc())
+    # myscript.add_test_case(TeraMarkLookupEnginePerformanceTc())
+    # myscript.add_test_case(FlowTestPerformanceTc())
+    # myscript.add_test_case(TeraMarkZipPerformanceTc())
+    # myscript.add_test_case(TeraMarkDfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkJpegPerformanceTc())
+    # myscript.add_test_case(TeraMarkNuTransitPerformanceTc())
+    # myscript.add_test_case(PkeX25519TlsSoakPerformanceTc())
+    # myscript.add_test_case(PkeP256TlsSoakPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyNonCohPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemsetPerformanceTc())
+    # myscript.add_test_case(F1FlowTestPerformanceTc())
+    # myscript.add_test_case(TeraMarkNfaPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomReadPerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeWritePerformanceTc())
+    # myscript.add_test_case(TeraMarkRcnvmeRandomWritePerformanceTc())
+    # myscript.add_test_case(RcnvmeReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomReadAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeWriteAllPerformanceTc())
+    # myscript.add_test_case(RcnvmeRandomWriteAllPerformanceTc())
+    # myscript.add_test_case(SoakDmaMemcpyThresholdPerformanceTc())
+    # myscript.add_test_case(WuLatencyUngatedPerformanceTc())
+    # myscript.add_test_case(WuLatencyAllocStackPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecDecryptionSingleTunnelPerformanceTc())
+    # myscript.add_test_case(JuniperIpsecEncryptionMultiTunnelPerformanceTc())
+    # myscript.add_test_case(SetNetworkingStatusTc())
+    # myscript.add_test_case(VoltestLsvPerformanceTc())
+    # myscript.add_test_case(VoltestLsv4PerformanceTc())
+    # myscript.add_test_case(ChannelParallPerformanceTc())
+    # myscript.add_test_case(SoakFlowsBusyLoopPerformanceTc())
+    # myscript.add_test_case(SoakFlowsMemcpy1MbNonCohPerformanceTc())
+    # myscript.add_test_case(VoltestBlt1PerformanceTc())
+    # myscript.add_test_case(VoltestBlt8PerformanceTc())
+    # myscript.add_test_case(VoltestBlt12PerformanceTc())
+    # myscript.add_test_case(CryptoFastPathPerformanceTc())
+    myscript.add_test_case(DataPlaneOperationsPerformanceTc())
 
     myscript.run()
