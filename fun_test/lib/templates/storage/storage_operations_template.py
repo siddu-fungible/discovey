@@ -363,7 +363,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                         if nvme_volumes:
                             for namespace in nvme_volumes:
                                 nvme_device = self._get_nvme_device_namespace(namespace=namespace)
-                                fun_test.simple_assert(expression=nvme_device, message="Fecth NVMe device")
+                                fun_test.simple_assert(expression=nvme_device, message="Fetch NVMe device")
                                 if nvme_device:
                                     namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
                                         host_handle=host_handle, nvme_device=nvme_device)
@@ -503,16 +503,18 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if len(nvme_volumes) > 0:
                 if subsys_nqn:
                     for namespace in nvme_volumes:
-                        nvme_device = namespace[:-2].split('/dev/')[1]
-                        namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                            nvme_device))
-                        if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
-                            if nsid:
-                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                        nvme_device = self._get_nvme_device_namespace(namespace=namespace)
+                        fun_test.simple_assert(expression=nvme_device, message="Fetch NVMe device")
+                        if nvme_device:
+                            namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
+                                host_handle=host_linux_handle, nvme_device=nvme_device)
+                            if namespace_subsys_nqn == str(subsys_nqn):
+                                if nsid:
+                                    if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                                        result = namespace
+                                else:
                                     result = namespace
-                            else:
-                                result = namespace
-                                self.host_nvme_device[host_obj].append(namespace)
+                                    self.host_nvme_device[host_obj].append(namespace)
 
         return result
 

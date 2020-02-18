@@ -48,7 +48,6 @@ class BltApiStorageTest(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol"
-        count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 107374182400
         compression_effort = False
