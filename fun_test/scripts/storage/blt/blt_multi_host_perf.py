@@ -188,13 +188,15 @@ class MultiHostFioRandRead(FunTestCase):
             self.create_volume_list = []
             drive_id_list = []
 
-            unique_drives = True
-            if "unique_drives" in job_inputs:
-                unique_drives = job_inputs["unique_drives"]
-            fun_test.add_checkpoint("Check if volumes are to be created in unique drives:{}".format(str(unique_drives)))
+            use_unique_drives = True
+            if "use_unique_drives" in job_inputs:
+                use_unique_drives = job_inputs["use_unique_drives"]
+            fun_test.add_checkpoint(
+                checkpoint="Check if volumes are to be created in unique drives:{}".format(str(use_unique_drives)))
 
             for i in range(self.blt_count):
-                name = "blt_vol" + str(i + 1)
+                suffix = utils.generate_uuid(length=4)
+                name = "blt_vol_{}_{}".format(suffix, i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -210,7 +212,7 @@ class MultiHostFioRandRead(FunTestCase):
                 self.create_volume_list.append(current_vol_uuid)
 
                 # Check if drive id is unique
-                if unique_drives:
+                if use_unique_drives:
                     props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
                     dpcsh_op = self.sc_dpcsh_obj.peek(props_tree=props_tree)
                     fun_test.simple_assert(current_vol_uuid in dpcsh_op["data"].keys(),
