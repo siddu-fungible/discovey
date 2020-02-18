@@ -35,7 +35,10 @@ class HostsState:
         self.hosts_states.setdefault(hostname, []).append(nvme_namespace)
 
     def get_host_nvme_namespaces(self, hostname):
-        return self.hosts_states[hostname]
+        result = []
+        if hostname in self.hosts_states:
+            result = self.hosts_states[hostname]
+        return result
 
 
 class StorageControllerOperationsTemplate:
@@ -356,16 +359,17 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     if port_details.data.host_nqn == host_nqn:
 
                         host_handle = host_obj.get_instance()
-                        nvme_volumes = self._get_fungible_nvme_namespace(host_handle=host_obj.get_instance())
+                        nvme_volumes = self._get_fungible_nvme_namespaces(host_handle=host_obj.get_instance())
                         if nvme_volumes:
-                                for namespace in nvme_volumes:
-                                    nvme_device = self._get_nvme_device_from_namespace(namespace=namespace)
-                                    if nvme_device:
-                                        namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
-                                            host_handle=host_handle, nvme_device=nvme_device)
-                                        if namespace_subsys_nqn == str(subsys_nqn):
-                                            result = True
-                                            break
+                            for namespace in nvme_volumes:
+                                nvme_device = self._get_nvme_device_namespace(namespace=namespace)
+                                fun_test.simple_assert(expression=nvme_device, message="Fecth NVMe device")
+                                if nvme_device:
+                                    namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
+                                        host_handle=host_handle, nvme_device=nvme_device)
+                                    if namespace_subsys_nqn == str(subsys_nqn):
+                                        result = True
+                                        break
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
@@ -491,8 +495,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         """
         result = None
         host_linux_handle = host_obj.get_instance()
-        self.get_nvme_namespaces_lsblk(host_handle=host_linux_handle)
-        nvme_volumes = self._get_fungible_nvme_namespace(host_handle=host_linux_handle)
+        self.get_nvme_namespaces_by_lsblk(host_handle=host_linux_handle)
+        nvme_volumes = self._get_fungible_nvme_namespaces(host_handle=host_linux_handle)
         result = nvme_volumes
         if nvme_volumes:
             if len(nvme_volumes) > 0:
@@ -521,7 +525,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                            verify=verify, do_verify=do_verify)
         return fio_result
 
-    def get_nvme_namespaces_lsblk(self, host_handle):
+    def get_nvme_namespaces_by_lsblk(self, host_handle):
         lsblk_output = host_handle.lsblk(options="-b")
         nvme_volumes = []
         for volume_name in lsblk_output:
@@ -533,7 +537,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         namespace_subsys_nqn = host_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
         return str(namespace_subsys_nqn).strip()
 
-    def _get_nvme_device_from_namespace(self, namespace):
+    def _get_nvme_device_namespace(self, namespace):
         result = None
         if "/dev/" in namespace:
             nvme_device = namespace[:-2].split('/dev/')[1]
@@ -543,7 +547,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             result = nvme_device
         return result
 
-    def _get_fungible_nvme_namespace(self, host_handle):
+    def _get_fungible_nvme_namespaces(self, host_handle):
         # WORKAROUND - SWOS-8804
         result = None
         nvme_list_raw = host_handle.nvme_list(json_output=True)
@@ -650,8 +654,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_handle.sudo_command("killall fio")
             fun_test.add_checkpoint(checkpoint="Kill any running FIO processes")
             disconnected_nvme_devices = []
+            host_namespaces = self.hosts_state_object.get_host_nvme_namespaces(hostname=host_obj.name)
             for nvme_namespace in self.hosts_state_object.get_host_nvme_namespaces(hostname=host_obj.name):
-                nvme_device = self._get_nvme_device_from_namespace(namespace=nvme_namespace)
+                nvme_device = self._get_nvme_device_namespace(namespace=nvme_namespace)
                 if nvme_device and nvme_device not in disconnected_nvme_devices:
                     host_handle.nvme_disconnect(device=nvme_device)
                     fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
