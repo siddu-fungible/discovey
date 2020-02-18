@@ -351,6 +351,7 @@ class MultiHostFioRandRead(FunTestCase):
                     fun_test.critical(str(ex))
 
                 fun_test.sleep("Sleeping for 2 seconds before actual test", seconds=2)
+            fun_test.test_assert(fun_test.shared_variables["blt"]["warmup_done"], message="Warmup done successfully")
 
     def run(self):
         testcase = self.__class__.__name__
