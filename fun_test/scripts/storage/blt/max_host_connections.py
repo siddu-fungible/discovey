@@ -113,7 +113,8 @@ class MaxHostsConnections(FunTestCase):
         self.topology = fun_test.shared_variables["topology"]
         self.blt_template = fun_test.shared_variables["blt_template"]
         self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
-        self.num_of_connections = 64
+        self.num_of_connections = 128
+        self.tcp_connections_per_connect = 17
 
         tc_config = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -228,6 +229,18 @@ class MaxHostsConnections(FunTestCase):
                                                        validate_nvme_connect=True, raw_api_call=True)
 
                 fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+
+        # Populating the NVMe devices available to the hosts
+        for host in self.hosts:
+            host.nvme_block_device_list = []
+            for namespace in self.blt_template.host_nvme_device[host]:
+                host.nvme_block_device_list.append("/dev/{}".format(namespace))
+            fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
+            fun_test.test_assert_expected(expected=host.num_volumes,
+                                          actual=len(host.nvme_block_device_list),
+                                          message="Expected NVMe devices are available")
+            host.nvme_block_device_list.sort()
+            host.fio_filename = ":".join(host.nvme_block_device_list)
 
 
         # self.fio_io_size = 100 / len(self.hosts)
@@ -360,20 +373,39 @@ class MaxHostsConnections(FunTestCase):
                     host_nqn = result.host_nqn
                     dataplane_ip = result.ip
 
-                fun_test.test_assert(expression=self.blt_template.nvme_connect_from_host(host_obj=host_obj, subsys_nqn=subsys_nqn,
-                                                                            host_nqn=host_nqn, dataplane_ip=dataplane_ip,
-                                                                            nvme_io_queues=nvme_io_queues),
+                connections_before_connect = self.get_num_of_tcp_connections(host_obj)
+                fun_test.test_assert(expression=self.blt_template.nvme_connect_from_host(host_obj=host_obj,
+                                                                                         subsys_nqn=subsys_nqn,
+                                                                                         host_nqn=host_nqn,
+                                                                                         dataplane_ip=dataplane_ip,
+                                                                                         nvme_io_queues=nvme_io_queues),
                                      message="NVMe connect from host: {}".format(host_obj.name))
+                connections_after_connect = self.get_num_of_tcp_connections(host_obj)
+                fun_test.test_assert_expected(self.tcp_connections_per_connect,
+                                              connections_after_connect - connections_before_connect,
+                                              message="Number of new tcp connections created after nvme connect")
+                fun_test.log("Number of tcp connections from the host {} are {}".format(host_obj.name,
+                                                                                        connections_after_connect))
+
                 if host_obj not in self.blt_template.host_nvme_device:
                     self.blt_template.host_nvme_device[host_obj] = []
-                nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn)
-                fun_test.test_assert(expression=nvme_filename,
-                                     message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
-        if isinstance(host_obj, list):
-            result = result_list[0]
-        else:
-            result = result_list
-        return result
+                #nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host_obj)
+                #fun_test.test_assert(expression=nvme_filename,
+                #                    message="Get NVMe drive from Host {} using lsblk".format(host_obj.name))
+
+        return result_list
+
+    @staticmethod
+    def get_num_of_tcp_connections(host_obj):
+        #netstat_data = host_obj.instance.netstat([4420])
+        try:
+            output = host_obj.instance.sudo_command("netstat -nalp | grep 4420 | wc -l")
+            output = output.split('\r')[0]
+            connections = int(output)
+        except Exception:
+            fun_test.test_assert(False, message="Get netstat info from the host ")
+            return None
+        return connections
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
