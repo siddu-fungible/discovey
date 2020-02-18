@@ -2958,7 +2958,7 @@ if __name__ == "__main_alibaba_rdma__":
             # print json.dumps(new_charts, indent=4)
     print "added new charts for different sizes"
 
-if __name__ == "__main__":
+if __name__ == "__main_failure_ratio__":
     owner_info = "Ashwin S (ashwin.s@fungible.com)"
     source = "https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/system/build_time_performance.py"
     base_line_date = datetime(year=2020, month=2, day=10, minute=0, hour=0, second=0)
@@ -2981,3 +2981,67 @@ if __name__ == "__main__":
                            peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
                            workspace_ids=[])
     print "created flaky tests failure ratio chart"
+
+if __name__ == "__main__":
+    iops_chart_ids = [843, 1075, 1076, 1077]
+    fio_job_name = "fio_tcp_randread_blt_32_16_vol_"
+    for id in iops_chart_ids:
+        chart = MetricChart.objects.get(metric_id=id)
+        if chart:
+            data_sets = chart.get_data_sets()
+            new_data_set = chart.get_data_sets()[0]
+            old_fio_job_name = new_data_set["inputs"]["input_fio_job_name"]
+            if "vol_12" in old_fio_job_name:
+                new_data_set["inputs"]["input_fio_job_name"] = fio_job_name + "12"
+            elif "vol_8" in old_fio_job_name:
+                new_data_set["inputs"]["input_fio_job_name"] = fio_job_name + "8"
+            elif "vol_4" in old_fio_job_name:
+                new_data_set["inputs"]["input_fio_job_name"] = fio_job_name + "4"
+            elif "vol_2" in old_fio_job_name:
+                new_data_set["inputs"]["input_fio_job_name"] = fio_job_name + "2"
+            new_data_set["name"] = "qd512"
+            new_data_set["output"]["min"] = 0
+            new_data_set["output"]["max"] = -1
+            new_data_set["output"]["expected"] = -1
+            new_data_set["output"]["reference"] = -1
+            new_data_set["output"]["best"] = -1
+
+            data_sets.append(new_data_set)
+            chart.data_sets = json.dumps(data_sets)
+            chart.save()
+    print "created 512 qdepth iops dataset for all volumes"
+    copy_latency_charts = ["rand_read_qd1_multi_host_nvmetcp_2_vols_output_latency",
+                           "rand_read_qd1_multi_host_nvmetcp_4_vols_output_latency",
+                           "rand_read_qd1_multi_host_nvmetcp_8_vols_output_latency",
+                           "rand_read_qd1_multi_host_nvmetcp_output_latency"]
+    base_line_date = datetime(year=2020, month=1, day=30, minute=0, hour=0, second=0)
+    for latency_chart in copy_latency_charts:
+        chart = MetricChart.objects.get(internal_chart_name=latency_chart)
+        if chart:
+            internal_chart_name = latency_chart.replace("qd1", "qd512")
+            data_sets = chart.get_data_sets()
+            for data_set in data_sets:
+                data_set["output"]["min"] = 0
+                data_set["output"]["max"] = -1
+                data_set["output"]["expected"] = -1
+                data_set["output"]["reference"] = -1
+                data_set["output"]["best"] = -1
+                data_set["inputs"]["input_fio_job_name"] = data_set["inputs"]["input_fio_job_name"].replace("1_1",
+                                                                                                            "32_16")
+            ml.create_leaf(chart_name="Latency, QDepth=512", internal_chart_name=internal_chart_name,
+                           data_sets=data_sets, leaf=True,
+                           description=chart.description,
+                           owner_info=chart.owner_info, source=chart.source,
+                           positive=False, y1_axis_title=chart.y1_axis_title,
+                           visualization_unit=chart.visualization_unit,
+                           metric_model_name=chart.metric_model_name,
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+    print "created latency charts for all volumes random read"
+
+
+
+
+
