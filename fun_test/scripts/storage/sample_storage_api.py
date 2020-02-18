@@ -3,16 +3,17 @@ fun_test.enable_storage_api()
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
+from lib.templates.storage.storage_traffic_template import StorageTrafficTemplate
 from swagger_client.models.volume_types import VolumeTypes
 
 
-class BringupSetup(FunTestScript):
+class BootupSetup(FunTestScript):
     topology = None
     testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
     def describe(self):
         self.set_test_details(steps="""
-        1. Deploy the topology. Bringup FS1600 
+        1. Deploy the topology. Bootup FS1600 
         2. Configure Linux Host instance and make it available for test case
         """)
 
@@ -30,6 +31,7 @@ class BringupSetup(FunTestScript):
 class RunStorageApiCommands(FunTestCase):
     topology = None
     storage_controller_template = None
+    attach_result = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -45,7 +47,6 @@ class RunStorageApiCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol"
-        count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
         compression_effort = False
@@ -61,32 +62,37 @@ class RunStorageApiCommands(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
+        vol_uuid_list = self.storage_controller_template.\
+            create_volume(fs_obj=fs_obj_list, body_volume_intent_create=body_volume_intent_create)
         fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
         for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid_list[index],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            self.attach_result = attach_vol_result
 
     def run(self):
-        hosts = self.topology.get_available_hosts()
-        for host_id in hosts:
-            host_obj = hosts[host_id]
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
-            traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
-                                                                                filename="/dev/" + nvme_device_name[0])
-            fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
+        hosts = self.topology.get_available_host_instances()
+        for host_obj in hosts:
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
+                                                                                     subsys_nqn=self.attach_result[
+                                                                                         'data']['subsys_nqn'],
+                                                                                     nsid=self.attach_result[
+                                                                                         'data']['nsid'])
+            storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
+            traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
+            fun_test.test_assert(expression=traffic_result,
+                                 message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
     def cleanup(self):
-        self.storage_controller_template.cleanup()
+        self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
 
 
 if __name__ == "__main__":
-    setup_bringup = BringupSetup()
+    setup_bringup = BootupSetup()
     setup_bringup.add_test_case(RunStorageApiCommands())
     setup_bringup.run()
