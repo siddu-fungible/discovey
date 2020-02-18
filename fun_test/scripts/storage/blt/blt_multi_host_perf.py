@@ -526,7 +526,8 @@ class MultiHostFioRandRead(FunTestCase):
                 stats_obj.stop(self.stats_collect_details)
                 self.sc_dpcsh_obj.verbose = True
 
-            stats_obj.populate_stats_to_file(self.stats_collect_details, mode=mode, iodepth=row_data_dict["iodepth"])
+            job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+            stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
