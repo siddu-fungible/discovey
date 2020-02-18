@@ -13,6 +13,7 @@ from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
 from lib.fun.storage.fs_storage import FsStorage
+from lib.fun.networking.fs_networking import FsNetworking
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -2244,6 +2245,7 @@ class Fs(object, ToDictMixin):
         fun_test.register_fs(self)
 
         self.storage = FsStorage(fs_obj=self)
+        self.networking = FsNetworking(fs_obj=self)
 
     def get_bundle_version(self):
         result = None
@@ -3042,11 +3044,12 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main2__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
-    print fs.get_bundle_version()
-    health = fs.health(only_reachability=True)
-    print health
+    i = 0
+    # print fs.get_bundle_version()
+    # health = fs.health(only_reachability=True)
+    # print health
     # come = fs.get_come()
     # come.cleanup_redis()
 
@@ -3073,14 +3076,15 @@ if __name__ == "__main_2_":
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
 
-if __name__ == "__main3__":
+if __name__ == "__main__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
-    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-171"))
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-regression1"))
     topology = th.deploy(already_deployed=True)
     fs_obj = topology.get_dut_instance(index=0)
     # fs_obj.storage.nvme_ssds(f1_index=0)
     fs_obj.get_bundle_version()
-    health = fs_obj.health()
-    print health
-
+    # health = fs_obj.health()
+    # print health
+    for interface_index, bond_interface_obj in fs_obj.networking.get_bond_interfaces(f1_index=0).iteritems():
+        print bond_interface_obj.ip
