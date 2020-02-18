@@ -618,6 +618,7 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
         vol_group = {}
         vol_group[BltVolumeOperationsTemplate.vol_type] = fun_test.shared_variables["vol_uuid_list"]
         vol_details.append(vol_group)
+        self.storage_controller_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
         for mode in self.reboot_fio_modes:
             for io_depth in self.reboot_fio_iodepth:
                 self.test_mode = mode
