@@ -166,12 +166,12 @@ class MultiHostFioRandRead(FunTestCase):
                 fs_obj = self.topology.get_dut_instance(index=dut_index)
                 fs_obj_list.append(fs_obj)
             fs_obj = fs_obj_list[0]
-            self.storage_controller_dpcsh_obj = fs_obj.get_storage_controller(f1_index=0)
+            self.sc_dpcsh_obj = fs_obj.get_storage_controller(f1_index=0)
             self.hosts = self.topology.get_available_host_instances()
 
             # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
             # the capacity is not overridden while starting the script
-            min_drive_capacity = find_min_drive_capacity(self.storage_controller_dpcsh_obj)
+            min_drive_capacity = find_min_drive_capacity(self.sc_dpcsh_obj)
             if min_drive_capacity:
                 self.blt_details["capacity"] = min_drive_capacity
                 # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
@@ -186,8 +186,17 @@ class MultiHostFioRandRead(FunTestCase):
                 self.blt_details["capacity"] = job_inputs["capacity"]
 
             self.create_volume_list = []
+            drive_id_list = []
+
+            use_unique_drives = True
+            if "use_unique_drives" in job_inputs:
+                use_unique_drives = job_inputs["use_unique_drives"]
+            fun_test.add_checkpoint(
+                checkpoint="Check if volumes are to be created in unique drives:{}".format(str(use_unique_drives)))
+
             for i in range(self.blt_count):
-                name = "blt_vol" + str(i + 1)
+                suffix = utils.generate_uuid(length=4)
+                name = "blt_vol_{}_{}".format(suffix, i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -197,10 +206,22 @@ class MultiHostFioRandRead(FunTestCase):
                 vol_uuid_list = self.sc_template.create_volume(fs_obj=fs_obj_list,
                                                                body_volume_intent_create=
                                                                body_volume_intent_create)
+                current_vol_uuid = vol_uuid_list[0]
                 fun_test.test_assert(expression=vol_uuid_list,
-                                     message="Created Volume {} Successful".format(vol_uuid_list[0]))
-                self.create_volume_list.append(vol_uuid_list[0])
+                                     message="Created Volume {} Successful".format(current_vol_uuid))
+                self.create_volume_list.append(current_vol_uuid)
 
+                # Check if drive id is unique
+                if use_unique_drives:
+                    props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
+                    dpcsh_op = self.sc_dpcsh_obj.peek(props_tree=props_tree)
+                    fun_test.simple_assert(current_vol_uuid in dpcsh_op["data"].keys(),
+                                           message="Volume {} not seen in peek storage output".format(current_vol_uuid))
+                    drive_id = dpcsh_op["data"][current_vol_uuid]["stats"]["drive_uuid"]
+                    fun_test.test_assert(drive_id not in drive_id_list,
+                                         message="Volume with uuid {} id created on unique drive having"
+                                                 " uuid {}".format(current_vol_uuid, drive_id))
+                    drive_id_list.append(drive_id)
 
             fun_test.test_assert_expected(expected=self.blt_count, actual=len(self.create_volume_list),
                                           message="Created {} number of volumes".format(self.blt_count))
@@ -253,7 +274,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
-                set_fcp_scheduler(storage_controller=self.storage_controller_dpcsh_obj,
+                set_fcp_scheduler(storage_controller=self.sc_dpcsh_obj,
                                   config_fcp_scheduler=self.config_fcp_scheduler,
                                   command_timeout=5)
 
@@ -291,7 +312,7 @@ class MultiHostFioRandRead(FunTestCase):
 
             fun_test.shared_variables["blt"]["setup_created"] = True
             fun_test.shared_variables["hosts"] = self.hosts
-            fun_test.shared_variables["dpcsh_obj"] = self.storage_controller_dpcsh_obj
+            fun_test.shared_variables["dpcsh_obj"] = self.sc_dpcsh_obj
 
         if not fun_test.shared_variables["blt"]["warmup_done"]:
             thread_id = {}
@@ -351,6 +372,7 @@ class MultiHostFioRandRead(FunTestCase):
                     fun_test.critical(str(ex))
 
                 fun_test.sleep("Sleeping for 2 seconds before actual test", seconds=2)
+            fun_test.test_assert(fun_test.shared_variables["blt"]["warmup_done"], message="Warmup done successfully")
 
     def run(self):
         testcase = self.__class__.__name__
@@ -377,7 +399,7 @@ class MultiHostFioRandRead(FunTestCase):
         table_data_rows = []
 
         self.hosts = fun_test.shared_variables["hosts"]
-        self.storage_controller_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
+        self.sc_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
 
         # Preparing the volume details list containing the list of dictionaries
         vol_details = []
@@ -415,8 +437,8 @@ class MultiHostFioRandRead(FunTestCase):
                     self.stats_collect_details[index][func]["vol_details"] = vol_details
             fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
-            self.storage_controller_dpcsh_obj.verbose = False
-            stats_obj = CollectStats(self.storage_controller_dpcsh_obj)
+            self.sc_dpcsh_obj.verbose = False
+            stats_obj = CollectStats(self.sc_dpcsh_obj)
             stats_obj.start(file_suffix, self.stats_collect_details)
             fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
@@ -502,9 +524,10 @@ class MultiHostFioRandRead(FunTestCase):
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
             finally:
                 stats_obj.stop(self.stats_collect_details)
-                self.storage_controller_dpcsh_obj.verbose = True
+                self.sc_dpcsh_obj.verbose = True
 
-            stats_obj.populate_stats_to_file(self.stats_collect_details, mode=mode, iodepth=row_data_dict["iodepth"])
+            job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+            stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 

@@ -46,12 +46,6 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
-        fs_obj = fs_obj_list[0]
-
         self.sc_template = EcVolumeOperationsTemplate(topology=self.topology)
         self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
         fun_test.shared_variables["storage_controller_template"] = self.sc_template

@@ -75,6 +75,10 @@
       "mgmt_ip": "fs15-come"
     },
     "name": "fs-15",
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
+    },
     "fpga": {
       "mgmt_ssh_password": "root",
       "mgmt_ssh_username": "root",
@@ -121,6 +125,10 @@
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "fs20-come"
     },
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
+    },
     "name": "fs-20",
     "fpga": {
       "mgmt_ssh_password": "root",
@@ -145,6 +153,10 @@
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "fs21-come"
+    },
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
     },
     "name": "fs-21",
     "fpga": {
@@ -545,6 +557,10 @@
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "fs8-come"
     },
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
+    },
     "name": "fs-8",
     "fpga": {
       "mgmt_ssh_password": "root",
@@ -594,6 +610,10 @@
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "fs38-come"
+    },
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
     },
     "name": "fs-38",
     "fpga": {
@@ -713,6 +733,10 @@
       "mgmt_ssh_password": "123",
       "mgmt_ssh_username": "fun",
       "mgmt_ip": "fs32-come"
+    },
+    "bundle_compatible": false,
+    "workarounds": {
+      "retimer_workaround": true
     },
     "name": "fs-32",
     "fpga": {

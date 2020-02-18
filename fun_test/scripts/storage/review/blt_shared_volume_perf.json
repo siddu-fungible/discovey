@@ -82,10 +82,10 @@
       "multiple_jobs": "--rw=randwrite --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=0 --verify=md5",
       "timeout": 3600
     },
-    "reboot_fio_modes": ["randread"],
-    "reboot_fio_iodepth": [128],
-    "reboot_fio_bs": "4k",
-    "reboot_fio_cmd_args": {
+    "fio_modes": ["randread"],
+    "fio_iodepth": [128],
+    "fio_bs": "4k",
+    "fio_cmd_args": {
       "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=1 --verify=md5",
       "timeout": 3600
     },
