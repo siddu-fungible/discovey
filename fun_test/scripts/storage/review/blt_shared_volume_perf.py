@@ -90,6 +90,7 @@ class BringupSetup(FunTestScript):
         self.blt_template.cleanup()
         self.topology.cleanup()
 
+
 class SharedVolumePerfTest(FunTestCase):
 
     def describe(self):
@@ -141,6 +142,8 @@ class SharedVolumePerfTest(FunTestCase):
         if "warmup_bs" in job_inputs:
             self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
                 replace("bs=128k", "bs={}".format(job_inputs["warmup_bs"]))
+        if "fio_modes" in job_inputs:
+            self.fio_modes = job_inputs["fio_modes"]
 
         """
         self.topology = fun_test.shared_variables["topology"]
@@ -225,11 +228,10 @@ class SharedVolumePerfTest(FunTestCase):
             fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
             fun_test.test_assert_expected(expected=host.num_volumes,
                                           actual=len(host.nvme_block_device_list),
-                                          message="Expected NVMe devices are available")
+                                          message="Expected NVMe devices are available - {}".format(host.name))
             host.nvme_block_device_list.sort()
             print("host_nvme_block_device list",host.nvme_block_device_list)
             host.fio_filename = ":".join(host.nvme_block_device_list)
-
 
         # Extracting the host CPUs
         # for host in self.hosts:
@@ -374,13 +376,12 @@ class SharedVolumePerfTest(FunTestCase):
                 row_data_dict["iodepth"] = io_depth
                 num_jobs = 32 / self.blt_count
                 file_size_in_gb = self.capacity / 1073741824
-                runtime = 60
                 row_data_dict["size"] = str(file_size_in_gb) + "GB"
                 file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
                 for index, stat_detail in enumerate(self.stats_collect_details):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(
-                        runtime / self.stats_collect_details[index][func]["interval"])
+                        self.fio_cmd_args["timeout"] / self.stats_collect_details[index][func]["interval"])
                     if func == "vol_stats":
                         self.stats_collect_details[index][func]["vol_details"] = vol_details
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
@@ -450,8 +451,8 @@ class SharedVolumePerfTest(FunTestCase):
                     stats_obj.stop(self.stats_collect_details)
                     self.storage_controller_dpcsh_obj.verbose = True
 
-                stats_obj.populate_stats_to_file(self.stats_collect_details, mode=mode,
-                                                 iodepth=row_data_dict["iodepth"])
+                job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+                stats_obj.populate_stats_to_file(self.stats_collect_details, job_string=job_string)
 
                 aggr_fio_output = {}
                 for index, host in enumerate(self.hosts):
@@ -479,7 +480,6 @@ class SharedVolumePerfTest(FunTestCase):
                         row_data_dict[op + field] = aggr_fio_output[op][field]
                 fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
-
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
@@ -493,10 +493,10 @@ class SharedVolumePerfTest(FunTestCase):
                                    table_data=table_data)
 
     def cleanup(self):
-       pass
+        pass
 
 
-class ConfigPeristenceAfterReset(SharedVolumePerfTest):
+class ConfigPeristenceAfterReset(FunTestCase):
     topology = None
     storage_controller_template = None
 
@@ -512,7 +512,6 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
                                  ''')
 
     def setup(self):
-        # super(ConfigPeristenceAfterReset,self).setup()
         testcase = self.__class__.__name__
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
@@ -543,8 +542,8 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
         # Reboot logic
 
         total_reconnect_time = 600
-        add_on_time = 180 # Needed for getting through 60 iterations of reconnect from host
-        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time) #WORKAROUND, why do we need so much time
+        add_on_time = 180  # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)  # WORKAROUND, why do we need so much time
         # Reset the fs and ensure all containers are up and api server is running
 
         self.reset_and_health_check(self.fs_obj_list[0])
@@ -580,16 +579,16 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
             if volume_found:
                 for host in self.hosts:
                     host_handle = host.instance
-                    nvme_device_list_after_reboot = self.fetch_nvme_list(host_handle)
+                    nvme_device_list_after_reboot = fetch_nvme_list(host_handle)
                     fun_test.log("nvme_device_list_after_reboot")
                     fun_test.log(nvme_device_list_after_reboot)
-                    if nvme_device_list_after_reboot["status"] == True:
+                    if nvme_device_list_after_reboot["status"]:
                         fun_test.test_assert_expected(
                             expected=len(host.nvme_block_device_list),
                             actual=len(nvme_device_list_after_reboot["nvme_devices"]),
                             message="Expected number of NVMe devices available after reboot")
                         res = sorted(host.nvme_block_device_list) == sorted(nvme_device_list_after_reboot["nvme_devices"])
-                        fun_test.test_assert(res,"nvme device names are valid {}".format(nvme_device_list_after_reboot["nvme_devices"]))
+                        fun_test.test_assert(res, "nvme device names are valid {}".format(nvme_device_list_after_reboot["nvme_devices"]))
                 break
 
     def run(self):
@@ -750,7 +749,6 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
     def cleanup(self):
         self.storage_controller_template.cleanup()
 
-
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset(hard=False)
         fun_test.test_assert(fs_obj.come.ensure_expected_containers_running(), "All containers are up")
@@ -758,7 +756,8 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
             storage_controller=fs_obj.get_storage_controller()),
             message="{}: API server health".format(fs_obj))
 
-    def fetch_nvme_list(self,host_obj):
+    """
+    def fetch_nvme_list(self, host_obj):
         result = {'status': False}
         nvme_list_raw = host_obj.sudo_command("nvme list -o json")
         fun_test.log("NVME list command results")
@@ -791,6 +790,8 @@ class ConfigPeristenceAfterReset(SharedVolumePerfTest):
         else:
             result = {'status': False, 'nvme_devices': None}
         return result
+    """
+
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
