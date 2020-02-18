@@ -3014,7 +3014,7 @@ if __name__ == "__main__":
                            "rand_read_qd1_multi_host_nvmetcp_4_vols_output_latency",
                            "rand_read_qd1_multi_host_nvmetcp_8_vols_output_latency",
                            "rand_read_qd1_multi_host_nvmetcp_output_latency"]
-    base_line_date = datetime(year=2020, month=2, day=10, minute=0, hour=0, second=0)
+    base_line_date = datetime(year=2020, month=1, day=30, minute=0, hour=0, second=0)
     for latency_chart in copy_latency_charts:
         chart = MetricChart.objects.get(internal_chart_name=latency_chart)
         if chart:
