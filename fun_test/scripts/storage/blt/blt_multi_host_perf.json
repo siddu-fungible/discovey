@@ -8,6 +8,7 @@
       "compression_effort": false,
       "encrypt": false
     },
+    "raw_api_call": true,
     "drive_margin": 0,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
@@ -58,6 +59,7 @@
       "compression_effort": false,
       "encrypt": false
     },
+    "raw_api_call": true,
     "drive_margin": 0,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
@@ -105,6 +107,7 @@
       "compression_effort": false,
       "encrypt": false
     },
+    "raw_api_call": true,
     "drive_margin": 0,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},

@@ -690,6 +690,14 @@ def get_device_numa_node(end_host, ethernet_adapter):
     return numa_node
 
 
+def get_total_numa_cpus(host_numa_cpu_range):
+    total_numa_cpus = 0
+    for cpu_group in host_numa_cpu_range.split(","):
+        cpu_range = cpu_group.split("-")
+        total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+    return total_numa_cpus
+
+
 def fetch_numa_cpus(end_host, ethernet_adapter):
     numa_cpus = None
     lspci_output = end_host.lspci(grep_filter=ethernet_adapter)
@@ -2519,56 +2527,56 @@ class CollectStats(object):
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
-    def populate_stats_to_file(self, stats_collect_details, mode, iodepth):
+    def populate_stats_to_file(self, stats_collect_details, job_string):
         for index, value in enumerate(stats_collect_details):
             for func, arg in value.iteritems():
                 filename = arg.get("output_file")
                 if filename:
                     if func == "vp_utils":
-                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {}".format(job_string),
+                                                    filename=filename)
                     if func == "per_vp":
-                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "resource_bam_args":
-                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "vol_stats":
-                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="Volume Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "vppkts_stats":
-                        fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="VP Pkts Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "psw_stats":
-                        fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="PSW Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "fcp_stats":
-                        fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="FCP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "wro_stats":
-                        fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="WRO Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "erp_stats":
-                        fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="ERP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "etp_stats":
-                        fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="ETP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "eqm_stats":
-                        fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="EQM Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "hu_stats":
-                        fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="HU Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "ddr_stats":
-                        fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="DDR Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "ca_stats":
-                        fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="CA Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "cdu_stats":
-                        fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="CDU Stats - {}".format(job_string),
+                                                    filename=filename)
 
 
 def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
@@ -2588,7 +2596,6 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
         fun_test.critical("Unable to get the individual drive status...")
 
     return min_capacity
-
 
 
 def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
@@ -2611,6 +2618,7 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["status"] = True
 
     return result
+
 
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
@@ -2661,6 +2669,7 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
             fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result
+
 
 def get_plex_device_id(ec_info, storage_controller):
     if "device_id" not in ec_info:

@@ -507,6 +507,7 @@ def suites(request, id):
             s = Suite()
         else:
             s = Suite.objects.get(id=id)
+            s.modified_date = datetime.datetime.now()
         request_json = json.loads(request.body)
         name = request_json.get("name", None)
         short_description = request_json.get("short_description", None)
@@ -515,12 +516,14 @@ def suites(request, id):
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
         type = request_json.get("type", "SUITE")  # TODO
+        owner_email = request_json.get("owner_email", "john.abraham@fungible.com")
         s.type = type
         s.name = name
         s.short_description = short_description
         s.categories = categories
         s.tags = tags
         s.custom_test_bed_spec = custom_test_bed_spec
+        s.owner_email = owner_email
         if suite_entries is not None:
             s.entries = suite_entries
         s.save()
@@ -856,11 +859,14 @@ def last_good_build(request, release_train):
         request_json = json.loads(request.body)
         last_good_build_object = LastGoodBuild.set(**request_json)
         if last_good_build_object:
-            result = last_good_build.to_dict()
-    if request.method == "GET":
-        last_good_build_object = LastGoodBuild.get(release_train=release_train)
-        if last_good_build_object:
             result = last_good_build_object.to_dict()
+    if request.method == "GET":
+        if release_train:
+            last_good_build_object = LastGoodBuild.get(release_train=release_train)
+            if last_good_build_object:
+                result = last_good_build_object.to_dict()
+        else:
+            result = [x.to_dict() for x in LastGoodBuild.objects.all().order_by('-updated_date')]
     return result
 
 

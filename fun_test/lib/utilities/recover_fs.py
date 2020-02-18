@@ -7,7 +7,7 @@ if __name__ == "__main__":
     fs_names = ["fs-104", "fs-116", "fs-117", "fs-121", "fs-122", "fs-123"]
     fs_names = ["fs-123"]
 
-    for fs_name in fs_names:fs
+    for fs_name in fs_names:
         try:
             stable_image_gz = "s_57904_funos-f1.stripped.signed.gz"
             stable_image_gz = "s_57928_funos-f1.stripped.signed.gz"  # 198 good

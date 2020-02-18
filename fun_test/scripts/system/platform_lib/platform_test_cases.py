@@ -11,7 +11,7 @@ def run_decorator(func):
     return function_wrapper
 
 
-class MyScript(FunTestScript):
+class PlatformScriptSetup(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""""")
 
@@ -559,7 +559,19 @@ class ComeVolumeCreation(PlatformGeneralTestCase, StorageApi):
 
     @run_decorator
     def run(self):
+        run_time = self.fio_read["runtime"]
+        # platform_stats = PlatformStat()
+        # time_in_seconds = 5
+        # stats_thread = fun_test.execute_thread_after(func=platform_stats.start_monitoring_fan_sensors,
+        #                                              time_in_seconds=time_in_seconds,
+        #                                              interval=self.stats_interval)
+        # fun_test.sleep("Wait for thread to start", seconds=time_in_seconds)
+        # asyncapp = DpcshAsyncApps()
+        # response = asyncapp.rcnvme(self.come_handle, duration=run_time + 20)
+        # fun_test.test_assert(response["status"], "Started the RCNVME app for duration: {}".format(run_time))
         self.create_volume_and_run_fio()
+        # platform_stats.stop_monitoring_fan_sensors()
+        # fun_test.join_thread(stats_thread)
 
     def cleanup(self):
         # PlatformGeneralTestCase.cleanup(self)
@@ -789,6 +801,7 @@ class BroadcomLoginVerification(PlatformGeneralTestCase):
 
 
 class TftpImage(PlatformGeneralTestCase):
+    # --environment={\"test_bed_type\":\"fs-65\",\"tftp_image_path\":\"ranga/funos-f1_onkar.stripped.gz\"}
     def describe(self):
         self.set_test_details(id=29,
                               summary="boot any image",
@@ -802,12 +815,6 @@ class TftpImage(PlatformGeneralTestCase):
         topology_helper.set_dut_parameters(fs_parameters={"already_deployed": self.already_deployed})
         self.topology = topology_helper.deploy()
         fun_test.test_assert(self.topology, "Topology deployed")
-
-        self.fs_obj = self.topology.get_dut_instance(index=0)
-        self.dpc_f1_0 = self.fs_obj.get_dpc_client(0)
-        self.dpc_f1_1 = self.fs_obj.get_dpc_client(1)
-        self.come_handle = self.fs_obj.get_come()
-        self.bmc_handle = self.fs_obj.get_bmc()
 
     @run_decorator
     def run(self):
@@ -829,37 +836,37 @@ class General(PlatformGeneralTestCase):
 
 
 if __name__ == "__main__":
-    myscript = MyScript()
+    myscript = PlatformScriptSetup()
     test_case_list = [
-        DiscoverStaticIp,
-        DiscoverDhcpIp,
-        AlternateCommunicationToBmc,
-        PlatformComponentVersioningDiscovery,
-        BootSequenceFpga,
-        BootSequenceBmc,
-        BootSequenceCome,
-        BmcLinkToggle,
-        BmcColdBoot,
-        BmcIpmiReset,
-        BmcTransportForCommunication,
-        TemperatureSensorBmcIpmi,
-        FanSensorBootupIpmi,
-        TemperatureFanMeasurement,
-        InletExhasutThreshold,
+        # DiscoverStaticIp,
+        # DiscoverDhcpIp,
+        # AlternateCommunicationToBmc,
+        # PlatformComponentVersioningDiscovery,
+        # BootSequenceFpga,
+        # BootSequenceBmc,
+        # BootSequenceCome,
+        # BmcLinkToggle,
+        # BmcColdBoot,
+        # BmcIpmiReset,
+        # BmcTransportForCommunication,
+        # TemperatureSensorBmcIpmi,
+        # FanSensorBootupIpmi,
+        # TemperatureFanMeasurement,
+        # InletExhasutThreshold,
         FanRedfishtool,
-        F1AsicTemperature,
-        BootComeUefiOrBios,
-        PcieDiscoverySsdViaRc,
-        PcieDeviceDetection,
-        HostConnectionViaPcieBus,
-        ComeVolumeCreation,
-        SnakeTest,
-        PortSplitTestCase,
-        FanSpeedVariations,
-        MultipleF1Reset,
-        BroadcomLoginVerification,
-        BundleInstallWithDisable,
-        TftpImage
+        # F1AsicTemperature,
+        # BootComeUefiOrBios,
+        # PcieDiscoverySsdViaRc,
+        # PcieDeviceDetection,
+        # HostConnectionViaPcieBus,
+        # ComeVolumeCreation,
+        # SnakeTest,
+        # PortSplitTestCase,
+        # FanSpeedVariations,
+        # MultipleF1Reset,
+        # BroadcomLoginVerification,
+        # BundleInstallWithDisable,
+        # TftpImage
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

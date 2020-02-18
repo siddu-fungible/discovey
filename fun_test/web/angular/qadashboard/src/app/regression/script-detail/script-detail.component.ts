@@ -162,7 +162,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
-  suiteExecutionId: number = 10000;
+  suiteExecutionId: number = null;
   logPrefix: number = null;
   scriptId: number = null;
   scriptPath: string = null;
@@ -206,9 +206,11 @@ export class ScriptDetailComponent implements OnInit {
   registeredAssets: RegisteredAsset [];
 
   timeSeriesTypes: any = null;
+  baseUrl: string = null;
+  queryParams: any = {};
 
   ngOnInit() {
-
+    this.baseUrl = '/regression/script_detail';
     this.driver = of(true).pipe(switchMap(response => {
       return this.regressionService.getTimeSeriesTypes();
     })).pipe(switchMap(response => {
@@ -246,6 +248,8 @@ export class ScriptDetailComponent implements OnInit {
     })).pipe(switchMap(response => {
       this._parseTestCaseTables(response);
       return of(true);
+    })).pipe(switchMap(response => {
+      return this.getQueryParams();
     }));
 
     this.route.params.subscribe(params => {
@@ -258,11 +262,114 @@ export class ScriptDetailComponent implements OnInit {
       if (params["scriptId"]) {
         this.scriptId = parseInt(params["scriptId"]);
       }
+      if (this.scriptId && this.logPrefix && this.suiteExecutionId) {
+        this.baseUrl += "/" + this.scriptId + "/" + this.logPrefix + "/" + this.suiteExecutionId;
+      }
       this.refreshAll();
-
     });
 
+  }
 
+  getQueryParams() {
+    this.route.queryParams.subscribe(params => {
+      this.queryParams = {};
+      if (params['show_more_logs']) {
+        this.queryParams['show_more_logs'] = 1;
+        this.openArtifactsPanelClick();
+      } else {
+        this.showingArtifactPanel = false;
+      }
+
+      if (params['show_test_case_tables']) {
+        this.queryParams['show_test_case_tables'] = 1;
+        this.openTestCaseTablesPanelClick();
+      } else {
+        this.showingTablesPanel = false;
+      }
+      // test_case_id and checkpoint_id
+      if (params['test_case_id'] && params['checkpoint_id']) {
+        let testCaseId = Number(params['test_case_id']);
+        this.queryParams['test_case_id'] = testCaseId;
+        this.fetchTestCases(testCaseId).subscribe(response => {
+          let checkpointId = Number(params['checkpoint_id']);
+          this.queryParams['checkpoint_id'] = checkpointId;
+          this.expandCheckpointIdClick(checkpointId);
+        }, error => {
+          this.loggerService.error("Unable to fetch test case and checkpoints", error);
+          this.status = null;
+        });
+      } else if (params['test_case_id']) {
+        let testCaseId = Number(params['test_case_id']);
+        this.queryParams['test_case_id'] = testCaseId;
+        this.fetchTestCases(testCaseId).subscribe(response => {
+        }, error => {
+          this.loggerService.error("Unable to fetch test cases", error);
+          this.status = null;
+        });
+      }
+    });
+    return of(true);
+  }
+
+  fetchTestCases(testCaseId = null, testCaseIndex = null): any {
+    return of(true).pipe(
+      switchMap(response => {
+        let index = null;
+        if (testCaseId != null) { //explicitly do a null check coz the test_case_id 0 exists
+          let id = Number(testCaseId);
+          index = this.getIndexFromTestCaseId(id);
+        }
+        if (testCaseIndex) {
+          index = testCaseIndex;
+        }
+        if (index != null) {
+          this.testLogs = null;
+          this.currentCheckpointIndex = null;
+          this.showLogsPanel = false;
+          this.currentTestCaseExecution = this.testCaseExecutions[String(index)];
+          this.updateScriptExecutionInfo();
+        } else {
+          throw of("Test case index not found");
+        }
+        return of(true);
+      })).pipe(
+      switchMap(response => {
+        this.checkpointPanelStatus = "Fetching checkpoints";
+        return this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId);
+      })).pipe(
+      switchMap(response => {
+        this.checkpointPanelStatus = null;
+        this.showCheckpointPanel = true;
+        return of(true);
+
+      }));
+  }
+
+  expandCheckpointIdClick(checkpointId) {
+    let contextId = this.getContextIdFromCheckpointId(checkpointId);
+    this.onCheckpointClick(this.currentTestCaseExecution, checkpointId, contextId);
+  }
+
+  getContextIdFromCheckpointId(checkpointId) {
+    let contextId = 0;
+    for (let checkpoint of this.currentTestCaseExecution.checkpoints) {
+      if (checkpoint.data.checkpoint_index === checkpointId) {
+        contextId = checkpoint.data.context_id;
+        break;
+      }
+    }
+    return contextId;
+  }
+
+  getIndexFromTestCaseId(testCaseId): Number {
+    let index = null;
+    for (let i = 0; i < this.testCaseExecutions.length; i++) {
+      if (this.testCaseExecutions[i].test_case_id === testCaseId) {
+        index = i;
+        break;
+      }
+    }
+    return index;
   }
 
   clickedStatsTreeNode(flatNode): void {
@@ -361,30 +468,6 @@ export class ScriptDetailComponent implements OnInit {
     }
   }
 
-  onTestCaseIdClick(testCaseExecutionIndex) {
-    this.testLogs = null;
-    this.currentCheckpointIndex = null;
-    this.showLogsPanel = false;
-    this.currentTestCaseExecution = this.testCaseExecutions[testCaseExecutionIndex];
-    this.updateScriptExecutionInfo();
-
-    this.checkpointPanelStatus = "Fetching checkpoints";
-    this.fetchCheckpoints(this.currentTestCaseExecution, this.suiteExecutionId).subscribe(response => {
-      this.checkpointPanelStatus = null;
-      this.showCheckpointPanel = true;
-
-    }, error => {
-      this.loggerService.error("Unable to fetch checkpoints");
-      this.status = null;
-
-    });
-
-  }
-
-  onCheckpointClick2(testCaseExecution, checkpointIndex, contextId?: 0) {
-
-  }
-
   showContext(contextId) {
     for (let index = 0; index < this.availableContexts.length; index++) {
       if (contextId === this.availableContexts[index].context_id) {
@@ -399,7 +482,7 @@ export class ScriptDetailComponent implements OnInit {
     this.timeFilterMin = 0;
   }
 
-  onCheckpointClick(testCaseExecution, checkpointIndex, contextId?: 0) {
+  onCheckpointClick(testCaseExecution, checkpointIndex, contextId = 0) {
     this.showContext(contextId);
     this._restoreCheckpointDefaults();
     this.currentCheckpointIndex = checkpointIndex;
@@ -548,6 +631,7 @@ export class ScriptDetailComponent implements OnInit {
 
   }
 
+
   findMatchingTestCase(time): number {
     let testCaseIndex = 0;
     let found = false;
@@ -571,7 +655,11 @@ export class ScriptDetailComponent implements OnInit {
     this.timeFilterMin = valueChanged;
     let testCaseIndex = this.findMatchingTestCase(this.timeFilterMin);
     if (this.currentTestCaseExecutionIndex !== testCaseIndex) {
-      this.onTestCaseIdClick(testCaseIndex)
+      this.fetchTestCases(null, testCaseIndex).subscribe(response => {
+      }, error => {
+        this.loggerService.error("Unable to fetch test cases", error);
+        this.status = null;
+      });
     }
   }
 
@@ -591,15 +679,6 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   viewChartsClick(content?) {
-    /*
-    this.selectedStatisticsCategory = null;
-    this.selectedStatisticsSubCategory = null;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((suiteExecution) => {
-    }, (reason) => {
-      console.log("Rejected");
-      //this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
-    });*/
-
     this.sidePanelOpen = !this.sidePanelOpen;
   }
 
@@ -639,7 +718,7 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openArtifactsPanelClick() {
-    this.showingArtifactPanel = !this.showingArtifactPanel;
+    this.showingArtifactPanel = true;
     this.regressionService.artifacts(this.suiteExecutionId, this.timeSeriesTypes.ARTIFACT).subscribe(response => {
       this.artifacts = response;
       this._parseArtifacts();
@@ -657,8 +736,41 @@ export class ScriptDetailComponent implements OnInit {
   }
 
   openTestCaseTablesPanelClick() {
-    this.showingTablesPanel = !this.showingTablesPanel;
+    this.showingTablesPanel = true;
   }
 
+
+  routeByOption(value, queryParam) {
+    if (queryParam === 'show_more_logs') {
+      this.removeQueryParam('show_test_case_tables');
+    } else {
+      this.removeQueryParam('show_more_logs');
+    }
+    if (value) {
+      value = !value;
+      this.removeQueryParam(queryParam);
+    } else {
+      this.queryParams[queryParam] = 1;
+    }
+    this.commonService.navigateByQuery(this.queryParams, this.baseUrl);
+  }
+
+  clickTestCaseOrCheckpoint(testCaseId, checkpointId = null) {
+    this.queryParams["test_case_id"] = testCaseId;
+    if (checkpointId != null) {
+      this.queryParams['checkpoint_id'] = checkpointId;
+    } else {
+      this.removeQueryParam('checkpoint_id');
+    }
+    this.commonService.navigateByQuery(this.queryParams, this.baseUrl);
+  }
+
+  removeQueryParam(param) {
+    Object.keys(this.queryParams).forEach(p => {
+      if (p === param) {
+        delete this.queryParams[p];
+      }
+    });
+  }
 
 }

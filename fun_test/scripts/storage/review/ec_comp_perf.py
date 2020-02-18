@@ -332,6 +332,8 @@ class ECVolumeLevelTestcase(FunTestCase):
             self.warm_up_fio_cmd_args["iodepth"] = job_inputs["warmup_io_depth"]
         if "warmup_size" in job_inputs:
             self.warm_up_fio_cmd_args["io_size"] = job_inputs["warmup_size"]
+        if "buffer_compress_percentage" in job_inputs:
+            self.warm_up_fio_cmd_args["buffer_compress_percentage"] = job_inputs["buffer_compress_percentage"]
         if "csi_perf_iodepth" in job_inputs:
             self.csi_perf_iodepth = job_inputs["csi_perf_iodepth"]
             if not isinstance(self.csi_perf_iodepth, list):
@@ -1133,7 +1135,7 @@ class ECVolumeLevelTestcase(FunTestCase):
                         fun_test.log(total_bytes_pushed_to_disk)
                         fun_test.log(cr)
                         fun_test.log("===================================================================")
-                        fun_test.test_assert(True, "Compression ration for iodepth {} is: ".format(iodepth,cr))
+                        fun_test.test_assert(True, "Compression ration for iodepth {} is: {}".format(iodepth,cr))
                         fun_test.debug("\nVolume stats diff: {}".format(curr_stats_diff))
 
                         pbw = curr_stats_diff["total_diff"]["VOL_TYPE_BLK_LOCAL_THIN"]["write_bytes"]

@@ -83,5 +83,55 @@
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
     "iostat_args": {"interval": 1, "output_file":  "/tmp/iostat.out"}
+  },
+  "SingleVolumeWOBP": {
+    "ec_info": {
+      "volume_types": {"ndata": "VOL_TYPE_BLK_LOCAL_THIN", "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
+                       "ec": "VOL_TYPE_BLK_EC", "lsv": "VOL_TYPE_BLK_LSV", "jvol": "VOL_TYPE_BLK_NV_MEMORY"},
+      "volume_block": {"ndata": 4096, "nparity": 4096, "ec": 4096, "lsv": 4096, "jvol": 512},
+      "ndata": 4,
+      "nparity": 2,
+      "capacity": 1099511627776,
+      "use_lsv": 1,
+      "lsv_pct": 1,
+      "lsv_chunk_size": 128,
+      "jvol_size_multiplier": 8,
+      "num_volumes": 1
+    },
+    // timeout used for the storage controller
+    "command_timeout": 10,
+    "min_timeout": 60,
+    "f1_fs_timeout_ratio": [1073741824, 3],
+    "fs_cp_timeout_ratio": [1073741824, 15],
+    "file_copy_output": "/tmp/copy_time",
+    "status_interval": 5,
+    "ns_id": 1,
+    "io_queues": 1,
+    "queue_size": 16,
+    "nr_requests": 4,
+    "back_pressure": false,
+    "back_pressure_io": {"fio_cmd_args": "sudo fio --group_reporting --output-format=json --ioengine=libaio  --numjobs=1 --direct=1 --prio=0 --rw=write --cpus_allowed_policy=split --norandommap --randrepeat=0 --iodepth=8 --bs=4k --time_based --runtime=7200 --name=job0 ", "timeout": 7800},
+    "nvme_device": "/dev/nvme",
+    "mount_path": "/mnt/ssd",
+    "trigger_failure": true,
+    // If 'fail_drive' is true, initiate drive failure else initiate plex failure
+    "fail_drive": true,
+    "rebuild_on_spare_volume": true,
+    "rebuild_rate": 100,
+    "rebuild_timeout": 3600,
+    // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
+    "failure_mode": "random",
+    "failure_start_time_ratio": 0.05,
+    "fs_type": "ext3",
+    "test_volume_start_index": 0,
+    "test_file_size": 107374182400,
+    // Ensure that dividing block size with the test_file_size doesn't give any fractions
+    "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},
+    "attach_transport": "TCP",
+    "transport_port": 1099,
+    "huid": 7,
+    "ctlid": 0,
+    "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
+    "iostat_args": {"interval": 1, "output_file":  "/tmp/iostat.out"}
   }
 }

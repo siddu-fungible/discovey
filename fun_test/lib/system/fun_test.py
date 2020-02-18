@@ -338,24 +338,9 @@ class FunTest:
 
     def enable_storage_api(self):   # Only needed for transition
         self.storage_api_enabled = True
-        api_path = STASH_DIR + "/swagger_client"
-        if os.path.exists(api_path):
-            shutil.rmtree(api_path)
-        """
-        api_path = STASH_DIR + "/swagger_client"
-        if not os.path.exists(api_path):
-            fun_test.log("Swagger client does not exist. Fetching ...")
-            self.download_storage_api()
-        else:
-            version_file_path = "{}/swagger_client/version.txt"
-            if os.path.exists(version_file_path):
-                with open(version_file_path, "r") as version_file:
-                    content = version_file.read()
-                    api_version = content.strip()
-                    if api_version != STORAGE_API_VERSION:
-                        pass
-        """
-
+        # api_path = STASH_DIR + "/swagger_client"
+        # if os.path.exists(api_path):
+        #    shutil.rmtree(api_path)
 
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
@@ -392,6 +377,14 @@ class FunTest:
     def is_at_least_one_failed(self):
         return self.at_least_one_failed
 
+    def get_stable_build_number(self, release_train):
+        result = "latest"
+        if self.suite_execution_id:
+            stable = models_helper.get_stable_build_number(release_train=release_train)
+            if stable:
+                result = stable.build_number
+        return result
+
     def initialize_output_files(self, absolute_script_file_name):
         # (frame, file_name, line_number, function_name, lines, index) = \
         #    inspect.getouterframes(inspect.currentframe())[2]
@@ -407,13 +400,23 @@ class FunTest:
             # if self.log_prefix:
             #    html_log_file = "{}_{}".format(self.log_prefix, html_log_file)
         self.html_log_file = html_log_file
+        console_log_path = None
+        if self.suite_execution_id:
+            console_log_path = html_log_file.replace(".html", ".logs.txt")
 
         self.fun_xml_obj = fun_xml.FunXml(script_name=script_file_name_without_extension,
                                           log_directory=self.logs_dir,
                                           log_file=html_log_file,
-                                          full_script_path=self.absolute_script_file_name)
+                                          full_script_path=self.absolute_script_file_name,
+                                          console_log_path=console_log_path)
         reload(sys)
         sys.setdefaultencoding('UTF8')  # Needed for xml
+        if self.suite_execution_id:
+            # print "Console log at: {}".format(console_log_path)
+            fun_test.add_auxillary_file(description="Console log",
+                                        filename=console_log_path)
+            if self.fun_xml_obj:
+                self.fun_xml_obj.set_console_log_path(console_log_path=console_log_path)
 
     def enable_profiling(self):
         self.profiling = True
@@ -460,6 +463,7 @@ class FunTest:
         with_stable_master = self.get_job_environment_variable("with_stable_master")
         bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
         pre_built_artifacts = self.get_job_environment_variable("pre_built_artifacts")
+        start_with_bundle_options = self.get_job_environment_variable("start_with_bundle_options")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path
@@ -473,6 +477,8 @@ class FunTest:
             # Check if it was stored by a previous script
             tftp_image_path = self.get_stored_environment_variable(variable_name="tftp_image_path")
             self.build_parameters["tftp_image_path"] = tftp_image_path
+        if start_with_bundle_options:
+            self.build_parameters["start_with_bundle_options"] = start_with_bundle_options
         user_supplied_build_parameters = self.get_job_environment_variable("build_parameters")
         if user_supplied_build_parameters:
             if "BOOTARGS" in user_supplied_build_parameters:
@@ -1553,6 +1559,7 @@ class FunTest:
         checkpoint_for_time_series = checkpoint
         if self.profiling:
             checkpoint = "{:.2f} {}".format(self.profiling_timer.elapsed_time(), checkpoint)
+        self.log("CHECKPOINT: {}".format(checkpoint), context=context)
         if self.fun_xml_obj:
             self.fun_xml_obj.add_checkpoint(checkpoint=checkpoint,
                                             result=result,

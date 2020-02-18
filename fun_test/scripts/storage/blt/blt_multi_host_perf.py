@@ -156,8 +156,7 @@ class MultiHostFioRandRead(FunTestCase):
             self.csi_perf_iodepth = [self.csi_perf_iodepth]
             self.full_run_iodepth = self.csi_perf_iodepth
 
-        if (not fun_test.shared_variables["blt"]["setup_created"]) \
-                and (not fun_test.shared_variables["blt"]["warmup_done"]):
+        if (not fun_test.shared_variables["blt"]["setup_created"]):
 
             self.topology = fun_test.shared_variables["topology"]
             self.sc_template = fun_test.shared_variables["storage_controller_template"]
@@ -167,12 +166,12 @@ class MultiHostFioRandRead(FunTestCase):
                 fs_obj = self.topology.get_dut_instance(index=dut_index)
                 fs_obj_list.append(fs_obj)
             fs_obj = fs_obj_list[0]
-            self.storage_controller_dpcsh_obj = fs_obj.get_storage_controller(f1_index=0)
+            self.sc_dpcsh_obj = fs_obj.get_storage_controller(f1_index=0)
             self.hosts = self.topology.get_available_host_instances()
 
             # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
             # the capacity is not overridden while starting the script
-            min_drive_capacity = find_min_drive_capacity(self.storage_controller_dpcsh_obj)
+            min_drive_capacity = find_min_drive_capacity(self.sc_dpcsh_obj)
             if min_drive_capacity:
                 self.blt_details["capacity"] = min_drive_capacity
                 # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
@@ -187,8 +186,17 @@ class MultiHostFioRandRead(FunTestCase):
                 self.blt_details["capacity"] = job_inputs["capacity"]
 
             self.create_volume_list = []
+            drive_id_list = []
+
+            use_unique_drives = True
+            if "use_unique_drives" in job_inputs:
+                use_unique_drives = job_inputs["use_unique_drives"]
+            fun_test.add_checkpoint(
+                checkpoint="Check if volumes are to be created in unique drives:{}".format(str(use_unique_drives)))
+
             for i in range(self.blt_count):
-                name = "blt_vol" + str(i + 1)
+                suffix = utils.generate_uuid(length=4)
+                name = "blt_vol_{}_{}".format(suffix, i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.sc_template.vol_type,
                                                                    capacity=self.blt_details["capacity"],
@@ -198,10 +206,22 @@ class MultiHostFioRandRead(FunTestCase):
                 vol_uuid_list = self.sc_template.create_volume(fs_obj=fs_obj_list,
                                                                body_volume_intent_create=
                                                                body_volume_intent_create)
+                current_vol_uuid = vol_uuid_list[0]
                 fun_test.test_assert(expression=vol_uuid_list,
-                                     message="Created Volume {} Successful".format(vol_uuid_list[0]))
-                self.create_volume_list.append(vol_uuid_list[0])
+                                     message="Created Volume {} Successful".format(current_vol_uuid))
+                self.create_volume_list.append(current_vol_uuid)
 
+                # Check if drive id is unique
+                if use_unique_drives:
+                    props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
+                    dpcsh_op = self.sc_dpcsh_obj.peek(props_tree=props_tree)
+                    fun_test.simple_assert(current_vol_uuid in dpcsh_op["data"].keys(),
+                                           message="Volume {} not seen in peek storage output".format(current_vol_uuid))
+                    drive_id = dpcsh_op["data"][current_vol_uuid]["stats"]["drive_uuid"]
+                    fun_test.test_assert(drive_id not in drive_id_list,
+                                         message="Volume with uuid {} id created on unique drive having"
+                                                 " uuid {}".format(current_vol_uuid, drive_id))
+                    drive_id_list.append(drive_id)
 
             fun_test.test_assert_expected(expected=self.blt_count, actual=len(self.create_volume_list),
                                           message="Created {} number of volumes".format(self.blt_count))
@@ -212,14 +232,49 @@ class MultiHostFioRandRead(FunTestCase):
                                                                           volume_uuid_list=self.create_volume_list,
                                                                           host_obj_list=self.hosts,
                                                                           volume_is_shared=False,
-                                                                          raw_api_call=True)
+                                                                          raw_api_call=self.raw_api_call,
+                                                                          validate_nvme_connect=False)
             fun_test.test_assert(expression=self.attach_vol_result, message="Attached volumes to hosts")
             fun_test.shared_variables["volumes_list"] = self.create_volume_list
             fun_test.shared_variables["attach_volumes_list"] = self.attach_vol_result
 
+            for host in self.hosts:
+                host.nvme_connect_info = {}
+                for result in self.attach_vol_result[host]:
+                    if self.raw_api_call:
+                        # fun_test.test_assert(expression=result["status"], message="Attach volume {} to {} host".
+                        #                     format(i, host.name))
+                        subsys_nqn = result["data"]["subsys_nqn"]
+                        host_nqn = result["data"]["host_nqn"]
+                        dataplane_ip = result["data"]["ip"]
+                    else:
+                        subsys_nqn = result.subsys_nqn
+                        host_nqn = result.host_nqn
+                        dataplane_ip = result.ip
+
+                    if subsys_nqn not in host.nvme_connect_info:
+                        host.nvme_connect_info[subsys_nqn] = []
+                    host_nqn_ip = (host_nqn, dataplane_ip)
+                    if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
+                        host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
+
+            for host in self.hosts:
+                for subsys_nqn in host.nvme_connect_info:
+                    for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                        host_nqn, dataplane_ip = host_nqn_ip
+                        fun_test.test_assert(
+                            expression=self.sc_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                                host_nqn=host_nqn,
+                                                                                dataplane_ip=dataplane_ip),
+                            message="NVMe connect from host: {}".format(host.name))
+                        nvme_filename = self.sc_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                        fun_test.test_assert(expression=nvme_filename,
+                                             message="Get NVMe drive from Host {} using lsblk".format(host.name))
+
+
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
-                set_fcp_scheduler(storage_controller=self.storage_controller_dpcsh_obj,
+                set_fcp_scheduler(storage_controller=self.sc_dpcsh_obj,
                                   config_fcp_scheduler=self.config_fcp_scheduler,
                                   command_timeout=5)
 
@@ -257,8 +312,9 @@ class MultiHostFioRandRead(FunTestCase):
 
             fun_test.shared_variables["blt"]["setup_created"] = True
             fun_test.shared_variables["hosts"] = self.hosts
-            fun_test.shared_variables["dpcsh_obj"] = self.storage_controller_dpcsh_obj
+            fun_test.shared_variables["dpcsh_obj"] = self.sc_dpcsh_obj
 
+        if not fun_test.shared_variables["blt"]["warmup_done"]:
             thread_id = {}
             end_host_thread = {}
 
@@ -316,6 +372,7 @@ class MultiHostFioRandRead(FunTestCase):
                     fun_test.critical(str(ex))
 
                 fun_test.sleep("Sleeping for 2 seconds before actual test", seconds=2)
+            fun_test.test_assert(fun_test.shared_variables["blt"]["warmup_done"], message="Warmup done successfully")
 
     def run(self):
         testcase = self.__class__.__name__
@@ -342,7 +399,7 @@ class MultiHostFioRandRead(FunTestCase):
         table_data_rows = []
 
         self.hosts = fun_test.shared_variables["hosts"]
-        self.storage_controller_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
+        self.sc_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
 
         # Preparing the volume details list containing the list of dictionaries
         vol_details = []
@@ -380,8 +437,8 @@ class MultiHostFioRandRead(FunTestCase):
                     self.stats_collect_details[index][func]["vol_details"] = vol_details
             fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
-            self.storage_controller_dpcsh_obj.verbose = False
-            stats_obj = CollectStats(self.storage_controller_dpcsh_obj)
+            self.sc_dpcsh_obj.verbose = False
+            stats_obj = CollectStats(self.sc_dpcsh_obj)
             stats_obj.start(file_suffix, self.stats_collect_details)
             fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
                          "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
@@ -416,7 +473,6 @@ class MultiHostFioRandRead(FunTestCase):
                         cpus_allowed = "{}-4".format(starting_core)
                     elif int(fio_numjobs) > 4:
                         cpus_allowed = "{}-{}".format(starting_core, host.host_numa_cpus[2:])
-
 
                     fun_test.log("Running FIO...")
                     fio_job_name = "fio_tcp_{}_blt_{}_{}_vol_{}".format(mode, fio_numjobs, fio_iodepth, self.blt_count)
@@ -468,9 +524,10 @@ class MultiHostFioRandRead(FunTestCase):
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
             finally:
                 stats_obj.stop(self.stats_collect_details)
-                self.storage_controller_dpcsh_obj.verbose = True
+                self.sc_dpcsh_obj.verbose = True
 
-            stats_obj.populate_stats_to_file(self.stats_collect_details, mode=mode, iodepth=row_data_dict["iodepth"])
+            job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+            stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
@@ -506,7 +563,8 @@ class MultiHostFioRandRead(FunTestCase):
                 else:
                     row_data_list.append(row_data_dict[i])
 
-            table_data_rows.append(row_data_list)
+            table_data_list = copy.deepcopy(row_data_list)
+            table_data_rows.append(table_data_list)
 
             row_data_list.insert(0, self.blt_count)
             row_data_list.insert(0, self.num_ssd)
@@ -572,6 +630,7 @@ class PreCommitSanity(MultiHostFioRandRead):
 
     def cleanup(self):
         super(PreCommitSanity, self).cleanup()
+
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()

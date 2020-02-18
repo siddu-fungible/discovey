@@ -12,40 +12,7 @@ from scripts.networking.helper import *
 from collections import OrderedDict
 from lib.templates.storage.storage_controller_api import *
 import random
-
-
-# Get NVMe device details
-def get_nvme_device(host_obj):
-    nvme_list_raw = host_obj.sudo_command("nvme list -o json")
-    host_obj.disconnect()
-    if str(nvme_list_raw) in "":
-        fio_filename = None
-    elif "failed to open" in nvme_list_raw.lower():
-        nvme_list_raw = nvme_list_raw + "}"
-        temp1 = nvme_list_raw.replace('\n', '')
-        temp2 = re.search(r'{.*', temp1).group()
-        nvme_list_dict = json.loads(temp2, strict=False)
-    else:
-        try:
-            nvme_list_dict = json.loads(nvme_list_raw)
-        except:
-            nvme_list_raw = nvme_list_raw + "}"
-            nvme_list_dict = json.loads(nvme_list_raw, strict=False)
-
-    try:
-        nvme_device_list = []
-        for device in nvme_list_dict["Devices"]:
-            if "Non-Volatile memory controller: Vendor 0x1dad" in device["ProductName"] or \
-                    "fs1600" in device["ModelNumber"].lower():
-                nvme_device_list.append(device["DevicePath"])
-            elif "unknown device" in device["ProductName"].lower() or "null" in device["ProductName"].lower():
-                if not device["ModelNumber"].strip() and not device["SerialNumber"].strip():
-                    nvme_device_list.append(device["DevicePath"])
-        fio_filename = str(':'.join(nvme_device_list))
-    except:
-        fio_filename = None
-
-    return fio_filename
+import datetime
 
 
 def nvme_connect_method(host_info, nqn_list, transport_type, test_network, transport_port, nvme_io_queues=None):
@@ -78,7 +45,7 @@ def nvme_connect_method(host_info, nqn_list, transport_type, test_network, trans
         host_handle.sudo_command("dmesg")
         fun_test.shared_variables["host_handle"] = host_handle
         if command_result:
-            device_details = get_nvme_device(host_handle)
+            device_details = fetch_nvme_list(host_handle)
             host_handle.disconnect()
             if not device_details:
                 host_handle.command("dmesg")
@@ -323,7 +290,7 @@ class SnapVolumeTestCase(FunTestCase):
 
         self.bv_ctrlr = utils.generate_uuid()
         self.ctrlr_uuid = self.bv_ctrlr
-        nqn = "nqn"
+        nqn = "nqn.2017-05.com.fungible:nss-uuid1"
         self.nqn_list.append(nqn)
         command_result = self.storage_controller.create_controller(ctrlr_id=1,
                                                                    ctrlr_uuid=self.ctrlr_uuid,
@@ -374,6 +341,8 @@ class SnapVolumeTestCase(FunTestCase):
         # command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/{}".
         #                                               format(self.thin_uuid))
 
+        self.vol_to_device_map = {}
+
         # Attach Base volume to controller before creating SNAP volume
         if not self.bv_attach:
             if hasattr(self, "attach_basevol") and self.attach_basevol:
@@ -391,13 +360,13 @@ class SnapVolumeTestCase(FunTestCase):
                 fun_test.test_assert(nvme_connect_result["status"], "NVMe connect from host to Base Volume")
                 fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                 self.device_details = nvme_connect_result["device_details"]
+                self.vol_to_device_map["base_vol"] = self.device_details
 
-        # Create SNAP
+        # Create COW volume        
         for x in range(1, self.snap_count + 1, 1):
             self.cow_uuid[x] = utils.generate_uuid()
             self.snap_uuid[x] = utils.generate_uuid()
 
-            # Create COW volume
             if hasattr(self, "cow_vol_capacity"):
                 cow_capacity = self.cow_vol_capacity
             else:
@@ -460,6 +429,8 @@ class SnapVolumeTestCase(FunTestCase):
                     fun_test.test_assert(command_result["status"], "Attach Snap Volume to controller".
                                          format(self.snap_uuid[x], self.ctrlr_uuid))
 
+                    fun_test.shared_variables["host_handle"].command("dmesg")
+
                     if hasattr(self, "attach_basevol") and not self.attach_basevol:
                         nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
                                                                   transport_port=self.transport_port,
@@ -468,6 +439,18 @@ class SnapVolumeTestCase(FunTestCase):
                         fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host to Snap Volume")
                         fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                         self.device_details = nvme_connect_result["device_details"]
+                        # Add the snapvolume disk
+                        temp_device = self.device_details.split(":")
+                        for temp_dev in temp_device:
+                            if temp_dev in self.vol_to_device_map.values():
+                                continue
+                            else:
+                                self.vol_to_device_map["snap_vol"] = temp_dev
+                    else:
+                        try:
+                            self.device_details = nvme_connect_result["device_details"]
+                        except:
+                            fun_test.shared_variables["host_handle"].command("dmesg")
 
     def run(self):
         testcase = self.__class__.__name__
@@ -525,10 +508,18 @@ class SnapVolumeTestCase(FunTestCase):
                 thread_id = {}
                 wait_time = 0
                 self.host_count = 1
-                if "write" not in mode:
-                    fio_numjobs = len(self.device_details.split(":")) * 1
-                else:
-                    fio_numjobs = 1
+                # if "write" not in mode:
+                #     fio_numjobs = len(self.device_details.split(":")) * 1
+                # else:
+                #     fio_numjobs = 1
+                fio_numjobs = 1
+                if "write" in mode:
+                    if self.snap_write:
+                        self.fio_device = self.vol_to_device_map["snap_vol"]
+                    else:
+                        self.fio_device = self.vol_to_device_map["base_vol"]
+                elif "read" in mode:
+                    self.fio_device = self.vol_to_device_map["snap_vol"]
 
                 for x in range(1, self.host_count + 1, 1):
                     if mode == "rw" or mode == "randrw":
@@ -538,7 +529,7 @@ class SnapVolumeTestCase(FunTestCase):
                         thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                      func=fio_parser,
                                                                      arg1=self.linux_host_inst[x],
-                                                                     filename=self.device_details,
+                                                                     filename=self.fio_device,
                                                                      rw=mode,
                                                                      rwmixread=self.fio_rwmixread,
                                                                      bs=fio_block_size,
@@ -553,7 +544,7 @@ class SnapVolumeTestCase(FunTestCase):
                         thread_id[x] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                      func=fio_parser,
                                                                      arg1=self.linux_host_inst[x],
-                                                                     filename=self.device_details,
+                                                                     filename=self.fio_device,
                                                                      rw=mode,
                                                                      bs=fio_block_size,
                                                                      iodepth=fio_iodepth,
@@ -585,8 +576,9 @@ class SnapVolumeTestCase(FunTestCase):
                         temp1 = re.search('nvme(.[0-9]*)', temp)
                         nvme_disconnect_device = temp1.group()
                         if nvme_disconnect_device:
-                            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
-                            nvme_dev_output = get_nvme_device(self.linux_host)
+                            command_result = self.linux_host.nvme_disconnect(device=nvme_disconnect_device)
+                            fun_test.simple_assert(command_result, "NVMe disconnect")
+                            nvme_dev_output = fetch_nvme_list(self.linux_host)
                             if nvme_dev_output:
                                 fun_test.critical(False, "NVMe disconnect failed")
                                 self.linux_host.disconnect()
@@ -624,7 +616,7 @@ class SnapVolumeTestCase(FunTestCase):
                             self.snap_ctrlr = utils.generate_uuid()
                             self.ctrlr_uuid = self.snap_ctrlr
                             self.nqn_list = []
-                            nqn = "snap_nqn"
+                            nqn = "nqn.2017-05.com.fungible:nss-uuid2"
                             self.nqn_list.append(nqn)
 
                             command_result = self.storage_controller.create_controller(ctrlr_id=2,
@@ -655,6 +647,18 @@ class SnapVolumeTestCase(FunTestCase):
                                                    "NVMe connect from host to Snap Volume")
                             fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                             self.device_details = nvme_connect_result["device_details"]
+                        else:
+                            self.device_details = fetch_nvme_list(self.linux_host)
+                            # Add the snapvolume disk
+                            temp_device = self.device_details.split(":")
+                            for temp_dev in temp_device:
+                                if temp_dev in self.vol_to_device_map.values():
+                                    continue
+                                else:
+                                    self.vol_to_device_map["snap_vol"] = temp_dev
+                            fun_test.log_section("The Devices are {}".format(self.vol_to_device_map))
+                            fun_test.log("Base Volume is {}".format(self.vol_to_device_map["base_vol"]))
+                            fun_test.log("Snap Volume is {}".format(self.vol_to_device_map["snap_vol"]))
 
     def cleanup(self):
         self.linux_host = fun_test.shared_variables["host_handle"]
@@ -665,8 +669,9 @@ class SnapVolumeTestCase(FunTestCase):
         temp1 = re.search('nvme(.[0-9]*)', temp)
         nvme_disconnect_device = temp1.group()
         if nvme_disconnect_device:
-            self.linux_host.sudo_command("nvme disconnect -d {}".format(nvme_disconnect_device))
-            nvme_dev_output = get_nvme_device(self.linux_host)
+            command_result = self.linux_host.nvme_disconnect(device=nvme_disconnect_device)
+            fun_test.test_assert(command_result, "Cleanup : NVMe disconnect")
+            nvme_dev_output = fetch_nvme_list(self.linux_host)
             if nvme_dev_output:
                 fun_test.critical(False, "NVMe disconnect failed")
                 self.linux_host.disconnect()

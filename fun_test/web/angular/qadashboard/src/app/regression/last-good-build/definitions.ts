@@ -4,7 +4,7 @@ export class LastGoodBuild extends Api {
   classType = LastGoodBuild;
   url = "/api/v1/regression/last_good_build";
   release_train: string = null;
-  build_number: number;
+  build_number: string;
   release_catalog_execution_id: number = -1;
 
   serialize() {
