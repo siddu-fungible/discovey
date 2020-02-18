@@ -124,7 +124,6 @@ class ECVolScript(FunTestScript):
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
             host_cleanup = cleanup_host(host_obj=host_handle)
-            host_cleanup = cleanup_host(host_obj=host_handle)
             fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_list"],
                                           message="Host {} cleanup: Fetch NVMe list".format(host_name))
             fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_disconnect"],

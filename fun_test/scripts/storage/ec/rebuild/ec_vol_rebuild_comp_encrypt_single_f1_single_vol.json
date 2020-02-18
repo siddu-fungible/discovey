@@ -64,9 +64,6 @@
       "zip_filter": "FILTER_TYPE_DEFLATE",
       "encrypt": true,
       "key_size": 32,
-      "xtweak_size": 8,
-      "encrypt": true,
-      "key_size": 32,
       "xtweak_size": 8
     },
     // timeout used for the storage controller
@@ -425,9 +422,6 @@
       "compress": true,
       "zip_effort": "ZIP_EFFORT_64Gbps",
       "zip_filter": "FILTER_TYPE_DEFLATE",
-      "encrypt": true,
-      "key_size": 32,
-      "xtweak_size": 8,
       "encrypt": true,
       "key_size": 32,
       "xtweak_size": 8
