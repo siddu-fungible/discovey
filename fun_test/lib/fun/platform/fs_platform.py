@@ -8,7 +8,7 @@ class FsPlatform:
         self.fs_obj = fs_obj
 
     def get_funsdk_flash_version_from_props(self, bld_props=None):
-        """ This methdo takes the bld_props JSON and return the flash_sdk_version for this drop """
+        """ This method takes the bld_props JSON and return the flash_sdk_version for this drop """
 
         sdk_version = bld_props['components']['funsdk_flash_images']
         return sdk_version
