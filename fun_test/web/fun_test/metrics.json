@@ -2836,6 +2836,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_2_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -2913,6 +2918,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_4_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -2990,6 +3000,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_8_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -3067,6 +3082,11 @@
                                 "label": "Latency, QDepth=256",
                                 "metric_model_name": "BltVolumePerformance",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
