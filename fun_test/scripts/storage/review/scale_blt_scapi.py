@@ -124,8 +124,7 @@ class RunStorageApiCommands(FunTestCase):
             fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful {}".format(i))
             if self.attach == "Y":
                 if i == (self.volume_count - 1):
-                    # Never Connect from host
-                    connect_needed = False
+                    connect_needed = True
                 for j in range(len(vol_uuid_list[i])):
                     attach_vol_result = self.storage_controller_template.attach_volume(host_obj=my_host_obj_list,
                                                                                        fs_obj=fs_obj,
@@ -162,7 +161,7 @@ class RunStorageApiCommands(FunTestCase):
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
             traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
                                                                                 filename="/dev/"
-										+ str(nvme_device_name[0]))
+                                                                                + str(nvme_device_name[0]))
             fun_test.test_assert(expression=traffic_result, message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
 
@@ -171,25 +170,25 @@ class RunStorageApiCommands(FunTestCase):
         self.storage_controller_template.cleanup()
 
 
-class BLTScaleNVolumes1Host1FSStress(RunStorageApiCommands):
+class BLTScaleNVolumes1Host1FSScale(RunStorageApiCommands):
     def describe(self):
         self.set_test_details(id=1,
-                              summary="create-attach-detach-delete in loop",
+                              summary="create-attach in loop",
                               steps='''
                               ''')
 
     def setup(self):
-        super(BLTScaleNVolumes1Host1FSStress, self).setup()
+        super(BLTScaleNVolumes1Host1FSScale, self).setup()
 
     def run(self):
         pass  # Do not run FIO.
-        #super(BLTScaleNVolumes1Host1FSStress, self).run()
+        #super(BLTScaleNVolumes1Host1FSScale, self).run()
 
     def cleanup(self):
-        super(BLTScaleNVolumes1Host1FSStress, self).cleanup()
+        super(BLTScaleNVolumes1Host1FSScale, self).cleanup()
 
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(BLTScaleNVolumes1Host1FSStress())
+    setup_bringup.add_test_case(BLTScaleNVolumes1Host1FSScale())
     setup_bringup.run()
