@@ -456,6 +456,8 @@ class StorageController(NetworkController, DpcshClient):
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
                 elif compression_enabled and encryption_enabled:
+                    ec_info["key"][num] = utils.generate_key(ec_info["key_size"])
+                    ec_info["xtweak"][num] = utils.generate_key(ec_info["xtweak_size"])
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
                                                         block_size=ec_info["volume_block"]["lsv"],
