@@ -138,7 +138,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
             nvme_device_name = fun_test.shared_variables["nvme_device_name"]
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
-            fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj,
+            fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
                                                                               filename="/dev/" + nvme_device_name,
                                                                               numjobs=1, iodepth=32,
                                                                               verify_integrity=True)
