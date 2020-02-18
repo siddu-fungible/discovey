@@ -514,7 +514,7 @@ class SnapVolumeTestCase(FunTestCase):
                 #     fio_numjobs = 1
                 fio_numjobs = 1
                 if "write" in mode:
-                    if self.snap_write:
+                    if hasattr(self, "snap_write") and self.snap_write:
                         self.fio_device = self.vol_to_device_map["snap_vol"]
                     else:
                         self.fio_device = self.vol_to_device_map["base_vol"]

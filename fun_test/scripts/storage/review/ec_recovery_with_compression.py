@@ -442,7 +442,7 @@ class RecoveryWithFailures(FunTestCase):
                                          format(self.ec_info["device_id"][num][plex]))
                             device_fail_status = self.storage_controller.power_toggle_ssd("off",
                                                                                           device_id=
-                                                                                          self.ec_info["device"][num][plex],
+                                                                                          self.ec_info["device_id"][num][plex],
                                                                                           command_duration=
                                                                                           self.command_timeout)
                             fun_test.test_assert(device_fail_status["status"],
