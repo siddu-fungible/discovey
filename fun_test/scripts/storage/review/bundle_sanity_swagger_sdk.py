@@ -1,7 +1,5 @@
 from lib.system.fun_test import *
 fun_test.enable_storage_api()
-from lib.system import utils
-from lib.host.linux import Linux
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
@@ -33,6 +31,8 @@ class BringupSetup(FunTestScript):
 class BltApiStorageTest(FunTestCase):
     topology = None
     storage_controller_template = None
+    attach_result = None
+    storage_traffic_template = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -57,39 +57,46 @@ class BltApiStorageTest(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize()
+        self.storage_controller_template.initialize(already_deployed=False)
 
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
 
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
+        vol_uuid_list = self.storage_controller_template.create_volume(
+            fs_obj=fs_obj_list, body_volume_intent_create=body_volume_intent_create)
         fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
         for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid_list[index],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            self.attach_result = attach_vol_result
 
     def run(self):
         hosts = self.topology.get_available_host_instances()
-        storage_traffic_template = StorageTrafficTemplate(
+        self.storage_traffic_template = StorageTrafficTemplate(
             storage_operations_template=self.storage_controller_template)
 
         for host_obj in hosts:
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
+                                                                                     subsys_nqn=self.attach_result[
+                                                                                         'data']['subsys_nqn'],
+                                                                                     nsid=self.attach_result[
+                                                                                         'data']['nsid'])
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
 
-            fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
-                                                                              filename="/dev/" + nvme_device_name,
-                                                                              numjobs=1, iodepth=32)
+            fio_integrity = self.storage_traffic_template.fio_with_integrity_check(
+                host_linux_handle=host_obj.get_instance(), filename="/dev/" + nvme_device_name, numjobs=1, iodepth=32)
             fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
+            fun_test.shared_variables["nvme_device_name"] = nvme_device_name
+            break
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+        fun_test.shared_variables["storage_traffic_template"] = self.storage_traffic_template
 
 
 class ConfigPeristenceAfterReset(FunTestCase):
@@ -126,10 +133,9 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                                                  dut_index=dut_index)
 
     def run(self):
-        storage_traffic_template = StorageTrafficTemplate(
-            storage_operations_template=self.storage_controller_template)
+        storage_traffic_template = fun_test.shared_variables["storage_traffic_template"]
         for host_obj in self.topology.get_available_host_instances():
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = fun_test.shared_variables["nvme_device_name"]
             fun_test.test_assert(expression=nvme_device_name,
                                  message="NVMe device found on Host after FS reboot: {}".format(nvme_device_name))
             fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj,
@@ -137,6 +143,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                                                               numjobs=1, iodepth=32,
                                                                               verify_integrity=True)
             fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
+            break
 
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result=fun_test.is_current_test_case_failed())
