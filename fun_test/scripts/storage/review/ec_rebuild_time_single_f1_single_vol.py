@@ -978,6 +978,15 @@ class ECVolRebuildTestcase(FunTestCase):
         row_data_dict["fio_job_name"] = fio_job_name
 
         # Building the table raw for this variation
+        if row_data_dict["mode"] in ["read", "randread"]:
+            row_data_dict["writeiops"] = row_data_dict["writebw"] = row_data_dict["writeclatency"] = \
+                row_data_dict["writelatency90"] = row_data_dict["writelatency95"] = \
+                row_data_dict["writelatency9999"] = row_data_dict["writelatency99"] = -1
+        elif row_data_dict["mode"] in ["write", "randwrite"]:
+            row_data_dict["readiops"] = row_data_dict["readbw"] = row_data_dict["readclatency"] = \
+                row_data_dict["readlatency90"] = row_data_dict["readlatency95"] = row_data_dict["readlatency9999"] = \
+                row_data_dict["readlatency99"] = -1
+
         row_data_list = []
         for i in table_data_cols:
             if i not in row_data_dict:
