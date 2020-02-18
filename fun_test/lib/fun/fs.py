@@ -1610,7 +1610,7 @@ class ComE(Linux):
         return result
 
     def diags(self):
-        fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
+        fun_test.add_checkpoint(checkpoint="Trying to fetch diags", context=self.context)
         clone = self.clone()
         clone.command("dmesg", timeout=120)
         clone.command("cat /var/log/syslog", timeout=60)
@@ -1832,7 +1832,7 @@ class ComE(Linux):
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
         if not devices:
-            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected", context=self.context)
             self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
