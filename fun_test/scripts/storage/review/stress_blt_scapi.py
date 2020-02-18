@@ -182,7 +182,7 @@ class BLTScaleNVolumes1Host1FSStress(RunStorageApiCommands):
         super(BLTScaleNVolumes1Host1FSStress, self).setup()
 
     def run(self):
-        pass // Do not run FIO.
+        pass  # Do not run FIO.
         #super(BLTScaleNVolumes1Host1FSStress, self).run()
 
     def cleanup(self):
