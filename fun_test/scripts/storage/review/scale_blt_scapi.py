@@ -170,7 +170,7 @@ class RunStorageApiCommands(FunTestCase):
         self.storage_controller_template.cleanup()
 
 
-class BLTScaleNVolumes1Host1FSStress(RunStorageApiCommands):
+class BLTScaleNVolumes1Host1FSScale(RunStorageApiCommands):
     def describe(self):
         self.set_test_details(id=1,
                               summary="create-attach in loop",
@@ -178,17 +178,17 @@ class BLTScaleNVolumes1Host1FSStress(RunStorageApiCommands):
                               ''')
 
     def setup(self):
-        super(BLTScaleNVolumes1Host1FSStress, self).setup()
+        super(BLTScaleNVolumes1Host1FSScale, self).setup()
 
     def run(self):
         pass  # Do not run FIO.
-        #super(BLTScaleNVolumes1Host1FSStress, self).run()
+        #super(BLTScaleNVolumes1Host1FSScale, self).run()
 
     def cleanup(self):
-        super(BLTScaleNVolumes1Host1FSStress, self).cleanup()
+        super(BLTScaleNVolumes1Host1FSScale, self).cleanup()
 
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(BLTScaleNVolumes1Host1FSStress())
+    setup_bringup.add_test_case(BLTScaleNVolumes1Host1FSScale())
     setup_bringup.run()
