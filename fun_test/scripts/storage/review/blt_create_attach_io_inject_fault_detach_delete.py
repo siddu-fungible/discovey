@@ -246,9 +246,19 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
                                                                      filename="nofile",
                                                                      **warm_up_fio_cmd_args)
                     #fio_offset += self.fio_io_size
-                    fun_test.sleep("Fio threadzz", seconds=1)
+                    fun_test.sleep("Fio threads", seconds=1)
 
-            fun_test.sleep("Fio threads started", 180)
+            fun_test.sleep("Fio threads started", 10)
+            if self.vol_fault_inject:
+                fun_test.sleep("Wait before Injecting volume failures", seconds=10)
+                print (self.vol_uuid_list)
+                for dut_index in self.topology.get_available_duts().keys():
+                    fs_obj = self.topology.get_dut_instance(index=dut_index)
+                    storage_controller = fs_obj.get_storage_controller()
+                for vol_uuid in self.vol_uuid_list:
+                    inject_fault_volume = storage_controller.storage_api.inject_fault_volume(vol_uuid)
+                    fun_test.test_assert(expression=inject_fault_volume.status,
+                                         message="Inject fault to Volume {} is done".format(vol_uuid))
 
             try:
                 for i, host_name in enumerate(self.host_info):
