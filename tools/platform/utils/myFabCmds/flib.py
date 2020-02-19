@@ -447,7 +447,7 @@ def start_serial_sockets():
             return True #map(lambda l: l.split()[1], o.splitlines())
         except:
             with settings( hide('stderr', 'stdout'), warn_only=True ):
-                run("rm /var/local/LCK*ttyS")
+                run("rm -f /var/lock/LCK..ttyS0; rm -f /var/lock/LCK..ttyS2; rm -f /var/lock/LCK..ttyS1; rm -f /var/lock/LCK..ttyS3")
                 run("bash /mnt/sdmmc0p1/_install/web/fungible/RUN_TCP_PYSERIAL.sh")
                 time.sleep(5)
                 run("ps -ef | grep tcp_serial_redirect | grep -v grep")
@@ -465,8 +465,8 @@ def disable_pcie(bus=None):
 def stop_serial_sockets():
     """ kill and restart the relay socket for serial consoles on BMC """
     with settings(hide('stdout'), warn_only=True ):
-        run("ps -ef | grep -v grep | grep tcp_serial | grep ttyS0 | awk '{print $2}' | xargs kill -9")
-        run("ps -ef | grep -v grep | grep tcp_serial | grep ttyS2 | awk '{print $2}' | xargs kill -9")
+        run("ps -ef | grep -v grep | grep -E 'ttyS0|ttyS1|ttyS2|ttyS3' | awk '{print $2}' | xargs kill -9")
+        run("rm -f /var/lock/LCK..ttyS0; rm -f /var/lock/LCK..ttyS2; rm -f /var/lock/LCK..ttyS1; rm -f /var/lock/LCK..ttyS3")
         time.sleep(3)
         run("ps -ef | grep tcp_serial")
         time.sleep(3)
@@ -474,13 +474,10 @@ def stop_serial_sockets():
 @roles('bmc')
 @task
 def restart_serial_sockets():
-    """ kill and restart the relay socket for serial consoles on BMC """
+    """ kill and restart the relay socket for serial consoles on BMC for DPU and SBP"""
     with settings(hide('stdout'), warn_only=True ):
-        run("ps -ef | grep -v grep | grep ttyS0 | awk '{print $2}' | xargs kill -9")
-        run("ps -ef | grep -v grep | grep ttyS2 | awk '{print $2}' | xargs kill -9")
-        run("ps -ef | grep -v grep | grep F1_CON | awk '{print $2}' | xargs kill -9")
-        run("rm -rf /var/lock/LCK..ttyS0")
-        run("rm -rf /var/lock/LCK..ttyS2")
+        run("ps -ef | grep -v grep | grep -E 'ttyS0|ttyS1|ttyS2|ttyS3' | awk '{print $2}' | xargs kill -9")
+        run("rm -f /var/lock/LCK..ttyS0; rm -f /var/lock/LCK..ttyS2; rm -f /var/lock/LCK..ttyS1; rm -f /var/lock/LCK..ttyS3")
         time.sleep(3)
         run("ps -ef | grep tcp_serial")
         run("sh /mnt/sdmmc0p1/_install/web/fungible/RUN_TCP_PYSERIAL.sh", pty=False, combine_stderr=True)
@@ -538,6 +535,8 @@ def flashF(index=0, flags=False, type=None, image=None, rootpath='funsdk-release
     global child
     child = connectF(index, True)
     child.sendline ('echo connected to chip={} ...'.format(index))
+    child.expect ('\nf1 # ')
+    child.sendline ('run load_images; funpart;')
     child.expect ('\nf1 # ')
     child.sendline ('setenv ethaddr %s' % _mac_random_mac(index))
     child.expect ('\nf1 # ')
