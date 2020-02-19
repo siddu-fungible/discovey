@@ -2,10 +2,10 @@
   <div class="fun-panel">
     <div class="fun-panel-header">
       <span *ngIf="id">Editing suite&nbsp;
-      <button class="fun-button-with-icon" style="border: solid 1px black; min-width: 0 !important"
+       <a class="fun-action-link" style="color: blue"
               (click)="cloneSuite(suite.id)">
-        <i class="fa fa-copy" title="copy"></i>
-      </button></span>
+        <i class="fa fa-copy" title="copy">&nbsp;copy</i>
+      </a></span>
       <span *ngIf="(!cloneId && !id) || cloneId">Creating suite</span>
     </div>
 
