@@ -4,6 +4,7 @@ from swagger_client.models.body_node_update import BodyNodeUpdate
 from swagger_client.models.volume_types import VolumeTypes
 from swagger_client.models.transport import Transport
 from swagger_client.rest import ApiException
+from swagger_client.models.body_drive_format import BodyDriveFormat
 from swagger_client.models.node_update_op import NodeUpdateOp
 from lib.templates.storage.storage_controller_api import *
 from asset.asset_global import AssetType
@@ -200,17 +201,31 @@ class StorageControllerOperationsTemplate:
         for node in topology.data:
             for dpu in topology.data[node].dpus:
                 for drive_info in dpu.drives:
-                    self._format_drive(drive_uuid=drive_info.uuid, storage_controller=storage_controller)
+                    fun_test.add_checkpoint(checkpoint="Format Drive {}".format(drive_info.uuid), expected=True,
+                                            actual=self._format_drive(
+                                                drive_info=drive_info, storage_controller=storage_controller))
 
-    def _format_drive(self, drive_uuid, storage_controller, raw_api_call=True):
+    def _format_drive(self, drive_info, storage_controller, raw_api_call=True):
         result = False
         if raw_api_call:
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drive/{}".format(drive_uuid),
+            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drive/{}".format(drive_info.uuid),
                                                   data={}).json()
-            fun_test.add_checkpoint(checkpoint="Format Drive {}".format(drive_uuid), expected=True,
-                                    actual=format_drive["status"])
             result = format_drive["status"]
+        else:
+            body_drive_format = BodyDriveFormat(dpu_id=drive_info.dpu, nguid_low=drive_info.nguid_low,
+                                                nguid_high=drive_info.nguid_high, slot_id=drive_info.slot_id,
+                                                fault_zones=drive_info.fault_zone, capacity=drive_info.capacity)
+            format_drive = None
+            try:
+                format_drive = storage_controller.topology_api.format_drive_change_uuid(
+                    drive_uuid=drive_info.uuid, body_drive_format=body_drive_format)
+            except ApiException as e:
+                fun_test.critical(message="Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
+            except Exception as e:
+                fun_test.critical(message="Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
+            if format_drive:
+                result = True
         return result
 
     def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
