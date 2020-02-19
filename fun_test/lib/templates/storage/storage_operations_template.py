@@ -332,11 +332,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.test_assert(expression=nvme_filename,
                                      message="Get NVMe drive from Host {} using nvme list".format(host_obj.name))
                 self.hosts_state_object.add_host_nvme_namespace(hostname=host_obj.name, nvme_namespace=nvme_filename)
-        if isinstance(host_obj, list):
-            result = result_list
-        else:
-            result = result_list[0]
-        return result
+        # if isinstance(host_obj, list):
+        #     result = result_list
+        # else:
+        #     result = result_list[0]
+        return result_list
 
     def _check_host_target_existing_connection(self, fs_obj, volume_uuid, subsys_nqn, host_nqn, host_obj):
         result = False
