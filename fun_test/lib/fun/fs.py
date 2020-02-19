@@ -8,7 +8,7 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
-from fun_global import Codes, get_current_epoch_time, get_build_number_for_latest
+from fun_global import Codes, get_current_epoch_time, get_build_number_for_latest, processed_release_train
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
@@ -1059,7 +1059,7 @@ class BootupWorker(Thread):
                                          message="Bundle image installed",
                                          context=self.context)
                     fs.bundle_upgraded = True
-                    fs.post_install_expected_bundle_version = {"release_train": release_train,
+                    fs.post_install_expected_bundle_version = {"release_train": processed_release_train(release_train),
                                                                "build_number": build_number}
                     bmc.bundle_upgraded = True
 
@@ -1229,13 +1229,16 @@ class ComEInitializationWorker(Thread):
                     if self.fs.bundle_upgraded:
                         # Validate bundle_version
                         current_bundle_version = self.fs.get_bundle_version()
-                        """
-                        if self.fs.post_install_expected_bundle_version:
-                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
-                                                          actual=current_bundle_version["release_train"], message="Post-install expected release train")
-                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
-                                                          actual=current_bundle_version["build_number"], message="Post-install expected build number")
-                        """
+
+                        try:
+                            if self.fs.post_install_expected_bundle_version:
+                                fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
+                                                              actual=current_bundle_version["release_train"], message="Post-install expected release train")
+                                fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
+                                                              actual=current_bundle_version["build_number"], message="Post-install expected build number")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
                         fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
                                                                     current_bundle_version["build_number"]))
 
@@ -1576,7 +1579,6 @@ class ComE(Linux):
             fun_test.critical(str(ex))
         return result
 
-
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
         convert build number and release train to a url on dochub that refers to the bundle script
@@ -1586,12 +1588,8 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
-        release_prefix = ""
-        if "master" not in release_train:
-            release_prefix = "rel_"
-
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
-                                          release_prefix + release_train.replace(".", "_"),
+                                          processed_release_train(release_train=release_train),
                                           build_number,
                                           script_file_name)
 
