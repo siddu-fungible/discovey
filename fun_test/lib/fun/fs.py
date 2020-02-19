@@ -1013,7 +1013,7 @@ class BootupWorker(Thread):
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
 
-            if fs.bundle_image_parameters or fs.start_with_bundle_options:
+            if fs.bundle_image_parameters or (fs.start_with_bundle_options and fs.bundle_compatible):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 if fs.bundle_image_parameters:
                     build_number = fs.bundle_image_parameters.get("build_number", 70)
