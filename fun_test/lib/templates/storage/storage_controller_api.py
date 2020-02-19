@@ -26,6 +26,8 @@ class StorageControllerApi(object):
                 response = requests.delete(url, auth=self.http_basic_auth, json=data)
             elif method == "PATCH":
                 response = requests.patch(url, auth=self.http_basic_auth, json=data)
+            elif method == "PUT":
+                response = requests.put(url, auth=self.http_basic_auth, json=data)
         except Exception as ex:
             fun_test.critical("API Exception: {}".format(str(ex)))
 

@@ -194,7 +194,26 @@ class StorageControllerOperationsTemplate:
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
-    def initialize(self, already_deployed=False, dpu_indexes=None):
+    def format_all_drives(self, fs_obj):
+        storage_controller = fs_obj.get_storage_controller()
+        topology = storage_controller.topology_api.get_hierarchical_topology()
+        for node in topology.data:
+            for dpu in topology.data[node].dpus:
+                for drive_info in dpu.drives:
+                    self._format_drive(drive_uuid=drive_info.uuid, storage_controller=storage_controller)
+
+    def _format_drive(self, drive_uuid, storage_controller, raw_api_call=True):
+        result = False
+        if raw_api_call:
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drive/{}".format(drive_uuid),
+                                                  data={}).json()
+            fun_test.add_checkpoint(checkpoint="Format Drive {}".format(drive_uuid), expected=True,
+                                    actual=format_drive["status"])
+            result = format_drive["status"]
+        return result
+
+    def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
@@ -209,6 +228,8 @@ class StorageControllerOperationsTemplate:
             num_dpus = len(dpu_indexes)
             fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
                                           message="Make sure {} DPUs are online".format(num_dpus))
+            if not already_deployed and format_drives:
+                self.format_all_drives(fs_obj=fs_obj)
 
     def cleanup(self):
         pass
