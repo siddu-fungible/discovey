@@ -276,12 +276,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             host_obj_list.append(host_obj)
         else:
             host_obj_list = host_obj
-        for host_obj in host_obj_list:
-            if host_obj not in self.host_nvme_device:
-                self.host_nvme_device[host_obj] = []
-            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, host_obj.name))
+        for cur_host_obj in host_obj_list:
+            if cur_host_obj not in self.host_nvme_device:
+                self.host_nvme_device[cur_host_obj] = []
+            fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, cur_host_obj.name))
             storage_controller = fs_obj.get_storage_controller()
-            host_data_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
+            host_data_ip = cur_host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
                 attach_fields = BodyVolumeAttach(transport=Transport().TCP,
                                                  host_nqn="nqn.2015-09.com.Fungible:{}".format(host_data_ip))
@@ -313,25 +313,25 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     nsid = result.nsid
                 if not self._check_host_target_existing_connection(fs_obj=fs_obj, volume_uuid=volume_uuid,
                                                                    subsys_nqn=subsys_nqn, host_nqn=host_nqn,
-                                                                   host_obj=host_obj):
-                    fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=host_obj,
+                                                                   host_obj=cur_host_obj):
+                    fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=cur_host_obj,
                                                                                 subsys_nqn=subsys_nqn,
                                                                                 host_nqn=host_nqn,
                                                                                 dataplane_ip=dataplane_ip,
                                                                                 nvme_io_queues=nvme_io_queues),
-                                         message="NVMe connect from host: {}".format(host_obj.name))
+                                         message="NVMe connect from host: {}".format(cur_host_obj.name))
                 else:
                     fun_test.log("Skipping NVMe connect, because connection from host: {host} exists for "
-                                 "subsys-nqn: {subsys_nqn} and host-nqn: {host_nqn}".format(host=host_obj.name,
+                                 "subsys-nqn: {subsys_nqn} and host-nqn: {host_nqn}".format(host=cur_host_obj.name,
                                                                                             subsys_nqn=subsys_nqn,
                                                                                             host_nqn=host_nqn))
 
-                if host_obj not in self.host_nvme_device:
-                    self.host_nvme_device[host_obj] = []
-                nvme_filename = self.get_host_nvme_device(host_obj=host_obj, subsys_nqn=subsys_nqn, nsid=nsid)
+                if cur_host_obj not in self.host_nvme_device:
+                    self.host_nvme_device[cur_host_obj] = []
+                nvme_filename = self.get_host_nvme_device(host_obj=cur_host_obj, subsys_nqn=subsys_nqn, nsid=nsid)
                 fun_test.test_assert(expression=nvme_filename,
-                                     message="Get NVMe drive from Host {} using nvme list".format(host_obj.name))
-                self.hosts_state_object.add_host_nvme_namespace(hostname=host_obj.name, nvme_namespace=nvme_filename)
+                                     message="Get NVMe drive from Host {} using nvme list".format(cur_host_obj.name))
+                self.hosts_state_object.add_host_nvme_namespace(hostname=cur_host_obj.name, nvme_namespace=nvme_filename)
         if isinstance(host_obj, list):
             result = result_list
         else:
