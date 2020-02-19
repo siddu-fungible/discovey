@@ -780,6 +780,7 @@ class Bmc(Linux):
         if self.fs:
             asset_type = self.fs.get_asset_type()
             asset_id = self.fs.get_asset_name()
+            self.fs.bmc_cleanup_attempted = True
 
         fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
         post_processing_error_found = False
@@ -2009,7 +2010,13 @@ class ComE(Linux):
 
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
-                fun_test.add_checkpoint("HBM dumping going on")
+                fun_test.add_checkpoint("HBM dumping going on. Switching to BMC to collect logs")
+
+                try:
+                    self.fs.get_bmc().cleanup()
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
                 while not hbm_dump_timer.is_expired(print_remaining_time=True):
                     fun_test.sleep("HBM Dump", seconds=60)
@@ -2252,9 +2259,11 @@ class Fs(object, ToDictMixin):
         self.force_bundle_install = force_bundle_install
         fun_test.register_fs(self)
 
+        self.bmc_cleanup_attempted = False
         self.storage = FsStorage(fs_obj=self)
         self.networking = FsNetworking(fs_obj=self)
         self.platform = FsPlatform(fs_obj=self)
+
 
     def get_bundle_version(self):
         result = None
@@ -2399,8 +2408,9 @@ class Fs(object, ToDictMixin):
                 self.get_come().cleanup()
         except Exception as ex:
             pass
-            
-        self.get_bmc().cleanup()
+
+        if not self.bmc_cleanup_attempted:
+            self.get_bmc().cleanup()
 
         if self.errors_detected:
             for f1_index, f1 in self.f1s.iteritems():
