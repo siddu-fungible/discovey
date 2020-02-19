@@ -285,6 +285,11 @@ class SnapVolumeTestCase(FunTestCase):
         self.nqn_list = []
         self.bv_attach = False
 
+        if hasattr(self, "nvme_io_queues") and self.nvme_io_queues:
+            self.nvme_io_q = self.nvme_io_queues
+        else:
+            self.nvme_io_q = 16
+
         if not hasattr(self, "snap_attach"):
             self.snap_attach = False
 
@@ -356,7 +361,8 @@ class SnapVolumeTestCase(FunTestCase):
                 nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
                                                           transport_port=self.transport_port,
                                                           test_network=self.test_network["f1_loopback_ip"],
-                                                          transport_type=unicode.lower(self.transport_type))
+                                                          transport_type=unicode.lower(self.transport_type),
+                                                          nvme_io_queues=self.nvme_io_q)
                 fun_test.test_assert(nvme_connect_result["status"], "NVMe connect from host to Base Volume")
                 fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                 self.device_details = nvme_connect_result["device_details"]
@@ -435,7 +441,8 @@ class SnapVolumeTestCase(FunTestCase):
                         nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
                                                                   transport_port=self.transport_port,
                                                                   test_network=self.test_network["f1_loopback_ip"],
-                                                                  transport_type=unicode.lower(self.transport_type))
+                                                                  transport_type=unicode.lower(self.transport_type),
+                                                                  nvme_io_queues=self.nvme_io_q)
                         fun_test.simple_assert(nvme_connect_result["status"], "NVMe connect from host to Snap Volume")
                         fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]
                         self.device_details = nvme_connect_result["device_details"]
@@ -642,7 +649,8 @@ class SnapVolumeTestCase(FunTestCase):
                             nvme_connect_result = nvme_connect_method(host_info=self.host_info, nqn_list=self.nqn_list,
                                                                       transport_port=self.transport_port,
                                                                       test_network=self.test_network["f1_loopback_ip"],
-                                                                      transport_type=unicode.lower(self.transport_type))
+                                                                      transport_type=unicode.lower(self.transport_type),
+                                                                      nvme_io_queues=self.nvme_io_q)
                             fun_test.simple_assert(nvme_connect_result["status"],
                                                    "NVMe connect from host to Snap Volume")
                             fun_test.shared_variables["host_handle"] = nvme_connect_result["host_handle"]

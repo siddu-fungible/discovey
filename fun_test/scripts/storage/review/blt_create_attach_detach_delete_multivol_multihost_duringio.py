@@ -105,6 +105,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
@@ -183,11 +185,11 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                 if nvme_devices:
                     if isinstance(nvme_devices, list):
                         for nvme_device in nvme_devices:
-                            current_device = "/dev/" + nvme_device
+                            current_device = nvme_device
                             host.nvme_block_device_list.append(current_device)
                             host_nvme_mapping[host].append(current_device)
                     else:
-                        current_device = "/dev/" + nvme_devices
+                        current_device = nvme_devices
                         host.nvme_block_device_list.append(current_device)
                         host_nvme_mapping[host].append(current_device)
 

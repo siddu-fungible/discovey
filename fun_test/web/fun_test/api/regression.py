@@ -484,6 +484,9 @@ def suites(request, id):
             search_by_name_text = request.GET.get("search_by_name", None)
             if search_by_name_text:
                 q &= Q(name__icontains=search_by_name_text)
+            owner_email = request.GET.get('owner_email', None)
+            if owner_email:
+                q &= Q(owner_email=owner_email)
             all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by(
                 'case_insensitive_name')
             if get_count is None:

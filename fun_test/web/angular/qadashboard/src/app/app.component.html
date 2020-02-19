@@ -41,7 +41,8 @@
           <a class="dropdown-item" href="/regression/submit_job_page?mode=TRIAGE">Integration triage</a>
 
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/regression/suites_view">Suites</a>
+          <a class="dropdown-item" href="/regression/suites_view?owner_email={{ userProfile.user.email }}">My suites</a>
+          <a class="dropdown-item" href="/regression/suites_view">All suites</a>
           <a class="dropdown-item" href="/regression/admin">Admin</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/regression/releases">Releases</a>
