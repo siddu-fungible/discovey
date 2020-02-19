@@ -1682,6 +1682,8 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
+        if exit_status:
+            self.fs.bundle_install_failure_reset_required = True
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
 
 
@@ -2186,6 +2188,8 @@ class Fs(object, ToDictMixin):
             if is_number and bundle_build_number < 0:
                 fun_test.log("Build number set to -1 so resetting bundle image parameters. Received bundle number: {}".format(bundle_build_number))
                 self.bundle_image_parameters = None
+        self.bundle_install_failure_reset_required = None
+
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
         self.boot_args = boot_args
@@ -2458,6 +2462,12 @@ class Fs(object, ToDictMixin):
                             fun_test.test_assert(self.reset(), "FS reset complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
+            try:
+                if self.bundle_install_failure_reset_required:
+                    fun_test.add_checkpoint("Bundle installed failed. Resetting the FS")
+                    self.reset()
+            except Exception as ex:
+                fun_test.critical(str(ex))
             fun_test.simple_assert(not self.errors_detected, "Errors detected")
         return True
 
