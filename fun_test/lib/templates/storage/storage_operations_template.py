@@ -580,6 +580,20 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 fun_test.critical(message="Cannot find Fungible NVMe devices")
         return result
 
+    def get_volume_attach_status(self, fs_obj, volume_uuid):
+        result = False
+        storage_controller = fs_obj.get_storage_controller()
+        all_pools = storage_controller.storage_api.get_all_pools()
+        for pool in all_pools.data:
+            if result:
+                break
+            for volume in all_pools.data[pool].volumes:
+                if volume == volume_uuid:
+                    result = True
+                    break
+
+        return result
+
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
