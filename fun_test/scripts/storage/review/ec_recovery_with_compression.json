@@ -28,7 +28,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300,
     "reboot_hosts": false,
-    "already_deployed": true,
+    "already_deployed": false,
     "space_savings": 25
   },
   "RecoveryWithMFailure": {
@@ -75,7 +75,7 @@
     "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
     "collect_network_stats": false,
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
@@ -173,7 +173,7 @@
     "collect_network_stats": false,
     "m_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
@@ -274,7 +274,7 @@
     "m_concurrent_failure": true,
     "m_plus_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   }

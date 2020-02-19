@@ -2676,14 +2676,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-      "cab02-qa-09",
-      "cab02-qa-10",
-      "cab02-qa-11",
-      "cab02-qa-12",
-      "cab02-qa-13"
-    ]
+    }
   },
   "fs-104": {
     "dut_info": {
@@ -3887,13 +3880,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-      "cab04-qa-01",
-      "cab04-qa-02",
-      "cab04-qa-04",
-      "cab04-qa-05"
-    ]
+    }
   },
   "fs-regression2": {
     "switch_info": {

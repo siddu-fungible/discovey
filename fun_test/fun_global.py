@@ -233,3 +233,11 @@ def get_build_number_for_latest(release_train, model="fs1600"):
         except Exception as ex:
             print("Error getting build number: {}".format(str(ex)))
     return result
+
+
+def processed_release_train(release_train):
+    result = release_train
+    if "master" not in release_train:
+        release_prefix = "rel_"
+        result = "{}{}".format(release_prefix, release_train.replace(".", "_"))
+    return result

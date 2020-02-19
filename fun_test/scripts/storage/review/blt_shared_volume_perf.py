@@ -107,7 +107,6 @@ class SharedVolumePerfTest(FunTestCase):
     def setup(self):
 
         testcase = self.__class__.__name__
-
         self.topology = fun_test.shared_variables["topology"]
         self.blt_template = fun_test.shared_variables["blt_template"]
         self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
@@ -142,6 +141,8 @@ class SharedVolumePerfTest(FunTestCase):
         if "warmup_bs" in job_inputs:
             self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
                 replace("bs=128k", "bs={}".format(job_inputs["warmup_bs"]))
+        if "test_bs" in job_inputs:
+            self.fio_bs = job_inputs["test_bs"]
         if "fio_modes" in job_inputs:
             self.fio_modes = job_inputs["fio_modes"]
 
@@ -223,14 +224,12 @@ class SharedVolumePerfTest(FunTestCase):
 
         for host in self.hosts:
             host.nvme_block_device_list = []
-            for namespace in self.blt_template.host_nvme_device[host]:
-                host.nvme_block_device_list.append("/dev/{}".format(namespace))
-            fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
+            results = fetch_nvme_list(host.instance)
+            host.nvme_block_device_list = results["nvme_device"].split(":")
             fun_test.test_assert_expected(expected=host.num_volumes,
                                           actual=len(host.nvme_block_device_list),
                                           message="Expected NVMe devices are available - {}".format(host.name))
             host.nvme_block_device_list.sort()
-            print("host_nvme_block_device list",host.nvme_block_device_list)
             host.fio_filename = ":".join(host.nvme_block_device_list)
 
         # Extracting the host CPUs
@@ -580,25 +579,30 @@ class ConfigPeristenceAfterReset(FunTestCase):
                 for host in self.hosts:
                     host_handle = host.instance
                     nvme_device_list_after_reboot = fetch_nvme_list(host_handle)
+                    nvme_device_list_after_reboot["nvme_device"] = nvme_device_list_after_reboot["nvme_device"]. \
+                        split(":")
                     fun_test.log("nvme_device_list_after_reboot")
                     fun_test.log(nvme_device_list_after_reboot)
                     if nvme_device_list_after_reboot["status"]:
                         fun_test.test_assert_expected(
                             expected=len(host.nvme_block_device_list),
-                            actual=len(nvme_device_list_after_reboot["nvme_devices"]),
+                            actual=len(nvme_device_list_after_reboot["nvme_device"]),
                             message="Expected number of NVMe devices available after reboot")
-                        res = sorted(host.nvme_block_device_list) == sorted(nvme_device_list_after_reboot["nvme_devices"])
-                        fun_test.test_assert(res, "nvme device names are valid {}".format(nvme_device_list_after_reboot["nvme_devices"]))
+                        res = sorted(host.nvme_block_device_list) == sorted(nvme_device_list_after_reboot["nvme_device"])
+                        fun_test.test_assert(res, "nvme device names are valid {}".format(nvme_device_list_after_reboot["nvme_device"]))
                 break
 
     def run(self):
 
         testcase = self.__class__.__name__
+        test_method = testcase
+        # self.test_mode = testca
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in
-        # read only modes after reboot
+        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
+        # & read only modes
 
         internal_result = {}
+
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
                               "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
@@ -612,29 +616,29 @@ class ConfigPeristenceAfterReset(FunTestCase):
                            ]
 
         table_data_rows = []
+
         # Preparing the volume details list containing the list of dictionaries
         vol_details = []
         vol_group = {}
         vol_group[BltVolumeOperationsTemplate.vol_type] = fun_test.shared_variables["vol_uuid_list"]
         vol_details.append(vol_group)
         self.storage_controller_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
-        for mode in self.reboot_fio_modes:
-            for io_depth in self.reboot_fio_iodepth:
+
+        for mode in self.fio_modes:
+            for io_depth in self.fio_iodepth:
                 self.test_mode = mode
                 row_data_dict = {}
                 row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = self.reboot_fio_bs
+                row_data_dict["block_size"] = self.fio_bs
                 row_data_dict["iodepth"] = io_depth
                 num_jobs = 32 / self.blt_count
                 file_size_in_gb = self.capacity / 1073741824
                 row_data_dict["size"] = str(file_size_in_gb) + "GB"
-                runtime = 60
                 file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
-                # Stats collection
                 for index, stat_detail in enumerate(self.stats_collect_details):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(
-                        runtime / self.stats_collect_details[index][func]["interval"])
+                        self.fio_cmd_args["timeout"] / self.stats_collect_details[index][func]["interval"])
                     if func == "vol_stats":
                         self.stats_collect_details[index][func]["vol_details"] = vol_details
                 fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
@@ -655,8 +659,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
                     fio_output[index] = {}
                     end_host_thread[index] = host.instance.clone()
                     wait_time = len(self.hosts) - index
-                    if "multiple_jobs" in self.reboot_fio_cmd_args:
-                        reboot_fio_cmd_args = {}
+                    if "multiple_jobs" in self.fio_cmd_args:
+                        fio_cmd_args = {}
                         # Adding the allowed CPUs into the fio command
                         fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                         jobs = ""
@@ -671,20 +675,20 @@ class ConfigPeristenceAfterReset(FunTestCase):
                         # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
                         # size = " --size={}%".format(self.fio_io_size)
                         rw_string = " --rw={}".format(mode)
-                        bs_string = " --bs={}".format(self.reboot_fio_bs)
-                        reboot_fio_cmd_args["multiple_jobs"] = self.reboot_fio_cmd_args["multiple_jobs"] + \
-                                                               fio_cpus_allowed_args + num_jobs_string + \
-                                                               io_depth_string + io_size_string + bs_string + rw_string + jobs
-                        reboot_fio_cmd_args["timeout"] = self.reboot_fio_cmd_args["timeout"]
+                        bs_string = " --bs={}".format(self.fio_bs)
+                        fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + \
+                                                        fio_cpus_allowed_args + num_jobs_string + \
+                                                        io_depth_string + io_size_string + bs_string + rw_string + jobs
+                        fio_cmd_args["timeout"] = self.fio_cmd_args["timeout"]
                         fun_test.log("Fio command used is ")
-                        fun_test.log(reboot_fio_cmd_args["multiple_jobs"])
+                        fun_test.log(fio_cmd_args["multiple_jobs"])
                         thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                          func=fio_parser,
                                                                          arg1=end_host_thread[index],
                                                                          host_index=index,
                                                                          filename="nofile",
-                                                                         **reboot_fio_cmd_args)
-                        fio_offset += self.fio_io_size
+                                                                         **fio_cmd_args)
+                        # fio_offset += self.fio_io_size
                         fun_test.sleep("Fio threadzz", seconds=1)
 
                 fun_test.sleep("Fio threads started", 10)
@@ -705,8 +709,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
                     stats_obj.stop(self.stats_collect_details)
                     self.storage_controller_dpcsh_obj.verbose = True
 
-                stats_obj.populate_stats_to_file(self.stats_collect_details, mode=mode,
-                                                 iodepth=row_data_dict["iodepth"])
+                job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+                stats_obj.populate_stats_to_file(self.stats_collect_details, job_string=job_string)
 
                 aggr_fio_output = {}
                 for index, host in enumerate(self.hosts):
@@ -752,9 +756,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset(hard=False)
         fun_test.test_assert(fs_obj.come.ensure_expected_containers_running(), "All containers are up")
-        fun_test.test_assert(expression=self.blt_template.get_health(
-            storage_controller=fs_obj.get_storage_controller()),
-            message="{}: API server health".format(fs_obj))
+        fun_test.test_assert(expression=self.blt_template.get_health(fs_obj),
+                             message="{}: API server health".format(fs_obj))
 
     """
     def fetch_nvme_list(self, host_obj):

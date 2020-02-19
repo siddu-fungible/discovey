@@ -72,7 +72,7 @@ export class SuiteEditorService {
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
-  suites<T>(getCount=null, recordsPerPage=null, page=null, selectedCategories=null, byNameSearchText=null): Observable<T> {
+  suites<T>(getCount=null, recordsPerPage=null, page=null, selectedCategories=null, byNameSearchText=null, ownerEmail=null): Observable<T> {
     let url = "/api/v1/regression/suites";
     if (recordsPerPage) {
       url += `?records_per_page=${recordsPerPage}&page=${page}`;
@@ -90,6 +90,9 @@ export class SuiteEditorService {
       });
       s = s.replace(/,$/, '');
       url += `&categories=${s};`
+    }
+    if (ownerEmail) {
+      url += `&owner_email=${ownerEmail}`;
     }
 
     return this.apiService.get(url).pipe(switchMap(response => {
