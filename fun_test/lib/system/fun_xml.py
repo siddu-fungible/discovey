@@ -413,8 +413,8 @@ class PageContent:
         glyph_button = GenericElement("span", id="summary_collapse", class_name="fa fa-caret-square-o-left")
         glyph_button.text = ''
         panel_anchor.append(glyph_button)
-        self.messages_panel = self.get_messages_panel()
-        panel_group.append(self.messages_panel)
+        # self.messages_panel = self.get_messages_panel()
+        # panel_group.append(self.messages_panel)
         panel_group.append(panel_anchor)
         # self.tree.append(self.panel_group)
         return panel_group
@@ -868,6 +868,7 @@ class FunXml:
         # self.nav_tab.append(page_tab4)
         if console_tab is not None:
             self.nav_tab.append(console_tab)
+
         self.nav_tab.append(page_tab5)
         tabs_wrapper.append(self.nav_tab)
 
@@ -880,7 +881,7 @@ class FunXml:
         self.script_page_content = ScriptContent()
         # self.topology_page_content = TopologyPageContent()
         self.aux_page_content = AuxPageContent()
-
+        self.aux_page_content.get().append(self.result_page_content.get_messages_panel())
         self.tab_content.append(self.result_page_content.get())
         self.tab_content.append(self.documentation_page_content.get())
         self.tab_content.append(self.script_page_content.get())

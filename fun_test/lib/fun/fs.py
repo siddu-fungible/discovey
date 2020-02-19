@@ -1332,6 +1332,7 @@ class ComE(Linux):
 
     CORES_DIRECTORY = "/opt/fungible/cores"
     BLD_PROPS_PATH = "/opt/fungible/bld_props.json"
+    CCLINUX_DIRECTORY = "{}/cclinux".format(FUN_ROOT)
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
@@ -1907,7 +1908,36 @@ class ComE(Linux):
                 fun_test.critical(str(ex))
 
             if fungible_root:
-                logs_path = "{}/logs/*".format(fungible_root)
+                try:
+                    fun_test.log("Started collecting cclinux logs")
+                    self.sudo_command("{}/cclinux_collect.sh --log {}".format(self.CCLINUX_DIRECTORY, self.FUN_ROOT), timeout=180)
+                    fun_test.log("Finished collecting cclinux logs")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+                # logs_path = "{}/logs/*".format(fungible_root)
+                logs_tgz_path = "/tmp/logs.tgz"
+                self.sudo_command("rm -f {}".format(logs_tgz_path))
+                self.sudo_command("tar -cvzf {} {}/logs".format(logs_tgz_path, self.FUN_ROOT), timeout=180)
+
+                content_prefix = self._get_context_prefix(data="opt_fungible_logs")
+                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=content_prefix,
+                                                         linux_obj=self,
+                                                         source_file_path=logs_tgz_path,
+                                                         display_name="{} {}/logs tgz".format(self._get_context_prefix(""), self.FUN_ROOT),
+                                                         asset_type=asset_type,
+                                                         asset_id=asset_id,
+                                                         artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                         artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                         is_large_file=False,
+                                                         timeout=240)
+                if uploaded_path:
+                    fun_test.log("{}/logs uploaded to {}".format(self.FUN_ROOT, uploaded_path))
+                    fun_test.report_message("{}/logs available at {}".format(self.FUN_ROOT, uploaded_path))
+
+                self.command("rm {}".format(logs_tgz_path))
+
+                """
                 files = self.list_files(logs_path)
                 for file in files:
                     file_name = file["filename"]
@@ -1931,7 +1961,7 @@ class ComE(Linux):
                                                 asset_id=asset_id,
                                                 artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                 artifact_sub_category=self.fs.ArtifactSubCategory.COME)
-
+                """
 
         except Exception as ex:
             fun_test.critical(str(ex))
