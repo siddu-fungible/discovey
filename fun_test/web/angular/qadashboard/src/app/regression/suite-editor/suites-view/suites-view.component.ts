@@ -38,9 +38,10 @@ export class SuitesViewComponent implements OnInit {
   mode: Mode = Mode.DEFAULT;
   showScriptPath: boolean = true;
   showAllSuites: boolean = false;
+  ownerEmail: string = null;
 
   constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService,
-              private router: Router) {
+              private router: Router, private route: ActivatedRoute) {
     this.recordsPerPage = this.DEFAULT_RECORDS_PER_PAGE;
 
   }
@@ -53,6 +54,8 @@ export class SuitesViewComponent implements OnInit {
     }
     this.driver =
       of(true).pipe(switchMap(response => {
+        return this.getQueryParam();
+      })).pipe(switchMap(response => {
         return this.service.categories();
       })).pipe(switchMap(response => {
         this.availableCategories = response;
@@ -60,7 +63,7 @@ export class SuitesViewComponent implements OnInit {
       })).pipe(switchMap(suiteCount => {
         this.suitesCount = suiteCount;
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.recordsPerPage);
-        return this.service.suites<Suite[]>(null, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        return this.service.suites<Suite[]>(null, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText, this.ownerEmail);
       })).pipe(switchMap((response: Suite []) => {
         //console.log(typeof response);
         //console.log(Object.prototype.toString.call(response[0]));
@@ -174,5 +177,14 @@ export class SuitesViewComponent implements OnInit {
       this.recordsPerPage = this.suitesCount;
     }
     this.refreshAll();
+  }
+
+   getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('owner_email')) {
+        this.ownerEmail = params["owner_email"]
+      }
+      return of(params);
+    }))
   }
 }
