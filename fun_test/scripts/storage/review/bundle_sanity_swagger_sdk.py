@@ -170,7 +170,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         if not fun_test.is_current_test_case_failed():
             hosts = self.topology.get_available_host_instances()
             for host_obj in hosts:
-                self.storage_controller_template.host_diagnostics(host_obj=host_obj)
+                self.storage_controller_template.host_diagnostics(host_obj=host_obj.get_instance())
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset()
