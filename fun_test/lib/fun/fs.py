@@ -14,6 +14,7 @@ from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCate
 from lib.utilities.http import fetch_text_file
 from lib.fun.storage.fs_storage import FsStorage
 from lib.fun.networking.fs_networking import FsNetworking
+from lib.fun.fs_platform.fs_platform import FsPlatform
 
 from threading import Thread, Lock
 from datetime import datetime
@@ -779,6 +780,7 @@ class Bmc(Linux):
         if self.fs:
             asset_type = self.fs.get_asset_type()
             asset_id = self.fs.get_asset_name()
+            self.fs.bmc_cleanup_attempted = True
 
         fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
         post_processing_error_found = False
@@ -1011,7 +1013,7 @@ class BootupWorker(Thread):
                     fun_test.test_assert(come.ensure_expected_containers_running(), "Expected containers running")
                     self.fs.renew_device_handles()
 
-            if fs.bundle_image_parameters or fs.start_with_bundle_options:
+            if fs.bundle_image_parameters or (fs.start_with_bundle_options and fs.bundle_compatible):
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_INSTALL_BUNDLE)
                 if fs.bundle_image_parameters:
                     build_number = fs.bundle_image_parameters.get("build_number", 70)
@@ -1039,6 +1041,7 @@ class BootupWorker(Thread):
                     do_upgrade = self._is_upgrade_required(current_bundle_version=current_bundle_version,
                                                            target_release_train=release_train,
                                                            target_build_number=build_number)
+                do_upgrade = True   # WORKAROUND
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
                 else:
@@ -1226,14 +1229,23 @@ class ComEInitializationWorker(Thread):
                     if self.fs.bundle_upgraded:
                         # Validate bundle_version
                         current_bundle_version = self.fs.get_bundle_version()
+                        """
                         if self.fs.post_install_expected_bundle_version:
                             fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
                                                           actual=current_bundle_version["release_train"], message="Post-install expected release train")
                             fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
                                                           actual=current_bundle_version["build_number"], message="Post-install expected build number")
-
+                        """
                         fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
                                                                     current_bundle_version["build_number"]))
+
+                        try:
+                            validate_firmware_result = self.fs.platform.validate_firmware(bld_props=self.fs.get_come().get_build_properties())
+                            fun_test.log("Validate firmware result: {}".format(validate_firmware_result))
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+
+
 
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     """
@@ -1540,9 +1552,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
-            if self.fs.bundle_compatible:
-                fun_test.log("Clearing out HBM dump directory")
-                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+            # if self.fs.bundle_compatible:
+            #    fun_test.log("Clearing out HBM dump directory")
+            #    self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1602,7 +1614,7 @@ class ComE(Linux):
         return result
 
     def diags(self):
-        fun_test.add_checkpoint(checkpoint="Trying to fetch diags")
+        fun_test.add_checkpoint(checkpoint="Trying to fetch diags", context=self.context)
         clone = self.clone()
         clone.command("dmesg", timeout=120)
         clone.command("cat /var/log/syslog", timeout=60)
@@ -1824,7 +1836,7 @@ class ComE(Linux):
     def detect_pfs(self):
         devices = self.lspci(grep_filter="1dad")
         if not devices:
-            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected")
+            fun_test.add_checkpoint(result=fun_test.FAILED, checkpoint="No PCI devices detected", context=self.context)
             self.diags()
         fun_test.test_assert(expression=devices, message="PCI devices detected", context=self.context)
 
@@ -2001,7 +2013,13 @@ class ComE(Linux):
 
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
-                fun_test.add_checkpoint("HBM dumping going on")
+                fun_test.add_checkpoint("HBM dumping going on. Switching to BMC to collect logs")
+
+                try:
+                    self.fs.get_bmc().cleanup()
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
                 while not hbm_dump_timer.is_expired(print_remaining_time=True):
                     fun_test.sleep("HBM Dump", seconds=60)
@@ -2244,8 +2262,11 @@ class Fs(object, ToDictMixin):
         self.force_bundle_install = force_bundle_install
         fun_test.register_fs(self)
 
+        self.bmc_cleanup_attempted = False
         self.storage = FsStorage(fs_obj=self)
         self.networking = FsNetworking(fs_obj=self)
+        self.platform = FsPlatform(fs_obj=self)
+
 
     def get_bundle_version(self):
         result = None
@@ -2390,8 +2411,9 @@ class Fs(object, ToDictMixin):
                 self.get_come().cleanup()
         except Exception as ex:
             pass
-            
-        self.get_bmc().cleanup()
+
+        if not self.bmc_cleanup_attempted:
+            self.get_bmc().cleanup()
 
         if self.errors_detected:
             for f1_index, f1 in self.f1s.iteritems():
@@ -3044,8 +3066,10 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main2__":
+if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
+    bmc = fs.get_bmc()
+    output = bmc.command("date")
     i = 0
     # print fs.get_bundle_version()
     # health = fs.health(only_reachability=True)
@@ -3076,7 +3100,7 @@ if __name__ == "__main_2_":
     o = come.get_process_id_by_pattern("dpcsh.*{}\|{}\|{}\|{}".format(come.DEFAULT_DPC_PORT[0], come.DEFAULT_DPC_PORT[1], come.DEFAULT_STATISTICS_DPC_PORT[0], come.DEFAULT_STATISTICS_DPC_PORT[1]), multiple=True)
     come.get_process_id_by_pattern("dpcsh.*{}".format(come.DEFAULT_DPC_PORT[0]))
 
-if __name__ == "__main__":
+if __name__ == "__main222__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-regression1"))

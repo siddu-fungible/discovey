@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+
 fun_test.enable_storage_api()
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
@@ -212,16 +213,20 @@ class MultiHostFioRandRead(FunTestCase):
                 self.create_volume_list.append(current_vol_uuid)
 
                 # Check if drive id is unique
+
+                props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
+                dpcsh_op = self.sc_dpcsh_obj.peek(props_tree=props_tree)
+                fun_test.simple_assert(current_vol_uuid in dpcsh_op["data"].keys(),
+                                       message="Volume {} not seen in peek storage output".format(current_vol_uuid))
+                drive_id = dpcsh_op["data"][current_vol_uuid]["stats"]["drive_uuid"]
                 if use_unique_drives:
-                    props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
-                    dpcsh_op = self.sc_dpcsh_obj.peek(props_tree=props_tree)
-                    fun_test.simple_assert(current_vol_uuid in dpcsh_op["data"].keys(),
-                                           message="Volume {} not seen in peek storage output".format(current_vol_uuid))
-                    drive_id = dpcsh_op["data"][current_vol_uuid]["stats"]["drive_uuid"]
                     fun_test.test_assert(drive_id not in drive_id_list,
                                          message="Volume with uuid {} id created on unique drive having"
                                                  " uuid {}".format(current_vol_uuid, drive_id))
-                    drive_id_list.append(drive_id)
+                else:
+                    fun_test.add_checkpoint("Volume {} created on drive with uuid {}".format(current_vol_uuid,
+                                                                                             drive_id))
+                drive_id_list.append(drive_id)
 
             fun_test.test_assert_expected(expected=self.blt_count, actual=len(self.create_volume_list),
                                           message="Created {} number of volumes".format(self.blt_count))
@@ -264,13 +269,12 @@ class MultiHostFioRandRead(FunTestCase):
                         host_nqn, dataplane_ip = host_nqn_ip
                         fun_test.test_assert(
                             expression=self.sc_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
-                                                                                host_nqn=host_nqn,
-                                                                                dataplane_ip=dataplane_ip),
+                                                                               host_nqn=host_nqn,
+                                                                               dataplane_ip=dataplane_ip),
                             message="NVMe connect from host: {}".format(host.name))
                         nvme_filename = self.sc_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
                         fun_test.test_assert(expression=nvme_filename,
                                              message="Get NVMe drive from Host {} using lsblk".format(host.name))
-
 
             # Setting the fcp scheduler bandwidth
             if hasattr(self, "config_fcp_scheduler"):
@@ -296,10 +300,10 @@ class MultiHostFioRandRead(FunTestCase):
                 if nvme_devices:
                     if isinstance(nvme_devices, list):
                         for nvme_device in nvme_devices:
-                            current_device = "/dev/" + nvme_device
+                            current_device = nvme_device
                             host.nvme_block_device_list.append(current_device)
                     else:
-                        current_device = "/dev/" + nvme_devices
+                        current_device = nvme_devices
                         host.nvme_block_device_list.append(current_device)
                 fun_test.test_assert_expected(expected=len(self.attach_vol_result[host]),
                                               actual=len(host.nvme_block_device_list),

@@ -141,6 +141,8 @@ class SharedVolumePerfTest(FunTestCase):
         if "warmup_bs" in job_inputs:
             self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
                 replace("bs=128k", "bs={}".format(job_inputs["warmup_bs"]))
+        if "test_bs" in job_inputs:
+            self.fio_bs = job_inputs["test_bs"]
         if "fio_modes" in job_inputs:
             self.fio_modes = job_inputs["fio_modes"]
 
