@@ -59,7 +59,7 @@ export class SuitesViewComponent implements OnInit {
         return this.service.categories();
       })).pipe(switchMap(response => {
         this.availableCategories = response;
-        return this.service.suites<number>(true, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        return this.service.suites<number>(true, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText, this.ownerEmail);
       })).pipe(switchMap(suiteCount => {
         this.suitesCount = suiteCount;
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.recordsPerPage);
