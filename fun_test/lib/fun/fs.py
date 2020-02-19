@@ -1549,9 +1549,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
-            if self.fs.bundle_compatible:
-                fun_test.log("Clearing out HBM dump directory")
-                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+            # if self.fs.bundle_compatible:
+            #    fun_test.log("Clearing out HBM dump directory")
+            #    self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
