@@ -175,7 +175,8 @@ class MaxHostsConnections(FunTestCase):
                                                                capacity=self.capacity, compression_effort=False,
                                                                encrypt=False, data_protection={})
             vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
-            fun_test.test_assert(expression=vol_uuid[0], message="Create Volume Successful")
+            fun_test.test_assert(expression=vol_uuid[0],
+                                 message="Volume-{} creation successful with uuid {}".format(i+1, vol_uuid[0]))
             self.vol_uuid_list.append(vol_uuid[0])
 
 

@@ -39,10 +39,10 @@
   },
   "MaxHostsConnections":{
     "num_f1": 1,
-    "blt_count": 128,
+    "blt_count": 8,
     "num_hosts": 2,
     "capacity": 1099511627776,
-    "num_of_vhosts": 128,
+    "num_of_vhosts": 8,
     "tcp_connections_per_connect": 17,
     "compression_effort": "False",
     "encrypt": "False",
