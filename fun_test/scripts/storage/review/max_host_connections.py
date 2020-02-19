@@ -179,51 +179,6 @@ class MaxHostsConnections(FunTestCase):
                                  message="Volume-{} creation successful with uuid {}".format(i+1, vol_uuid[0]))
             self.vol_uuid_list.append(vol_uuid[0])
 
-
-        # for i in range(self.blt_count):
-        #     attach_vol_result = self.blt_template.attach_volume(self.fs_obj_list[0],
-        #                                                         self.vol_uuid_list[i],
-        #                                                         self.hosts,
-        #                                                         validate_nvme_connect=True,
-        #                                                         raw_api_call=True)
-        #     fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-        # for host in self.hosts:
-        #     host.num_volumes = self.blt_count
-        #
-        # # Populating the NVMe devices available to the hosts
-        # for host in self.hosts:
-        #     host.nvme_block_device_list = []
-        #     for namespace in self.blt_template.host_nvme_device[host]:
-        #         host.nvme_block_device_list.append("/dev/{}".format(namespace))
-        #     fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
-        #     fun_test.test_assert_expected(expected=host.num_volumes,
-        #                                   actual=len(host.nvme_block_device_list),
-        #                                   message="Expected NVMe devices are available")
-        #     host.nvme_block_device_list.sort()
-        #     host.fio_filename = ":".join(host.nvme_block_device_list)
-
-        # Extracting the host CPUs
-        # for host in self.hosts:
-        #     host_handle = host.instance
-        #     if host.name.startswith("cab0"):
-        #         if self.override_numa_node["override"]:
-        #             host_numa_cpus_filter = host_handle.lscpu("node[01]")
-        #             host.host_numa_cpus = ",".join(host_numa_cpus_filter.values())
-        #     else:
-        #         if self.override_numa_node["override"]:
-        #             host_numa_cpus_filter = host_handle.lscpu(self.override_numa_node["override_node"])
-        #             host.host_numa_cpus = host_numa_cpus_filter[self.override_numa_node["override_node"]]
-        #         else:
-        #             host.host_numa_cpus = fetch_numa_cpus(host_handle, self.ethernet_adapter)
-        # numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
-        # if self.override_numa_node["override"]:
-        #     numa_node_to_use = self.override_numa_node["override_node"]
-        # self.hosts = get_host_numa_cpus(hosts=self.hosts, numa_node_to_use=numa_node_to_use)
-        #
-        # fun_test.shared_variables["host_info"] = self.hosts
-        # fun_test.log("Hosts info: {}".format(self.hosts))
-
     def run(self):
         self.vhosts_per_host = self.num_of_vhosts / self.num_host
         self.host_nvme_device_dict = {}
@@ -397,7 +352,7 @@ class MaxHostsConnections(FunTestCase):
 
                 connections_before_connect = get_num_of_tcp_connections(host_obj)
                 host_linux_handle = host_obj.get_instance()
-                name_spaces_before_connect = self.blt_template.get_nvme_namespaces(host_linux_handle)
+                name_spaces_before_connect = self.blt_template.get_nvme_namespaces_by_lsblk(host_linux_handle)
                 fun_test.test_assert(expression=self.blt_template.nvme_connect_from_host(host_obj=host_obj,
                                                                                          subsys_nqn=subsys_nqn,
                                                                                          host_nqn=host_nqn,
@@ -410,7 +365,7 @@ class MaxHostsConnections(FunTestCase):
                                               message="Number of new tcp connections created after nvme connect")
                 fun_test.log("Number of tcp connections from the host {} are {}".format(host_obj.name,
                                                                                         connections_after_connect))
-                name_spaces_after_connect = self.blt_template.get_nvme_namespaces(host_linux_handle)
+                name_spaces_after_connect = self.blt_template.get_nvme_namespaces_by_lsblk(host_linux_handle)
                 new_name_space = list(set(name_spaces_after_connect)-set(name_spaces_before_connect))
                 fun_test.test_assert_expected(1, len(new_name_space),
                                               message="Increase in namespaces on host after connect")
