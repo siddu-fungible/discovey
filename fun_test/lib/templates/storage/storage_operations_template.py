@@ -455,10 +455,10 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                             host_obj=temp_host_obj_list[index],
                                             validate_nvme_connect=validate_nvme_connect, raw_api_call=raw_api_call,
                                             nvme_io_queues=nvme_io_queues)
-                fun_test.test_assert(output[0]["status"],
+                fun_test.test_assert(output["status"],
                                      message="Attach volume {} to host {}".format(temp_volume_uuid_list[index],
                                                                                   temp_host_obj_list[index].name))
-                result[temp_host_obj_list[index]].append(output[0])
+                result[temp_host_obj_list[index]].append(output)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
