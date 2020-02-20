@@ -57,7 +57,6 @@ class BringupSetup(FunTestScript):
 
         # self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
 
-
     def cleanup(self):
         fun_test.log("Performing disconnect/detach/delete cleanup as part of script level cleanup")
         self.blt_template.cleanup()
@@ -116,31 +115,10 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         if "test_iteration_count" in job_inputs:
             self.test_iteration_count = job_inputs["test_iteration_count"]
 
-        '''if "warmup_jobs" in job_inputs:
-            self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
-                replace("numjobs=1", "numjobs={}".format(job_inputs["warmup_jobs"]))'''
-
-
         fun_test.shared_variables["blt_count"] = self.blt_count
         self.vol_type = VolumeTypes().LOCAL_THIN
 
-        self.available_hosts = self.topology.get_available_hosts()
-        self.host_objs = self.available_hosts.values()
-
-        self.host_info = {}
-        fun_test.shared_variables["host_ctrl"] = {}
-        # Populating the linux handles of the hosts
-        for host_name, host_obj in self.available_hosts.items():
-            self.host_info[host_name] = {}
-            self.host_info[host_name]["test_interface"] = host_obj.get_test_interface(index=0)
-            self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
-            self.host_info[host_name]["handle"] = host_obj.get_instance()
-
-        # chars = string.ascii_uppercase + string.ascii_lowercase
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            self.fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(self.fs_obj)
+        self.hosts = self.topology.get_available_host_instances()
 
     def run(self):
         for count in range(self.test_iteration_count):
@@ -153,21 +131,21 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                 vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
                 fun_test.test_assert(expression=vol_uuid[0], message="Create Volume{} Successful with uuid {}".format(i+1, vol_uuid[0]))
                 self.vol_uuid_list.append(vol_uuid[0])
-            hosts = self.topology.get_available_host_instances()
+
             if self.shared_volume:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=hosts, fs_obj=self.fs_obj,
+                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts, fs_obj=self.fs_obj_list[0],
                                                                                volume_uuid_list=self.vol_uuid_list,
                                                                                validate_nvme_connect=False,
                                                                                raw_api_call=True,
                                                                                nvme_io_queues=None,
                                                                                volume_is_shared=True)
             else:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=hosts, fs_obj=self.fs_obj,
-                                                                      volume_uuid_list=self.vol_uuid_list,
-                                                                      validate_nvme_connect=False,
-                                                                      raw_api_call=True,
-                                                                      nvme_io_queues=None,
-                                                                      volume_is_shared=False)
+                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts, fs_obj=self.fs_obj_list[0],
+                                                                               volume_uuid_list=self.vol_uuid_list,
+                                                                               validate_nvme_connect=False,
+                                                                               raw_api_call=True,
+                                                                               nvme_io_queues=None,
+                                                                               volume_is_shared=False)
 
             host_nvme_mapping = {}
             for host, data in self.attach_vol_result.items():
@@ -200,9 +178,9 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                                                           "on host {} matches with attached ".format(host.name))
                 else:
                     fun_test.test_assert_expected(expected=len(self.attach_vol_result[host]),
-                                              actual=len(host.nvme_block_device_list),
-                                              message="Check number of nvme block devices found "
-                                                      "on host {} matches with attached ".format(host.name))
+                                                  actual=len(host.nvme_block_device_list),
+                                                  message="Check number of nvme block devices found "
+                                                          "on host {} matches with attached ".format(host.name))
 
 
             # Extracting the host CPUs
