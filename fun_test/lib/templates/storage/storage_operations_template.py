@@ -71,7 +71,6 @@ class StorageControllerOperationsTemplate:
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         result = False
-        topology_result = None
 
         dut = self.topology.get_dut(index=dut_index)
         fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -202,9 +201,9 @@ class StorageControllerOperationsTemplate:
         for node in topology.data:
             for dpu in topology.data[node].dpus:
                 for drive_info in dpu.drives:
-                    fun_test.add_checkpoint(checkpoint="Formatting drive {}".format(drive_info.uuid), expected=True,
-                                            actual=self._format_drive(
-                                                drive_info=drive_info, storage_controller=storage_controller))
+                    fun_test.test_assert(self._format_drive(
+                        drive_info=drive_info, storage_controller=storage_controller),
+                        message="Formatting drive {}".format(drive_info.uuid))
 
     def _format_drive(self, drive_info, storage_controller, raw_api_call=False):
         result = False
