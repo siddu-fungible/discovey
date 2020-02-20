@@ -1238,7 +1238,7 @@ class ComEInitializationWorker(Thread):
                                                               actual=current_bundle_version["build_number"], message="Post-install expected build number")
                         except Exception as ex:
                             fun_test.critical(str(ex))
-
+                        fun_test.log("Setting version")
                         fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
                                                                     current_bundle_version["build_number"]))
 
