@@ -817,7 +817,7 @@ class Bmc(Linux):
                                             artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                             artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
-            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
+            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} FunOS log").format(f1_index),
                                         filename=artifact_file_name,
                                         asset_type=asset_type,
                                         asset_id=asset_id,
