@@ -737,11 +737,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with host_nqn {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
+                    fun_test.add_checkpoint(expected=True, actual=detach_volume.status,
+                                            checkpoint="Detach Volume {} from host with host_nqn {}".format(
+                                                volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
+                fun_test.add_checkpoint(expected=True, actual=delete_volume.status,
+                                        checkpoint="Delete Volume {}".format(volume))
 
         super(GenericVolumeOperationsTemplate, self).cleanup()
 
