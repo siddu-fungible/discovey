@@ -3193,7 +3193,10 @@ class DataPlaneOperationsPerformance(FunModel):
     input_volume_size_unit = models.TextField(default=PerfUnit.UNIT_MB)
     input_concurrent = models.BooleanField(default=False)
     input_split_performance_data = models.TextField(verbose_name="Split perf data", default={})
+    input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+
 
     output_total_time = models.FloatField(verbose_name="Total time taken", default=-1)
     output_avg_time = models.FloatField(verbose_name="Avg time taken", default=-1)

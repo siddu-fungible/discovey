@@ -1651,12 +1651,17 @@ class MetricParser():
             for line in file:
                 self.match_found = True
                 self.metrics["output_total_time"] = line["total_time"]
-                self.metrics["output_total_time"] = line["total_time_unit"]
+                self.metrics["output_total_time_unit"] = line["total_time_unit"]
+                if line["total_time_unit"] == "seconds":
+                    self.metrics["output_total_time_unit"] = PerfUnit.UNIT_SECS
                 self.metrics["output_avg_time"] = line["avg_time_per_volume"]
-                self.metrics["output_avg_time_unit"] = line["avg_time_per_volume_unit"]
+                if line["avg_time_per_volume_unit"] == "seconds":
+                    self.metrics["output_avg_time_unit"] = PerfUnit.UNIT_SECS
 
                 self.metrics["input_volume_size"] = line["volume_size"]
                 self.metrics["input_volume_size_unit"] = line["volume_size_unit"]
+                if line["volume_size_unit"] == "MB":
+                    self.metrics["input_volume_size_unit"] = PerfUnit.UNIT_MB
                 self.metrics["input_volume_type"] = line["volume_type"]
                 self.metrics["input_total_volumes"] = line["total_volumes"]
                 self.metrics["input_concurrent"] = line["concurrent"]
