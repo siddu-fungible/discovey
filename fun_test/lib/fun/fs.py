@@ -970,7 +970,7 @@ class BootupWorker(Thread):
                 m2 = re.search(r'(\d+)', target_build_number)
                 if m2:
                     target_build_number = int(m2.group(1))
-            result = current_bundle_version_build_number < target_build_number
+            result = current_bundle_version_build_number != target_build_number
 
             if not result:
                 fun_test.log("Current version: {}/{}, Target version: {}".format(current_bundle_version_release_train, current_bundle_version_build_number, target_release_train, target_build_number))
@@ -1041,7 +1041,7 @@ class BootupWorker(Thread):
                     do_upgrade = self._is_upgrade_required(current_bundle_version=current_bundle_version,
                                                            target_release_train=release_train,
                                                            target_build_number=build_number)
-                do_upgrade = True   # WORKAROUND
+                # do_upgrade = True   # WORKAROUND
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
                 else:
