@@ -39,7 +39,7 @@
   },
   "CreateAttachIoInjectVolfaultDetachDelete":{
     "num_f1": 1,
-    "blt_count": 1,
+    "blt_count": 2,
     "num_hosts": 1,
     "capacity": 10737418240,
     "test_iteration_count": 1,
@@ -52,8 +52,8 @@
     "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 --time_based=1 --runtime=300",
-      "timeout": 3600
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 --time_based=1 --runtime=60",
+      "timeout": 60
     }
   }
 }

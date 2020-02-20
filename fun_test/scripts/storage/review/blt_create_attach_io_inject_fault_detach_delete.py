@@ -140,6 +140,7 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
+            storage_controller = fs_obj.get_storage_controller()
 
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
@@ -250,16 +251,13 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
 
             fun_test.sleep("Fio threads started", 10)
             if self.vol_fault_inject:
-                fun_test.sleep("Wait before Injecting volume failures", seconds=10)
-                print (self.vol_uuid_list)
-                for dut_index in self.topology.get_available_duts().keys():
-                    fs_obj = self.topology.get_dut_instance(index=dut_index)
-                    storage_controller = fs_obj.get_storage_controller()
-                for vol_uuid in self.vol_uuid_list:
-                    inject_fault_volume = storage_controller.storage_api.inject_fault_volume(vol_uuid)
-                    fun_test.test_assert(expression=inject_fault_volume.status,
-                                         message="Inject fault to Volume {} is done".format(vol_uuid))
-
+                fun_test.sleep("Wait before Injecting volume failure", seconds=20)
+                inject_fault_volume = storage_controller.storage_api.inject_fault_volume(self.vol_uuid_list[0])
+                fun_test.test_assert(expression=inject_fault_volume.data,
+                                     message="Inject fault to Volume {} is done".format(vol_uuid))
+                raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+                get_volume_result = raw_sc_api.get_volumes()
+                fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             try:
                 for i, host_name in enumerate(self.host_info):
                     fun_test.log("Joining fio thread {}".format(i))
