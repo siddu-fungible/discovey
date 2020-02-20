@@ -10,6 +10,7 @@
     "attach" : "Y",
     "detach" : "N",
     "delete": "N",
-    "already_deployed": false
+    "already_deployed": false,
+    "format_drive": false
   }
 }
