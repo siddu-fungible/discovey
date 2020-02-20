@@ -1992,7 +1992,7 @@ class Linux(object, ToDictMixin):
 
     @fun_test.safe
     def fio(self, filename, timeout=65, ioengine="libaio", bs="4k", name="fio_job", numjobs=1, iodepth=1, rw="rw",
-            runtime=None, direct=1, group_reporting=1, randrepeat=0, time_based=False, output_format="json",
+            runtime=None, direct=1, group_reporting=1, randrepeat=0, size=None, time_based=False, output_format="json",
             norandommap=True, verify=None, do_verify=None, verify_fatal=None, offset=None, verify_state_save=None,
             verify_state_load=None, verify_dump=None, output=None, fill_device=None):
 
@@ -2009,26 +2009,28 @@ class Linux(object, ToDictMixin):
         fio_command += " --rw={}".format(rw)
         if runtime:
             fio_command += " --runtime={}".format(runtime)
-        if fill_device:
+        if size:
+            fio_command += " --size={}".format(size)
+        if fill_device is not None:
             fio_command += " --fill_device={}".format(fill_device)
         fio_command += " --direct={}".format(direct)
         fio_command += " --group_reporting={}".format(group_reporting)
         fio_command += " --randrepeat={}".format(randrepeat)
-        if verify:
+        if verify is not None:
             fio_command += " --verify={}".format(verify)
         if offset:
             fio_command += " --offset={}".format(offset)
-        if verify_fatal:
+        if verify_fatal is not None:
             fio_command += " --verify_fatal={}".format(verify_fatal)
-        if do_verify:
+        if do_verify is not None:
             fio_command += " --do_verify={}".format(do_verify)
         if time_based:
             fio_command += " --time_based"
         if norandommap:
             fio_command += " --norandommap"
-        if verify_state_save:
+        if verify_state_save is not None:
             fio_command += " --verify_state_save={}".format(verify_state_save)
-        if verify_state_load:
+        if verify_state_load is not None:
             fio_command += " --verify_state_load={}".format(verify_state_load)
         if verify_dump:
             fio_command += " --verify_dump={}".format(verify_dump)
