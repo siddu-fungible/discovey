@@ -42,7 +42,7 @@
     "blt_count": 48,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 1,
+    "test_iteration_count": 24,
     "shared_volume" : false,
     "detach_duringio": false,
     "raw_api_call": true,
