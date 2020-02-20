@@ -1935,7 +1935,7 @@ class ComE(Linux):
                     fun_test.log("{}/logs uploaded to {}".format(self.FUN_ROOT, uploaded_path))
                     fun_test.report_message("{}/logs available at {}".format(self.FUN_ROOT, uploaded_path))
 
-                self.command("rm {}".format(logs_tgz_path))
+                self.command("rm -f {}".format(logs_tgz_path))
 
                 """
                 files = self.list_files(logs_path)
