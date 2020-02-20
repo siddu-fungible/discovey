@@ -3135,6 +3135,7 @@ class RawVolumeNvmeTcpMultiHostPerformance(FunModel):
     input_date_time = models.DateTimeField(verbose_name="Date", default=datetime.now)
     input_num_hosts = models.IntegerField(verbose_name="Number of hosts")
     input_num_ssd = models.IntegerField(verbose_name="Number of SSD(s)")
+    input_num_dpu = models.IntegerField(verbose_name="Number of DPU(s) used")
     input_num_volume = models.IntegerField(verbose_name="Number of volume(s)")
     input_block_size = models.TextField(verbose_name="Block size")
     input_io_depth = models.IntegerField(verbose_name="IO depth")

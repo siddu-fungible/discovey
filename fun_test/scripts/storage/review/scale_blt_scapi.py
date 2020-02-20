@@ -131,10 +131,12 @@ class RunStorageApiCommands(FunTestCase):
                                                                                        volume_uuid=vol_uuid_list[i][j],
                                                                                        validate_nvme_connect=connect_needed,
                                                                                        raw_api_call=True)
-                    print "attach volume result:", attach_vol_result, \
-                        " \nattach_volume_result[data][uuid]:", attach_vol_result[0]["data"]["uuid"]
+                    print "attach_vol_result[data]:", attach_vol_result["data"]
+                    if attach_vol_result["data"]:
+                        print "attach volume result:", attach_vol_result, \
+                            " \nattach_volume_result[data][uuid]:", attach_vol_result["data"]["uuid"]
 
-                    fun_test.test_assert(expression=attach_vol_result,
+                    fun_test.test_assert(expression=attach_vol_result["data"],
                                          message="Attach Volume {} Successful".format(vol_uuid_list[i][j]))
                     if self.detach == "Y":
                         storage_controller = fs_obj.get_storage_controller()
