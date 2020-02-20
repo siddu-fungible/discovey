@@ -398,14 +398,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                         nvme_volumes = self._get_fungible_nvme_namespaces(host_handle=host_obj.get_instance())
                         if nvme_volumes:
                             for namespace in nvme_volumes:
-                                nvme_device = self._get_nvme_device_namespace(namespace=namespace)
-                                fun_test.simple_assert(expression=nvme_device, message="Fecth NVMe device")
-                                if nvme_device:
-                                    namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
-                                        host_handle=host_handle, nvme_device=nvme_device)
-                                    if namespace_subsys_nqn == str(subsys_nqn):
-                                        result = True
-                                        break
+                                namespace_subsys_nqn = self._get_nvme_subsysnqn_by_namespace(
+                                    host_handle=host_handle, namespace=namespace)
+                                if namespace_subsys_nqn == str(subsys_nqn):
+                                    result = True
+                                    break
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
@@ -539,12 +536,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if len(nvme_volumes) > 0:
                 if subsys_nqn:
                     for namespace in nvme_volumes:
-                        nvme_device = namespace[:-2].split('/dev/')[1]
-                        namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                            nvme_device))
-                        if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                        namespace_subsys_nqn = self._get_nvme_subsysnqn_by_namespace(
+                            host_handle=host_linux_handle, namespace=namespace)
+                        if namespace_subsys_nqn == str(subsys_nqn):
                             if nsid:
-                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(namespace=namespace)):
                                     result = namespace
                             else:
                                 result = namespace
@@ -569,6 +565,13 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if re.search("nvme", volume_name):
                 nvme_volumes.append(volume_name)
         return nvme_volumes
+
+    def _get_nvme_subsysnqn_by_namespace(self, host_handle, namespace):
+        result = None
+        nvme_id_ctrl = host_handle.nvme_id_ctrl(namespace=namespace)
+        if 'subnqn' in nvme_id_ctrl:
+            result = nvme_id_ctrl['subnqn']
+        return result
 
     def _get_nvme_subsysnqn_by_device(self, host_handle, nvme_device):
         namespace_subsys_nqn = host_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
@@ -734,11 +737,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with host_nqn {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
+                    fun_test.add_checkpoint(expected=True, actual=detach_volume.status,
+                                            checkpoint="Detach Volume {} from host with host_nqn {}".format(
+                                                volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
+                fun_test.add_checkpoint(expected=True, actual=delete_volume.status,
+                                        checkpoint="Delete Volume {}".format(volume))
 
         super(GenericVolumeOperationsTemplate, self).cleanup()
 

@@ -57,10 +57,8 @@ class RunStorageApiCommands(FunTestCase):
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
         self.storage_controller_template.initialize(already_deployed=False)
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+        fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
+                       for dut_index in self.topology.get_available_duts().keys()]
 
         vol_uuid_list = self.storage_controller_template.\
             create_volume(fs_obj=fs_obj_list, body_volume_intent_create=body_volume_intent_create)
