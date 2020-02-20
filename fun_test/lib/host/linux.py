@@ -1557,12 +1557,21 @@ class Linux(object, ToDictMixin):
         return output
 
     @fun_test.safe
-    def nvme_get_ns_id(self, device):
+    def nvme_get_ns_id(self, namespace):
         result = None
-        cmd = "nvme get-ns-id {}".format(device)
+        cmd = "nvme get-ns-id {}".format(namespace)
         output = self.sudo_command(cmd)
         if "namespace-id:" in output:
             result = output.strip().split("namespace-id:")[1]
+        return result
+
+    def nvme_ctrl_id(self, namespace, json=True):
+        result = None
+        cmd = "nvme ctrl-id {}".format(namespace)
+        if json:
+            cmd += " -o json"
+        output = self.sudo_command(cmd)
+        result = output
         return result
 
     @fun_test.safe
@@ -2009,7 +2018,7 @@ class Linux(object, ToDictMixin):
         fio_command += " --rw={}".format(rw)
         if runtime:
             fio_command += " --runtime={}".format(runtime)
-        if size:
+        if size is not None:
             fio_command += " --size={}".format(size)
         if fill_device is not None:
             fio_command += " --fill_device={}".format(fill_device)
@@ -2018,7 +2027,7 @@ class Linux(object, ToDictMixin):
         fio_command += " --randrepeat={}".format(randrepeat)
         if verify is not None:
             fio_command += " --verify={}".format(verify)
-        if offset:
+        if offset is not None:
             fio_command += " --offset={}".format(offset)
         if verify_fatal is not None:
             fio_command += " --verify_fatal={}".format(verify_fatal)
@@ -2032,7 +2041,7 @@ class Linux(object, ToDictMixin):
             fio_command += " --verify_state_save={}".format(verify_state_save)
         if verify_state_load is not None:
             fio_command += " --verify_state_load={}".format(verify_state_load)
-        if verify_dump:
+        if verify_dump is not None:
             fio_command += " --verify_dump={}".format(verify_dump)
         if output:
             fio_command += " --output={}".format(output)

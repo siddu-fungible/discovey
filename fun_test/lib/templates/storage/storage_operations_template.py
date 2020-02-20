@@ -546,7 +546,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                 host_handle=host_linux_handle, nvme_device=nvme_device)
                             if namespace_subsys_nqn == str(subsys_nqn):
                                 if nsid:
-                                    if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                                    if str(nsid) == str(host_linux_handle.nvme_get_ns_id(namespace=namespace)):
                                         result = namespace
                                 else:
                                     result = namespace
