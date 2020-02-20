@@ -1177,6 +1177,9 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
+            if self.fs.bundle_compatible:
+                bmc.clear_bundle_f1_logs()
+                bmc.start_bundle_f1_logs()
 
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
