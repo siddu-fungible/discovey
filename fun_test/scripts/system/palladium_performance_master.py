@@ -242,10 +242,12 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, file_paths, validation_required=True):
+    def validate_json_file(self, file_paths, logs_dir=True):
         self.lines = []
         for names in file_paths:
             file_path = LOGS_DIR + "/" + names
+            if not logs_dir:
+                file_path = SHARED_TEST_RESULTS_DIR + "/" + names + "/results.json"
             fun_test.test_assert(os.path.isfile(file_path), "Ensure Json exists")
             fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
             with open(file_path) as fp:
@@ -1013,6 +1015,7 @@ class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
 
 
 class DataPlaneOperationsPerformanceTc(PalladiumPerformanceTc):
+    model = "DataPlaneOperationsPerformance"
     file_paths = ["attach_raw_volumes", "create_raw_volumes", "detach_raw_volumes", "delete_raw_volumes"]
     platform = F1
 
@@ -1023,25 +1026,9 @@ class DataPlaneOperationsPerformanceTc(PalladiumPerformanceTc):
 
     def run(self):
         try:
-            self.lines = []
-            for names in self.file_paths:
-                file_path = SHARED_TEST_RESULTS_DIR + "/" + names
-                current_date = get_current_time()
-                current_date = datetime(year=current_date.year, month=current_date.month, day=14)
-                localMonthString = str(current_date.month) if current_date.month > 10 else '0' + str(current_date.month)
-                localDayString = str(current_date.day) if current_date.day > 10 else '0' + str(current_date.day)
-                current_date_string = str(current_date.year) + localMonthString + localDayString
-                file_directories = glob(file_path + "/*/")
-                for directory in file_directories:
-                    splits = directory.split('/')
-                    date_time_splits = splits[len(splits) - 2].split('_')
-                    date_time = date_time_splits[len(date_time_splits) - 1].split('-')[0]
-                    if date_time == current_date_string:
-                        fun_test.test_assert(os.access(directory + "/results.json", os.R_OK), "Ensure read access for "
-                                                                                            "the file")
-                        with open(directory + "/results.json") as fp:
-                            data = json.loads(fp.read())
-                            print json.dumps(data)
+            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths, logs_dir=False), "validate json file and output")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, platform=self.platform)
             self.result = fun_test.PASSED
         except Exception as ex:
             fun_test.critical(str(ex))
