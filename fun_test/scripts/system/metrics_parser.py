@@ -114,7 +114,7 @@ class MetricParser():
         elif "TeraMarkZip" in model_name:
             return self.teramark_zip(logs=logs, date_time=date_time, platform=platform, run_time=run_time)
         elif "DataPlaneOperationsPerformance" in model_name:
-            return self.data_plane_operations(logs=logs, platform=platform, model_name=model_name)
+            return self.data_plane_operations(logs=logs, platform=platform)
         else:
             return {}
 
@@ -1643,64 +1643,33 @@ class MetricParser():
         return self.result
 
 
-    def data_plane_operations(self, logs, platform, model_name):
+    def data_plane_operations(self, logs, platform):
         self.initialize()
         self.metrics["input_platform"] = platform
-        nu_transit_flow_types = {"FCP_HNU_HNU": "HNU_HNU_FCP"}
 
         for file in logs:
             for line in file:
-                if "flow_type" in line:
-                    if line["flow_type"] in nu_transit_flow_types:
-                        line["flow_type"] = nu_transit_flow_types[line["flow_type"]]
-                        self.match_found = True
-                    self.metrics["input_flow_type"] = line["flow_type"].replace("FPG", "NU")
-                    self.metrics["input_mode"] = line.get("mode", "")
-                    self.metrics["input_version"] = line["version"]
-                    self.metrics["input_frame_size"] = line["frame_size"]
-                    date_time = self.get_time_from_timestamp(line["timestamp"])
-                    self.metrics["output_throughput"] = (float(
-                        line["throughput"]) / 1000) if "throughput" in line and line[
-                        "throughput"] != -1 else -1
-                    self.metrics["output_pps"] = (float(
-                        line["pps"]) / 1000000) if "pps" in line and line[
-                        "pps"] != -1 else -1
-                    self.metrics["output_latency_max"] = line.get("latency_max", -1)
-                    self.metrics["output_latency_min"] = line.get("latency_min", -1)
-                    self.metrics["output_latency_avg"] = line.get("latency_avg", -1)
-                    if model_name == "NuTransitPerformance":
-                        self.metrics["output_latency_P99"] = line.get("latency_P99", -1)
-                        self.metrics["output_latency_P90"] = line.get("latency_P90", -1)
-                        self.metrics["output_latency_P50"] = line.get("latency_P50", -1)
-                    else:
-                        self.metrics["input_half_load_latency"] = line.get("half_load_latency", False)
-                    self.metrics["input_num_flows"] = line.get("num_flows", 512000)
-                    self.metrics["input_offloads"] = line.get("offloads", False)
-                    self.metrics["input_protocol"] = line.get("protocol", "UDP")
-                    self.metrics["output_jitter_max"] = line.get("jitter_max", -1)
-                    self.metrics["output_jitter_min"] = line.get("jitter_min", -1)
-                    self.metrics["output_jitter_avg"] = line.get("jitter_avg", -1)
-                    fun_test.log(
-                        "flow type: {}, latency: {}, bandwidth: {}, frame size: {}, jitters: {}, pps: {}".format(
-                            self.metrics["input_flow_type"], self.metrics["output_latency_avg"],
-                            self.metrics["output_throughput"],
-                            self.metrics["input_frame_size"], self.metrics["output_jitter_avg"],
-                            self.metrics["output_pps"]))
-                    self.status = RESULTS["PASSED"]
-                    d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
-                    self.result["data"].append(d)
-                    if date_time.year >= 2019:
-                        metric_model = app_config.get_metric_models()[model_name]
-                        run_time_props = {}
-                        run_time_props["lsf_job_id"] = None
-                        run_time_props["suite_execution_id"] = fun_test.get_suite_execution_id()
-                        run_time_props["jenkins_build_number"] = None
-                        run_time_props["build_properties"] = None
-                        run_time_props["version"] = self.metrics["input_version"]
-                        run_time_props["associated_suites"] = None
-                        MetricHelper(model=metric_model).add_entry(run_time=run_time_props, **d)
+                self.match_found = True
+                self.metrics["output_total_time"] = line["total_time"]
+                self.metrics["output_total_time"] = line["total_time_unit"]
+                self.metrics["output_avg_time"] = line["avg_time_per_volume"]
+                self.metrics["output_avg_time_unit"] = line["avg_time_per_volume_unit"]
 
-            self.result["match_found"] = self.match_found
-            self.result["status"] = self.status == RESULTS["PASSED"]
-            fun_test.log("Result :{}".format(self.result))
-            return self.result
+                self.metrics["input_volume_size"] = line["volume_size"]
+                self.metrics["input_volume_size_unit"] = line["volume_size_unit"]
+                self.metrics["input_volume_type"] = line["volume_type"]
+                self.metrics["input_total_volumes"] = line["total_volumes"]
+                self.metrics["input_concurrent"] = line["concurrent"]
+                self.metrics["input_action_type"] = line["action_type"]
+                self.metrics["input_split_performance_data"] = line["split_performance_data"] if \
+                    "split_performance_data" in line else "{}"
+
+                self.status = RESULTS["PASSED"]
+                date_time = self.get_time_from_timestamp(line["date_time"])
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        fun_test.log("Result :{}".format(self.result))
+        return self.result

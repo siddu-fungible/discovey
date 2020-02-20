@@ -1028,8 +1028,10 @@ class DataPlaneOperationsPerformanceTc(PalladiumPerformanceTc):
         try:
             fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths, logs_dir=False), "validate json file and output")
             result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
-                                             auto_add_to_db=True, platform=self.platform)
+                                             auto_add_to_db=False, platform=self.platform)
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
             self.result = fun_test.PASSED
+
         except Exception as ex:
             fun_test.critical(str(ex))
 
