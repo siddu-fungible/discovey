@@ -136,8 +136,7 @@ class RunStorageApiCommands(FunTestCase):
             detachable = False
             if self.attach == "Y":
                 if i == (self.volume_count - 1):
-                    # Never Connect from host
-                    connect_needed = False
+                    connect_needed = True
                 for j in range(len(vol_uuid_list[i])):
                     attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj_list[0],
                                                                                        fs_obj=fs_obj_list[0],
