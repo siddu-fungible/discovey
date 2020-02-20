@@ -8,7 +8,7 @@ from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
 from fun_settings import STASH_DIR
-from fun_global import Codes, get_current_epoch_time, get_build_number_for_latest
+from fun_global import Codes, get_current_epoch_time, get_build_number_for_latest, processed_release_train
 from asset.asset_global import AssetType
 from lib.utilities.statistics_manager import StatisticsCollector, StatisticsCategory
 from lib.utilities.http import fetch_text_file
@@ -817,7 +817,7 @@ class Bmc(Linux):
                                             artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                             artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
-            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
+            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} FunOS log").format(f1_index),
                                         filename=artifact_file_name,
                                         asset_type=asset_type,
                                         asset_id=asset_id,
@@ -970,7 +970,7 @@ class BootupWorker(Thread):
                 m2 = re.search(r'(\d+)', target_build_number)
                 if m2:
                     target_build_number = int(m2.group(1))
-            result = current_bundle_version_build_number < target_build_number
+            result = current_bundle_version_build_number != target_build_number
 
             if not result:
                 fun_test.log("Current version: {}/{}, Target version: {}".format(current_bundle_version_release_train, current_bundle_version_build_number, target_release_train, target_build_number))
@@ -1041,7 +1041,7 @@ class BootupWorker(Thread):
                     do_upgrade = self._is_upgrade_required(current_bundle_version=current_bundle_version,
                                                            target_release_train=release_train,
                                                            target_build_number=build_number)
-                do_upgrade = True   # WORKAROUND
+                # do_upgrade = True   # WORKAROUND
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
                 else:
@@ -1059,7 +1059,7 @@ class BootupWorker(Thread):
                                          message="Bundle image installed",
                                          context=self.context)
                     fs.bundle_upgraded = True
-                    fs.post_install_expected_bundle_version = {"release_train": release_train,
+                    fs.post_install_expected_bundle_version = {"release_train": processed_release_train(release_train),
                                                                "build_number": build_number}
                     bmc.bundle_upgraded = True
 
@@ -1177,6 +1177,9 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
+            if self.fs.bundle_compatible:
+                bmc.clear_bundle_f1_logs()
+                bmc.start_bundle_f1_logs()
 
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
@@ -1229,13 +1232,16 @@ class ComEInitializationWorker(Thread):
                     if self.fs.bundle_upgraded:
                         # Validate bundle_version
                         current_bundle_version = self.fs.get_bundle_version()
-                        """
-                        if self.fs.post_install_expected_bundle_version:
-                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
-                                                          actual=current_bundle_version["release_train"], message="Post-install expected release train")
-                            fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
-                                                          actual=current_bundle_version["build_number"], message="Post-install expected build number")
-                        """
+
+                        try:
+                            if self.fs.post_install_expected_bundle_version:
+                                fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["release_train"],
+                                                              actual=current_bundle_version["release_train"], message="Post-install expected release train")
+                                fun_test.test_assert_expected(expected=self.fs.post_install_expected_bundle_version["build_number"],
+                                                              actual=current_bundle_version["build_number"], message="Post-install expected build number")
+                        except Exception as ex:
+                            fun_test.critical(str(ex))
+                        fun_test.log("Setting version")
                         fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
                                                                     current_bundle_version["build_number"]))
 
@@ -1329,6 +1335,7 @@ class ComE(Linux):
 
     CORES_DIRECTORY = "/opt/fungible/cores"
     BLD_PROPS_PATH = "/opt/fungible/bld_props.json"
+    CCLINUX_DIRECTORY = "{}/cclinux".format(FUN_ROOT)
 
     class FunCpDockerContainer(Linux):
         CUSTOM_PROMPT_TERMINATOR = r'# '
@@ -1576,7 +1583,6 @@ class ComE(Linux):
             fun_test.critical(str(ex))
         return result
 
-
     def _get_build_script_url(self, build_number, release_train, script_file_name):
         """
         convert build number and release train to a url on dochub that refers to the bundle script
@@ -1586,12 +1592,8 @@ class ComE(Linux):
         :return: returns the dochub url with the given build number and release train
                 example: http://dochub.fungible.local/doc/jenkins/apple_fs1600/68/setup_fs1600-68.sh
         """
-        release_prefix = ""
-        if "master" not in release_train:
-            release_prefix = "rel_"
-
         url = "{}/{}/fs1600/{}/{}".format(DOCHUB_BASE_URL,
-                                          release_prefix + release_train.replace(".", "_"),
+                                          processed_release_train(release_train=release_train),
                                           build_number,
                                           script_file_name)
 
@@ -1684,6 +1686,8 @@ class ComE(Linux):
         self.sudo_command("chmod 777 {}".format(target_file_name))
         self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
+        if exit_status:
+            self.fs.bundle_install_failure_reset_required = True
         fun_test.test_assert(exit_status == 0, "Bundle install complete. Exit status valid", context=self.context)
 
 
@@ -1907,7 +1911,36 @@ class ComE(Linux):
                 fun_test.critical(str(ex))
 
             if fungible_root:
-                logs_path = "{}/logs/*".format(fungible_root)
+                try:
+                    fun_test.log("Started collecting cclinux logs")
+                    self.sudo_command("{}/cclinux_collect.sh --log {}".format(self.CCLINUX_DIRECTORY, self.FUN_ROOT), timeout=180)
+                    fun_test.log("Finished collecting cclinux logs")
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
+                # logs_path = "{}/logs/*".format(fungible_root)
+                logs_tgz_path = "/tmp/logs.tgz"
+                self.sudo_command("rm -f {}".format(logs_tgz_path))
+                self.sudo_command("tar -cvzf {} {}/logs".format(logs_tgz_path, self.FUN_ROOT), timeout=180)
+
+                content_prefix = self._get_context_prefix(data="opt_fungible_logs.tgz")
+                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=content_prefix,
+                                                         linux_obj=self,
+                                                         source_file_path=logs_tgz_path,
+                                                         display_name="{} {}/logs tgz".format(self._get_context_prefix(""), self.FUN_ROOT),
+                                                         asset_type=asset_type,
+                                                         asset_id=asset_id,
+                                                         artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                         artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                         is_large_file=False,
+                                                         timeout=240)
+                if uploaded_path:
+                    fun_test.log("{}/logs uploaded to {}".format(self.FUN_ROOT, uploaded_path))
+                    fun_test.report_message("{}/logs available at {}".format(self.FUN_ROOT, uploaded_path))
+
+                self.command("rm -f {}".format(logs_tgz_path))
+
+                """
                 files = self.list_files(logs_path)
                 for file in files:
                     file_name = file["filename"]
@@ -1931,7 +1964,7 @@ class ComE(Linux):
                                                 asset_id=asset_id,
                                                 artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                 artifact_sub_category=self.fs.ArtifactSubCategory.COME)
-
+                """
 
         except Exception as ex:
             fun_test.critical(str(ex))
@@ -2188,6 +2221,8 @@ class Fs(object, ToDictMixin):
             if is_number and bundle_build_number < 0:
                 fun_test.log("Build number set to -1 so resetting bundle image parameters. Received bundle number: {}".format(bundle_build_number))
                 self.bundle_image_parameters = None
+        self.bundle_install_failure_reset_required = None
+
         self.disable_f1_index = disable_f1_index
         self.f1s = {}
         self.boot_args = boot_args
@@ -2452,6 +2487,7 @@ class Fs(object, ToDictMixin):
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
                     fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True, result=fun_test.FAILED)
+                    """  # No longer needed as COME should be doing this
                     try:
                         if self.errors_detected \
                                 and self.get_revision() in ["2"] \
@@ -2460,6 +2496,14 @@ class Fs(object, ToDictMixin):
                             fun_test.test_assert(self.reset(), "FS reset complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
+                    """
+
+            try:
+                if self.bundle_install_failure_reset_required:
+                    fun_test.add_checkpoint("Bundle installed failed. Resetting the FS")
+                    self.reset()
+            except Exception as ex:
+                fun_test.critical(str(ex))
             fun_test.simple_assert(not self.errors_detected, "Errors detected")
         return True
 

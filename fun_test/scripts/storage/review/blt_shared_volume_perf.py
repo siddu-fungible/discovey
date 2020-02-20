@@ -756,9 +756,8 @@ class ConfigPeristenceAfterReset(FunTestCase):
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset(hard=False)
         fun_test.test_assert(fs_obj.come.ensure_expected_containers_running(), "All containers are up")
-        fun_test.test_assert(expression=self.blt_template.get_health(
-            storage_controller=fs_obj.get_storage_controller()),
-            message="{}: API server health".format(fs_obj))
+        fun_test.test_assert(expression=self.blt_template.get_health(fs_obj),
+                             message="{}: API server health".format(fs_obj))
 
     """
     def fetch_nvme_list(self, host_obj):
