@@ -1565,13 +1565,21 @@ class Linux(object, ToDictMixin):
             result = output.strip().split("namespace-id:")[1]
         return result
 
-    def nvme_ctrl_id(self, namespace, json=True):
+    def nvme_id_ctrl(self, namespace, enable_json=True):
         result = None
-        cmd = "nvme ctrl-id {}".format(namespace)
-        if json:
+        cmd = "nvme id-ctrl {}".format(namespace)
+        if enable_json:
             cmd += " -o json"
         output = self.sudo_command(cmd)
-        result = output
+        if output:
+            if enable_json:
+                try:
+                    result = json.loads(output)
+                except Exception as e:
+                    fun_test.critical(message="Cannot parse nvme id-ctrl output dur to exception: {}".format(e))
+                    result = None
+            else:
+                result = output
         return result
 
     @fun_test.safe
