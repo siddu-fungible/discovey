@@ -817,7 +817,7 @@ class Bmc(Linux):
                                             artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                             artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
-            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} UART log").format(f1_index),
+            fun_test.add_auxillary_file(description=self._get_context_prefix("F1_{} FunOS log").format(f1_index),
                                         filename=artifact_file_name,
                                         asset_type=asset_type,
                                         asset_id=asset_id,
@@ -970,7 +970,7 @@ class BootupWorker(Thread):
                 m2 = re.search(r'(\d+)', target_build_number)
                 if m2:
                     target_build_number = int(m2.group(1))
-            result = current_bundle_version_build_number < target_build_number
+            result = current_bundle_version_build_number != target_build_number
 
             if not result:
                 fun_test.log("Current version: {}/{}, Target version: {}".format(current_bundle_version_release_train, current_bundle_version_build_number, target_release_train, target_build_number))
@@ -1041,7 +1041,7 @@ class BootupWorker(Thread):
                     do_upgrade = self._is_upgrade_required(current_bundle_version=current_bundle_version,
                                                            target_release_train=release_train,
                                                            target_build_number=build_number)
-                do_upgrade = True   # WORKAROUND
+                # do_upgrade = True   # WORKAROUND
                 if not do_upgrade:
                     fun_test.add_checkpoint("Upgrade skipped")
                 else:
@@ -1177,6 +1177,9 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
+            if self.fs.bundle_compatible:
+                bmc.clear_bundle_f1_logs()
+                bmc.start_bundle_f1_logs()
 
             if self.fs.fun_cp_callback:
                 fs.set_boot_phase(BootPhases.FS_BRING_UP_CALL_FUNCP_CALLBACK)
@@ -1238,7 +1241,7 @@ class ComEInitializationWorker(Thread):
                                                               actual=current_bundle_version["build_number"], message="Post-install expected build number")
                         except Exception as ex:
                             fun_test.critical(str(ex))
-
+                        fun_test.log("Setting version")
                         fun_test.set_version(version="{}/{}".format(current_bundle_version["release_train"],
                                                                     current_bundle_version["build_number"]))
 
@@ -2484,6 +2487,7 @@ class Fs(object, ToDictMixin):
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
                     fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True, result=fun_test.FAILED)
+                    """  # No longer needed as COME should be doing this
                     try:
                         if self.errors_detected \
                                 and self.get_revision() in ["2"] \
@@ -2492,6 +2496,8 @@ class Fs(object, ToDictMixin):
                             fun_test.test_assert(self.reset(), "FS reset complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
+                    """
+
             try:
                 if self.bundle_install_failure_reset_required:
                     fun_test.add_checkpoint("Bundle installed failed. Resetting the FS")

@@ -37,12 +37,12 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "MaxHostsConnections":{
+  "SingleVolumeMaxHosts":{
     "num_f1": 1,
-    "blt_count": 256,
-    "num_hosts": 1,
+    "blt_count": 1,
+    "num_hosts": 2,
     "capacity": 1099511627776,
-    "num_of_vhosts": 256,
+    "num_of_vhosts": 64,
     "tcp_connections_per_connect": 17,
     "compression_effort": "False",
     "encrypt": "False",
