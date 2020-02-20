@@ -1920,7 +1920,7 @@ class ComE(Linux):
                 self.sudo_command("rm -f {}".format(logs_tgz_path))
                 self.sudo_command("tar -cvzf {} {}/logs".format(logs_tgz_path, self.FUN_ROOT), timeout=180)
 
-                content_prefix = self._get_context_prefix(data="opt_fungible_logs")
+                content_prefix = self._get_context_prefix(data="opt_fungible_logs.tgz")
                 uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=content_prefix,
                                                          linux_obj=self,
                                                          source_file_path=logs_tgz_path,
