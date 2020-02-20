@@ -2484,6 +2484,7 @@ class Fs(object, ToDictMixin):
                 for error_detected in self.errors_detected:
                     fun_test.critical("Error detected: {}".format(error_detected))
                     fun_test.add_checkpoint(checkpoint="Error detected: {}".format(error_detected), expected=False, actual=True, result=fun_test.FAILED)
+                    """  # No longer needed as COME should be doing this
                     try:
                         if self.errors_detected \
                                 and self.get_revision() in ["2"] \
@@ -2492,6 +2493,8 @@ class Fs(object, ToDictMixin):
                             fun_test.test_assert(self.reset(), "FS reset complete. Devices are up")
                     except Exception as ex:
                         fun_test.critical(str(ex))
+                    """
+
             try:
                 if self.bundle_install_failure_reset_required:
                     fun_test.add_checkpoint("Bundle installed failed. Resetting the FS")
