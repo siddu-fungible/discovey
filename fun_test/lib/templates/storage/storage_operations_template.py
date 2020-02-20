@@ -206,11 +206,11 @@ class StorageControllerOperationsTemplate:
                                             actual=self._format_drive(
                                                 drive_info=drive_info, storage_controller=storage_controller))
 
-    def _format_drive(self, drive_info, storage_controller, raw_api_call=True):
+    def _format_drive(self, drive_info, storage_controller, raw_api_call=False):
         result = False
         if raw_api_call:
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drive/{}".format(drive_info.uuid),
+            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drives/{}".format(drive_info.uuid),
                                                   data={}).json()
             result = format_drive["status"]
         else:
@@ -222,7 +222,7 @@ class StorageControllerOperationsTemplate:
                 format_drive = storage_controller.topology_api.format_drive_change_uuid(
                     drive_uuid=drive_info.uuid, body_drive_format=body_drive_format)
             except ApiException as e:
-                fun_test.critical(message="Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
+                fun_test.critical(message="ApiException Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
             except Exception as e:
                 fun_test.critical(message="Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
             if format_drive:
