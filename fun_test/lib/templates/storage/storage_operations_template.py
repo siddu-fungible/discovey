@@ -133,9 +133,10 @@ class StorageControllerOperationsTemplate:
                     fun_test.critical("Exception while getting DPU state%s\n" % e)
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-                result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
-                if result['status']:
-                    if result['data']['state'] == "Online" and result['data']['available']:
+                api_result = raw_sc_api.execute_api(method="GET",
+                                                    cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
+                if api_result['status']:
+                    if api_result['data']['state'] == "Online" and api_result['data']['available']:
                         result = True
                         break
             fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
@@ -201,7 +202,7 @@ class StorageControllerOperationsTemplate:
         for node in topology.data:
             for dpu in topology.data[node].dpus:
                 for drive_info in dpu.drives:
-                    fun_test.add_checkpoint(checkpoint="Format Drive {}".format(drive_info.uuid), expected=True,
+                    fun_test.add_checkpoint(checkpoint="Formatting drive {}".format(drive_info.uuid), expected=True,
                                             actual=self._format_drive(
                                                 drive_info=drive_info, storage_controller=storage_controller))
 
