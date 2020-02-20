@@ -108,12 +108,11 @@ class MaxHostsConnections(FunTestCase):
     def describe(self):
 
         self.set_test_details(id=1,
-                              summary="Create Volume using API and run IO from host",
+                              summary="Test Max hosts",
                               steps='''
-                              1. Make sure API server is up and running
-                              2. Create n BLT Volumes using API Calls
-                              3. Attach Volumes to the hosts with different host_nqn's
-                              4. Nvme connect from hosts and check for tcp connections
+                              1. Create n BLT Volumes using API Calls
+                              2. Attach Volumes to the hosts with different host_nqn's
+                              3. Nvme connect from hosts and check for tcp connections
                               ''')
 
     def setup(self):
