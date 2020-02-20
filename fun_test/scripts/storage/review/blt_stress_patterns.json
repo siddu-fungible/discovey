@@ -1,0 +1,23 @@
+{
+  // patterns: SINGLE HOST SCENARIOS
+  // "C": Create, Create ...
+  // "CA" : Create, Attach, Create, Attach...(Different volumes)
+  // "CAA" : Create, Attach, Attach, Attach.... (Same volume)
+  // "CADt" : Create, Attach, Detach, Create, Attach, Detach... (Different Volumes)
+  // "CADtADt" : Create, Attach, Detach, Attach, Detach... (Same volume)
+  // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...
+  // "CADtDlADtDl": Create Attach Detach Delete, Attch, Detach, Delete (Same volume)
+
+  "BLTScaleNVolumes1Host1FSStress": {
+    "capacity": 1073741824, //1GB
+    "volume_count": 1,
+    "loop_count": 5,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 2,
+    "encrypt": "Y",
+    "already_deployed": false,
+    "format_drive": false,
+    "pattern": "CADtADt"
+  }
+}

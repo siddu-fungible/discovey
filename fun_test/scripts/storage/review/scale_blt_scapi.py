@@ -27,6 +27,11 @@ class BringupSetup(FunTestScript):
         else:
             self.already_deployed = False
 
+        if "format_drive" in job_inputs:
+            self.format_drive = job_inputs["format_drive"]
+        else:
+            self.format_drive = False
+
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=self.already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -79,6 +84,14 @@ class RunStorageApiCommands(FunTestCase):
             self.detach = job_inputs["detach"]
         if "delete" in job_inputs:
             self.delete = job_inputs["delete"]
+        if "format_drive" in job_inputs:
+            self.format_drive = job_inputs["format_drive"]
+        else:
+            self.format_drive = False
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
+        else:
+            self.already_deployed = False
 
         name = "blt_vol"
         vol_type = VolumeTypes().LOCAL_THIN
@@ -119,7 +132,8 @@ class RunStorageApiCommands(FunTestCase):
             encrypt = True
 
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=self.already_deployed, dpu_indexes=dpu_indexes)
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed, dpu_indexes=dpu_indexes,
+                                                    format_drives=self.format_drive)
 
         # Make a list of vol uuids by creating volume_count volumes for each fs_obj in fs_obj_list
         for i in range(self.volume_count):
