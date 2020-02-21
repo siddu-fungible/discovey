@@ -229,6 +229,8 @@ class StorageControllerOperationsTemplate:
         return result
 
     def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
+        if not already_deployed:
+            already_deployed = fun_test.get_job_environment_variable("already_deployed")
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
