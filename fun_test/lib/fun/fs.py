@@ -1324,6 +1324,7 @@ class ComE(Linux):
     HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
+    BUNDLE_DPCSH_DIRECTORY = "/opt/fungible/FunSDK/bin/Linux/dpcsh"
     SC_LOG_PATH = "/var/log/sc"
     REDIS_LOG_PATH = "/var/log/redis"
 
@@ -1371,6 +1372,8 @@ class ComE(Linux):
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
         self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
+        if self.fs:
+            self.DPCSH_DIRECTORY = self.BUNDLE_DPCSH_DIRECTORY
 
     def get_build_properties(self):
         result = None
