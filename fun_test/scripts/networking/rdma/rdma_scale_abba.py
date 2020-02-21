@@ -23,6 +23,10 @@ class BasicSetup(FunTestScript):
             fun_test.shared_variables['combined_log'] = inputs['combined_log']
         else:
             fun_test.shared_variables['combined_log'] = 0
+        if 'already_deployed' in inputs:
+            fun_test.shared_variables['already_deployed'] = inputs['already_deployed']
+        else:
+            fun_test.shared_variables['already_deployed'] = True
         fun_test.shared_variables['scenario'] = scenario_type
 
         if scenario_type in [RdmaHelper.SCENARIO_TYPE_1_1, RdmaHelper.SCENARIO_TYPE_N_1, RdmaHelper.SCENARIO_TYPE_N_N]:
@@ -71,6 +75,8 @@ class RdmaWriteBandwidthTest(FunTestCase):
         run_infinitely = self.rdma_helper.get_run_infinitely()
         iterations = self.rdma_helper.get_iterations()
         qpairs = self.rdma_helper.get_qpairs()
+        ib_device = self.rdma_helper.get_ibdev()
+
         if fun_test.shared_variables["combined_log"]:
             self.combined_log = fun_test.shared_variables["combined_log"]
         else:
@@ -81,13 +87,14 @@ class RdmaWriteBandwidthTest(FunTestCase):
                                               size=size_in_bytes, duration=duration, inline_size=inline_size,
                                               iterations=iterations, qpairs=qpairs, run_infinitely=run_infinitely,
                                               client_server_objs=client_server_objs, hosts=self.rdma_helper.host_objs,
-                                              combined_log=self.combined_log)
+                                              combined_log=self.combined_log, ib_device=ib_device)
         else:
             self.rdma_template = RdmaTemplate(test_type=self.test_type, is_parallel=is_parallel,
                                               size=size_in_bytes, duration=duration, inline_size=inline_size,
                                               iterations=iterations, qpairs=qpairs, run_infinitely=run_infinitely,
-                                              client_server_objs=client_server_objs, hosts=self.rdma_helper.host_objs)
-        if self.setup_test:
+                                              client_server_objs=client_server_objs, hosts=self.rdma_helper.host_objs,
+                                              ib_device=ib_device)
+        if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
             fun_test.test_assert(result, checkpoint)
 
@@ -170,6 +177,7 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
         iterations = self.rdma_helper.get_iterations()
         run_infinitely = self.rdma_helper.get_run_infinitely()
         qpairs = self.rdma_helper.get_qpairs()
+        ib_device = self.rdma_helper.get_ibdev()
 
         self.rdma_template = RdmaLatencyUnderLoadTemplate(lat_test_type=self.lat_test_type,
                                                           bw_test_type=self.bw_test_type,
@@ -181,9 +189,10 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
                                                           run_infinitely=run_infinitely,
                                                           qpairs=qpairs,
                                                           hosts=self.rdma_helper.host_objs,
-                                                          connection_type=None)
+                                                          connection_type=None,
+                                                          ib_device=ib_device)
 
-        if self.setup_test:
+        if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
             fun_test.test_assert(result, checkpoint)
 
@@ -242,6 +251,7 @@ class AbbaLatencyUnderLoadTest(FunTestCase):
         iterations = self.rdma_helper.get_iterations()
         run_infinitely = self.rdma_helper.get_run_infinitely()
         qpairs = self.rdma_helper.get_qpairs()
+        ib_device = self.rdma_helper.get_ibdev()
 
         self.rdma_template = RdmaLatencyUnderLoadTemplate(lat_test_type=self.lat_test_type,
                                                           bw_test_type=self.bw_test_type,
@@ -253,9 +263,10 @@ class AbbaLatencyUnderLoadTest(FunTestCase):
                                                           run_infinitely=run_infinitely,
                                                           qpairs=qpairs,
                                                           hosts=self.rdma_helper.host_objs,
-                                                          connection_type=None)
+                                                          connection_type=None,
+                                                          ib_device=ib_device)
 
-        if self.setup_test:
+        if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
             fun_test.test_assert(result, checkpoint)
 

@@ -5,6 +5,7 @@ from scripts.networking.funeth.sanity import Funeth
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.networking.rdma_tools import Rocetools
 from asset.asset_manager import *
+import ipaddress
 
 
 class ScriptSetup(FunTestScript):
@@ -360,6 +361,11 @@ class NicEmulation(FunTestCase):
                     iface_addr = handle.command(
                         "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
                             iface_name)).strip()
+                    try:
+                        ip = ipaddress.ip_address(unicode(iface_addr))
+                    except ValueError:
+                        fun_test.log("IP {} is not valid".format(ip))
+                        fun_test.simple_assert(False, "IP address on HU interface is invalid")
                 else:
                     fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
                 if objs == "f1_0":

@@ -19,15 +19,6 @@ class RdmaClient(Linux):
         self.server_ip = server_ip
         self.rdma_port = rdma_port
         self.client_id = client_id
-        # self.add_path(additional_path=PATH)
-        self.set_ld_library_path()
-        self.set_tool_path()
-
-    def set_tool_path(self):
-        self.command(command="export PATH=%s" % PATH)
-
-    def set_ld_library_path(self):
-        self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
 
     def __hash__(self):
         return self.client_id
@@ -44,15 +35,6 @@ class RdmaServer(Linux):
         self.server_id = server_id
         self.rdma_server_port = server_port
         self.interface_ip = interface_ip
-        # self.add_path(additional_path=PATH)
-        self.set_ld_library_path()
-        self.set_tool_path()
-
-    def set_tool_path(self):
-        self.command(command="export PATH=%s" % PATH)
-
-    def set_ld_library_path(self):
-        self.command(command="export LD_LIBRARY_PATH=%s" % LD_LIBRARY_PATH)
 
     def __hash__(self):
         return self.server_id
@@ -67,7 +49,7 @@ class RdmaTemplate(object):
 
     def __init__(self, client_server_objs, test_type, hosts, is_parallel=True,
                  connection_type=CONNECTION_TYPE_RC, size=100, qpairs=1, inline_size=64, duration=10, iterations=100,
-                 run_infinitely=10, combined_log=None):
+                 run_infinitely=10, combined_log=None, ib_device=None):
         """
         RDMA Template for Scale Tool
 
@@ -94,6 +76,7 @@ class RdmaTemplate(object):
         self.run_infinitely = run_infinitely
         self.qpairs = qpairs if qpairs else 1
         self.combined_log = combined_log
+        self.ibv_device = ib_device
 
     def setup_test(self):
         result = False
@@ -156,6 +139,9 @@ class RdmaTemplate(object):
                 else:
                     cmd += "-D %d " % (self.duration)
 
+                if '-t' in kwargs:
+                    cmd += '-t %s ' % (kwargs['-t'])
+
                 if client_cmd:
                         cmd += "%s " % (server_ip)
                         
@@ -168,6 +154,10 @@ class RdmaTemplate(object):
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
             elif self.test_type == IB_WRITE_LATENCY_TEST:
+                # Remove tx_depth for latency test
+                if '-t' in kwargs:
+                    del kwargs['-t']
+
                 if '-c' in kwargs:
                     self.connection_type = kwargs['-c']
 
@@ -198,10 +188,10 @@ class RdmaTemplate(object):
                     cmd += "--run_infinitely -n %d " % self.iterations
                 else:
                     if '-n' not in cmd:
-                        cmd += "-n %d" % self.iterations
+                        cmd += "-n %d " % self.iterations
 
                 if client_cmd:
-                    cmd += " %s" % server_ip
+                    cmd += "%s " % server_ip
                     
                 for key, val in kwargs.items():
                     if type(val) == list:
@@ -221,7 +211,10 @@ class RdmaTemplate(object):
         try:
             fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
                                                                         server_obj.rdma_server_port))
-            ibv_device = self.get_ibv_device(host_obj=server_obj)
+            if self.ibv_device:
+                ibv_device = self.ibv_device
+            else:
+                ibv_device = self.get_ibv_device(host_obj=server_obj)
             cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=server_obj.rdma_server_port,
                                        client_cmd=False, **kwargs)
             tmp_output_file = "/tmp/%s_server_process_%d.log" % (
@@ -258,16 +251,12 @@ class RdmaTemplate(object):
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
             client_obj.server_ip = server_obj.interface_ip
-            if set_paths:
-                # client_obj.add_path(additional_path=PATH)
-                client_obj.set_tool_path()
-                client_obj.set_ld_library_path()
-                # server_obj.add_path(additional_path=PATH)
-                server_obj.set_tool_path()
-                server_obj.set_ld_library_path()
             res = self._setup_server(server_obj=server_obj, **cmd_args)
             fun_test.simple_assert(res, "Ensure on %s server process started" % str(server_obj))
-            ibv_device = self.get_ibv_device(host_obj=client_obj)
+            if self.ibv_device:
+                ibv_device = self.ibv_device
+            else:
+                ibv_device = self.get_ibv_device(host_obj=client_obj)
             cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=client_obj.rdma_port, client_cmd=True,
                                        server_ip=client_obj.server_ip, **cmd_args)
             if self.run_infinitely:
@@ -281,7 +270,7 @@ class RdmaTemplate(object):
                 output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
                 result = self._parse_rdma_output(output=output)
             else:
-                output = client_obj.command(command=cmd, timeout=2100)
+                output = client_obj.command(command=cmd, timeout=self.duration*2)
                 result = self._parse_rdma_output(output=output)
             if not self.combined_log:
                 result.update({'client': str(client_obj)})
@@ -425,7 +414,8 @@ class RdmaLatencyUnderLoadTemplate(object):
     def __init__(self, lat_test_type, bw_test_type, lat_client_server_objs, bw_client_server_objs, bw_test_size,
                  lat_test_size, inline_size, qpairs,
                  duration, iterations, run_infinitely, hosts,
-                 connection_type=RdmaTemplate.CONNECTION_TYPE_RC):
+                 connection_type=RdmaTemplate.CONNECTION_TYPE_RC, ib_device=None):
+        self.ibv_device = ib_device
         self.duration = duration
         self.lat_client_server_objs = lat_client_server_objs
         self.bw_client_server_objs = bw_client_server_objs
@@ -500,7 +490,10 @@ class RdmaLatencyUnderLoadTemplate(object):
         try:
             fun_test.log_section("Setup %s server with RDMA port %d" % (str(server_obj),
                                                                         server_obj.rdma_server_port))
-            ibv_device = self.lat_test_template.get_ibv_device(host_obj=server_obj)
+            if self.ibv_device:
+                ibv_device = self.ibv_device
+            else:
+                ibv_device = self.lat_test_template.get_ibv_device(host_obj=server_obj)
             cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], port_num=server_obj.rdma_server_port,
                                        test_type=test_type, client_cmd=False, **cmd_args)
             tmp_output_file = "/tmp/%s_server_process_%d.log" % (test_type, server_obj.rdma_server_port)
@@ -530,15 +523,12 @@ class RdmaLatencyUnderLoadTemplate(object):
             server_obj.rdma_server_port = port_no
             client_obj.rdma_port = port_no
             client_obj.server_ip = server_obj.interface_ip
-            # client_obj.add_path(additional_path=PATH)
-            client_obj.set_tool_path()
-            client_obj.set_ld_library_path()
-            # server_obj.add_path(additional_path=PATH)
-            server_obj.set_tool_path()
-            server_obj.set_ld_library_path()
             fun_test.simple_assert(self.setup_server(test_type=test_type, server_obj=server_obj, **cmd_args),
                                    "Ensure on %s server process started" % str(server_obj))
-            ibv_device = self.lat_test_template.get_ibv_device(host_obj=client_obj)
+            if self.ibv_device:
+                ibv_device = self.ibv_device
+            else:
+                ibv_device = self.lat_test_template.get_ibv_device(host_obj=client_obj)
             cmd = self.create_rdma_cmd(ibv_device=ibv_device['name'], test_type=test_type,
                                        port_num=client_obj.rdma_port, client_cmd=True, server_ip=client_obj.server_ip,
                                        **cmd_args)
@@ -776,11 +766,23 @@ class RdmaHelper(object):
             for key in self.config:
                 if key == self.scenario_type:
                     if 'qpairs' in self.config[key]:
-                        iterations = self.config[key]['qpairs']
+                        qpairs = self.config[key]['qpairs']
                         break
         except Exception as ex:
             fun_test.critical(str(ex))
         return qpairs
+
+    def get_ibdev(self):
+        ib_dev = {}
+        try:
+            for key in self.config:
+                if key == self.scenario_type:
+                    if 'ib_device' in self.config[key]:
+                        ib_dev['name'] = self.config[key]['ib_device']
+                        break
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return ib_dev
 
     def get_rate_limit(self):
         rate_limit = None

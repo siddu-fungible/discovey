@@ -643,7 +643,6 @@ export class SuiteEditorComponent implements OnInit {
           setTimeout(() => {
             window.location.href = "/regression/suites_view";
           }, 1000);
-
         })
     } else {
       this.suite.owner_email = this.selectedUser.email;

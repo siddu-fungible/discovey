@@ -33,7 +33,9 @@ class Rocetools:
             fun_test.test_assert(False, "Funrdma load failed")
             return False
         else:
-            self.host.modprobe("rdma_ucm")
+            check_rdmaucm = self.host.lsmod("rdma_ucm")
+            if not check_rdmaucm:
+                self.host.modprobe("rdma_ucm")
             self.host.disconnect()
         if not self.host.check_file_directory_exists(path):
             self.host.sudo_command("echo '* soft memlock unlimited' > {}".format(path))
