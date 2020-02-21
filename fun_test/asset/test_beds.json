@@ -4358,7 +4358,7 @@
       }
     }
   },
-   "fs-139": {
+  "fs-139": {
     "dut_info": {
       "0": {
         "type": "DUT_TYPE_FSU",
@@ -5013,6 +5013,90 @@
     },
     "perf_listener_host_info": [
       "mktg-server-14"
+    ]
+  },
+  "fs-161": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-161",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "15.161.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.161.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "15.161.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.161.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et7/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et8/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et23/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et24/1"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    },
+    "host_info": [
+      "cab04-qa-04"
     ]
   }
 }
