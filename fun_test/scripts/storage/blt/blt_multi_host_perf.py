@@ -43,8 +43,13 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
+        format_drives = True
+        if "format_drives" in job_inputs:
+            format_drives = job_inputs["format_drives"]
+
         self.sc_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_indexes)
+        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_indexes,
+                                    format_drives=format_drives)
         fun_test.shared_variables["storage_controller_template"] = self.sc_template
 
         # Below lines are needed so that we create/attach volumes only once and other testcases use the same volumes

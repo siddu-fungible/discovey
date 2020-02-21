@@ -1279,6 +1279,26 @@ def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout)
     return result
 
 
+def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest, timeout=3600):
+    """
+    :param host_handle: Handle to host
+    :param host_index: Index of host in case this function is called for multiple hosts
+    :param ezfio_path: Directory where ezfio is installed
+    :param device: nvme volume
+    :param dev_util: % of volume to test
+    :param output_dest: Dir where results should be stored
+    :param timeout:
+    :return: None
+    """
+
+    ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {}".\
+        format(ezfio_path, device, dev_util, output_dest)
+    ezfio_output = host_handle.sudo_command(ezfio_command, timeout)
+    fun_test.shared_variables["ezfio"][host_index] = ezfio_output
+
+    return ezfio_output
+
+
 def fio_parser(arg1, host_index, **kwargs):
     fio_output = arg1.pcie_fio(**kwargs)
     fun_test.shared_variables["fio"][host_index] = fio_output
