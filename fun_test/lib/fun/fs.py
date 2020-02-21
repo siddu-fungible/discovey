@@ -1274,7 +1274,6 @@ class ComEInitializationWorker(Thread):
                             fun_test.critical(str(ex))
 
 
-
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     """
                     expected_containers_running = self.is_expected_containers_running(come)
@@ -2212,7 +2211,8 @@ class Fs(object, ToDictMixin):
                  check_expected_containers_running=True,
                  start_with_bundle_options=None,
                  post_bundle_validation=False,
-                 force_bundle_install=False):
+                 force_bundle_install=False,
+                 initial_version_options=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2266,7 +2266,6 @@ class Fs(object, ToDictMixin):
         self.fun_cp_callback = fun_cp_callback
         self.post_bundle_validation = post_bundle_validation
         self.start_with_bundle_options = start_with_bundle_options
-
         self.asset_name = "FS"
         if self.spec:
             self.asset_name = self.spec.get("name", "FS")
