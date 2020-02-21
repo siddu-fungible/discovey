@@ -1392,8 +1392,8 @@ class ComE(Linux):
         self.fs = kwargs.get("fs", None)
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
-        self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
-        if self.fs:
+        self.starting_dpc_for_statistics = False  # Just temporarily while statistics manager is being developed TODO
+        if self.fs and self.fs.bundle_compatible:
             self.DPCSH_DIRECTORY = self.BUNDLE_DPCSH_DIRECTORY
 
     def get_build_properties(self):
