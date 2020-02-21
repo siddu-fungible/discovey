@@ -924,6 +924,25 @@ class Bmc(Linux):
             file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
         return file_name
 
+    def upload_bundle_f1_logs(self, prefix="post-boot"):
+        for f1_index in range(2):
+            if f1_index == self.disable_f1_index:
+                continue
+            if self.bundle_compatible:
+                log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
+
+                content_prefix = self._get_context_prefix(data="F1_{} FunOS log {}".format(f1_index, prefix))
+                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=content_prefix,
+                                                         linux_obj=self,
+                                                         source_file_path=log_path,
+                                                         display_name="{} {}/logs tgz".format(self._get_context_prefix(""), self.FUN_ROOT),
+                                                         asset_type=self.fs.get_asset_type(),
+                                                         asset_id=self.fs.get_asset_name(),
+                                                         artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC,
+                                                         is_large_file=False,
+                                                         timeout=60)
+
     def clear_bundle_f1_logs(self):
         for f1_index in range(2):
             if f1_index == self.disable_f1_index:
@@ -1132,7 +1151,6 @@ class BootupWorker(Thread):
 
                             context=self.context)
 
-
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
@@ -1178,6 +1196,10 @@ class BootupWorker(Thread):
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
             if self.fs.bundle_compatible:
+                try:
+                    bmc.upload_bundle_f1_logs()
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 bmc.clear_bundle_f1_logs()
                 bmc.start_bundle_f1_logs()
 
