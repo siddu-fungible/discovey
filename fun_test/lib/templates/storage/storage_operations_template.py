@@ -67,13 +67,11 @@ class StorageControllerOperationsTemplate:
             result &= dut_health
         return result
 
-    def set_dataplane_ips(self, dut_index, dpu_indexes=None):
+    def set_dataplane_ips(self, fs_obj, dpu_indexes=None):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         result = False
 
-        dut = self.topology.get_dut(index=dut_index)
-        fs_obj = self.topology.get_dut_instance(index=dut_index)
         storage_controller = fs_obj.get_storage_controller()
         topology_result = None
         try:
@@ -85,11 +83,7 @@ class StorageControllerOperationsTemplate:
         fun_test.test_assert(expression=node_ids, message="Fetch node IDs using topology API")
         for node in node_ids:
             for f1_index in dpu_indexes:
-
-                bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
-                fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
-
-                first_bond_interface = bond_interfaces[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 ip_obj = ipaddress.ip_network(address=unicode(first_bond_interface.ip), strict=False)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 subnet_mask = str(ip_obj.netmask)
@@ -238,7 +232,7 @@ class StorageControllerOperationsTemplate:
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before sending dataplane IP commands", seconds=60)  # WORKAROUND
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, dpu_indexes=dpu_indexes),
+                fun_test.test_assert(self.set_dataplane_ips(fs_obj=fs_obj, dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             num_dpus = len(dpu_indexes)
             fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
