@@ -79,7 +79,6 @@ class CreateDeleteVolume(FunTestCase):
             pool_uuid = str(response['data'].keys()[0])
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
-            print("total_capacity = ", total_capacity)
             max_volume_capacity = find_min_drive_capacity(storage_controller,30)
 
         max_no_of_volumes = total_capacity/min_volume_capacity
@@ -93,7 +92,6 @@ class CreateDeleteVolume(FunTestCase):
             self.capacity.append(random_capacity)
             self.no_of_volumes = self.no_of_volumes + 1
             if remaining_capacity == 0:
-                print("no_of_volumes = ", self.no_of_volumes)
                 break
             else:
                 if remaining_capacity-min_volume_capacity >= max_volume_capacity:
@@ -132,12 +130,6 @@ class CreateDeleteVolume(FunTestCase):
             storage_controller = fs_obj.get_storage_controller()
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_num in range(self.no_of_volumes):
-                print("volume_num = ", volume_num)
-                print("volume_uuid = ", self.vol_uuid_list[volume_num])
-                print("come_handle = ", self.come_handle)
-                print("capacity = ", self.capacity[volume_num])
-                print("vol_type = ", self.vol_type)
-                print("encrypt = ", self.encrypt)
                 vol_db_status = raw_sc_api.is_raw_vol_in_db(vol_uuid=self.vol_uuid_list[volume_num],come_handle=self.come_handle,
                                                             capacity=self.capacity[volume_num],stripe_count=0,
                                                             vol_type=self.vol_type,encrypt=self.encrypt)
@@ -149,13 +141,11 @@ class CreateDeleteVolume(FunTestCase):
             storage_controller = fs_obj.get_storage_controller()
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_uuid in self.vol_uuid_list:
-                print("volume_uuid = ", volume_uuid)
-                print("come_handle = ", self.come_handle)
                 vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle,vol_uuid=volume_uuid)
                 fun_test.test_assert( expression=vol_db_status["status"], message="Volume Deletion Check {}".format(vol_db_status))
 
     def run(self):
-        self.delete_volumes()
+        self.delete_volumes() #Delete Volumes from Previous run
         self.create_volumes()
         self.volumes_persistent_check()
         self.delete_volumes()
