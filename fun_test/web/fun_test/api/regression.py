@@ -71,7 +71,8 @@ def test_beds(request, id):
                      "health_status": test_bed.health_status,
                      "disabled": test_bed.disabled,
                      "health_check_message": test_bed.health_check_message,
-                     "health_check_enabled": test_bed.health_check_enabled}
+                     "health_check_enabled": test_bed.health_check_enabled,
+                     "pooled": test_bed.pooled}
                 if not minimal:
                     if not test_bed.manual_lock:
                         if not all_test_bed_specs:
@@ -98,7 +99,8 @@ def test_beds(request, id):
                       "note": t.note,
                       "manual_lock": t.manual_lock,
                       "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
-                      "manual_lock_submitter": t.manual_lock_submitter}
+                      "manual_lock_submitter": t.manual_lock_submitter,
+                      "pooled": t.pooled}
             test_bed_availability = am.get_test_bed_availability(test_bed_type=t.name)
             if not t.manual_lock:
                 asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
