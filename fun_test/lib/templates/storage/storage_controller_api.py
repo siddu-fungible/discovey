@@ -17,6 +17,8 @@ class StorageControllerApi(object):
         method = method.upper()
         url = '{}/{}'.format(self.base_url, cmd_url)
         response = ""
+        if data is None and method == "PUT":
+            data = {}
         try:
             if method == "POST":
                 response = requests.post(url, auth=self.http_basic_auth, json=data)
@@ -374,8 +376,51 @@ class StorageControllerApi(object):
                 result = {"status": True, "data": vol}
                 return result
 
-
+    def get_all_drives(self):
+        result = {}
+        url = "topology"
+        try:
+            response = self.execute_api("GET", url)
+            topo_dict = response.json()
+        except Exception as ex:
+            fun_test.critical(ex.message)
+        for dpu in topo_dict["data"]["FS1"]["dpus"]:
+            result[dpu.get("uuid")] = []
+            for drive in dpu["drives"]:
+                drive_dict = {}
+                drive_dict.update({"uuid": drive.get("uuid")})
+                drive_dict.update({"slot_id": drive.get("slot_id")})
+                drive_dict.update({'state': drive.get("state")})
+                result[dpu.get("uuid")].append(drive_dict)
+        return result
+    def format_drives(self, dpu_dict):
+        result = {}
+        url = "topology/drives/"
+        for dpu in dpu_dict:
+            result[dpu] = []
+            for drive in dpu_dict[dpu]:
+                fun_test.log("UUID of drive in slot {} is: {}".format(drive.get("slot_id"), drive.get("uuid")))
+                try:
+                    response = self.execute_api("PUT", url + drive.get("uuid"))
+                    response_dict = response.json()
+                except Exception as ex:
+                    fun_test.critical(ex.message)
+                else:
+                    elem = {}
+                    if not response.ok:
+                        elem.update({'status': False})
+                        elem.update({'slot_id': drive.get("slot_id")})
+                        elem.update({"uuid": drive.get("uuid")})
+                    else:
+                        elem.update({"status":True})
+                        elem.update({"slot_id": drive.get("slot_id")})
+                        elem.update({"uuid": drive.get("uuid")})
+                result[dpu].append(elem)
+        return result
 
 if __name__ == "__main__":
-    s = StorageControllerApi(api_server_ip="fs144-come")
-    s.get_dpu_ids()
+    s = StorageControllerApi(api_server_ip="10.1.108.116")
+    res = s.execute_api("GET", 'topology')
+    res_dict = res.json()
+    print res_dict["data"]["FS1"]["dpus"][0]["uuid"]
+    print res_dict["data"]["FS1"]["dpus"][1]["uuid"]
