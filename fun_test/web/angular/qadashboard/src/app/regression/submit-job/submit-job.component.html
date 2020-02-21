@@ -322,7 +322,11 @@
             <app-section-horizontal-line [text]="'Additional options'"></app-section-horizontal-line>
           </td>
         </tr>
-
+        <tr>
+          <td>
+            <input (change)="alreadyDeployed = !alreadyDeployed" type="checkbox" name="already-deployed" [checked]="alreadyDeployed"> Topology already deploy
+          </td>
+        </tr>
         <tr>
           <td><input (change)="toggleCsiPerf()" type="checkbox"
                      name="csi-perf"

@@ -213,6 +213,8 @@ class TopologyHelper:
 
     @fun_test.safe
     def deploy(self, already_deployed=False):
+        if not already_deployed:
+            already_deployed = fun_test.get_job_environment_variable("already_deployed")
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
