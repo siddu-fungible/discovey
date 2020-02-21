@@ -147,6 +147,8 @@ class MultiHostFioRandRead(FunTestCase):
             self.nvme_io_queues = job_inputs["nvme_io_queues"]
         if "warm_up_traffic" in job_inputs:
             self.warm_up_traffic = job_inputs["warm_up_traffic"]
+        if "warmup_bs" in job_inputs:
+            self.warm_up_fio_cmd_args["bs"] = job_inputs["warmup_bs"]
         if "runtime" in job_inputs:
             self.fio_cmd_args["runtime"] = job_inputs["runtime"]
             self.fio_cmd_args["timeout"] = self.fio_cmd_args["runtime"] + 15
