@@ -8,7 +8,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
-import string, random
+import string, random,re
 from collections import OrderedDict, Counter
 
 
@@ -35,11 +35,13 @@ class BringupSetup(FunTestScript):
         if not job_inputs:
             job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
-
+        format_drives = True
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
         else:
             self.already_deployed = False
+        if "format_drives" in job_inputs:
+            format_drives = job_inputs["format_drives"]
 
         '''
         self = single_fs_setup(self, set_dataplane_ips=False)
@@ -59,7 +61,7 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
         self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
+        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed,format_drives=format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
@@ -145,6 +147,11 @@ class SharedVolumePerfTest(FunTestCase):
             self.fio_bs = job_inputs["test_bs"]
         if "fio_modes" in job_inputs:
             self.fio_modes = job_inputs["fio_modes"]
+
+        res = re.search('--numjobs=(\d+)', str(self.warm_up_fio_cmd_args["multiple_jobs"]))
+        if int(res.group(1)) >1:
+            self.warm_up_fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}". \
+                format(int(self.warm_up_fio_cmd_args["timeout"]) - 60)
 
         """
         self.topology = fun_test.shared_variables["topology"]
@@ -268,6 +275,7 @@ class SharedVolumePerfTest(FunTestCase):
 
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
+            host.instance.sudo_command("dmesg -C") # cleaning the dmesg output of the previous runs
             fun_test.log("Initial Write IO to volume, this might take long time depending on fio --size "
                          "provided")
             fio_output[index] = {}
@@ -308,6 +316,7 @@ class SharedVolumePerfTest(FunTestCase):
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
+            host.instance.sudo_command("dmesg") # print dmesg output of the host when fio fails
 
         aggr_fio_output = {}
         for index, host in enumerate(self.hosts):
@@ -445,6 +454,7 @@ class SharedVolumePerfTest(FunTestCase):
                         fio_output[i] = fun_test.shared_variables["fio"][i]
                 except Exception as ex:
                     fun_test.critical(str(ex))
+                    host.instance.sudo_command("dmesg") #print dmesg output of the host when fio fails
                     fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
                 finally:
                     stats_obj.stop(self.stats_collect_details)
@@ -496,6 +506,7 @@ class SharedVolumePerfTest(FunTestCase):
 
 
 class ConfigPeristenceAfterReset(FunTestCase):
+
     topology = None
     storage_controller_template = None
 
@@ -536,16 +547,94 @@ class ConfigPeristenceAfterReset(FunTestCase):
         fs = self.fs_obj_list[0]
         come = fs.get_come()
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        # self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        # check the data integrity before reboot
+        # self.offsets = ["1%", "26%", "51%", "76%"]
+        thread_id = {}
+        end_host_thread = {}
+        fio_output = {}
+        fio_offset = 1
 
-        # Reboot logic
+        fun_test.shared_variables["fio"] = {}
+        for index, host in enumerate(self.hosts):
+            fun_test.log("Verifying data integrity before reboot")
+            fio_output[index] = {}
+            end_host_thread[index] = host.instance.clone()
+            wait_time = len(self.hosts) - index
+            if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                warm_up_fio_cmd_args = {}
+                # Adding the allowed CPUs into the fio warmup command
+                fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                jobs = ""
+                for id, device in enumerate(host.nvme_block_device_list):
+                    jobs += " --name=vol{} --filename={}".format(id + 1, device)
+                # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
+                size = " --size={}%".format(self.fio_io_size)
+                warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                                                        fio_cpus_allowed_args + size + jobs
+                warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
+                thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                 func=fio_parser,
+                                                                 arg1=end_host_thread[index],
+                                                                 host_index=index,
+                                                                 filename="nofile",
+                                                                 **warm_up_fio_cmd_args)
+                # fio_offset += self.fio_io_size
+                fun_test.sleep("Fio threadzz", seconds=1)
+
+        fun_test.sleep("Fio threads started", 10)
+        try:
+            for i, host in enumerate(self.hosts):
+                fun_test.log("Joining fio thread {}".format(i))
+                fun_test.join_thread(fun_test_thread_id=thread_id[i])
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fun_test.shared_variables["fio"][i])
+                fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                     "FIO read test with IO depth 16 in host {}".format(host.name))
+                fio_output[i] = fun_test.shared_variables["fio"][i]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
+            host.instance.sudo_command("dmesg") # print dmesg output of the host when fio fails
+
+        aggr_fio_output = {}
+        for index, host in enumerate(self.hosts):
+            fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                 "FIO test with IO depth 16 in host {}".format(host.name))
+            for op, stats in fun_test.shared_variables["fio"][index].items():
+                if op not in aggr_fio_output:
+                    aggr_fio_output[op] = {}
+                aggr_fio_output[op] = Counter(aggr_fio_output[op]) + Counter(fio_output[i][op])
+
+        # fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
+
+        for op, stats in aggr_fio_output.items():
+            for field, value in stats.items():
+                if field == "iops":
+                    aggr_fio_output[op][field] = int(round(value))
+                if field == "bw":
+                    # Converting the KBps to MBps
+                    aggr_fio_output[op][field] = int(round(value / 1000))
+                if "latency" in field:
+                    aggr_fio_output[op][field] = int(round(value) / len(self.hosts))
+                # Converting the runtime from milliseconds to seconds and taking the average out of it
+                if field == "runtime":
+                    aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
+
+        fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
+
+
+
+        # Reset the fs and ensure all containers are up and api server is running
         total_reconnect_time = 600
         add_on_time = 180  # Needed for getting through 60 iterations of reconnect from host
         reboot_timer = FunTimer(max_time=total_reconnect_time + add_on_time)  # WORKAROUND, why do we need so much time
-        # Reset the fs and ensure all containers are up and api server is running
-
         self.reset_and_health_check(self.fs_obj_list[0])
+        fun_test.sleep(message="Wait before checking the state of the DPU's", seconds=60)
+        num_dpus = 1
+        fun_test.test_assert_expected(expected=1,
+                                      actual=self.blt_template.get_online_dpus(dpu_indexes=[0]),
+                                      message="Make sure {} DPUs are online".format(num_dpus))
         '''
         threads_list = []
         for dut_index in self.topology.get_duts().keys():
@@ -557,23 +646,19 @@ class ConfigPeristenceAfterReset(FunTestCase):
         for thread_id in threads_list:
             fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
         '''
-        fun_test.sleep(message="Wait before checking the state of the DPU's", seconds=60)
-        num_dpus = 1
-        fun_test.test_assert_expected(expected=1,
-                                      actual=self.blt_template.get_online_dpus(dpu_indexes=[0]),
-                                      message="Make sure {} DPUs are online".format(num_dpus))
+
 
         # Check whether volumes are available to the hosts after reboot
         volume_found = False
         while not reboot_timer.is_expired():
-            # Check whether EC vol is listed in storage/volumes
+            # checking if the volumes are available at fs side
             vols = self.sc_api.get_volumes()
             if (vols['status'] and vols['data']):
                 volume_list = vols['data'].keys()
                 fun_test.log("volumes listed from api after reboot")
                 fun_test.log(volume_list)
                 res = sorted(volume_list) == sorted(self.vol_uuid_list)
-                fun_test.test_assert(res, "volumes are available at the fs side after reboot {}".format(self.vol_uuid_list))
+                fun_test.test_assert(res, "volumes are available at the fs side after reboot")
                 volume_found = True
             if volume_found:
                 for host in self.hosts:
@@ -587,171 +672,90 @@ class ConfigPeristenceAfterReset(FunTestCase):
                         fun_test.test_assert_expected(
                             expected=len(host.nvme_block_device_list),
                             actual=len(nvme_device_list_after_reboot["nvme_device"]),
-                            message="Expected number of NVMe devices available after reboot")
+                            message="Expected number of NVMe devices available after reboot at host {}".format(host.name))
                         res = sorted(host.nvme_block_device_list) == sorted(nvme_device_list_after_reboot["nvme_device"])
                         fun_test.test_assert(res, "nvme device names are valid {}".format(nvme_device_list_after_reboot["nvme_device"]))
                 break
 
     def run(self):
 
-        testcase = self.__class__.__name__
-        test_method = testcase
-        # self.test_mode = testca
+        thread_id = {}
+        end_host_thread = {}
+        fio_output = {}
+        fio_offset = 1
 
-        # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
-        # & read only modes
+        fun_test.shared_variables["fio"] = {}
+        for index, host in enumerate(self.hosts):
+            fun_test.log("Verifying data integrity after reboot")
+            fio_output[index] = {}
+            end_host_thread[index] = host.instance.clone()
+            wait_time = len(self.hosts) - index
+            if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                warm_up_fio_cmd_args = {}
+                # Adding the allowed CPUs into the fio warmup command
+                fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                jobs = ""
+                for id, device in enumerate(host.nvme_block_device_list):
+                    jobs += " --name=vol{} --filename={}".format(id + 1, device)
+                # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
+                size = " --size={}%".format(self.fio_io_size)
+                warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                                                        fio_cpus_allowed_args + size + jobs
+                warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
-        internal_result = {}
+                thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                 func=fio_parser,
+                                                                 arg1=end_host_thread[index],
+                                                                 host_index=index,
+                                                                 filename="nofile",
+                                                                 **warm_up_fio_cmd_args)
+                # fio_offset += self.fio_io_size
+                fun_test.sleep("Fio threadzz", seconds=1)
 
-        table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
-                              "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
-                              "Write Latency 90 Percentile in uSecs", "Write Latency 95 Percentile in uSecs",
-                              "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
-                              "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
-                              "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs"]
-        table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
-                           "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           ]
+        fun_test.sleep("Fio threads started", 10)
+        try:
+            for i, host in enumerate(self.hosts):
+                fun_test.log("Joining fio thread {}".format(i))
+                fun_test.join_thread(fun_test_thread_id=thread_id[i])
+                fun_test.log("FIO Command Output:")
+                fun_test.log(fun_test.shared_variables["fio"][i])
+                fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                     "FIO read test with IO depth 16 in host {}".format(host.name))
+                fio_output[i] = fun_test.shared_variables["fio"][i]
+        except Exception as ex:
+            fun_test.critical(str(ex))
+            fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
+            host.instance.sudo_command("dmesg")  # print dmesg output of the host when fio fails
 
-        table_data_rows = []
+        aggr_fio_output = {}
+        for index, host in enumerate(self.hosts):
+            fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                 "FIO test with IO depth 16 in host {}".format(host.name))
+            for op, stats in fun_test.shared_variables["fio"][index].items():
+                if op not in aggr_fio_output:
+                    aggr_fio_output[op] = {}
+                aggr_fio_output[op] = Counter(aggr_fio_output[op]) + Counter(fio_output[i][op])
 
-        # Preparing the volume details list containing the list of dictionaries
-        vol_details = []
-        vol_group = {}
-        vol_group[BltVolumeOperationsTemplate.vol_type] = fun_test.shared_variables["vol_uuid_list"]
-        vol_details.append(vol_group)
-        self.storage_controller_dpcsh_obj = fun_test.shared_variables["dpcsh_obj"]
+        # fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
-        for mode in self.fio_modes:
-            for io_depth in self.fio_iodepth:
-                self.test_mode = mode
-                row_data_dict = {}
-                row_data_dict["mode"] = mode
-                row_data_dict["block_size"] = self.fio_bs
-                row_data_dict["iodepth"] = io_depth
-                num_jobs = 32 / self.blt_count
-                file_size_in_gb = self.capacity / 1073741824
-                row_data_dict["size"] = str(file_size_in_gb) + "GB"
-                file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
-                for index, stat_detail in enumerate(self.stats_collect_details):
-                    func = stat_detail.keys()[0]
-                    self.stats_collect_details[index][func]["count"] = int(
-                        self.fio_cmd_args["timeout"] / self.stats_collect_details[index][func]["interval"])
-                    if func == "vol_stats":
-                        self.stats_collect_details[index][func]["vol_details"] = vol_details
-                fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
-                             "them:\n{}".format((int(io_depth) * int(num_jobs)), self.stats_collect_details))
-                self.storage_controller_dpcsh_obj.verbose = False
-                stats_obj = CollectStats(self.storage_controller_dpcsh_obj)
-                stats_obj.start(file_suffix, self.stats_collect_details)
-                fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
-                             "them:\n{}".format((int(io_depth) * int(num_jobs)), self.stats_collect_details))
+        for op, stats in aggr_fio_output.items():
+            for field, value in stats.items():
+                if field == "iops":
+                    aggr_fio_output[op][field] = int(round(value))
+                if field == "bw":
+                    # Converting the KBps to MBps
+                    aggr_fio_output[op][field] = int(round(value / 1000))
+                if "latency" in field:
+                    aggr_fio_output[op][field] = int(round(value) / len(self.hosts))
+                # Converting the runtime from milliseconds to seconds and taking the average out of it
+                if field == "runtime":
+                    aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
 
-                thread_id = {}
-                end_host_thread = {}
-                fio_output = {}
-                fio_offset = 1
-                for index, host in enumerate(self.hosts):
-                    fun_test.log("After warmup,{} IO to volume, this might take long time depending on fio --size "
-                                 "provided".format(mode))
-                    fio_output[index] = {}
-                    end_host_thread[index] = host.instance.clone()
-                    wait_time = len(self.hosts) - index
-                    if "multiple_jobs" in self.fio_cmd_args:
-                        fio_cmd_args = {}
-                        # Adding the allowed CPUs into the fio command
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
-                        jobs = ""
-                        for id, device in enumerate(host.nvme_block_device_list):
-                            jobs += " --name=vol{} --filename={}".format(id + 1, device)
+        fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
-                        num_jobs_string = " --numjobs={}".format(num_jobs)
-                        required_io_depth = io_depth / num_jobs
-                        io_depth_string = " --iodepth={}".format(required_io_depth)
-                        io_size = self.capacity / num_jobs
-                        io_size_string = " --io_size={}".format(io_size)
-                        # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                        # size = " --size={}%".format(self.fio_io_size)
-                        rw_string = " --rw={}".format(mode)
-                        bs_string = " --bs={}".format(self.fio_bs)
-                        fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + num_jobs_string + \
-                                                        io_depth_string + io_size_string + bs_string + rw_string + jobs
-                        fio_cmd_args["timeout"] = self.fio_cmd_args["timeout"]
-                        fun_test.log("Fio command used is ")
-                        fun_test.log(fio_cmd_args["multiple_jobs"])
-                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                         func=fio_parser,
-                                                                         arg1=end_host_thread[index],
-                                                                         host_index=index,
-                                                                         filename="nofile",
-                                                                         **fio_cmd_args)
-                        # fio_offset += self.fio_io_size
-                        fun_test.sleep("Fio threadzz", seconds=1)
-
-                fun_test.sleep("Fio threads started", 10)
-                try:
-                    for i, host in enumerate(self.hosts):
-                        fun_test.log("Joining fio thread {}".format(i))
-                        fun_test.join_thread(fun_test_thread_id=thread_id[i])
-                        fun_test.log("FIO Command Output:")
-                        fun_test.log(fun_test.shared_variables["fio"][i])
-                        fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                             "FIO {} test with IO depth {} in host {}".format(mode, io_depth,
-                                                                                              host.name))
-                        fio_output[i] = fun_test.shared_variables["fio"][i]
-                except Exception as ex:
-                    fun_test.critical(str(ex))
-                    fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
-                finally:
-                    stats_obj.stop(self.stats_collect_details)
-                    self.storage_controller_dpcsh_obj.verbose = True
-
-                job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
-                stats_obj.populate_stats_to_file(self.stats_collect_details, job_string=job_string)
-
-                aggr_fio_output = {}
-                for index, host in enumerate(self.hosts):
-                    fun_test.simple_assert(fun_test.shared_variables["fio"][index],
-                                           "FIO {} test with IO depth {} in host {}".format(mode, io_depth, host.name))
-                    for op, stats in fun_test.shared_variables["fio"][index].items():
-                        if op not in aggr_fio_output:
-                            aggr_fio_output[op] = {}
-                        aggr_fio_output[op] = Counter(aggr_fio_output[op]) + Counter(fio_output[index][op])
-
-                fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
-                for op, stats in aggr_fio_output.items():
-                    for field, value in stats.items():
-                        if field == "iops":
-                            aggr_fio_output[op][field] = int(round(value))
-                        if field == "bw":
-                            # Converting the KBps to MBps
-                            aggr_fio_output[op][field] = int(round(value / 1000))
-                        if "latency" in field:
-                            aggr_fio_output[op][field] = int(round(value) / len(self.hosts))
-                        # Converting the runtime from milliseconds to seconds and taking the average out of it
-                        if field == "runtime":
-                            aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
-                        row_data_dict[op + field] = aggr_fio_output[op][field]
-                fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
-                row_data_list = []
-                for i in table_data_cols:
-                    if i not in row_data_dict:
-                        row_data_list.append(-1)
-                    else:
-                        row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
-
-                table_data = {"headers": table_data_headers, "rows": table_data_rows}
-                fun_test.add_table(panel_header="BLT Shared Volume Performance Table", table_name=self.summary,
-                                   table_data=table_data)
 
     def cleanup(self):
-        self.storage_controller_template.cleanup()
+        pass
 
     def reset_and_health_check(self, fs_obj):
         fs_obj.reset(hard=False)
