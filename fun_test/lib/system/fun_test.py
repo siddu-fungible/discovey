@@ -599,7 +599,7 @@ class FunTest:
         return result
 
     def get_job_inputs(self):
-        result = {}
+        result = None
         if self.inputs:
             result = self.parse_string_to_json(self.inputs)
         return result
