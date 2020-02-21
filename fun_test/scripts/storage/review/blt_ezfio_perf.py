@@ -73,15 +73,15 @@ class EzfioPerfSetup(FunTestScript):
         """)
 
     def setup(self):
-        job_inputs = {}
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
 
         already_deployed = False
-        if job_inputs is not None:
-            if "already_deployed" in job_inputs:
-                already_deployed = job_inputs["already_deployed"]
+        if "already_deployed" in job_inputs:
+            already_deployed = job_inputs["already_deployed"]
 
-        dpu_index = None if not "num_f1" in job_inputs else range(job_inputs["num_f1"])
+        dpu_index = None if "num_f1" not in job_inputs else range(job_inputs["num_f1"])
 
         # TODO: Check workload=storage in deploy(), set dut params
         topology_helper = TopologyHelper()
