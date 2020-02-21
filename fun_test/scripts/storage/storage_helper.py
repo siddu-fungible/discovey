@@ -66,7 +66,7 @@ def single_fs_setup(obj, set_dataplane_ips=True):
         fun_test.log("{} Testbed Config: {}".format(obj.testbed_type, obj.testbed_config))
         obj.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
         obj.available_hosts = obj.fs_hosts_map[obj.testbed_type]["host_info"]
-        obj.full_dut_indexes = [int(i) for i in sorted(obj.testbed_config["dut_info"].keys())]
+        obj.full_dut_indexes = [int(i) for i in sorted(obj.fs_hosts_map[obj.testbed_type]["dut_info"].keys())]
         # Skipping DUTs not required for this test
         obj.skip_dut_list = []
         for index in xrange(0, obj.dut_start_index):
@@ -322,6 +322,43 @@ def single_fs_setup(obj, set_dataplane_ips=True):
     fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout, come_obj=obj.come_obj[0]),
                            message="Bundle Image boot: API server is up")
     fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+    num_drives = 0
+    drives = obj.sc_api.get_all_drives()
+    for dpu in drives:
+        num_drives += len(drives[dpu])
+    fun_test.log("Number of drives in FS is {}".format(num_drives))
+    format_result = obj.sc_api.format_drives(drives)
+    # Drive formatting
+    for dpu in format_result:
+        for drive in format_result[dpu]:
+            fun_test.test_assert(drive.get("status"), "Drive with uuid {} on slot {} of {} formatted".format(drive.get("uuid"), drive.get("slot_id"), dpu))
+    drive_format_timer = FunTimer(max_time=obj.drive_format_timeout)
+    drive_state = obj.sc_api.get_all_drives()
+    total_system_drives = 0
+    for dpu in drive_state:
+        total_system_drives += len(drive_state[dpu])
+    all_drive_state = []
+    list_failed_drives = []
+    while not drive_format_timer.is_expired():
+        drive_state = obj.sc_api.get_all_drives()
+        for dpu in drive_state:
+            total_drives = len(drive_state[dpu])
+            current_drive_count = 0
+            for drive in drive_state[dpu]:
+                if drive.get("state") == 'Online':
+                    all_drive_state.append(True)
+                else:
+                    fun_test.log("Drive with uuid {} in slot {} on {}, not in Online state".format(drive.get("uuid"), drive.get("slot_id"), dpu))
+                    list_failed_drives.append((dpu, drive.get("slot_id"), drive.get("uuid")))
+        if len(all_drive_state) == total_system_drives:
+            fun_test.test_assert((all(all_drive_state)), "All drives on dpu {} is online".format(dpu))
+            break
+        elif list_failed_drives:
+            fun_test.sleep("Waiting for drives to come online", 10)
+    if drive_format_timer.is_expired() and list_failed_drives:
+        for elem in list_failed_drives:
+            fun_test.test_assert(False, "Drive in slot {} on dpu {} is not online".format(elem[1], dpu))
+
     # Check if bond interface status is Up and Running
     for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
         if container_name == "run_sc":
