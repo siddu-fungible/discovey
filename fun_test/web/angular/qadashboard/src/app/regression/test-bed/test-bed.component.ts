@@ -62,6 +62,7 @@ export class TestBedComponent implements OnInit {
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
   assetHealthStates: ApiType = new ApiType();
   testBedName: string = null;
+  showPooledTestBeds: boolean = false;
 
 
   constructor(private regressionService: RegressionService,
@@ -80,11 +81,6 @@ export class TestBedComponent implements OnInit {
       this.loggerService.error("Unable to fetch user profile");
       return;
     }
-    this.route.queryParams.subscribe(params => {
-      if (params['test_bed_name']) {
-        this.testBedName = params['test_bed_name'];
-      }
-    });
     // fetchUsers
     // fetchTestbeds
     this.driver = new Observable(observer => {
@@ -93,6 +89,9 @@ export class TestBedComponent implements OnInit {
       return () => {
       };
     }).pipe(switchMap(response => {
+      return this.getRouterQueryParam();
+      }),
+      switchMap(response => {
       return this.assetHealthStates.get('/api/v1/regression/asset_health_states');
       }),
       switchMap(response => {
@@ -115,6 +114,18 @@ export class TestBedComponent implements OnInit {
     this.refreshAll();
   }
 
+  getRouterQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('test_bed_name')) {
+        this.testBedName = params['test_bed_name'];
+      }
+      if (params.hasOwnProperty('show_pooled_test_beds')) {
+        this.showPooledTestBeds = true;
+      }
+      return of(params);
+    }))
+  }
+
   refreshAll () {
     this.refreshing = "Refreshing test-beds";
     this.driver.subscribe(() => {
@@ -130,7 +141,17 @@ export class TestBedComponent implements OnInit {
 
   fetchAssets() {
     if (!this.embed) {
-      return this.service.assets(this.testBedName).pipe(switchMap(response => {
+      let pooledTestBedNames = null;
+      if (this.showPooledTestBeds) {
+        pooledTestBedNames = "";
+        for (let testBed of this.testBeds) {
+          pooledTestBedNames += testBed.name + ",";
+        }
+        pooledTestBedNames = pooledTestBedNames.slice(0, -1);
+      } else if (this.testBedName) {
+        pooledTestBedNames = this.testBedName
+      }
+      return this.service.assets(pooledTestBedNames).pipe(switchMap(response => {
         let dutAssets = [];
         let hostAssets = [];
         let perfListenerAssets = [];
@@ -164,7 +185,7 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchTestBeds() {
-    return this.regressionService.fetchTestbeds(null, this.testBedName).pipe(switchMap(response => {
+    return this.regressionService.fetchTestbeds(null, this.testBedName, this.showPooledTestBeds).pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
         testBed.editingDescription = false;

@@ -11,10 +11,13 @@ export class TestBedService {
 
   constructor(private apiService: ApiService, private loggerService: LoggerService) { }
 
-  assets(name=null) {
+  assets(names=null) {
     let url = "/api/v1/regression/assets";
-    if (name) {
-      url += `?test_bed_name=${name}`;
+    if (names != null) {
+      if (names == "") {
+        return of([]);
+      }
+      url += `?test_bed_name=${names}`;
     }
     return this.apiService.get(url).pipe(switchMap(response => {
       return of(response.data);

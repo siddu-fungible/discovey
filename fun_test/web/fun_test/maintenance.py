@@ -3041,7 +3041,7 @@ if __name__ == "__main_qdepth512__":
                            workspace_ids=[])
     print "created latency charts for all volumes random read"
 
-if __name__ == "__main__":
+if __name__ == "__main_data_plane_operations__":
     operations = ["attach_volume", "create_volume", "delete_volume", "detach_volume"]
     concurrent = [True, False]
     base_line_date = datetime(year=2020, month=2, day=18, minute=0, hour=0, second=0)
@@ -3074,4 +3074,11 @@ if __name__ == "__main__":
                            workspace_ids=[])
     print "added charts for concurrent and serial chart for all operations"
 
+if __name__ == "__main__":
+    names = ["fs-functional-1", "fs-inspur", "fs-regression1", "fs-regression2", "fs-storage-test-cab04"]
+    for name in names:
+        test_bed = TestBed.objects.get(name=name)
+        test_bed.pooled = True
+        test_bed.save()
+    print "set the pooled boolean to be true for few test beds"
 

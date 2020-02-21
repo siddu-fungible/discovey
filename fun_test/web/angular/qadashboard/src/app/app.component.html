@@ -30,21 +30,25 @@
            aria-expanded="false" ngbDropdownToggle>Regression</a>
         <div ngbDropdownMenu class="dropdown-menu" aria-labelledby="navbarDropdown">
           <a class="dropdown-item" href="/regression/summary">Summary</a>
+
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/regression?submitter_email={{ userProfile.user.email }}">My jobs</a>
           <a class="dropdown-item" href="/regression">All jobs</a>
           <a class="dropdown-item" href="/regression/submit_job_page">Submit job</a>
-          <a class="dropdown-item" href="/regression/test_bed">Test-beds</a>
-          <a class="dropdown-item" href="/regression/all_jiras_component">JIRAs</a>
+
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/regression/test_bed?show_pooled_test_beds=1">Pooled test-beds</a>
+          <a class="dropdown-item" href="/regression/test_bed">All test-beds</a>
+          <a class="dropdown-item" href="/regression/suites_view?owner_email={{ userProfile.user.email }}">My suites</a>
+          <a class="dropdown-item" href="/regression/suites_view">All suites</a>
+
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/regression/triaging">Regression finder</a>
           <a class="dropdown-item" href="/regression/submit_job_page?mode=TRIAGE">Integration triage</a>
 
           <div class="dropdown-divider"></div>
-          <a class="dropdown-item" href="/regression/suites_view?owner_email={{ userProfile.user.email }}">My suites</a>
-          <a class="dropdown-item" href="/regression/suites_view">All suites</a>
+          <a class="dropdown-item" href="/regression/all_jiras_component">JIRAs</a>
           <a class="dropdown-item" href="/regression/admin">Admin</a>
-          <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="/regression/releases">Releases</a>
         </div>
       </li>
