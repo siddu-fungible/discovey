@@ -4505,14 +4505,14 @@
             "0": {
               "switch_info": {
                 "name": "cab04-arista-100g",
-                "port": "Et31/1"
+                "port": "Et7/1"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "4": {
               "switch_info": {
                 "name": "cab04-arista-100g",
-                "port": "Et32/1"
+                "port": "Et8/1"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
@@ -4521,14 +4521,14 @@
             "0": {
               "switch_info": {
                 "name": "cab04-arista-100g",
-                "port": "Et1/1"
+                "port": "Et23/1"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             },
             "4": {
               "switch_info": {
                 "name": "cab04-arista-100g",
-                "port": "Et2/1"
+                "port": "Et24/1"
               },
               "type": "INTERFACE_TYPE_ETHERNET"
             }
