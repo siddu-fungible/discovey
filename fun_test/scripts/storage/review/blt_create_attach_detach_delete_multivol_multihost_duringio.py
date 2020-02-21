@@ -72,7 +72,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                               steps='''
                                     1. Create 48 volumes
                                     2. Attach 8 volume to 6 hosts
-                                    3. Run fio ranwr test with iodepth=8 and numjobs=4
+                                    3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
                                     4. Let IO complete, then perform nvme disconnect during I/O on all hosts
                                     5. Detach and delete the volumes
                                     6. Continue this in a loop for 24 times  
@@ -332,8 +332,8 @@ class CreateAttachDetachDeleteMultivolMultihostDuringIO(CreateAttachDetachDelete
             steps='''
                 1. Create 48 volumes
                 2. Attach 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
-                4. Let IO run for 60sec, then perform nvme disconnect during I/O on all hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
                 ''')
@@ -356,7 +356,7 @@ class CreateAttachDetachDeleteMultivolMultihostShared(CreateAttachDetachDeleteMu
             steps='''
                 1. Create 8 volumes
                 2. Attach same 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
                 4. Let IO complete, then perform nvme disconnect on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
@@ -380,8 +380,8 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(CreateAttachDetach
             steps='''
                 1. Create 8 volumes
                 2. Attach 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
-                4. Let IO run for 60sec, then perform nvme disconnect during I/O on all hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
                 ''')
