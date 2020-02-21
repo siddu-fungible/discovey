@@ -121,7 +121,7 @@ export class RegressionService implements OnInit {
     }));
   }
 
-  fetchTestbeds(minimal=null, name=null) {
+  fetchTestbeds(minimal=null, name=null, showPooledTestBeds=false) {
     let url = "/api/v1/regression/test_beds";
     let queryParams = [];
     if (minimal !== null) {
@@ -129,6 +129,9 @@ export class RegressionService implements OnInit {
     }
     if (name) {
       queryParams.push(['name', name]);
+    }
+    if (showPooledTestBeds) {
+      queryParams.push(['pooled', 1]);
     }
     let queryParamString = this.commonService.queryParamsToString(queryParams);
     url = `${url}${queryParamString}`;

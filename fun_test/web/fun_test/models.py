@@ -109,6 +109,7 @@ class TestBed(models.Model):
     state_change_time = models.DateTimeField(default=timezone.now)
     health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
     health_check_message = models.TextField(default="")
+    pooled = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.name,
