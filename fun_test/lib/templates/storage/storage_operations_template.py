@@ -164,15 +164,13 @@ class StorageControllerOperationsTemplate:
 
         return result
 
-    def verify_dataplane_ip(self, storage_controller, dut_index, raw_api_call=True):
+    def verify_dataplane_ip(self, storage_controller, fs_obj, raw_api_call=True):
         result = True
 
         for node in self.node_ids:
-            dut = self.topology.get_dut(index=dut_index)
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
             for f1_index in range(fs_obj.NUM_F1S):
                 dpu_id = node + "." + str(f1_index)
-                first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 if raw_api_call:
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -642,11 +640,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         dmesg_output = host_obj.dmesg()
 
         for dut_index in self.topology.get_duts().keys():
-            dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             for f1_index in range(fs_obj.NUM_F1S):
-                bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
-                first_bond_interface = bond_interfaces[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 fun_test.add_checkpoint(expected=True, actual=host_obj.ping(dataplane_ip),
                                         checkpoint="{host} can ping FS {fs_name} F1_{f1_index} dataplane IP"
