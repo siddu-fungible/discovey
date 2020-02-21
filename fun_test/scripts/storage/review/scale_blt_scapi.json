@@ -1,14 +1,16 @@
 {
   // this is for scale, create/attach in loop and finally connect from a host at the last
   "BLTScaleNVolumes1Host1FSScale": {
-    "capacity": 1048576, //1MB
-    "volume_count": 500,
+    "capacity": 1073741824, //1GB
+    "volume_count": 10,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 2,
     "encrypt": "N",
     "attach" : "Y",
     "detach" : "N",
-    "delete": "N"
+    "delete": "N",
+    "already_deployed": false,
+    "format_drive": false
   }
 }

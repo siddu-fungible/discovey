@@ -4,6 +4,7 @@ from swagger_client.models.body_node_update import BodyNodeUpdate
 from swagger_client.models.volume_types import VolumeTypes
 from swagger_client.models.transport import Transport
 from swagger_client.rest import ApiException
+from swagger_client.models.body_drive_format import BodyDriveFormat
 from swagger_client.models.node_update_op import NodeUpdateOp
 from lib.templates.storage.storage_controller_api import *
 from asset.asset_global import AssetType
@@ -70,7 +71,6 @@ class StorageControllerOperationsTemplate:
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         result = False
-        topology_result = None
 
         dut = self.topology.get_dut(index=dut_index)
         fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -132,9 +132,10 @@ class StorageControllerOperationsTemplate:
                     fun_test.critical("Exception while getting DPU state%s\n" % e)
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
-                result = raw_sc_api.execute_api(method="GET", cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
-                if result['status']:
-                    if result['data']['state'] == "Online" and result['data']['available']:
+                api_result = raw_sc_api.execute_api(method="GET",
+                                                    cmd_url="topology/dpus/{}/state".format(dpu_id)).json()
+                if api_result['status']:
+                    if api_result['data']['state'] == "Online" and api_result['data']['available']:
                         result = True
                         break
             fun_test.sleep("Waiting for DPU to be online, remaining time: %s" % timer.remaining_time(), seconds=15)
@@ -194,7 +195,40 @@ class StorageControllerOperationsTemplate:
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
-    def initialize(self, already_deployed=False, dpu_indexes=None):
+    def format_all_drives(self, fs_obj):
+        storage_controller = fs_obj.get_storage_controller()
+        topology = storage_controller.topology_api.get_hierarchical_topology()
+        for node in topology.data:
+            for dpu in topology.data[node].dpus:
+                for drive_info in dpu.drives:
+                    fun_test.test_assert(self._format_drive(
+                        drive_info=drive_info, storage_controller=storage_controller),
+                        message="Formatting drive {}".format(drive_info.uuid))
+
+    def _format_drive(self, drive_info, storage_controller, raw_api_call=False):
+        result = False
+        if raw_api_call:
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            format_drive = raw_sc_api.execute_api(method="PUT", cmd_url="topology/drives/{}".format(drive_info.uuid),
+                                                  data={}).json()
+            result = format_drive["status"]
+        else:
+            body_drive_format = BodyDriveFormat(dpu_id=drive_info.dpu, nguid_low=drive_info.nguid_low,
+                                                nguid_high=drive_info.nguid_high, slot_id=drive_info.slot_id,
+                                                fault_zones=drive_info.fault_zone, capacity=drive_info.capacity)
+            format_drive = None
+            try:
+                format_drive = storage_controller.topology_api.format_drive_change_uuid(
+                    drive_uuid=drive_info.uuid, body_drive_format=body_drive_format)
+            except ApiException as e:
+                fun_test.critical(message="ApiException Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
+            except Exception as e:
+                fun_test.critical(message="Cannot format drive {}. Error:{}".format(drive_info.uuid, e))
+            if format_drive:
+                result = True
+        return result
+
+    def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
@@ -209,6 +243,8 @@ class StorageControllerOperationsTemplate:
             num_dpus = len(dpu_indexes)
             fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
                                           message="Make sure {} DPUs are online".format(num_dpus))
+            if not already_deployed and format_drives:
+                self.format_all_drives(fs_obj=fs_obj)
 
     def cleanup(self):
         pass
@@ -362,14 +398,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                         nvme_volumes = self._get_fungible_nvme_namespaces(host_handle=host_obj.get_instance())
                         if nvme_volumes:
                             for namespace in nvme_volumes:
-                                nvme_device = self._get_nvme_device_namespace(namespace=namespace)
-                                fun_test.simple_assert(expression=nvme_device, message="Fecth NVMe device")
-                                if nvme_device:
-                                    namespace_subsys_nqn = self._get_nvme_subsysnqn_by_device(
-                                        host_handle=host_handle, nvme_device=nvme_device)
-                                    if namespace_subsys_nqn == str(subsys_nqn):
-                                        result = True
-                                        break
+                                namespace_subsys_nqn = self._get_nvme_subsysnqn_by_namespace(
+                                    host_handle=host_handle, namespace=namespace)
+                                if namespace_subsys_nqn == str(subsys_nqn):
+                                    result = True
+                                    break
         return result
 
     def attach_m_vol_n_host(self, fs_obj, volume_uuid_list, host_obj_list, validate_nvme_connect=True,
@@ -503,12 +536,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if len(nvme_volumes) > 0:
                 if subsys_nqn:
                     for namespace in nvme_volumes:
-                        nvme_device = namespace[:-2].split('/dev/')[1]
-                        namespace_subsys_nqn = host_linux_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(
-                            nvme_device))
-                        if str(namespace_subsys_nqn).strip() == str(subsys_nqn):
+                        namespace_subsys_nqn = self._get_nvme_subsysnqn_by_namespace(
+                            host_handle=host_linux_handle, namespace=namespace)
+                        if namespace_subsys_nqn == str(subsys_nqn):
                             if nsid:
-                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(device=namespace)):
+                                if str(nsid) == str(host_linux_handle.nvme_get_ns_id(namespace=namespace)):
                                     result = namespace
                             else:
                                 result = namespace
@@ -533,6 +565,13 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if re.search("nvme", volume_name):
                 nvme_volumes.append(volume_name)
         return nvme_volumes
+
+    def _get_nvme_subsysnqn_by_namespace(self, host_handle, namespace):
+        result = None
+        nvme_id_ctrl = host_handle.nvme_id_ctrl(namespace=namespace)
+        if 'subnqn' in nvme_id_ctrl:
+            result = nvme_id_ctrl['subnqn']
+        return result
 
     def _get_nvme_subsysnqn_by_device(self, host_handle, nvme_device):
         namespace_subsys_nqn = host_handle.command("cat /sys/class/nvme/{}/subsysnqn".format(nvme_device))
@@ -597,9 +636,10 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def deploy(self):
         fun_test.critical(message="Deploy is not available for BLT volume template")
 
-    def initialize(self, already_deployed=False, dpu_indexes=None):
+    def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
         super(GenericVolumeOperationsTemplate, self).initialize(already_deployed=already_deployed,
-                                                                dpu_indexes=dpu_indexes)
+                                                                dpu_indexes=dpu_indexes,
+                                                                format_drives=format_drives)
 
     def host_diagnostics(self, host_obj):
 
@@ -697,11 +737,12 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with host_nqn {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
+                    fun_test.add_checkpoint(expected=True, actual=detach_volume.status,
+                                            checkpoint="Detach Volume {} from host with host_nqn {}".format(
+                                                volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
+                fun_test.add_checkpoint(expected=True, actual=delete_volume.status,
+                                        checkpoint="Delete Volume {}".format(volume))
 
         super(GenericVolumeOperationsTemplate, self).cleanup()
 

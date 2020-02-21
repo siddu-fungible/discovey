@@ -33,7 +33,9 @@ class BringupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             already_deployed = job_inputs["already_deployed"]
 
-        dpu_index = None if not "num_f1" in job_inputs else range(job_inputs["num_f1"])
+        num_f1 = 1
+        dpu_indexes = [x for x in range(num_f1)]
+        fun_test.shared_variables["num_f1"] = num_f1
 
         # TODO: Check workload=storage in deploy(), set dut params
         topology_helper = TopologyHelper()
@@ -41,8 +43,13 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
+        format_drives = True
+        if "format_drives" in job_inputs:
+            format_drives = job_inputs["format_drives"]
+
         self.sc_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
+        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_indexes,
+                                    format_drives=format_drives)
         fun_test.shared_variables["storage_controller_template"] = self.sc_template
 
         # Below lines are needed so that we create/attach volumes only once and other testcases use the same volumes
@@ -573,6 +580,8 @@ class MultiHostFioRandRead(FunTestCase):
             row_data_list.insert(0, self.blt_count)
             row_data_list.insert(0, self.num_ssd)
             row_data_list.insert(0, get_data_collection_time())
+            row_data_list.append(fun_test.shared_variables["num_f1"])
+            row_data_list.append(len(self.hosts))
             if self.post_results:
                 fun_test.log("Posting results on dashboard")
                 post_results("Multi_host_TCP", test_method, *row_data_list)

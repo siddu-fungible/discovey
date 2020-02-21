@@ -9,6 +9,7 @@ from lib.templates.networking.rdma_tools import Rocetools
 import re
 from asset.asset_manager import *
 import math
+import ipaddress
 
 
 def add_to_data_base(value_dict):
@@ -299,6 +300,22 @@ class BringupSetup(FunTestCase):
                                             % servers_mode[server])
             fun_test.shared_variables["host_pcie_info"] = self.host_pcie_info
 
+        fun_test.log_section("here")
+
+        host_cnt_x16 = 0
+        for host, pcie_stat in self.host_pcie_info.items():
+            if pcie_stat != "1":
+                fun_test.critical("{} didn't come up in x16".format(host))
+            else:
+                host_cnt_x16 += 1
+
+        if fun_test.shared_variables["test_speed"] == 2:
+            fun_test.simple_assert(expression=host_cnt_x16 >= 4,
+                                   message="Not enough x16 servers for 200G test")
+        elif fun_test.shared_variables["test_speed"] == 1:
+            fun_test.simple_assert(expression=host_cnt_x16 >= 2,
+                                   message="Not enough x16 servers for 100G test")
+
         fun_test.shared_variables["host_len_f10"] = len(host_dict["f1_0"])
         fun_test.shared_variables["host_len_f11"] = len(host_dict["f1_1"])
 
@@ -412,6 +429,11 @@ class NicEmulation(FunTestCase):
                         iface_addr = handle.command(
                             "ip addr list {} | grep \"inet \" | cut -d\' \' -f6 | cut -d/ -f1".format(
                                 iface_name)).strip()
+                        try:
+                            ip = ipaddress.ip_address(unicode(iface_addr))
+                        except ValueError:
+                            fun_test.log("IP {} is not valid".format(ip))
+                            fun_test.simple_assert(False, "IP address on HU interface is invalid")
                     else:
                         fun_test.test_assert(False, "Funeth is not loaded on {}".format(hostname))
                     if objs == "f1_0":

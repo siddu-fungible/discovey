@@ -2982,7 +2982,7 @@ if __name__ == "__main_failure_ratio__":
                            workspace_ids=[])
     print "created flaky tests failure ratio chart"
 
-if __name__ == "__main__":
+if __name__ == "__main_qdepth512__":
     iops_chart_ids = [843, 1075, 1076, 1077]
     fio_job_name = "fio_tcp_randread_blt_32_16_vol_"
     for id in iops_chart_ids:
@@ -3041,7 +3041,37 @@ if __name__ == "__main__":
                            workspace_ids=[])
     print "created latency charts for all volumes random read"
 
-
-
+if __name__ == "__main__":
+    operations = ["attach_volume", "create_volume", "delete_volume", "detach_volume"]
+    concurrent = [True, False]
+    base_line_date = datetime(year=2020, month=2, day=18, minute=0, hour=0, second=0)
+    for operation in operations:
+        for c in concurrent:
+            chart_name = "Average time per volume - " + "serial"
+            internal_chart_name = "fungible_controller_api_" + operation[:6] + "_avg_time_" + "serial"
+            if c:
+                chart_name = "Average time per volume - " +  "concurrent"
+                internal_chart_name = "fungible_controller_api_" + operation[:6] + "_avg_time_" + "concurrent"
+            data_sets = []
+            one_data_set = {}
+            one_data_set["name"] = "avg_time"
+            one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_action_type": operation,
+                                      "input_volume_type": "raw", "input_volume_size": 1800,
+                                      "input_volume_size_unit": "MB", "input_total_volumes": 5, "input_concurrent": c}
+            one_data_set["output"] = {"name": "output_avg_time", "min": 0, "max": -1, "expected": -1, "reference":
+                -1, "best": -1, "unit": PerfUnit.UNIT_SECS}
+            data_sets.append(one_data_set)
+            ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                           data_sets=data_sets, leaf=True,
+                           description="TBD",
+                           owner_info="Ashwin S (ashwin.s@fungible.com)", source="Unknown",
+                           positive=False, y1_axis_title=PerfUnit.UNIT_SECS,
+                           visualization_unit=PerfUnit.UNIT_SECS,
+                           metric_model_name="DataPlaneOperationsPerformance",
+                           base_line_date=base_line_date,
+                           work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                           peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                           workspace_ids=[])
+    print "added charts for concurrent and serial chart for all operations"
 
 

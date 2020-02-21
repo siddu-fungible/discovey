@@ -519,8 +519,8 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name, compression=False, encryption=False, compression_effort=-1,
-                 key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
+                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, compression=False, encryption=False,
+                 compression_effort=-1, key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -568,7 +568,8 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                       operation=operation,
                       num_ssd=num_ssd,
                       num_volume=num_volumes,
-                      fio_job_name=fio_job_name,
+                      num_dpu=num_dpu,
+                      num_hosts=num_hosts,
                       write_iops=write_iops,
                       read_iops=read_iops,
                       write_throughput=write_bw,
@@ -576,9 +577,12 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                       write_avg_latency=write_latency,
                       read_avg_latency=read_latency,
                       write_90_latency=write_90_latency,
-                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
+                      write_95_latency=write_95_latency,
+                      write_99_latency=write_99_latency,
+                      write_99_99_latency=write_99_99_latency,
+                      read_90_latency=read_90_latency,
+                      read_95_latency=read_95_latency,
+                      read_99_latency=read_99_latency,
                       read_99_99_latency=read_99_99_latency,
                       compression=compression,
                       encryption=encryption,
@@ -1273,6 +1277,26 @@ def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout)
         fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
         result = True
     return result
+
+
+def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest, timeout=3600):
+    """
+    :param host_handle: Handle to host
+    :param host_index: Index of host in case this function is called for multiple hosts
+    :param ezfio_path: Directory where ezfio is installed
+    :param device: nvme volume
+    :param dev_util: % of volume to test
+    :param output_dest: Dir where results should be stored
+    :param timeout:
+    :return: None
+    """
+
+    ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {}".\
+        format(ezfio_path, device, dev_util, output_dest)
+    ezfio_output = host_handle.sudo_command(ezfio_command, timeout)
+    fun_test.shared_variables["ezfio"][host_index] = ezfio_output
+
+    return ezfio_output
 
 
 def fio_parser(arg1, host_index, **kwargs):

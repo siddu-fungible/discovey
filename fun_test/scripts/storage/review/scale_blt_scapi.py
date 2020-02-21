@@ -17,9 +17,23 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        fun_test.log("Provided job inputs: {}".format(job_inputs))
+
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
+        else:
+            self.already_deployed = False
+
+        if "format_drive" in job_inputs:
+            self.format_drive = job_inputs["format_drive"]
+        else:
+            self.format_drive = False
+
         topology_helper = TopologyHelper()
-        self.topology = topology_helper.deploy(already_deployed=already_deployed)
+        self.topology = topology_helper.deploy(already_deployed=self.already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
@@ -53,16 +67,40 @@ class RunStorageApiCommands(FunTestCase):
         for k, v in testcase_dict[testcase].iteritems():
             setattr(self, k, v)
 
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+        if "capacity" in job_inputs:
+            self.capacity = job_inputs["capacity"]
+        if "volume_count" in job_inputs:
+            self.volume_count = job_inputs["volume_count"]
+        if "encrypt" in job_inputs:
+            self.encrypt = job_inputs["encrypt"]
+        if "dpu_count" in job_inputs:
+            self.dpu_count = job_inputs["dpu_count"]
+        if "attach" in job_inputs:
+            self.attach = job_inputs["attach"]
+        if "detach" in job_inputs:
+            self.detach = job_inputs["detach"]
+        if "delete" in job_inputs:
+            self.delete = job_inputs["delete"]
+        if "format_drive" in job_inputs:
+            self.format_drive = job_inputs["format_drive"]
+        else:
+            self.format_drive = False
+        if "already_deployed" in job_inputs:
+            self.already_deployed = job_inputs["already_deployed"]
+        else:
+            self.already_deployed = False
+
         name = "blt_vol"
         vol_type = VolumeTypes().LOCAL_THIN
         compression_effort = False
         encrypt = False
 
         fs_obj_list = []
-        my_fs_obj_list = []
 
         host_obj_list = []
-        my_host_obj_list = []
 
         vol_uuid_list = []  # Its a list of lists.
 
@@ -71,13 +109,7 @@ class RunStorageApiCommands(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(fs_obj)
 
-        fun_test.test_assert((self.fs_count >= len(fs_obj_list)),
-                             "Enough FS1600s exist for this test {}".format(len(fs_obj_list)))
-
-        # make new list of FS for the test
-        #my_fs_obj_list = fs_obj_list[0:0]
-        for fs in range(self.fs_count):
-            my_fs_obj_list.append(fs_obj_list[fs])
+        fun_test.shared_variables["fs_obj_list"] = fs_obj_list
 
         # Make a list of hosts
         topo_host_count = 0
@@ -88,14 +120,6 @@ class RunStorageApiCommands(FunTestCase):
         else:
             host_obj_list = hosts
             topo_host_count = 1
-
-        fun_test.test_assert((self.host_count >= topo_host_count),
-                             "Enough HOSTs exist for this test {}".format(len(fs_obj_list)))
-
-        # Make a new list of hosts for the test
-        my_host_obj_list = host_obj_list[0:0]
-        for host in range(self.host_count):
-            my_host_obj_list.append(host_obj_list[host])
 
         if self.dpu_count == 2:
             dpu_indexes = [0, 1]
@@ -108,26 +132,28 @@ class RunStorageApiCommands(FunTestCase):
             encrypt = True
 
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=False, dpu_indexes=dpu_indexes)
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed, dpu_indexes=dpu_indexes,
+                                                    format_drives=self.format_drive)
 
-        # Make a list of vol uuids by creating volume_count volumes for each fs_obj in my_fs_obj_list
+        # Make a list of vol uuids by creating volume_count volumes for each fs_obj in fs_obj_list
         for i in range(self.volume_count):
             suffix = utils.generate_uuid(length=4)
             body_volume_intent_create = BodyVolumeIntentCreate(name=name + suffix + "_" + str(i),
                                                                vol_type=vol_type, capacity=self.capacity,
                                                                compression_effort=compression_effort,
                                                                encrypt=encrypt, data_protection={})
-            vol_uuid = self.storage_controller_template.create_volume(fs_obj=my_fs_obj_list,
+            vol_uuid = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
                                                                       body_volume_intent_create=body_volume_intent_create)
 
             vol_uuid_list.append(vol_uuid)
             fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful {}".format(i))
+            detachable = False
             if self.attach == "Y":
                 if i == (self.volume_count - 1):
                     connect_needed = True
                 for j in range(len(vol_uuid_list[i])):
-                    attach_vol_result = self.storage_controller_template.attach_volume(host_obj=my_host_obj_list,
-                                                                                       fs_obj=fs_obj,
+                    attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj_list[0],
+                                                                                       fs_obj=fs_obj_list[0],
                                                                                        volume_uuid=vol_uuid_list[i][j],
                                                                                        validate_nvme_connect=connect_needed,
                                                                                        raw_api_call=True)
@@ -135,11 +161,12 @@ class RunStorageApiCommands(FunTestCase):
                     if attach_vol_result["data"]:
                         print "attach volume result:", attach_vol_result, \
                             " \nattach_volume_result[data][uuid]:", attach_vol_result["data"]["uuid"]
+                        detachable = True
 
                     fun_test.test_assert(expression=attach_vol_result["data"],
                                          message="Attach Volume {} Successful".format(vol_uuid_list[i][j]))
-                    if self.detach == "Y":
-                        storage_controller = fs_obj.get_storage_controller()
+                    if self.detach == "Y" and detachable:
+                        storage_controller = fs_obj_list[0].get_storage_controller()
                         port = attach_vol_result[0]["data"]["uuid"]
                         detach_vol_result = storage_controller.storage_api.delete_port(port_uuid=port)
 
@@ -147,7 +174,7 @@ class RunStorageApiCommands(FunTestCase):
                         fun_test.test_assert(expression=detach_vol_result,
                                              message="Detach Volume {} Successful".format(vol_uuid_list[i][j]))
             if self.delete == "Y":
-                storage_controller = fs_obj.get_storage_controller()
+                storage_controller = fs_obj_list[0].get_storage_controller()
                 delete_vol_result = storage_controller.storage_api.delete_volume(volume_uuid=vol_uuid_list[i][j])
                 print "delete_vol_result", delete_vol_result
                 fun_test.test_assert(expression=delete_vol_result,
