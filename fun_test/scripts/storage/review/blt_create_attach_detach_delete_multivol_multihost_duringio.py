@@ -72,7 +72,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                               steps='''
                                     1. Create 48 volumes
                                     2. Attach 8 volume to 6 hosts
-                                    3. Run fio ranwr test with iodepth=8 and numjobs=4
+                                    3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
                                     4. Let IO complete, then perform nvme disconnect during I/O on all hosts
                                     5. Detach and delete the volumes
                                     6. Continue this in a loop for 24 times  
@@ -119,6 +119,16 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         self.vol_type = VolumeTypes().LOCAL_THIN
         self.hosts = self.topology.get_available_host_instances()
 
+        # Fetch testcase numa cpus to be used
+        numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
+        if self.override_numa_node["override"]:
+            numa_node_to_use = self.override_numa_node["override_node"]
+        for host in self.hosts:
+            if host.name.startswith("cab0"):
+                host.host_numa_cpus = ",".join(host.spec["cpus"]["numa_node_ranges"])
+            else:
+                host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+
     def run(self):
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
@@ -132,14 +142,16 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                 self.vol_uuid_list.append(vol_uuid[0])
 
             if self.shared_volume:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts, fs_obj=self.fs_obj_list[0],
+                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
+                                                                               fs_obj=self.fs_obj_list[0],
                                                                                volume_uuid_list=self.vol_uuid_list,
                                                                                validate_nvme_connect=False,
                                                                                raw_api_call=True,
                                                                                nvme_io_queues=None,
                                                                                volume_is_shared=True)
             else:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts, fs_obj=self.fs_obj_list[0],
+                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
+                                                                               fs_obj=self.fs_obj_list[0],
                                                                                volume_uuid_list=self.vol_uuid_list,
                                                                                validate_nvme_connect=False,
                                                                                raw_api_call=True,
@@ -198,15 +210,6 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                                                           actual=len(host.nvme_block_device_list),
                                                           message="Check number of nvme block devices found "
                                                           "on host {} matches with attached ".format(host.name))
-            # Fetch testcase numa cpus to be used
-            numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
-            if self.override_numa_node["override"]:
-                numa_node_to_use = self.override_numa_node["override_node"]
-            for host in self.hosts:
-                if host.name.startswith("cab0"):
-                    host.host_numa_cpus = ",".join(host.spec["cpus"]["numa_node_ranges"])
-                else:
-                    host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
             self.fio_io_size = 100 / len(self.hosts)
             thread_id = {}
@@ -214,7 +217,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             fio_output = {}
             fio_offset = 1
             fun_test.shared_variables["fio"] = {}
-            for index, host_name in enumerate(self.hosts):
+            for index, host in enumerate(self.hosts):
                 fio_output[index] = {}
                 #end_host_thread[index] = self.hosts[host_name]["handle"].clone()
                 end_host_thread[index] = host.instance.clone()
@@ -260,7 +263,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                         fun_test.test_assert(True, message="FIO interrupted due to disconnect")
                     else:
                         fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                         "FIO randwrite test with IO depth 8 in host {}".format(host_name))
+                                         "FIO randwrite test with IO depth 16 in host {}".format(host_name.instance))
                     fio_output[i] = fun_test.shared_variables["fio"][i]
 
             except Exception as ex:
@@ -329,8 +332,8 @@ class CreateAttachDetachDeleteMultivolMultihostDuringIO(CreateAttachDetachDelete
             steps='''
                 1. Create 48 volumes
                 2. Attach 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
-                4. Let IO run for 60sec, then perform nvme disconnect during I/O on all hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
                 ''')
@@ -353,7 +356,7 @@ class CreateAttachDetachDeleteMultivolMultihostShared(CreateAttachDetachDeleteMu
             steps='''
                 1. Create 8 volumes
                 2. Attach same 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
                 4. Let IO complete, then perform nvme disconnect on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
@@ -377,8 +380,8 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(CreateAttachDetach
             steps='''
                 1. Create 8 volumes
                 2. Attach 8 volume to 6 hosts
-                3. Run fio ranwr test with iodepth=8 and numjobs=4
-                4. Let IO run for 60sec, then perform nvme disconnect during I/O on all hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
                 5. Detach and delete the volumes
                 6. Continue this in a loop for 24 times
                 ''')
@@ -396,7 +399,7 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(CreateAttachDetach
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihost())
-    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIO())
-    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostShared())
-    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIO())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIO())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostShared())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIO())
     setup_bringup.run()
