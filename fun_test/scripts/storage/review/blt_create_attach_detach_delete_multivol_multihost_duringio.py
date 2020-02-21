@@ -31,10 +31,13 @@ class BringupSetup(FunTestScript):
 
     def setup(self):
 
+        format_drives = False
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
         fun_test.log("Provided job inputs: {}".format(job_inputs))
+        if "format_drives" in job_inputs:
+            format_drives = job_inputs["format_drives"]
 
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
@@ -47,7 +50,8 @@ class BringupSetup(FunTestScript):
         fun_test.shared_variables["topology"] = self.topology
 
         self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
+        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed,
+                                     format_drives=format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
