@@ -26,6 +26,7 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
+            configuration.debug = True
             api_client = ApiClient(configuration)
             self.apigateway_api = ApigatewayApi(api_client)
             self.storage_api = StorageApi(api_client)
