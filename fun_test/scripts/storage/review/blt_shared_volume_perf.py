@@ -149,7 +149,7 @@ class SharedVolumePerfTest(FunTestCase):
             self.fio_modes = job_inputs["fio_modes"]
 
         res = re.search('--numjobs=(\d+)', str(self.warm_up_fio_cmd_args["multiple_jobs"]))
-        if int(res.group(1)) >1:
+        if int(res.group(1)) > 1:
             self.warm_up_fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}". \
                 format(int(self.warm_up_fio_cmd_args["timeout"]) - 60)
 
