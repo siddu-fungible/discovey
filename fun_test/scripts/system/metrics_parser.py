@@ -113,6 +113,8 @@ class MetricParser():
             return self.teramark_nu_transit(logs=logs, platform=platform, model_name=model_name)
         elif "TeraMarkZip" in model_name:
             return self.teramark_zip(logs=logs, date_time=date_time, platform=platform, run_time=run_time)
+        elif "DataPlaneOperationsPerformance" in model_name:
+            return self.data_plane_operations(logs=logs, platform=platform)
         else:
             return {}
 
@@ -1640,3 +1642,39 @@ class MetricParser():
         self.result["status"] = self.status == RESULTS["PASSED"]
         return self.result
 
+
+    def data_plane_operations(self, logs, platform):
+        self.initialize()
+        self.metrics["input_platform"] = platform
+
+        for file in logs:
+            for line in file:
+                self.match_found = True
+                self.metrics["output_total_time"] = line["total_time"]
+                self.metrics["output_total_time_unit"] = line["total_time_unit"]
+                if line["total_time_unit"] == "seconds":
+                    self.metrics["output_total_time_unit"] = PerfUnit.UNIT_SECS
+                self.metrics["output_avg_time"] = line["avg_time_per_volume"]
+                if line["avg_time_per_volume_unit"] == "seconds":
+                    self.metrics["output_avg_time_unit"] = PerfUnit.UNIT_SECS
+
+                self.metrics["input_volume_size"] = line["volume_size"]
+                self.metrics["input_volume_size_unit"] = line["volume_size_unit"]
+                if line["volume_size_unit"] == "MB":
+                    self.metrics["input_volume_size_unit"] = PerfUnit.UNIT_MB
+                self.metrics["input_volume_type"] = line["volume_type"]
+                self.metrics["input_total_volumes"] = line["total_volumes"]
+                self.metrics["input_concurrent"] = line["concurrent"]
+                self.metrics["input_action_type"] = line["action_type"]
+                self.metrics["input_split_performance_data"] = line["split_performance_data"] if \
+                    "split_performance_data" in line else "{}"
+
+                self.status = RESULTS["PASSED"]
+                date_time = self.get_time_from_timestamp(line["date_time"])
+                d = self.metrics_to_dict(metrics=self.metrics, result=self.status, date_time=date_time)
+                self.result["data"].append(d)
+
+        self.result["match_found"] = self.match_found
+        self.result["status"] = self.status == RESULTS["PASSED"]
+        fun_test.log("Result :{}".format(self.result))
+        return self.result

@@ -8,6 +8,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from scripts.system.metrics_parser import MetricParser
 from fun_global import FunPlatform
+from glob import glob
 
 F1 = FunPlatform.F1
 
@@ -241,10 +242,12 @@ class PalladiumPerformanceTc(FunTestCase):
             d[key] = value
         return d
 
-    def validate_json_file(self, file_paths, validation_required=True):
+    def validate_json_file(self, file_paths, logs_dir=True):
         self.lines = []
         for names in file_paths:
             file_path = LOGS_DIR + "/" + names
+            if not logs_dir:
+                file_path = SHARED_TEST_RESULTS_DIR + "/" + names + "/results.json"
             fun_test.test_assert(os.path.isfile(file_path), "Ensure Json exists")
             fun_test.test_assert(os.access(file_path, os.R_OK), "Ensure read access for the file")
             with open(file_path) as fp:
@@ -1011,6 +1014,30 @@ class CryptoFastPathPerformanceTc(PalladiumPerformanceTc):
                               steps="Steps 1")
 
 
+class DataPlaneOperationsPerformanceTc(PalladiumPerformanceTc):
+    model = "DataPlaneOperationsPerformance"
+    file_paths = ["attach_raw_volumes", "create_raw_volumes", "detach_raw_volumes", "delete_raw_volumes"]
+    platform = F1
+
+    def describe(self):
+        self.set_test_details(id=65,
+                              summary="Data plane operations Performance Test",
+                              steps="Steps 1")
+
+    def run(self):
+        try:
+            fun_test.test_assert(self.validate_json_file(file_paths=self.file_paths, logs_dir=False), "validate json file and output")
+            result = MetricParser().parse_it(model_name=self.model, logs=self.lines,
+                                             auto_add_to_db=True, platform=self.platform)
+            fun_test.test_assert(result["match_found"], "Found atleast one entry")
+            self.result = fun_test.PASSED
+
+        except Exception as ex:
+            fun_test.critical(str(ex))
+
+        fun_test.test_assert_expected(expected=fun_test.PASSED, actual=self.result, message="Test result")
+
+
 if __name__ == "__main__":
     myscript = MyScript()
 
@@ -1068,5 +1095,6 @@ if __name__ == "__main__":
     myscript.add_test_case(VoltestBlt8PerformanceTc())
     myscript.add_test_case(VoltestBlt12PerformanceTc())
     myscript.add_test_case(CryptoFastPathPerformanceTc())
+    myscript.add_test_case(DataPlaneOperationsPerformanceTc())
 
     myscript.run()

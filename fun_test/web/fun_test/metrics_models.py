@@ -3182,3 +3182,27 @@ class RawVolumeNvmeTcpMultiHostPerformance(FunModel):
 
     def __str__(self):
         return (str(self.__dict__))
+
+
+class DataPlaneOperationsPerformance(FunModel):
+    input_date_time = models.DateTimeField(verbose_name="Date time", default=datetime.now)
+    input_volume_size = models.IntegerField(verbose_name="Volume size")
+    input_total_volumes = models.IntegerField(verbose_name="Number of volumes")
+    input_volume_type = models.TextField(verbose_name="Volume type")
+    input_action_type = models.TextField(verbose_name="Action type")
+    input_volume_size_unit = models.TextField(default=PerfUnit.UNIT_MB)
+    input_concurrent = models.BooleanField(default=False)
+    input_split_performance_data = models.TextField(verbose_name="Split perf data", default={})
+    input_platform = models.TextField(default=FunPlatform.F1)
+    run_time_id = models.IntegerField(default=None, null=True)
+    status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
+
+
+    output_total_time = models.FloatField(verbose_name="Total time taken", default=-1)
+    output_avg_time = models.FloatField(verbose_name="Avg time taken", default=-1)
+
+    output_total_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+    output_avg_time_unit = models.TextField(default=PerfUnit.UNIT_SECS)
+
+    def __str__(self):
+        return (str(self.__dict__))
