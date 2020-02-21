@@ -77,8 +77,9 @@ class EzfioPerfSetup(FunTestScript):
         job_inputs = fun_test.get_job_inputs()
 
         already_deployed = False
-        if "already_deployed" in job_inputs:
-            already_deployed = job_inputs["already_deployed"]
+        if job_inputs is not None:
+            if "already_deployed" in job_inputs:
+                already_deployed = job_inputs["already_deployed"]
 
         dpu_index = None if not "num_f1" in job_inputs else range(job_inputs["num_f1"])
 
