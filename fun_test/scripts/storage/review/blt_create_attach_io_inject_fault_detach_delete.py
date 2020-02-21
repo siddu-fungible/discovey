@@ -38,15 +38,17 @@ class BringupSetup(FunTestScript):
 
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
+        if "format_drives" in job_inputs:
+            self.format_drives = job_inputs["format_drives"]
         else:
-            self.already_deployed = True
+            self.already_deployed = False
 
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=self.already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
         self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
+        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed, format_drives= self.format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():

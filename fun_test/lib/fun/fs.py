@@ -3111,10 +3111,28 @@ class Fs(object, ToDictMixin):
         return result
 
 if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
-    output = bmc.command("date")
-    i = 0
+    iterations = 0
+    hard = True
+    while True:
+        fun_test.log("Current iteration: {}".format(iterations))
+        fun_test.test_assert(fs.reset(hard=hard), "Reset iteration: {}".format(iterations))
+        f1_status = bmc.command("cat /tmp/F1_STATUS")
+
+        f1_0_running = re.search('F1_0: RUNNING', f1_status)
+        f1_1_running = re.search('F1_1: RUNNING', f1_status)
+        fun_test.test_assert(f1_0_running, "F1-0 running")
+        fun_test.test_assert(f1_1_running, "F1-1 running")
+
+        come = fs.get_come()
+        fun_test.test_assert(come.uptime() < 300, "ComE uptime is right. Iterations: {}".format(iterations))
+        iterations += 1
+        bmc.disconnect()
+        come.disconnect()
+
+
+
     # print fs.get_bundle_version()
     # health = fs.health(only_reachability=True)
     # print health

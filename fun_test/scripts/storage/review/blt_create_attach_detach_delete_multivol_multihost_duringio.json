@@ -39,10 +39,10 @@
   },
   "CreateAttachDetachDeleteMultivolMultihost":{
     "num_f1": 1,
-    "blt_count": 48,
-    "num_hosts": 2,
+    "blt_count": 4,
+    "num_hosts": 1,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
+    "test_iteration_count": 4,
     "shared_volume" : false,
     "detach_duringio": false,
     "raw_api_call": true,
@@ -57,16 +57,16 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=write --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
       "timeout": 1800
     }
   },
   "CreateAttachDetachDeleteMultivolMultihostDuringIO":{
     "num_f1": 1,
-    "blt_count": 48,
+    "blt_count": 8,
     "num_hosts": 2,
     "capacity": 17179869184,
-    "test_iteration_count": 24,
+    "test_iteration_count": 2,
     "shared_volume" : false,
     "detach_duringio": true,
     "raw_api_call": true,
@@ -81,7 +81,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
       "timeout": 1800
     }
   },
@@ -90,7 +90,7 @@
     "blt_count": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
+    "test_iteration_count": 2,
     "shared_volume" : true,
     "detach_duringio": false,
     "multi_host_test": "True",
@@ -105,7 +105,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   },
@@ -114,7 +114,7 @@
     "blt_count": 8,
     "num_hosts": 2,
     "capacity": 17179869184,
-    "test_iteration_count": 24,
+    "test_iteration_count": 2,
     "shared_volume" : true,
     "detach_duringio": true,
     "multi_host_test": "True",
@@ -129,7 +129,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   }
