@@ -3063,10 +3063,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "perf_listener_host_info": [
-      "mktg-server-14"
-    ]
+    }
   },
   "fs-66": {
     "dut_info": {
