@@ -751,7 +751,7 @@
       "password": "ADMIN"
     }
   },
-    "mktg15": {
+  "mktg15": {
     "host_ip": "mktg15",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
@@ -761,7 +761,7 @@
       "password": "Precious1*"
     }
   },
-      "mktg16": {
+  "mktg16": {
     "host_ip": "10.1.22.135",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
@@ -771,7 +771,7 @@
       "password": "ADMIN"
     }
   },
-     "systems-lab-01": {
+  "systems-lab-01": {
     "host_ip": "10.1.44.43",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
@@ -791,12 +791,12 @@
       "password": "ADMIN"
     }
   },
-    "cab02-qa-10-vm01": {
+  "cab02-qa-10-vm01": {
     "host_ip": "cab02-qa-10-vm01",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {},
-        "test_interface_info": {
+    "test_interface_info": {
       "0": {
         "name": "ens6",
         "ip": "15.1.15.3/24",
@@ -805,14 +805,17 @@
           "port": "et-0/0/57"
         }
       }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
     }
   },
-   "cab02-qa-10-vm02": {
+  "cab02-qa-10-vm02": {
     "host_ip": "cab02-qa-10-vm02",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {},
-        "test_interface_info": {
+    "test_interface_info": {
       "0": {
         "name": "ens6",
         "ip": "15.1.15.4/24",
@@ -821,14 +824,17 @@
           "port": "et-0/0/57"
         }
       }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
     }
   },
-     "cab02-qa-10-vm03": {
+  "cab02-qa-10-vm03": {
     "host_ip": "cab02-qa-10-vm03",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {},
-        "test_interface_info": {
+    "test_interface_info": {
       "0": {
         "name": "ens6",
         "ip": "15.1.15.5/24",
@@ -837,14 +843,17 @@
           "port": "et-0/0/57"
         }
       }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
     }
   },
-     "cab02-qa-10-vm04": {
+  "cab02-qa-10-vm04": {
     "host_ip": "cab02-qa-10-vm04",
     "ssh_username": "localadmin",
     "ssh_password": "Precious1*",
     "ipmi_info": {},
-        "test_interface_info": {
+    "test_interface_info": {
       "0": {
         "name": "ens6",
         "ip": "15.1.15.6/24",
@@ -853,6 +862,9 @@
           "port": "et-0/0/57"
         }
       }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
     }
   },
   "cab02-qa-09": {
