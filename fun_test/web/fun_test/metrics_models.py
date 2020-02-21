@@ -3140,6 +3140,7 @@ class RawVolumeNvmeTcpMultiHostPerformance(FunModel):
     input_block_size = models.TextField(verbose_name="Block size")
     input_io_depth = models.IntegerField(verbose_name="IO depth")
     input_operation = models.TextField(verbose_name="Operation type")
+    input_shared_volume = models.BooleanField(verbose_name="Shared volume", default=False)
     input_compression = models.BooleanField(verbose_name="Compression enabled")
     input_encryption = models.BooleanField(verbose_name="Encryption enabled")
     input_compression_effort = models.IntegerField(verbose_name="Compression effort")
