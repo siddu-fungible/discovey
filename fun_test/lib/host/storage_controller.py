@@ -2,6 +2,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+import httplib
 import logging
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
@@ -36,7 +37,9 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
-            configuration.debug = True
+            if api_logging_level <= logging.DEBUG:
+                # configuration.debug = True
+                httplib.HTTPConnection.debuglevel = 2
             try:
                 logger = logging.getLogger('swagger_client.rest')
                 logger.setLevel(api_logging_level)
