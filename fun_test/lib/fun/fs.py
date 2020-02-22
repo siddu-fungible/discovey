@@ -1195,7 +1195,7 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            if self.fs.bundle_compatible:
+            if self.fs.bundle_compatible and self.fs.bundle_image_parameters:
                 try:
                     bmc.upload_bundle_f1_logs()
                 except Exception as ex:
@@ -3204,7 +3204,7 @@ if __name__ == "__main__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
-    # topology = th.deploy(already_deployed=True)
-    topology = th.get_expanded_topology()
+    topology = th.deploy(already_deployed=True)
+    # topology = th.get_expanded_topology()
     fc = topology.get_fungible_controller_instance()
     fc.command("date")
