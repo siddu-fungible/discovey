@@ -31,7 +31,7 @@ class BringupSetup(FunTestScript):
     def cleanup(self):
         self.topology.cleanup()
 
-class CreateDeleteVolume(FunTestCase):
+class CreateDeleteVolumeRebootFS1600(FunTestCase):
     topology = None
     already_deployed = True
     storage_controller_template = None
@@ -158,5 +158,5 @@ class CreateDeleteVolume(FunTestCase):
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(CreateDeleteVolume())
+    setup_bringup.add_test_case(CreateDeleteVolumeRebootFS1600())
     setup_bringup.run()
