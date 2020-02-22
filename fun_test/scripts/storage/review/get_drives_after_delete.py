@@ -46,6 +46,7 @@ class RunStorageApiCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
         storage_controller = fs_obj_list[0].get_storage_controller()
