@@ -30,7 +30,8 @@
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 300
+    "api_server_up_timeout": 300,
+    "drive_format_timeout": 120
   },
   "RecoveryWithMFailure": {
     "ec_list": ["4,2"],
@@ -53,7 +54,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "test_rail_case_id": ["C16229"],
@@ -101,7 +102,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "test_rail_case_id": ["C16230"],
@@ -150,7 +151,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "test_rail_case_id": ["C18748"],
@@ -199,7 +200,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "test_rail_case_id": ["C18749"],
@@ -249,7 +250,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "test_rail_case_id": ["C18750"],
