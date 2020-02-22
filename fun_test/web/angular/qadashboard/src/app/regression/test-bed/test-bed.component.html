@@ -3,7 +3,8 @@
   <div *ngIf="!refreshing" class="flex-container">
     <div class="card">
       <div class="card-header">
-        Test-beds
+        <span *ngIf="showPooledTestBeds">Pooled test-beds</span>
+        <span *ngIf="!showPooledTestBeds">All test-beds</span>
       </div>
       <div class="card-body">
         <table class="test-bed-table table-nonfluid">

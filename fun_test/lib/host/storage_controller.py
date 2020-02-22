@@ -2,6 +2,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+import logging
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
     from swagger_client.api.topology_api import TopologyApi
@@ -9,6 +10,15 @@ if fun_test.storage_api_enabled:
     from swagger_client.api.apigateway_api import ApigatewayApi
     from swagger_client.api_client import ApiClient
     from swagger_client.configuration import Configuration
+
+
+class ApiLogHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            message = self.format(record)
+            fun_test.log(message)
+        except Exception as ex:
+            self.handleError(record)
 
 
 class StorageController(NetworkController, DpcshClient):
@@ -26,6 +36,15 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
+            configuration.debug = True
+            try:
+                logger = logging.getLogger('rest')
+                logger.setLevel(logging.DEBUG)
+                api_log_handler = ApiLogHandler()
+                logger.addHandler(api_log_handler)
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
             api_client = ApiClient(configuration)
             self.apigateway_api = ApigatewayApi(api_client)
             self.storage_api = StorageApi(api_client)

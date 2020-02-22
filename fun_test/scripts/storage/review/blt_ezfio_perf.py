@@ -13,6 +13,7 @@ from collections import OrderedDict
 from lib.templates.csi_perf.csi_perf_template import CsiPerfTemplate
 from lib.templates.storage.storage_controller_api import *
 import copy
+import datetime
 
 
 def start_mpstat(host_handle, runtime, stats_args):
@@ -358,16 +359,12 @@ class SingleBltSingleHost(FunTestCase):
 
         fun_test.log("Volume name is: {}".format(self.host.nvme_block_device_list))
 
-        """
-        ezfio_thread_id = fun_test.execute_after(time_in_seconds=1,
-                                                 func=ezfio_parser, arg1=end_host_thread,
-                                                 ezfio_path=self.ezfio_host_path,
-                                                 device=self.host.nvme_block_device_list[0],
-                                                 output_dest=outputdir_name,
-                                                 dev_util=100, host_index=0)
-        """
         self.ezfio_host_path = fun_test.shared_variables["ezfio_host_path"]
-        outputdir_name = "{}/{}_{}".format(self.ezfio_host_path, testcase, fun_test.get_start_time())
+
+        # Get current datetime to store file in unique locations
+        current_str_time = get_current_time().isoformat(sep="_")
+        outputdir_name = "{}/{}_{}".format(self.ezfio_host_path, testcase, current_str_time)
+
         try:
             # Start stats collection
             ezfio_runtime = 7200
@@ -392,16 +389,14 @@ class SingleBltSingleHost(FunTestCase):
             stop_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, stats_obj=stats_obj,
                              stats_list=self.stats_collect_details)
             # Copy ezfio output
-            """
             ezfio_output_dir = fun_test.get_test_case_artifact_file_name(post_fix_name=
                                                                          "{}_ezfio_perf".format(testcase))
             fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
                          source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
                          source_file_path=outputdir_name,
-                         target_file_path=ezfio_output_dir)
+                         target_file_path=ezfio_output_dir, recursive=True)
             fun_test.add_auxillary_file(description="Host CPU Usage",
                                         filename=ezfio_output_dir)
-            """
 
     def cleanup(self):
         pass

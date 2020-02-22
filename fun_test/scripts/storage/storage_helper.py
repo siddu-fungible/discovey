@@ -351,7 +351,7 @@ def single_fs_setup(obj, set_dataplane_ips=True):
                     fun_test.log("Drive with uuid {} in slot {} on {}, not in Online state".format(drive.get("uuid"), drive.get("slot_id"), dpu))
                     list_failed_drives.append((dpu, drive.get("slot_id"), drive.get("uuid")))
         if len(all_drive_state) == total_system_drives:
-            fun_test.test_assert((all(all_drive_state)), "All drives on dpu {} is online".format(dpu))
+            fun_test.test_assert((all(all_drive_state)), "All drives in FS is online")
             break
         elif list_failed_drives:
             fun_test.sleep("Waiting for drives to come online", 10)
