@@ -8,16 +8,16 @@
   // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...
   // "CADtDlADtDl": Create Attach Detach Delete, Attch, Detach, Delete (Same volume)
 
-  "BLTScaleNVolumes1Host1FSStress": {
+  "CCDD": {
     "capacity": 1073741824, //1GB
     "volume_count": 1,
-    "loop_count": 5,
+    "loop_count": 1,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 2,
     "encrypt": "Y",
     "already_deployed": false,
-    "format_drive": false,
-    "pattern": "CADtADt"
+    "format_drive": true,
+    "pattern": "CCDD"
   }
 }
