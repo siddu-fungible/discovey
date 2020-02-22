@@ -132,7 +132,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
             self.storage_controller_template.verify_dataplane_ip(storage_controller=storage_controller,
-                                                                 dut_index=dut_index)
+                                                                 fs_obj=fs_obj)
             vol_uuid_list = fun_test.shared_variables["vol_uuid_list"]
             timer = FunTimer(max_time=120)
             while not timer.is_expired():
