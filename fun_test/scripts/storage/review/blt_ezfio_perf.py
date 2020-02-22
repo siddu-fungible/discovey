@@ -365,6 +365,13 @@ class SingleBltSingleHost(FunTestCase):
         current_str_time = get_current_time().isoformat(sep="_")
         outputdir_name = "{}/{}_{}".format(self.ezfio_host_path, testcase, current_str_time)
 
+        # Get numa nodes to pass to ezfio
+        numa_node_to_use = get_device_numa_node(end_host_thread, self.ethernet_adapter)
+        if self.host.name.startswith("cab0"):
+            host_numa_cpus = ",".join(self.host.spec["cpus"]["numa_node_ranges"])
+        else:
+            host_numa_cpus = self.host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
+
         try:
             # Start stats collection
             ezfio_runtime = 7200
@@ -377,7 +384,8 @@ class SingleBltSingleHost(FunTestCase):
                                      ezfio_path=self.ezfio_host_path,
                                      device=self.host.nvme_block_device_list[0],
                                      output_dest=outputdir_name,
-                                     dev_util=100, host_index=0, timeout=ezfio_runtime)
+                                     dev_util=100, host_index=0, cpu_list=host_numa_cpus,
+                                     timeout=ezfio_runtime)
 
         except Exception as ex:
             fun_test.critical("Ezfio failed...{}".format(ex))
