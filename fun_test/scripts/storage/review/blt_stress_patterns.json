@@ -11,7 +11,7 @@
   "CCDD": {
     "capacity": 1073741824, //1GB
     "volume_count": 1,
-    "loop_count": 1,
+    "loop_count": 1024,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 2,

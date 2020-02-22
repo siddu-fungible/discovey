@@ -220,11 +220,11 @@ class CCDD(RunStorageApiCommands):
     def setup(self):
         # super(CADtADtWithEnc, self).setup()
         self.topology = fun_test.shared_variables["topology"]
-        self.assign_job_sepcifics()
+	super(CCDD, self).assign_volume_specifics()
         self.already_deployed = fun_test.shared_variables["already_deployed"]
         self.format_drive = fun_test.shared_variables["format_drive"]
-
-        super(CCDD, self).assign_volume_specifics()
+	
+	self.assign_job_sepcifics()
 
         body_volume_intent_create = BodyVolumeIntentCreate(name=self.name, vol_type=self.vol_type,
                                                            capacity=self.capacity,
