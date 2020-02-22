@@ -9,7 +9,7 @@
       "encrypt": false
     },
     "raw_api_call": true,
-    "drive_margin": 0,
+    "drive_margin": 1048576,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {
       "override": true,
