@@ -50,6 +50,7 @@ class RunStorageApiCommands(FunTestCase):
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
         storage_controller = fs_obj_list[0].get_storage_controller()
+        self.storage_controller_template.get_health(fs_obj=fs_obj_list[0])
         self.topology_result = storage_controller.topology_api.get_hierarchical_topology()
         fun_test.log(self.topology_result)
         self.storage_controller_template.initialize(already_deployed=False)
