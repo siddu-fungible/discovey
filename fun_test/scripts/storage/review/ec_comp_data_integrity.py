@@ -215,9 +215,9 @@ class DateIntegrityCheck(FunTestCase):
         testcase = self.__class__.__name__
         test_method = testcase
         self.fio_io_size = 100
-        block_sizes = ["4k"]
-        wr_modes =["write"]
-        rd_modes = ["read"]
+        block_sizes = ["4k", "8k", "16k", "32k", "64k"]
+        wr_modes =["write", "randwrite", "write", "randwrite"]
+        rd_modes = ["read", "randread", "randread", "read"]
 
         for bs in block_sizes:
             for wr_mode, rd_mode in zip(wr_modes, rd_modes):
