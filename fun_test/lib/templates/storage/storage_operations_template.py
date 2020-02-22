@@ -78,7 +78,9 @@ class StorageControllerOperationsTemplate:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
             fun_test.log(topology_result)
         except ApiException as e:
-            fun_test.critical("Exception while getting topology%s\n" % e)
+            fun_test.critical("Exception while getting topology{}\n".format(e))
+        except Exception as e:
+            fun_test.critical("Exception while getting topology{}\n".format(e))
         node_ids = [x.uuid for x in topology_result.data.values()]
         fun_test.test_assert(expression=node_ids, message="Fetch node IDs using topology API")
         for node in node_ids:
@@ -107,7 +109,10 @@ class StorageControllerOperationsTemplate:
                     self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
-                    fun_test.critical("Exception while updating dataplane IP %s\n" % e)
+                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
+                    result = False
+                except Exception as e:
+                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
                     result = False
 
         return result
@@ -123,7 +128,9 @@ class StorageControllerOperationsTemplate:
                         result = True
                         break
                 except ApiException as e:
-                    fun_test.critical("Exception while getting DPU state%s\n" % e)
+                    fun_test.critical("Exception while getting DPU state{}\n".format(e))
+                except Exception as e:
+                    fun_test.critical("Exception while getting DPU state{}\n".format(e))
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                 api_result = raw_sc_api.execute_api(method="GET",
@@ -148,7 +155,9 @@ class StorageControllerOperationsTemplate:
             try:
                 topology_result = storage_controller.topology_api.get_hierarchical_topology()
             except ApiException as e:
-                fun_test.critical("Exception while getting topology%s\n" % e)
+                fun_test.critical("Exception while getting topology{}\n".format(e))
+            except Exception as e:
+                fun_test.critical("Exception while getting topology{}\n".format(e))
             self.node_ids = [x.uuid for x in topology_result.data.values()]
             fun_test.test_assert(expression=self.node_ids, message="Fetch node IDs using topology API")
             for node in self.node_ids:
@@ -182,14 +191,22 @@ class StorageControllerOperationsTemplate:
                     try:
                         get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
                     except ApiException as e:
-                        fun_test.critical("Exception while getting DPU info: {}".format(e))
+                        fun_test.critical("Exception while getting DPU: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while getting DPU: {}\n".format(e))
                     fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IP")
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
     def format_all_drives(self, fs_obj):
         storage_controller = fs_obj.get_storage_controller()
-        topology = storage_controller.topology_api.get_hierarchical_topology()
+        topology = None
+        try:
+            topology = storage_controller.topology_api.get_hierarchical_topology()
+        except ApiException as e:
+            fun_test.critical("Exception while getting topology: {}\n".format(e))
+        except Exception as e:
+            fun_test.critical("Exception while getting topology: {}\n".format(e))
         for node in topology.data:
             for dpu in topology.data[node].dpus:
                 for drive_info in dpu.drives:
@@ -283,7 +300,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 vol_uuid = create_vol_result.data.uuid
                 result.append(vol_uuid)
             except ApiException as e:
-                fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                fun_test.critical("Exception when creating volume on fs {}: {}\n" .format(fs_obj, e))
+            except Exception as e:
+                fun_test.critical("Exception when creating volume on fs {}: {}\n" .format(fs_obj, e))
         return result
 
     def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False,
@@ -322,7 +341,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result_list.append(result)
                 except ApiException as e:
                     fun_test.test_assert(expression=False,
-                                         message="Exception when attach volume on fs %s: %s\n" % (fs_obj, e))
+                                         message="Exception when attach volume on fs {}: {}\n".format(fs_obj, e))
+                    result = None
+                except Exception as e:
+                    fun_test.test_assert(expression=False,
+                                         message="Exception when attach volume on fs {}: {}\n".format(fs_obj, e))
                     result = None
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -385,7 +408,13 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 for port in get_volume_result["data"][vol_uuid]["ports"]:
                     if result:
                         break
-                    port_details = storage_controller.storage_api.get_port(port_uuid=port)
+                    port_details = None
+                    try:
+                        port_details = storage_controller.storage_api.get_port(port_uuid=port)
+                    except ApiException as e:
+                        fun_test.critical("Exception while getting port info: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while getting port info: {}\n".format(e))
                     if port_details.data.host_nqn == host_nqn:
 
                         host_handle = host_obj.get_instance()
@@ -616,15 +645,22 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     def get_volume_attach_status(self, fs_obj, volume_uuid):
         result = False
         storage_controller = fs_obj.get_storage_controller()
-        all_pools = storage_controller.storage_api.get_all_pools()
-        for pool in all_pools.data:
-            if result:
-                break
-            for volume in all_pools.data[pool].volumes:
-                if volume == volume_uuid:
-                    result = True
+        all_pools = None
+        try:
+            all_pools = storage_controller.storage_api.get_all_pools()
+            for pool in all_pools.data:
+                if result:
                     break
-
+                for volume in all_pools.data[pool].volumes:
+                    if volume == volume_uuid:
+                        result = True
+                        break
+        except ApiException as e:
+            fun_test.critical("Exception while getting port info: {}\n".format(e))
+            result = False
+        except Exception as e:
+            fun_test.critical("Exception while getting port info: {}\n".format(e))
+            result = False
         return result
 
     def deploy(self):
@@ -728,12 +764,30 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
-                    detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.add_checkpoint(expected=True, actual=detach_volume.status,
+                    detach_volume = None
+                    try:
+                        detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    except ApiException as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    detach_result = False
+                    if detach_volume:
+                        detach_result = detach_volume.status
+                    fun_test.add_checkpoint(expected=True, actual=detach_result,
                                             checkpoint="Detach Volume {} from host with host_nqn {}".format(
                                                 volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
-                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                fun_test.add_checkpoint(expected=True, actual=delete_volume.status,
+                delete_volume = None
+                try:
+                    delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                except ApiException as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                except Exception as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                delete_volume_result = False
+                if delete_volume:
+                    delete_volume_result = delete_volume.status
+                fun_test.add_checkpoint(expected=True, actual=delete_volume_result,
                                         checkpoint="Delete Volume {}".format(volume))
 
         super(GenericVolumeOperationsTemplate, self).cleanup()
