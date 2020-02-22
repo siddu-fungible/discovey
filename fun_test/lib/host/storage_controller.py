@@ -38,7 +38,7 @@ class StorageController(NetworkController, DpcshClient):
             configuration.verify_ssl = False
             configuration.debug = True
             try:
-                logger = logging.getLogger('rest')
+                logger = logging.getLogger('swagger_client.rest')
                 logger.setLevel(logging.DEBUG)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)

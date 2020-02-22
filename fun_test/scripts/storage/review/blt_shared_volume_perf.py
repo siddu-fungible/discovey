@@ -140,6 +140,8 @@ class SharedVolumePerfTest(FunTestCase):
         if "warmup_jobs" in job_inputs:
             self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
                 replace("numjobs=1", "numjobs={}".format(job_inputs["warmup_jobs"]))
+        fun_test.log("Using the warm_up job value provided in the job inputs")
+        fun_test.log(self.warm_up_fio_cmd_args["multiple_jobs"])
         if "warmup_bs" in job_inputs:
             self.warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"]. \
                 replace("bs=128k", "bs={}".format(job_inputs["warmup_bs"]))
@@ -149,9 +151,13 @@ class SharedVolumePerfTest(FunTestCase):
             self.fio_modes = job_inputs["fio_modes"]
 
         res = re.search('--numjobs=(\d+)', str(self.warm_up_fio_cmd_args["multiple_jobs"]))
+        fun_test.log("num_jobs for warmup")
+        fun_test.log(res.group(1))
         if int(res.group(1)) > 1:
             self.warm_up_fio_cmd_args["multiple_jobs"] += " --time_based --runtime={}". \
                 format(int(self.warm_up_fio_cmd_args["timeout"]) - 60)
+            fun_test.log("Time based fio when num_jobs > 1")
+            fun_test.log(self.warm_up_fio_cmd_args["multiple_jobs"])
 
         """
         self.topology = fun_test.shared_variables["topology"]
