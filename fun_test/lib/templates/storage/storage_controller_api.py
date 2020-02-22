@@ -393,12 +393,14 @@ class StorageControllerApi(object):
                 drive_dict.update({'state': drive.get("state")})
                 result[dpu.get("uuid")].append(drive_dict)
         return result
+
     def format_drives(self, dpu_dict):
         result = {}
         url = "topology/drives/"
         for dpu in dpu_dict:
             result[dpu] = []
             for drive in dpu_dict[dpu]:
+                elem = {}
                 fun_test.log("UUID of drive in slot {} is: {}".format(drive.get("slot_id"), drive.get("uuid")))
                 try:
                     response = self.execute_api("PUT", url + drive.get("uuid"))
@@ -406,17 +408,17 @@ class StorageControllerApi(object):
                 except Exception as ex:
                     fun_test.critical(ex.message)
                 else:
-                    elem = {}
                     if not response.ok:
                         elem.update({'status': False})
                         elem.update({'slot_id': drive.get("slot_id")})
                         elem.update({"uuid": drive.get("uuid")})
                     else:
-                        elem.update({"status":True})
+                        elem.update({"status": True})
                         elem.update({"slot_id": drive.get("slot_id")})
                         elem.update({"uuid": drive.get("uuid")})
                 result[dpu].append(elem)
         return result
+
 
 if __name__ == "__main__":
     s = StorageControllerApi(api_server_ip="10.1.108.116")

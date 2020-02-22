@@ -21,6 +21,7 @@ from datetime import datetime
 import re
 import os
 import socket
+import logging
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
@@ -2132,9 +2133,11 @@ class F1InFs:
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
-    def get_dpc_storage_controller(self):
+    def get_dpc_storage_controller(self, api_logging_level=logging.DEBUG):
         come = self.fs.get_come()
-        return StorageController(target_ip=come.host_ip, target_port=come.get_dpc_port(self.index))
+        return StorageController(target_ip=come.host_ip,
+                                 target_port=come.get_dpc_port(self.index),
+                                 api_logging_level=api_logging_level)
 
     def get_dpc_network_controller(self):
         come = self.fs.get_come()
@@ -3097,9 +3100,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_storage_controller(self, f1_index=0):
+    def get_storage_controller(self, f1_index=0, api_logging_level=logging.DEBUG):
         f1 = self.get_f1(index=f1_index)
-        return f1.get_dpc_storage_controller()
+        return f1.get_dpc_storage_controller(api_logging_level=api_logging_level)
 
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)

@@ -2,6 +2,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+import httplib
 import logging
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
@@ -25,7 +26,7 @@ class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
-                 api_password="password", api_server_ip=None, api_server_port=9000):
+                 api_password="password", api_server_ip=None, api_server_port=9000, api_logging_level=logging.DEBUG):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
         if fun_test.storage_api_enabled:
             if not api_server_ip:
@@ -36,12 +37,25 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
-            configuration.debug = True
+            if api_logging_level <= logging.DEBUG:
+                # configuration.debug = True
+                httplib.HTTPConnection.debuglevel = 2
             try:
                 logger = logging.getLogger('swagger_client.rest')
-                logger.setLevel(logging.DEBUG)
+                logger.setLevel(api_logging_level)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
+
+                logger = logging.getLogger("requests.packages.urllib3")
+                logger.setLevel(api_logging_level)
+                api_log_handler = ApiLogHandler()
+                logger.addHandler(api_log_handler)
+
+                logger = logging.getLogger("httplib")
+                logger.setLevel(api_logging_level)
+                api_log_handler = ApiLogHandler()
+                logger.addHandler(api_log_handler)
+
             except Exception as ex:
                 fun_test.critical(str(ex))
 
