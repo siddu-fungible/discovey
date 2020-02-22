@@ -46,7 +46,7 @@ class StorageController(NetworkController, DpcshClient):
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
 
-                logger = logging.getLogger("requests")
+                logger = logging.getLogger("requests.packages.urllib3")
                 logger.setLevel(api_logging_level)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
