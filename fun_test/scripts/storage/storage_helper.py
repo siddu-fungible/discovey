@@ -332,7 +332,7 @@ def single_fs_setup(obj, set_dataplane_ips=True):
     for dpu in format_result:
         for drive in format_result[dpu]:
             fun_test.test_assert(drive.get("status"), "Drive with uuid {} on slot {} of {} formatted".format(drive.get("uuid"), drive.get("slot_id"), dpu))
-    drive_format_timer = FunTimer(max_time=obj.drive_format_timeout)
+    drive_format_timer = FunTimer(max_time=getattr(obj, "drive_format_timeout", 120))
     drive_state = obj.sc_api.get_all_drives()
     total_system_drives = 0
     for dpu in drive_state:
