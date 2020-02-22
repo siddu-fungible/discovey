@@ -559,6 +559,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         end_host_thread = {}
         fio_output = {}
         fio_offset = 1
+        self.fio_io_size = 100
 
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
@@ -689,6 +690,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         end_host_thread = {}
         fio_output = {}
         fio_offset = 1
+        self.fio_io_size = 100
 
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
