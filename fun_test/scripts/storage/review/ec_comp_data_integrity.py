@@ -127,7 +127,7 @@ class DateIntegrityCheck(FunTestCase):
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for effort in self.effort_levels:
             suffix = utils.generate_uuid(length=4)
-            body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + effort, vol_type=vol_type,
+            body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(effort), vol_type=vol_type,
                                                                capacity=self.capacity, compression_effort=effort,
                                                                encrypt=False, data_protection={"num_redundant_dpus": 0,
                                                                                                "num_failed_disks": 2})
