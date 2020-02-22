@@ -213,6 +213,8 @@ class TopologyHelper:
 
     @fun_test.safe
     def deploy(self, already_deployed=False):
+        if not already_deployed:
+            already_deployed = fun_test.get_job_environment_variable("already_deployed")
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
@@ -500,10 +502,10 @@ class TopologyHelper:
         ##### Let us print out the topology
         asset_manager.describe()  # TODO Just for debugging
 
-        d = topology.to_dict()
-        topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
-                                                                         contents=json.dumps(d, indent=4))
-        fun_test.set_topology_json_filename(filename=topology_json_artifact)
+        # d = topology.to_dict()
+        # topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
+        #                                                                 contents=json.dumps(d, indent=4))
+        # fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
 
     @fun_test.safe

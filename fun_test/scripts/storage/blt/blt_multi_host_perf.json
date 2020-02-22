@@ -9,7 +9,7 @@
       "encrypt": false
     },
     "raw_api_call": true,
-    "drive_margin": 0,
+    "drive_margin": 12288,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
@@ -60,7 +60,7 @@
       "encrypt": false
     },
     "raw_api_call": true,
-    "drive_margin": 0,
+    "drive_margin": 12288,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},
@@ -108,7 +108,7 @@
       "encrypt": false
     },
     "raw_api_call": true,
-    "drive_margin": 0,
+    "drive_margin": 12288,
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
     "config_fcp_scheduler": {"total_bw" : 400, "fcp_ctl_bw" : 0, "fcp_data_bw": 0},

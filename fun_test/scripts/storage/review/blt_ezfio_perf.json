@@ -1,0 +1,113 @@
+{
+  "SingleBltSingleHost": {
+    "num_ssd": 1,
+    "blt_count": 1,
+    "blt_details": {
+      "capacity": 1600277970944,
+      "block_size": 4096,
+      "compression_effort": false,
+      "encrypt": false
+    },
+    "raw_api_call": true,
+    "drive_margin": 0,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "config_fcp_scheduler": {
+      "total_bw": 400,
+      "fcp_ctl_bw": 0,
+      "fcp_data_bw": 0
+    },
+    "nvme_io_queues": 16,
+    "command_timeout": 30,
+    "mpstat_args": {"interval": 60, "output_file": "/tmp/mpstat.out", "cpu_list": "ALL"},
+    "stats_collect_details": [
+      {
+        "vp_utils": {
+          "interval": 60
+        }
+      },
+      {
+        "per_vp": {
+          "interval": 60
+        }
+      },
+      {
+        "resource_bam_args": {
+          "interval": 60
+        }
+      },
+      {
+        "vol_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "vppkts_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "psw_stats": {
+          "interval": 60,
+          "nu": true
+        }
+      },
+      {
+        "fcp_stats": {
+          "interval": 60,
+          "nu": true
+        }
+      },
+      {
+        "wro_stats": {
+          "interval": 60,
+          "nu": true
+        }
+      },
+      {
+        "erp_stats": {
+          "interval": 60,
+          "nu": true
+        }
+      },
+      {
+        "etp_stats": {
+          "interval": 60,
+          "nu": true
+        }
+      },
+      {
+        "eqm_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "hu_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "ddr_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "ca_stats": {
+          "interval": 60
+        }
+      },
+      {
+        "cdu_stats": {
+          "interval": 60
+        }
+      }
+    ],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [
+      128
+    ]
+  }
+}

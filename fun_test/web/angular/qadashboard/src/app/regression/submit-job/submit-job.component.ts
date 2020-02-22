@@ -115,7 +115,9 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
   richBootArgs: string = null;
   csiPerf: boolean = false;
+  alreadyDeployed: boolean = false;
   csiCacheMiss: boolean = false;
+  startWithStableBundle: boolean = false;
   dryRun: boolean = false;
   hbmDump: boolean = false;
   pauseOnFailure: boolean = false;
@@ -315,6 +317,10 @@ export class SubmitJobComponent implements OnInit {
         }
       }
 
+      if (payloadEnvironment.hasOwnProperty('start_with_bundle_options')) {
+        this.startWithStableBundle = true;
+      }
+
       if (payloadEnvironment.hasOwnProperty('private_funos_tgz_url')) {
         this.privateFunosTgzUrl = payloadEnvironment.private_funos_tgz_url;
       }
@@ -330,6 +336,10 @@ export class SubmitJobComponent implements OnInit {
 
       if (payloadEnvironment.hasOwnProperty('csi_perf')) {
         this.csiPerf = payloadEnvironment.csi_perf;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('already_deployed')) {
+        this.alreadyDeployed = payloadEnvironment.already_deployed;
       }
 
       if (payloadEnvironment.hasOwnProperty('csi_cache_miss')) {
@@ -590,6 +600,14 @@ export class SubmitJobComponent implements OnInit {
         payload["environment"]["with_stable_master"] = this.withStableMaster;
       }
 
+      if (this.startWithStableBundle) {
+        payload["environment"]["start_with_bundle_options"] = {"release_train": "master", "build_number": "stable"};
+      }
+
+      if (this.alreadyDeployed) {
+        payload["environment"]["already_deployed"] = this.alreadyDeployed;
+      }
+
       if (payload["environment"]["with_jenkins_build"]) {
         payload["environment"]["build_parameters"] = {};
         if (this.bootArgs && this.bootArgs !== "" && this.isTestBedFs()) {
@@ -795,5 +813,9 @@ export class SubmitJobComponent implements OnInit {
   /*test() {
     console.log(this.selectedTestBedType);
   }*/
+
+  toggleStartWithStableBundle() {
+    this.startWithStableBundle = !this.startWithStableBundle;
+  }
 
 }

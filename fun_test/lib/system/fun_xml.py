@@ -413,8 +413,8 @@ class PageContent:
         glyph_button = GenericElement("span", id="summary_collapse", class_name="fa fa-caret-square-o-left")
         glyph_button.text = ''
         panel_anchor.append(glyph_button)
-        self.messages_panel = self.get_messages_panel()
-        panel_group.append(self.messages_panel)
+        # self.messages_panel = self.get_messages_panel()
+        # panel_group.append(self.messages_panel)
         panel_group.append(panel_anchor)
         # self.tree.append(self.panel_group)
         return panel_group
@@ -829,7 +829,8 @@ class FunXml:
                  enable_checkpoint_table=True,
                  enable_bugs=True,
                  variants=None,
-                 full_script_path=None):
+                 full_script_path=None,
+                 console_log_path=None):
         if FunXml._instance:
             raise Exception("Only one instance of FunXml is permitted")
 
@@ -842,6 +843,7 @@ class FunXml:
         self.enable_long_summary = enable_long_summary
         self.enable_checkpoint_table = enable_checkpoint_table
         self.enable_bugs = enable_bugs
+        self.console_log_path = console_log_path
 
         # Head
         self.head = _XmlHead()
@@ -854,14 +856,19 @@ class FunXml:
         page_tab1 = self.get_page_tab(name="Results", index=1, href_id="#wrapper")
         page_tab2 = self.get_page_tab(name="Documentation", index=2, href_id="#documentation")
         page_tab3 = self.get_page_tab(name="Script", index=3, href_id="#script")
-        page_tab4 = self.get_page_tab(name="Topology", index=4, href_id="#topology")
+        # page_tab4 = self.get_page_tab(name="Topology", index=4, href_id="#topology")
+        console_tab = None
+        if self.console_log_path:
+            console_tab = self.get_console_tab()
         page_tab5 = self.get_page_tab(name="FunOS logs/Other logs", index=5, href_id="#aux")
-
 
         self.nav_tab.append(page_tab1)
         self.nav_tab.append(page_tab2)
         self.nav_tab.append(page_tab3)
-        self.nav_tab.append(page_tab4)
+        # self.nav_tab.append(page_tab4)
+        if console_tab is not None:
+            self.nav_tab.append(console_tab)
+
         self.nav_tab.append(page_tab5)
         tabs_wrapper.append(self.nav_tab)
 
@@ -872,13 +879,13 @@ class FunXml:
                                                variants=self.variants)
 
         self.script_page_content = ScriptContent()
-        self.topology_page_content = TopologyPageContent()
+        # self.topology_page_content = TopologyPageContent()
         self.aux_page_content = AuxPageContent()
-
+        self.aux_page_content.get().append(self.result_page_content.get_messages_panel())
         self.tab_content.append(self.result_page_content.get())
         self.tab_content.append(self.documentation_page_content.get())
         self.tab_content.append(self.script_page_content.get())
-        self.tab_content.append(self.topology_page_content.get())
+        # self.tab_content.append(self.topology_page_content.get())
         self.tab_content.append(self.aux_page_content.get())
 
         self.body = GenericElement('body')
@@ -901,13 +908,24 @@ class FunXml:
 
         self.summary_chart = summary_chart
         self.ts = None
+        self.console_log_path = None
 
+    def set_console_log_path(self, console_log_path):
+        self.console_log_path = console_log_path
 
     def add_message(self, message):
         self.result_page_content.add_message(message=message)
 
     def add_auxillary_file(self, description, auxillary_file):
         self.aux_page_content.add_file(description=description, filename=auxillary_file)
+
+    def get_console_tab(self):
+        tab_li = GenericElement("li", class_name="nav-item")
+        console_tab = GenericElement("a")
+        console_tab.set("href", self.console_log_path)
+        console_tab.text = "Console log"
+        tab_li.append(console_tab)
+        return tab_li
 
     def get_page_tab(self, name, index, href_id):
         if index == 1:

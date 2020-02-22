@@ -22,6 +22,8 @@ from django.utils import timezone
 import logging
 from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_save
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 logger = logging.getLogger(COMMON_WEB_LOGGER_NAME)
@@ -107,6 +109,7 @@ class TestBed(models.Model):
     state_change_time = models.DateTimeField(default=timezone.now)
     health_status = models.IntegerField(default=AssetHealthStates.HEALTHY)
     health_check_message = models.TextField(default="")
+    pooled = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.name,

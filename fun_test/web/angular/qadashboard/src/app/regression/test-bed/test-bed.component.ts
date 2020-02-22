@@ -62,6 +62,7 @@ export class TestBedComponent implements OnInit {
   assetLockInfo: AssetLockInfo = new AssetLockInfo();
   assetHealthStates: ApiType = new ApiType();
   testBedName: string = null;
+  showPooledTestBeds: boolean = false;
 
 
   constructor(private regressionService: RegressionService,
@@ -72,7 +73,8 @@ export class TestBedComponent implements OnInit {
               private userService: UserService,
               private modalService: NgbModal,
               private route: ActivatedRoute
-  ) { }
+  ) {
+  }
 
   ngOnInit() {
     this.userProfile = this.commonService.getUserProfile();
@@ -80,11 +82,6 @@ export class TestBedComponent implements OnInit {
       this.loggerService.error("Unable to fetch user profile");
       return;
     }
-    this.route.queryParams.subscribe(params => {
-      if (params['test_bed_name']) {
-        this.testBedName = params['test_bed_name'];
-      }
-    });
     // fetchUsers
     // fetchTestbeds
     this.driver = new Observable(observer => {
@@ -93,7 +90,10 @@ export class TestBedComponent implements OnInit {
       return () => {
       };
     }).pipe(switchMap(response => {
-      return this.assetHealthStates.get('/api/v1/regression/asset_health_states');
+        return this.getRouterQueryParam();
+      }),
+      switchMap(response => {
+        return this.assetHealthStates.get('/api/v1/regression/asset_health_states');
       }),
       switchMap(response => {
         return this.fetchTestBeds();
@@ -111,11 +111,23 @@ export class TestBedComponent implements OnInit {
         this.userMap = response;
         return this.fetchAssets();
       })
-      );
+    );
     this.refreshAll();
   }
 
-  refreshAll () {
+  getRouterQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('test_bed_name')) {
+        this.testBedName = params['test_bed_name'];
+      }
+      if (params.hasOwnProperty('show_pooled_test_beds')) {
+        this.showPooledTestBeds = true;
+      }
+      return of(params);
+    }))
+  }
+
+  refreshAll() {
     this.refreshing = "Refreshing test-beds";
     this.driver.subscribe(() => {
       this.refreshing = null;
@@ -130,33 +142,47 @@ export class TestBedComponent implements OnInit {
 
   fetchAssets() {
     if (!this.embed) {
-      return this.service.assets(this.testBedName).pipe(switchMap(response => {
-        let dutAssets = [];
-        let hostAssets = [];
-        let perfListenerAssets = [];
-        let pcieHostAssets = [];
-        /*let dutWithSsdsAssets = [];
-        let dutWithServersAssets= [];*/
-        this.assets = response;
-        this.assets.map((asset) => {
-          asset.applyingManualLock = false;
-          if (asset.type === 'DUT') {
-            dutAssets.push(asset);
-          }
-          if (asset.type === 'Host') {
-            hostAssets.push(asset);
-          }
-          if (asset.type === 'Perf Listener') {
-            perfListenerAssets.push(asset);
-          }
-          if (asset.type === 'PCIE-host') {
-            pcieHostAssets.push(asset);
-          }
-
-        });
-        this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
+      let pooledTestBedNames = null;
+      if (this.showPooledTestBeds) {
+        pooledTestBedNames = "";
+        for (let testBed of this.testBeds) {
+          pooledTestBedNames += testBed.name + ",";
+        }
+        pooledTestBedNames = pooledTestBedNames.slice(0, -1);
+      } else if (this.testBedName) {
+        pooledTestBedNames = this.testBedName
+      }
+      if (pooledTestBedNames && pooledTestBedNames == "") {
+        this.assets = [];
         return of(true);
-      }))
+      } else {
+        return this.service.assets(pooledTestBedNames).pipe(switchMap(response => {
+          let dutAssets = [];
+          let hostAssets = [];
+          let perfListenerAssets = [];
+          let pcieHostAssets = [];
+          /*let dutWithSsdsAssets = [];
+          let dutWithServersAssets= [];*/
+          this.assets = response;
+          this.assets.map((asset) => {
+            asset.applyingManualLock = false;
+            if (asset.type === 'DUT') {
+              dutAssets.push(asset);
+            }
+            if (asset.type === 'Host') {
+              hostAssets.push(asset);
+            }
+            if (asset.type === 'Perf Listener') {
+              perfListenerAssets.push(asset);
+            }
+            if (asset.type === 'PCIE-host') {
+              pcieHostAssets.push(asset);
+            }
+          });
+          this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
+          return of(true);
+        }));
+      }
     } else {
       return of(true);
     }
@@ -164,19 +190,23 @@ export class TestBedComponent implements OnInit {
   }
 
   fetchTestBeds() {
-    return this.regressionService.fetchTestbeds(null, this.testBedName).pipe(switchMap(response => {
+    return this.regressionService.fetchTestbeds(null, this.testBedName, this.showPooledTestBeds).pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds.map(testBed => {
         testBed.editingDescription = false;
         testBed.editingNote = false;
         let numExecutions = -1;
         let executionId = -1;
-        this.automationStatus[testBed.name] = {numExecutions: numExecutions,
-          executionId: executionId};
+        this.automationStatus[testBed.name] = {
+          numExecutions: numExecutions,
+          executionId: executionId
+        };
 
-        this.manualStatus[testBed.name] = {manualLock: testBed.manual_lock,
-        manualLockExpiryTime: testBed.manual_lock_expiry_time,
-        manualLockSubmitter: testBed.manual_lock_submitter};
+        this.manualStatus[testBed.name] = {
+          manualLock: testBed.manual_lock,
+          manualLockExpiryTime: testBed.manual_lock_expiry_time,
+          manualLockSubmitter: testBed.manual_lock_submitter
+        };
         this.assetLevelManualLockStatus[testBed.name] = null;
         if (testBed.hasOwnProperty("asset_level_manual_lock_status")) {
           this.assetLevelManualLockStatus[testBed.name] = testBed.asset_level_manual_lock_status;
@@ -184,12 +214,17 @@ export class TestBedComponent implements OnInit {
         if (testBed && testBed.hasOwnProperty("automation_status")) {
           let automationStatus = testBed.automation_status;
           if (automationStatus.hasOwnProperty("internal_asset_in_use") && automationStatus.internal_asset_in_use) {
-            this.automationStatus[testBed.name] = {numExecutions: 1,
-              executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset};
+            this.automationStatus[testBed.name] = {
+              numExecutions: 1,
+              executionId: automationStatus.internal_asset_in_use_suite_id, assetInUse: automationStatus.internal_asset
+            };
           } else if (automationStatus.hasOwnProperty("used_by_suite_id")) {
             this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.used_by_suite_id};
           } else if (automationStatus.hasOwnProperty('suite_info') && automationStatus.suite_info) {
-            this.automationStatus[testBed.name] = {numExecutions: 1, executionId: automationStatus.suite_info.suite_execution_id};
+            this.automationStatus[testBed.name] = {
+              numExecutions: 1,
+              executionId: automationStatus.suite_info.suite_execution_id
+            };
           }
 
         }
@@ -273,7 +308,11 @@ export class TestBedComponent implements OnInit {
 
   onAddTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_extension_hour: this.addedTime, manual_lock_extension_minute: 0, manual_lock_submitter_email: this.currentTestBed.manual_lock_submitter};
+    let payload = {
+      manual_lock_extension_hour: this.addedTime,
+      manual_lock_extension_minute: 0,
+      manual_lock_submitter_email: this.currentTestBed.manual_lock_submitter
+    };
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Time successfully added");
       this.refreshTestBeds();
@@ -286,8 +325,10 @@ export class TestBedComponent implements OnInit {
 
   onExtendTimeSubmit(testBed) {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_extension_hour: this.schedulingTime.hour,
-    manual_lock_extension_minute: this.schedulingTime.minute};
+    let payload = {
+      manual_lock_extension_hour: this.schedulingTime.hour,
+      manual_lock_extension_minute: this.schedulingTime.minute
+    };
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Extension request submitted");
       this.refreshTestBeds();
@@ -301,9 +342,11 @@ export class TestBedComponent implements OnInit {
 
   onLockSubmit() {
     let url = "/api/v1/regression/test_beds/" + this.currentTestBed.id;
-    let payload = {manual_lock_submitter_email: this.userProfile.user.email,
-    manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
-    manual_lock_extension_minute: this.schedulingTime.minute, note: this.currentTestBed.note};
+    let payload = {
+      manual_lock_submitter_email: this.userProfile.user.email,
+      manual_lock: true, manual_lock_extension_hour: this.schedulingTime.hour,
+      manual_lock_extension_minute: this.schedulingTime.minute, note: this.currentTestBed.note
+    };
     this.apiService.put(url, payload).subscribe(response => {
       this.loggerService.success("Lock request submitted");
       this.schedulingTime.hour = 1;

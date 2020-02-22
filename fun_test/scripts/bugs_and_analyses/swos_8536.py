@@ -117,7 +117,7 @@ class Singledpu(FunTestScript):
         fun_test.shared_variables["command_timeout"] = self.command_timeout
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.end_host = self.host_handles[self.host_ips[0]]
-
+        fun_test.shared_variables["end_host"] = self.end_host
 
     def cleanup(self):
         # Cleanup
@@ -229,6 +229,7 @@ class CloneTestCase(FunTestCase):
         self.num_duts = fun_test.shared_variables["num_duts"]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
+
 
         # contrller, base and clone uids
         self.ctrlr_uuid1 = utils.generate_uuid()
@@ -354,8 +355,8 @@ class CloneTestCase(FunTestCase):
     def run(self):
         testcase = self.__class__.__name__
         self.test_method = testcase[:]
-
-
+        self.end_host = fun_test.shared_variables["end_host"]
+        self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
 
         if self.test_method == 'CloneRead':
 
