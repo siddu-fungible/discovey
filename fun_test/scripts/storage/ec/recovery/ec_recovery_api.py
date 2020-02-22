@@ -197,37 +197,46 @@ class RecoveryWithFailures(FunTestCase):
                 self.blt_stats_after_initial_read = collections.OrderedDict()
                 for host_id in hosts:
                     host_obj = hosts[host_id]
+                    host_handle = host_obj.get_instance()
                     nvme_device_name = self.sc_template.get_host_nvme_device(host_obj=host_obj)
                     # Perform initial WRITE
+                    fio_output = host_handle.pcie_fio(filename="/dev/" + nvme_device_name[0],
+                                                      **self.fio_write_cmd_args)
+                    """
                     fio_output = self.sc_template.traffic_from_host(host_obj=host_obj,
                                                                         filename="/dev/" + nvme_device_name[0],
                                                                         job_name=self.fio_write_cmd_args["name"],
                                                                         numjobs=self.fio_write_cmd_args["numjobs"],
                                                                         iodepth=self.fio_write_cmd_args["iodepth"],
                                                                         rw=self.fio_write_cmd_args["rw"],
-                                                                        runtime=60, bs=self.fio_write_cmd_args["bs"],
+                                                                        runtime=self.fio_write_cmd_args["timeout"],
+                                                                        bs=self.fio_write_cmd_args["bs"],
                                                                         ioengine="libaio", direct=1,
                                                                         time_based=False, norandommap=True,
                                                                         verify=self.fio_write_cmd_args["verify"],
                                                                         do_verify=self.fio_write_cmd_args["do_verify"]
-                                                                        )
+                                                                        )"""
                     fun_test.test_assert(expression=fio_output,
                                          message="Host : {} FIO traffic result after initial WRITE".format(host_obj.name))
                     fun_test.log(fio_output)
                     self.vol_stats["vol_stats_before_initial_read"] = raw_sc_api.execute_api(method="GET", cmd_url="storage/volumes/{}/stats".format(ec_vol_uuid)).json()
                     # Perform initial READ
+                    fio_output = host_handle.pcie_fio(filename="/dev/" + nvme_device_name[0],
+                                                      **self.fio_read_cmd_args)
+                    """
                     fio_output = self.sc_template.traffic_from_host(host_obj=host_obj,
                                                                     filename="/dev/" + nvme_device_name[0],
                                                                     job_name=self.fio_read_cmd_args["name"],
                                                                     numjobs=self.fio_read_cmd_args["numjobs"],
                                                                     iodepth=self.fio_read_cmd_args["iodepth"],
                                                                     rw=self.fio_read_cmd_args["rw"],
-                                                                    runtime=60, bs=self.fio_read_cmd_args["bs"],
+                                                                    runtime=self.fio_read_cmd_args["timeout"],
+                                                                    bs=self.fio_read_cmd_args["bs"],
                                                                     ioengine="libaio", direct=1,
                                                                     time_based=False, norandommap=True,
                                                                     verify=self.fio_read_cmd_args["verify"],
                                                                     do_verify=self.fio_read_cmd_args["do_verify"]
-                                                                    )
+                                                                    )"""
                     fun_test.test_assert(expression=fio_output,
                                          message="Host : {} FIO traffic result after initial READ".format(host_obj.name))
                     fun_test.log(fio_output)
