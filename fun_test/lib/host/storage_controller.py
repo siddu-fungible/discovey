@@ -42,6 +42,12 @@ class StorageController(NetworkController, DpcshClient):
                 logger.setLevel(logging.DEBUG)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
+
+                logger = logging.getLogger("requests").setLevel(logging.DEBUG)
+                logger.setLevel(logging.DEBUG)
+                api_log_handler = ApiLogHandler()
+                logger.addHandler(api_log_handler)
+
             except Exception as ex:
                 fun_test.critical(str(ex))
 
