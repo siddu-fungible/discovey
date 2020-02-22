@@ -31,7 +31,7 @@ class BringupSetup(FunTestScript):
     def cleanup(self):
         self.topology.cleanup()
 
-class CreateDeleteVolumeReboot(FunTestCase):
+class CreateDeleteVolume(FunTestCase):
     topology = None
     already_deployed = True
     storage_controller_template = None
@@ -79,26 +79,26 @@ class CreateDeleteVolumeReboot(FunTestCase):
             pool_uuid = str(response['data'].keys()[0])
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
-            print("total_capacity = ", total_capacity)
-            max_volume_capacity = find_min_drive_capacity(storage_controller,30)
+            max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3*4096)
 
         max_no_of_volumes = total_capacity/min_volume_capacity
         if total_capacity-min_volume_capacity >= max_volume_capacity:
             random_capacity = random.randint(min_volume_capacity,max_volume_capacity)
         else:
             random_capacity = total_capacity
+        random_capacity = random_capacity - (random_capacity%4096)
         remaining_capacity = total_capacity - random_capacity
         for volume in range(max_no_of_volumes):
             self.capacity.append(random_capacity)
             self.no_of_volumes = self.no_of_volumes + 1
             if remaining_capacity == 0:
-                print("no_of_volumes = ", self.no_of_volumes)
                 break
             else:
                 if remaining_capacity-min_volume_capacity >= max_volume_capacity:
                     random_capacity = random.randint(min_volume_capacity,max_volume_capacity)
                 else:
                     random_capacity = remaining_capacity
+                random_capacity = random_capacity - (random_capacity % 4096)
                 remaining_capacity = remaining_capacity - random_capacity
 
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
@@ -111,7 +111,7 @@ class CreateDeleteVolumeReboot(FunTestCase):
             vol_uuid = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                       body_volume_intent_create=self.body_volume_intent_create)
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
-            self.vol_uuid_list.append(vol_uuid)
+            self.vol_uuid_list.append(vol_uuid[0])
 
     def delete_volumes(self):
         for dut_index in self.topology.get_available_duts().keys():
@@ -130,16 +130,10 @@ class CreateDeleteVolumeReboot(FunTestCase):
             storage_controller = fs_obj.get_storage_controller()
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_num in range(self.no_of_volumes):
-                print("volume_num = ", volume_num)
-                print("volume_uuid = ", self.vol_uuid_list[volume_num])
-                print("come_handle = ", self.come_handle)
-                print("capacity = ", self.capacity[volume_num])
-                print("vol_type = ", self.vol_type)
-                print("encrypt = ", self.encrypt)
                 vol_db_status = raw_sc_api.is_raw_vol_in_db(vol_uuid=self.vol_uuid_list[volume_num],come_handle=self.come_handle,
                                                             capacity=self.capacity[volume_num],stripe_count=0,
                                                             vol_type=self.vol_type,encrypt=self.encrypt)
-                fun_test.test_assert( expression=vol_db_status.status, message="Volume Persistent Check {}".format(volume))
+                fun_test.test_assert(expression=vol_db_status["status"], message="Volume Persistent Check {}".format(vol_db_status))
 
     def volumes_deletion_check(self):
         for dut_index in self.topology.get_available_duts().keys():
@@ -147,23 +141,22 @@ class CreateDeleteVolumeReboot(FunTestCase):
             storage_controller = fs_obj.get_storage_controller()
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_uuid in self.vol_uuid_list:
-                print("volume_uuid = ", int(volume_uuid))
-                print("come_handle = ", self.come_handle)
-                vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle,vol_uuid=int(volume_uuid))
-                fun_test.test_assert( expression=vol_db_status.status, message="Volume Deletion Check {}".format(volume))
+                vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle,vol_uuid=volume_uuid)
+                fun_test.test_assert( expression=vol_db_status["status"], message="Volume Deletion Check {}".format(vol_db_status))
 
     def run(self):
-        self.delete_volumes()
+        self.delete_volumes() #Delete Volumes from Previous run
         self.create_volumes()
         self.volumes_persistent_check()
         self.delete_volumes()
         self.volumes_deletion_check()
 
     def cleanup(self):
-        self.storage_controller_template.cleanup()
+        pass
+        #self.storage_controller_template.cleanup()
 
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(CreateDeleteVolumeReboot())
+    setup_bringup.add_test_case(CreateDeleteVolume())
     setup_bringup.run()
