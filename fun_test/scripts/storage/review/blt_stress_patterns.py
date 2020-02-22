@@ -106,6 +106,7 @@ class RunStorageApiCommands(FunTestCase):
         print "vol_uuid:", vol_uuid
         fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
+	print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                 volume_uuid=vol_uuid,
@@ -242,6 +243,7 @@ class CCDD(RunStorageApiCommands):
         sfx = 0
         fs_obj = fs_obj_list[0]
         volumes = []
+	print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             vol_uuid = self. \
                 create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create, sfx=str(counter))
