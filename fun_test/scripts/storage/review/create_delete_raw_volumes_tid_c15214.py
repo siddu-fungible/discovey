@@ -79,7 +79,7 @@ class CreateDeleteVolume(FunTestCase):
             pool_uuid = str(response['data'].keys()[0])
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
-            max_volume_capacity = find_min_drive_capacity(storage_controller,30)
+            max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3*4096)
 
         max_no_of_volumes = total_capacity/min_volume_capacity
         if total_capacity-min_volume_capacity >= max_volume_capacity:
