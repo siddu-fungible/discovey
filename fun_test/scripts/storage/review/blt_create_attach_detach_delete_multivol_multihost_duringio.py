@@ -60,27 +60,13 @@ class BringupSetup(FunTestScript):
 
         fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
 
-
     def cleanup(self):
         fun_test.log("Performing disconnect/detach/delete cleanup as part of script level cleanup")
         self.blt_template.cleanup()
         self.topology.cleanup()
 
 
-class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
-
-    def describe(self):
-
-        self.set_test_details(id=1,
-                              summary="Create, attach, connect, disconnect, detach & delete N different volumes attached to M hosts with IO",
-                              steps='''
-                                    1. Create 48 volumes
-                                    2. Attach 8 volume to 6 hosts
-                                    3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
-                                    4. Let IO complete, then perform nvme disconnect during I/O on all hosts
-                                    5. Detach and delete the volumes
-                                    6. Continue this in a loop for 24 times  
-                              ''')
+class GenericCreateAttachDetachDelete(FunTestCase):
 
     def setup(self):
 
@@ -138,11 +124,13 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             self.vol_uuid_list = []
             for i in range(self.blt_count):
                 suffix = utils.generate_uuid(length=4)
-                body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i), vol_type=self.vol_type,
+                body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i),
+                                                                   vol_type=self.vol_type,
                                                                    capacity=self.capacity, compression_effort=False,
                                                                    encrypt=False, data_protection={})
                 vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
-                fun_test.test_assert(expression=vol_uuid[0], message="Create Volume{} Successful with uuid {}".format(i+1, vol_uuid[0]))
+                fun_test.test_assert(expression=vol_uuid[0], message="Create Volume{} Successful with uuid {}".
+                                     format(i+1, vol_uuid[0]))
                 self.vol_uuid_list.append(vol_uuid[0])
 
             if self.shared_volume:
@@ -267,7 +255,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                         fun_test.test_assert(True, message="FIO interrupted due to disconnect")
                     else:
                         fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                         "FIO randwrite test with IO depth 16 in host {}".format(host_name.instance))
+                                             "FIO randwrite test with IO depth 16 in host {}".
+                                             format(host_name.instance))
                     fio_output[i] = fun_test.shared_variables["fio"][i]
 
             except Exception as ex:
@@ -328,11 +317,36 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
 
 
-class CreateAttachDetachDeleteMultivolMultihostDuringIO(CreateAttachDetachDeleteMultivolMultihost):
+class CreateAttachDetachDeleteMultivolMultihost(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Create, attach, connect, disconnect, detach & delete N different volumes "
+                                      "attached to M hosts with IO",
+                              steps='''
+                                    1. Create 48 volumes
+                                    2. Attach 8 volume to 6 hosts
+                                    3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                                    4. Let IO complete, then perform nvme disconnect during I/O on all hosts
+                                    5. Detach and delete the volumes
+                                    6. Continue this in a loop for 24 times  
+                              ''')
+
+        def setup(self):
+            super(CreateAttachDetachDeleteMultivolMultihost, self).setup()
+
+        def run(self):
+            super(CreateAttachDetachDeleteMultivolMultihost, self).run()
+
+        def cleanup(self):
+            super(CreateAttachDetachDeleteMultivolMultihost, self).cleanup()
+
+
+class CreateAttachDetachDeleteMultivolMultihostDuringIO(GenericCreateAttachDetachDelete):
     def describe(self):
         self.set_test_details(
             id=2,
-            summary="Create,attach,connect,disconnect,detach & delete N different volumes attached to M hosts along with active IO during disconnect & detach",
+            summary="Create,attach,connect,disconnect,detach & delete N different volumes attached to M hosts along "
+                    "with active IO during disconnect & detach",
             steps='''
                 1. Create 48 volumes
                 2. Attach 8 volume to 6 hosts
@@ -352,7 +366,7 @@ class CreateAttachDetachDeleteMultivolMultihostDuringIO(CreateAttachDetachDelete
         super(CreateAttachDetachDeleteMultivolMultihostDuringIO, self).cleanup()
 
 
-class CreateAttachDetachDeleteMultivolMultihostShared(CreateAttachDetachDeleteMultivolMultihost):
+class CreateAttachDetachDeleteMultivolMultihostShared(GenericCreateAttachDetachDelete):
     def describe(self):
         self.set_test_details(
             id=3,
@@ -376,11 +390,12 @@ class CreateAttachDetachDeleteMultivolMultihostShared(CreateAttachDetachDeleteMu
         super(CreateAttachDetachDeleteMultivolMultihostShared, self).cleanup()
 
 
-class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(CreateAttachDetachDeleteMultivolMultihost):
+class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(GenericCreateAttachDetachDelete):
     def describe(self):
         self.set_test_details(
             id=4,
-            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with active IO during disconnect & detach",
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
+                    "active IO during disconnect & detach",
             steps='''
                 1. Create 8 volumes
                 2. Attach 8 volume to 6 hosts

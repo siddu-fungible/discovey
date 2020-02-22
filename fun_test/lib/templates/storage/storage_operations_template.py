@@ -46,11 +46,12 @@ class StorageControllerOperationsTemplate:
     """
     Do basic API operations
     """
-    def __init__(self, topology):
+    def __init__(self, topology, api_logging_level=logging.DEBUG):
         self.topology = topology
         self.node_ids = []
         self.duts_state_object = DutsState()
         self.hosts_state_object = HostsState()
+        self.api_logging_level = api_logging_level
 
     def get_health(self, fs_obj):
         result = True
@@ -60,7 +61,7 @@ class StorageControllerOperationsTemplate:
         else:
             fs_obj_list = fs_obj
         for fs_obj in fs_obj_list:
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             dut_health = storage_controller.health()
             fun_test.add_checkpoint(expected=True, actual=dut_health,
                                     checkpoint="Check health of DUT: {}".format(fs_obj))
@@ -271,8 +272,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     host_nvme_device = {}
     NVME_HOST_MODULES = ["nvme_core", "nvme", "nvme_fabrics", "nvme_tcp"]
 
-    def __init__(self, topology):
-        super(GenericVolumeOperationsTemplate, self).__init__(topology)
+    def __init__(self, topology, **kwargs):
+        super(GenericVolumeOperationsTemplate, self).__init__(topology, **kwargs)
         self.topology = topology
 
     def create_volume(self, fs_obj, body_volume_intent_create):
