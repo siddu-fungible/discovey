@@ -924,18 +924,18 @@ class Bmc(Linux):
             file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
         return file_name
 
-    def upload_bundle_f1_logs(self, prefix="post-boot"):
+    def upload_bundle_f1_logs(self, prefix="bootup"):
         for f1_index in range(2):
             if f1_index == self.disable_f1_index:
                 continue
             if self.bundle_compatible:
                 log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
 
-                content_prefix = self._get_context_prefix(data="F1_{} FunOS log {}".format(f1_index, prefix))
-                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=content_prefix,
+                context_prefix = self._get_context_prefix(data="F1_{}_FunOS log {}".format(f1_index, prefix))
+                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
                                                          linux_obj=self,
                                                          source_file_path=log_path,
-                                                         display_name="{} {}/logs tgz".format(self._get_context_prefix(""), self.FUN_ROOT),
+                                                         display_name="F1_{} FunOS log {}".format(f1_index, prefix),
                                                          asset_type=self.fs.get_asset_type(),
                                                          asset_id=self.fs.get_asset_name(),
                                                          artifact_category=self.fs.ArtifactCategory.BRING_UP,
@@ -3134,7 +3134,7 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main33__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
     iterations = 0
@@ -3198,3 +3198,13 @@ if __name__ == "__main222__":
     # print health
     for interface_index, bond_interface_obj in fs_obj.networking.get_bond_interfaces(f1_index=0).iteritems():
         print bond_interface_obj.ip
+
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
+    # topology = th.deploy(already_deployed=True)
+    topology = th.get_expanded_topology()
+    fc = topology.get_fungible_controller_instance()
+    fc.command("date")
