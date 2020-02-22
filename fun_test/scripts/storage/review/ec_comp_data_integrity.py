@@ -118,13 +118,13 @@ class DateIntegrityCheck(FunTestCase):
 
 
         self.vol_uuid_list = []
+        self.ec_count = len(self.effort_levels)
         fun_test.shared_variables["ec_count"] = self.ec_count
         vol_type = VolumeTypes().EC
 
         self.hosts = self.topology.get_available_host_instances()
 
         # chars = string.ascii_uppercase + string.ascii_lowercase
-        self.ec_count = len(self.effort_levels)
         for effort in self.effort_levels:
             suffix = utils.generate_uuid(length=4)
             body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + effort, vol_type=vol_type,
