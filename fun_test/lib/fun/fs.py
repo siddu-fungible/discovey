@@ -21,6 +21,7 @@ from datetime import datetime
 import re
 import os
 import socket
+import logging
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
@@ -924,6 +925,25 @@ class Bmc(Linux):
             file_name = "{}/funos_f1_{}.log".format(self.LOG_DIRECTORY, f1_index)
         return file_name
 
+    def upload_bundle_f1_logs(self, prefix="bootup"):
+        for f1_index in range(2):
+            if f1_index == self.disable_f1_index:
+                continue
+            if self.bundle_compatible:
+                log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
+
+                context_prefix = self._get_context_prefix(data="F1_{}_FunOS_log_{}".format(f1_index, prefix))
+                uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
+                                                         linux_obj=self,
+                                                         source_file_path=log_path,
+                                                         display_name="F1_{} FunOS log {}".format(f1_index, prefix),
+                                                         asset_type=self.fs.get_asset_type(),
+                                                         asset_id=self.fs.get_asset_name(),
+                                                         artifact_category=self.fs.ArtifactCategory.BRING_UP,
+                                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC,
+                                                         is_large_file=False,
+                                                         timeout=60)
+
     def clear_bundle_f1_logs(self):
         for f1_index in range(2):
             if f1_index == self.disable_f1_index:
@@ -1132,7 +1152,6 @@ class BootupWorker(Thread):
 
                             context=self.context)
 
-
                         fun_test.update_job_environment_variable("tftp_image_path", fs.tftp_image_path)
                     if not fs.bundle_compatible:
                         bmc.start_uart_log_listener(f1_index=f1_index, serial_device=fs.f1s.get(f1_index).serial_device_path)
@@ -1177,7 +1196,11 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            if self.fs.bundle_compatible:
+            if self.fs.bundle_compatible and self.fs.bundle_image_parameters:
+                try:
+                    bmc.upload_bundle_f1_logs()
+                except Exception as ex:
+                    fun_test.critical(str(ex))
                 bmc.clear_bundle_f1_logs()
                 bmc.start_bundle_f1_logs()
 
@@ -1252,7 +1275,6 @@ class ComEInitializationWorker(Thread):
                             fun_test.critical(str(ex))
 
 
-
                     fun_test.sleep(seconds=10, message="Waiting for expected containers", context=self.fs.context)
                     """
                     expected_containers_running = self.is_expected_containers_running(come)
@@ -1324,6 +1346,7 @@ class ComE(Linux):
     HEALTH_MONITOR = "/opt/fungible/etc/DpuHealthMonitor.sh"
 
     DPCSH_DIRECTORY = "/tmp/workspace/FunSDK/bin/Linux"  #TODO
+    BUNDLE_DPCSH_DIRECTORY = "/opt/fungible/FunSDK/bin/Linux/dpcsh"
     SC_LOG_PATH = "/var/log/sc"
     REDIS_LOG_PATH = "/var/log/redis"
 
@@ -1370,7 +1393,9 @@ class ComE(Linux):
         self.fs = kwargs.get("fs", None)
         self.hbm_dump_enabled = False
         self.funq_bind_device = {}
-        self.starting_dpc_for_statistics = False # Just temporarily while statistics manager is being developed TODO
+        self.starting_dpc_for_statistics = False  # Just temporarily while statistics manager is being developed TODO
+        if self.fs and self.fs.bundle_compatible:
+            self.DPCSH_DIRECTORY = self.BUNDLE_DPCSH_DIRECTORY
 
     def get_build_properties(self):
         result = None
@@ -2108,9 +2133,11 @@ class F1InFs:
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
-    def get_dpc_storage_controller(self):
+    def get_dpc_storage_controller(self, api_logging_level=logging.DEBUG):
         come = self.fs.get_come()
-        return StorageController(target_ip=come.host_ip, target_port=come.get_dpc_port(self.index))
+        return StorageController(target_ip=come.host_ip,
+                                 target_port=come.get_dpc_port(self.index),
+                                 api_logging_level=api_logging_level)
 
     def get_dpc_network_controller(self):
         come = self.fs.get_come()
@@ -2187,7 +2214,8 @@ class Fs(object, ToDictMixin):
                  check_expected_containers_running=True,
                  start_with_bundle_options=None,
                  post_bundle_validation=False,
-                 force_bundle_install=False):
+                 force_bundle_install=False,
+                 initial_version_options=None):
         self.spec = spec
         self.bmc_mgmt_ip = bmc_mgmt_ip
         self.bmc_mgmt_ssh_username = bmc_mgmt_ssh_username
@@ -2241,7 +2269,6 @@ class Fs(object, ToDictMixin):
         self.fun_cp_callback = fun_cp_callback
         self.post_bundle_validation = post_bundle_validation
         self.start_with_bundle_options = start_with_bundle_options
-
         self.asset_name = "FS"
         if self.spec:
             self.asset_name = self.spec.get("name", "FS")
@@ -3073,9 +3100,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_storage_controller(self, f1_index=0):
+    def get_storage_controller(self, f1_index=0, api_logging_level=logging.DEBUG):
         f1 = self.get_f1(index=f1_index)
-        return f1.get_dpc_storage_controller()
+        return f1.get_dpc_storage_controller(api_logging_level=api_logging_level)
 
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
@@ -3110,11 +3137,29 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
-    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-171"))
+if __name__ == "__main33__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
-    output = bmc.command("date")
-    i = 0
+    iterations = 0
+    hard = True
+    while True:
+        fun_test.log("Current iteration: {}".format(iterations))
+        fun_test.test_assert(fs.reset(hard=hard), "Reset iteration: {}".format(iterations))
+        f1_status = bmc.command("cat /tmp/F1_STATUS")
+
+        f1_0_running = re.search('F1_0: RUNNING', f1_status)
+        f1_1_running = re.search('F1_1: RUNNING', f1_status)
+        fun_test.test_assert(f1_0_running, "F1-0 running")
+        fun_test.test_assert(f1_1_running, "F1-1 running")
+
+        come = fs.get_come()
+        fun_test.test_assert(come.uptime() < 300, "ComE uptime is right. Iterations: {}".format(iterations))
+        iterations += 1
+        bmc.disconnect()
+        come.disconnect()
+
+
+
     # print fs.get_bundle_version()
     # health = fs.health(only_reachability=True)
     # print health
@@ -3156,3 +3201,13 @@ if __name__ == "__main222__":
     # print health
     for interface_index, bond_interface_obj in fs_obj.networking.get_bond_interfaces(f1_index=0).iteritems():
         print bond_interface_obj.ip
+
+
+if __name__ == "__main__":
+    from lib.topology.topology_helper import TopologyHelper
+    am = fun_test.get_asset_manager()
+    th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
+    topology = th.deploy(already_deployed=True)
+    # topology = th.get_expanded_topology()
+    fc = topology.get_fungible_controller_instance()
+    fc.command("date")

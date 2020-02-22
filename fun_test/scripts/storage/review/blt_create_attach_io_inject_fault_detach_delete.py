@@ -38,15 +38,17 @@ class BringupSetup(FunTestScript):
 
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
+        if "format_drives" in job_inputs:
+            self.format_drives = job_inputs["format_drives"]
         else:
-            self.already_deployed = True
+            self.already_deployed = False
 
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=self.already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
         self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
+        self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed, format_drives=self.format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
@@ -180,10 +182,10 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
                 if nvme_devices:
                     if isinstance(nvme_devices, list):
                         for nvme_device in nvme_devices:
-                            current_device = "/dev/" + nvme_device
+                            current_device = nvme_device
                             host.nvme_block_device_list.append(current_device)
                     else:
-                        current_device = "/dev/" + nvme_devices
+                        current_device = nvme_devices
                         host.nvme_block_device_list.append(current_device)
                 fun_test.test_assert_expected(expected=len(attach_vol_result[host]),
                                               actual=len(host.nvme_block_device_list),
@@ -254,7 +256,7 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
                 fun_test.sleep("Wait before Injecting volume failure", seconds=20)
                 inject_fault_volume = storage_controller.storage_api.inject_fault_volume(self.vol_uuid_list[0])
                 fun_test.test_assert(expression=inject_fault_volume.data,
-                                     message="Inject fault to Volume {} is done".format(vol_uuid))
+                                     message="Inject fault to Volume {} is done".format(self.vol_uuid_list[0]))
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                 get_volume_result = raw_sc_api.get_volumes()
                 fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])

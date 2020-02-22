@@ -62,7 +62,8 @@
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 300
+    "api_server_up_timeout": 300,
+    "drive_format_timeout": 120
   },
   "MultiHostFioRandRead": {
     "num_ssd": 12,

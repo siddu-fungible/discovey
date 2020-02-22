@@ -13,6 +13,10 @@ from lib.host.linux import Linux
       }
 """
 
+class HostType:
+    HOST_TYPE_BARE_METAL = "HOST_TYPE_BARE_METAL"
+    HOST_TYPE_VM = "HOST_TYPE_VM"
+
 class HostInterface():
     def __init__(self, name, ip, spec):
         self.name = name

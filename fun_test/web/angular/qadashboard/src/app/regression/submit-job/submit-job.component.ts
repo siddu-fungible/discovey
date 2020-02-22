@@ -115,6 +115,7 @@ export class SubmitJobComponent implements OnInit {
   jobInputs: string = null; // input dictionary to be sent to the scheduler
   richBootArgs: string = null;
   csiPerf: boolean = false;
+  alreadyDeployed: boolean = false;
   csiCacheMiss: boolean = false;
   startWithStableBundle: boolean = false;
   dryRun: boolean = false;
@@ -335,6 +336,10 @@ export class SubmitJobComponent implements OnInit {
 
       if (payloadEnvironment.hasOwnProperty('csi_perf')) {
         this.csiPerf = payloadEnvironment.csi_perf;
+      }
+
+      if (payloadEnvironment.hasOwnProperty('already_deployed')) {
+        this.alreadyDeployed = payloadEnvironment.already_deployed;
       }
 
       if (payloadEnvironment.hasOwnProperty('csi_cache_miss')) {
@@ -597,6 +602,10 @@ export class SubmitJobComponent implements OnInit {
 
       if (this.startWithStableBundle) {
         payload["environment"]["start_with_bundle_options"] = {"release_train": "master", "build_number": "stable"};
+      }
+
+      if (this.alreadyDeployed) {
+        payload["environment"]["already_deployed"] = this.alreadyDeployed;
       }
 
       if (payload["environment"]["with_jenkins_build"]) {
