@@ -931,7 +931,7 @@ class Bmc(Linux):
             if self.bundle_compatible:
                 log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
 
-                context_prefix = self._get_context_prefix(data="F1_{}_FunOS log {}".format(f1_index, prefix))
+                context_prefix = self._get_context_prefix(data="F1_{}_FunOS_log_{}".format(f1_index, prefix))
                 uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
                                                          linux_obj=self,
                                                          source_file_path=log_path,
