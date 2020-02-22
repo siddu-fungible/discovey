@@ -194,7 +194,7 @@ class DateIntegrityCheck(FunTestCase):
                                           message="Expected NVMe devices are available - {}".format(host.name))
             host.nvme_block_device_list.sort()
             host.fio_filename = ":".join(host.nvme_block_device_list)
-
+        '''
         numa_node_to_use = get_device_numa_node(self.hosts[0].instance, self.ethernet_adapter)
         if self.override_numa_node["override"]:
             numa_node_to_use = self.override_numa_node["override_node"]
@@ -203,7 +203,7 @@ class DateIntegrityCheck(FunTestCase):
                 host.host_numa_cpus = ",".join(host.spec["cpus"]["numa_node_ranges"])
             else:
                 host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
-
+        '''
         fun_test.shared_variables["host_info"] = self.hosts
         fun_test.log("Hosts info: {}".format(dir(self.hosts)))
         fun_test.shared_variables["hosts"] = self.hosts
@@ -236,7 +236,7 @@ class DateIntegrityCheck(FunTestCase):
                     if "multiple_jobs" in self.fio_write_cmd_args:
                         fio_cmd_args = {}
                         # Adding the allowed CPUs into the fio command
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                        # fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus) 
                         jobs = ""
                         for id, device in enumerate(host.nvme_block_device_list):
                             jobs += " --name=vol{} --filename={}".format(id + 1, device)
@@ -246,7 +246,7 @@ class DateIntegrityCheck(FunTestCase):
 
                         fio_cmd_args["multiple_jobs"] = self.fio_write_cmd_args["multiple_jobs"] + \
                                                                 operation + blk_size + \
-                                                                fio_cpus_allowed_args + size + jobs
+                                                                size + jobs
                         fio_cmd_args["timeout"] = self.fio_write_cmd_args["timeout"]
 
                         thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -299,7 +299,7 @@ class DateIntegrityCheck(FunTestCase):
                     if "multiple_jobs" in self.fio_read_cmd_args:
                         fio_cmd_args = {}
                         # Adding the allowed CPUs into the fio command
-                        fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                        # fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                         jobs = ""
                         for id, device in enumerate(host.nvme_block_device_list):
                             jobs += " --name=vol{} --filename={}".format(id + 1, device)
@@ -309,7 +309,7 @@ class DateIntegrityCheck(FunTestCase):
 
                         fio_cmd_args["multiple_jobs"] = self.fio_read_cmd_args["multiple_jobs"] + \
                                                                 operation + blk_size + \
-                                                                fio_cpus_allowed_args + size + jobs
+                                                                size + jobs
                         fio_cmd_args["timeout"] = self.fio_read_cmd_args["timeout"]
 
                         thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -410,7 +410,7 @@ class DataIntegrityAfterReset(FunTestCase):
             if "multiple_jobs" in self.fio_write_cmd_args:
                 fio_cmd_args = {}
                 # Adding the allowed CPUs into the fio command
-                fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                # fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
@@ -420,7 +420,7 @@ class DataIntegrityAfterReset(FunTestCase):
 
                 fio_cmd_args["multiple_jobs"] = self.fio_write_cmd_args["multiple_jobs"] + \
                                                 operation + blk_size + \
-                                                fio_cpus_allowed_args + size + jobs
+                                                size + jobs
                 fio_cmd_args["timeout"] = self.fio_write_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -515,7 +515,7 @@ class DataIntegrityAfterReset(FunTestCase):
             if "multiple_jobs" in self.fio_read_cmd_args:
                 fio_cmd_args = {}
                 # Adding the allowed CPUs into the fio command
-                fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                # fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
@@ -525,7 +525,7 @@ class DataIntegrityAfterReset(FunTestCase):
 
                 fio_cmd_args["multiple_jobs"] = self.fio_read_cmd_args["multiple_jobs"] + \
                                                 operation + blk_size + \
-                                                fio_cpus_allowed_args + size + jobs
+                                                size + jobs
                 fio_cmd_args["timeout"] = self.fio_read_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
