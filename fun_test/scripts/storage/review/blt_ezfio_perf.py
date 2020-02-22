@@ -374,7 +374,7 @@ class SingleBltSingleHost(FunTestCase):
 
         try:
             # Start stats collection
-            ezfio_runtime = 7200
+            ezfio_runtime = 10800
             mpstat_artifact_file, mpstat_pid = \
                 start_mpstat(host_handle=end_host_thread, runtime=ezfio_runtime,
                              stats_args=self.mpstat_args)
@@ -403,8 +403,8 @@ class SingleBltSingleHost(FunTestCase):
                          source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
                          source_file_path=outputdir_name,
                          target_file_path=ezfio_output_dir, recursive=True)
-            fun_test.add_auxillary_file(description="Host CPU Usage",
-                                        filename=ezfio_output_dir)
+            fun_test.add_auxillary_file(description="Ezfio test result",
+                                        filename="{}/*/ezfio_tests*.csv".format(ezfio_output_dir))
 
     def cleanup(self):
         pass
