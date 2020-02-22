@@ -25,7 +25,7 @@ class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
-                 api_password="password", api_server_ip=None, api_server_port=9000):
+                 api_password="password", api_server_ip=None, api_server_port=9000, api_logging_level=logging.DEBUG):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
         if fun_test.storage_api_enabled:
             if not api_server_ip:
@@ -39,12 +39,17 @@ class StorageController(NetworkController, DpcshClient):
             configuration.debug = True
             try:
                 logger = logging.getLogger('swagger_client.rest')
-                logger.setLevel(logging.DEBUG)
+                logger.setLevel(api_logging_level)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
 
                 logger = logging.getLogger("requests")
-                logger.setLevel(logging.DEBUG)
+                logger.setLevel(api_logging_level)
+                api_log_handler = ApiLogHandler()
+                logger.addHandler(api_log_handler)
+
+                logger = logging.getLogger("httplib")
+                logger.setLevel(api_logging_level)
                 api_log_handler = ApiLogHandler()
                 logger.addHandler(api_log_handler)
 
