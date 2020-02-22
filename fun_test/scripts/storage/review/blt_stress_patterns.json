@@ -8,16 +8,30 @@
   // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...
   // "CADtDlADtDl": Create Attach Detach Delete, Attch, Detach, Delete (Same volume)
 
-  "CCDD": {
-    "capacity": 1073741824, //1GB
+  "CADtADt1": {
+    "capacity": 536870912, //1GB
     "volume_count": 1,
-    "loop_count": 1,
+    "loop_count": 1024,
     "host_count": 1,
     "fs_count" : 1,
-    "dpu_count" : 2,
-    "encrypt": "Y",
-    "already_deployed": false,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
     "format_drive": true,
-    "pattern": "CCDD"
+    "pattern": "CADtADt",
+    "tcid" : 1
+  },
+   "CCDD1": {
+    "capacity": 1073741824, //1GB
+    "volume_count": 1024,
+    "loop_count": 1024,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 2
   }
 }
