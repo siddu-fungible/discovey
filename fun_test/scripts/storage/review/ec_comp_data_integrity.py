@@ -214,10 +214,10 @@ class DataIntegrityCheck(FunTestCase):
 
         testcase = self.__class__.__name__
         test_method = testcase
-        self.fio_io_size = 100
-        block_sizes = ["4k", "8k", "16k", "32k", "64k"]
-        wr_modes =["write", "randwrite", "write", "randwrite"]
-        rd_modes = ["read", "randread", "randread", "read"]
+        self.fio_io_size = 10
+        block_sizes = ["4k"]
+        wr_modes =["write"]
+        rd_modes = ["read"]
 
         for bs in block_sizes:
             for wr_mode, rd_mode in zip(wr_modes, rd_modes):
@@ -391,6 +391,7 @@ class TestCompressionRatio(FunTestCase):
         self.storage_controller = fs.get_storage_controller(f1_index=0)
 
         # FIO write
+        self.command_timeout = 5
         for host_obj in self.hosts:
             for nvme_device_name  in host_obj.nvme_block_device_list:
                 server_written_total_bytes = 0
