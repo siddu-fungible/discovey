@@ -73,7 +73,7 @@ class StorageControllerOperationsTemplate:
             dpu_indexes = [0, 1]
         result = False
 
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         topology_result = None
         try:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
@@ -151,7 +151,7 @@ class StorageControllerOperationsTemplate:
         result = 0
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             topology_result = None
             try:
                 topology_result = storage_controller.topology_api.get_hierarchical_topology()
@@ -200,7 +200,7 @@ class StorageControllerOperationsTemplate:
         return result
 
     def format_all_drives(self, fs_obj):
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         topology = None
         try:
             topology = storage_controller.topology_api.get_hierarchical_topology()
@@ -295,7 +295,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 body_volume_intent_create.name = body_volume_intent_create.name + str(fs_index)
 
             body_volume_intent_create.vol_type = self.vol_type
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             try:
                 create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
                 vol_uuid = create_vol_result.data.uuid
@@ -330,7 +330,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if cur_host_obj not in self.host_nvme_device:
                 self.host_nvme_device[cur_host_obj] = []
             fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, cur_host_obj.name))
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             host_data_ip = cur_host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
                 attach_fields = BodyVolumeAttach(transport=Transport().TCP,
@@ -394,7 +394,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def _check_host_target_existing_connection(self, fs_obj, volume_uuid, subsys_nqn, host_nqn, host_obj):
         result = False
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         # get_volume_result = storage_controller.storage_api.get_volumes()
         # WORKAROUND : get_volumes errors out.
         raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -645,7 +645,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def get_volume_attach_status(self, fs_obj, volume_uuid):
         result = False
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         all_pools = None
         try:
             all_pools = storage_controller.storage_api.get_all_pools()
@@ -757,7 +757,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             # volumes = storage_controller.storage_api.get_volumes()
             # WORKAROUND : get_volumes errors out.
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -806,3 +806,7 @@ class EcVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
     This template abstracts the operations of EC volume
     """
     vol_type = VolumeTypes().EC
+
+
+if __name__ == "__main__":
+    BltVolumeOperationsTemplate(None, api_logging_level=logging.ERROR)
