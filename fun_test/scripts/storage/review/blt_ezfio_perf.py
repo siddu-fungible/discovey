@@ -374,7 +374,7 @@ class SingleBltSingleHost(FunTestCase):
 
         try:
             # Start stats collection
-            ezfio_runtime = 4 * 3600
+            ezfio_runtime = 5 * 3600
             mpstat_artifact_file, mpstat_pid = \
                 start_mpstat(host_handle=end_host_thread, runtime=ezfio_runtime,
                              stats_args=self.mpstat_args)
