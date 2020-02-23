@@ -354,12 +354,13 @@ class TopologyHelper:
                 linux_obj = Linux(**host_spec)
                 host.set_instance(linux_obj)
 
-            fungible_controller = topology.fungible_controller
-            if fungible_controller:
-                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller.name)
-                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller.name))
+            fungible_controllers = topology.fungible_controllers
+            if fungible_controllers:
+                fungible_controller_name = fungible_controllers.keys()[0]
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller_name))
                 linux_obj = Linux(**host_spec)
-                fungible_controller.set_instance(linux_obj)
+                fungible_controllers[fungible_controller_name].set_instance(linux_obj)
 
             duts = topology.duts
 
