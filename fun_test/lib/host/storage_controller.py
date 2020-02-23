@@ -37,27 +37,28 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
-            if api_logging_level <= logging.DEBUG:
-                # configuration.debug = True
-                httplib.HTTPConnection.debuglevel = 2
-            try:
-                logger = logging.getLogger('swagger_client.rest')
-                logger.setLevel(api_logging_level)
-                api_log_handler = ApiLogHandler()
-                logger.addHandler(api_log_handler)
+            if True:
+                if api_logging_level <= logging.DEBUG:
+                    # configuration.debug = True
+                    httplib.HTTPConnection.debuglevel = 2
+                try:
+                    logger = logging.getLogger('swagger_client.rest')
+                    logger.setLevel(api_logging_level)
+                    api_log_handler = ApiLogHandler()
+                    logger.addHandler(api_log_handler)
 
-                logger = logging.getLogger("requests.packages.urllib3")
-                logger.setLevel(api_logging_level)
-                api_log_handler = ApiLogHandler()
-                logger.addHandler(api_log_handler)
+                    logger = logging.getLogger("requests.packages.urllib3")
+                    logger.setLevel(api_logging_level)
+                    api_log_handler = ApiLogHandler()
+                    logger.addHandler(api_log_handler)
 
-                logger = logging.getLogger("httplib")
-                logger.setLevel(api_logging_level)
-                api_log_handler = ApiLogHandler()
-                logger.addHandler(api_log_handler)
+                    logger = logging.getLogger("httplib")
+                    logger.setLevel(api_logging_level)
+                    api_log_handler = ApiLogHandler()
+                    logger.addHandler(api_log_handler)
 
-            except Exception as ex:
-                fun_test.critical(str(ex))
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
             api_client = ApiClient(configuration)
             self.apigateway_api = ApigatewayApi(api_client)
