@@ -3,6 +3,7 @@ from fun_global import get_current_time
 from fun_settings import FUN_TEST_DIR
 from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
+from lib.utilities.funcp_config import FunControlPlaneBringup
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity, perf_utils
 from scripts.networking.funcp.helper import *
