@@ -420,6 +420,12 @@ class TestCompressionRatio(FunTestCase):
                     #diff_vol_stats = final_vol_stats["EC"][vol_uuid]["stats"]["wr"] - \
                     #                 initial_vol_stats["EC"][vol_uuid]["stats"]["wr"]
 
+    def run(self):
+        pass
+
+    def cleanup(self):
+        pass
+
 
 class DataIntegrityAfterReset(FunTestCase):
 
