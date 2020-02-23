@@ -37,7 +37,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "DateIntegrityCheck":{
+  "DataIntegrityCheck":{
     "num_f1": 1,
     "blt_count": 8,
     "num_hosts": 4,
