@@ -577,9 +577,9 @@ class CADtDl2(CADtDl):
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
+    setup_bringup.add_test_case(CCDlDl1())
+    setup_bringup.add_test_case(CADtDl2())
     setup_bringup.add_test_case(CADtADt1())
     setup_bringup.add_test_case(CADtADt2())
-    setup_bringup.add_test_case(CCDlDl1())
     setup_bringup.add_test_case(CADtDl1())
-    setup_bringup.add_test_case(CADtDl2())
     setup_bringup.run()
