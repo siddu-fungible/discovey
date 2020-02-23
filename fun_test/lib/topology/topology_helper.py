@@ -58,6 +58,8 @@ class TopologyHelper:
         spec = self.spec
 
         disabled_hosts = spec.get("disabled_hosts", [])
+        disabled_fungible_controllers = spec.get("disabled_fungible_controllers", [])
+
         if "host_info" in spec:
             hosts = spec["host_info"]
             for host_name in hosts:
@@ -67,6 +69,16 @@ class TopologyHelper:
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)
+
+        if "fungible_controller_info" in spec:
+            fungible_controller_info = spec["fungible_controller_info"]
+            for fungible_controller_name in fungible_controller_info:
+                if fungible_controller_name in disabled_fungible_controllers:
+                    fun_test.log("Disabling Fungible controller: {}".format(fungible_controller_name))
+                    continue
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
+                fun_test.simple_assert(host_spec, "Retrieve fungible-controller-spec for {}".format(fungible_controller_name))
+                self.expanded_topology.fungible_controllers[fungible_controller_name] = Host(name=fungible_controller_name, spec=host_spec)
 
         disabled_perf_listener_hosts = spec.get("disabled_perf_listener_hosts", [])
         if "perf_listener_host_info" in spec:
@@ -341,6 +353,13 @@ class TopologyHelper:
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host.name))
                 linux_obj = Linux(**host_spec)
                 host.set_instance(linux_obj)
+
+            fungible_controller = topology.fungible_controller
+            if fungible_controller:
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller.name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller.name))
+                linux_obj = Linux(**host_spec)
+                fungible_controller.set_instance(linux_obj)
 
             duts = topology.duts
 

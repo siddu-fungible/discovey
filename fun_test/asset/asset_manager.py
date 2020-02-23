@@ -389,7 +389,10 @@ class AssetManager:
     @fun_test.safe
     def get_asset_instance(self, asset):
         instance = None
-        if asset.type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+        if asset.type in [AssetType.HOST,
+                          AssetType.PCIE_HOST,
+                          AssetType.PERFORMANCE_LISTENER_HOST,
+                          AssetType.FUNGIBLE_CONTROLLER]:
             instance = self.get_linux_host(name=asset.name)
         elif asset.type in AssetType.DUT:
             instance = self.get_fs(name=asset.name)
@@ -398,7 +401,10 @@ class AssetManager:
     @fun_test.safe
     def get_asset_instance_by_name(self, asset_type, asset_name):
         instance = None
-        if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
+        if asset_type in [AssetType.HOST,
+                          AssetType.PCIE_HOST,
+                          AssetType.PERFORMANCE_LISTENER_HOST,
+                          AssetType.FUNGIBLE_CONTROLLER]:
             instance = self.get_linux_host(name=asset_name)
         elif asset_type in AssetType.DUT:
             instance = self.get_fs(name=asset_name)
@@ -490,6 +496,11 @@ class AssetManager:
                     if host.name == asset_name:
                         found = True
                         break
+            if asset_type == AssetType.FUNGIBLE_CONTROLLER:
+                fungible_controller = topology.get_fungible_controllers()
+                if fungible_controller:
+                    if fungible_controller.name == asset_name:
+                        found = True
         return found
 
 
@@ -532,6 +543,10 @@ class AssetManager:
             host_names = [host_obj.name for name, host_obj in pcie_hosts.iteritems()]
             assets_required[AssetType.PCIE_HOST] = host_names
 
+            fungible_controllers = topology.get_fungible_controllers()
+            fungible_controller_names = [fungible_controller.name for name, fungible_controller in fungible_controllers.iteritems()]
+            assets_required[AssetType.FUNGIBLE_CONTROLLER] = fungible_controller_names
+
         return assets_required
 
     @fun_test.safe
@@ -564,6 +579,16 @@ class AssetManager:
                         disabled_hosts.append(host)
             test_bed_spec["disabled_hosts"] = disabled_hosts
 
+        if asset_type == AssetType.FUNGIBLE_CONTROLLER:
+            disabled_fungible_controllers = []
+            if "fungible_controller_info" in test_bed_spec:
+                for fungible_controller in test_bed_spec["fungible_controller_info"]:
+                    if to_disable and fungible_controller in to_disable:
+                        disabled_fungible_controllers.append(fungible_controller)
+                    if to_enable and fungible_controller not in to_enable:
+                        disabled_fungible_controllers.append(fungible_controller)
+            test_bed_spec["disabled_fungible_controllers"] = disabled_fungible_controllers
+
         if asset_type == AssetType.PERFORMANCE_LISTENER_HOST:
             disabled_perf_listener_hosts = []
             if "perf_listener_host_info" in test_bed_spec:
@@ -583,7 +608,8 @@ class AssetManager:
                   "custom_test_bed_spec": None,
                   "assets_required": {AssetType.DUT: [],
                                       AssetType.HOST: [],
-                                      AssetType.PERFORMANCE_LISTENER_HOST: []}}
+                                      AssetType.PERFORMANCE_LISTENER_HOST: [],
+                                      AssetType.FUNGIBLE_CONTROLLER: []}}
         from web.fun_test.models import Asset
         from web.fun_test.models_helper import is_suite_in_progress
         from django.core.exceptions import ObjectDoesNotExist
@@ -598,11 +624,13 @@ class AssetManager:
 
         assets_required_config = {AssetType.DUT: {},
                                   AssetType.HOST: {},
-                                  AssetType.PERFORMANCE_LISTENER_HOST: {}}
+                                  AssetType.PERFORMANCE_LISTENER_HOST: {},
+                                  AssetType.FUNGIBLE_CONTROLLER: {}}
 
         all_asset_types = [AssetType.DUT,
                            AssetType.HOST,
-                           AssetType.PERFORMANCE_LISTENER_HOST]
+                           AssetType.PERFORMANCE_LISTENER_HOST,
+                           AssetType.FUNGIBLE_CONTROLLER]
         for asset_type in all_asset_types:
             if asset_type in asset_request:
                 info = asset_request[asset_type]
