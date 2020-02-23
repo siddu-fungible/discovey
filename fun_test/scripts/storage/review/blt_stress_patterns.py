@@ -297,8 +297,10 @@ class CADtDl(FunTestCase):
         else:
             encrypt = False
 
-        self.already_deployed = fun_test.shared_variables["already_deployed"]
-        self.format_drive = fun_test.shared_variables["format_drive"]
+        #self.already_deployed = fun_test.shared_variables["already_deployed"]
+        #self.format_drive = fun_test.shared_variables["format_drive"]
+        self.already_deployed = True
+        self.format_drive = True
 
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
@@ -440,7 +442,7 @@ class CCDlDl(FunTestCase):
         #self.already_deployed = fun_test.shared_variables["already_deployed"]
         #self.format_drive = fun_test.shared_variables["format_drive"]
         self.already_deployed = True
-        self.format_drive = False
+        self.format_drive = True
 
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
