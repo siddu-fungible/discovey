@@ -414,7 +414,7 @@ class DataIntegrityAfterReset(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                size = " --size={}%".format(self.fio_io_size)
+                size = " --size=100%"
                 operation = " --rw=write"
                 blk_size = " --bs=16k"
 
@@ -519,7 +519,7 @@ class DataIntegrityAfterReset(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                size = " --size={}%".format(self.fio_io_size)
+                size = " --size=100%"
                 operation = " --rw=read"
                 blk_size = " --bs=16k"
 
