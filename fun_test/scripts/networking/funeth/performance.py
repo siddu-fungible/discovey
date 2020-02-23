@@ -5,6 +5,7 @@ from lib.host import netperf_manager as nm
 from lib.host.network_controller import NetworkController
 from scripts.networking.tb_configs import tb_configs
 from scripts.networking.funeth import funeth, sanity, perf_utils
+from scripts.networking.funcp.helper import *
 from web.fun_test.analytics_models_helper import get_data_collection_time
 from collections import OrderedDict
 import json
@@ -178,15 +179,17 @@ class FunethPerformance(sanity.FunethSanity):
         try:
             fs_name = fun_test.get_job_environment_variable('test_bed_type')
 
+            fun_test.log('FunethPerformance.cleanup: %s' % fs_name)
             if fs_name == 'fs-11' and sanity.control_plane:
-                from scripts.networking.funcp.helper import *
                 fs_spec = fun_test.get_asset_manager().get_fs_spec(fs_name)
                 funcp_obj = FunControlPlaneBringup(fs_name)
 
+                fun_test.log('FunethPerformance.cleanup: call cc_dmesg')
                 cc_dmesg(docker_names=funcp_obj.docker_names, fs_spec=fs_spec)
-                cc_cc_ethtool_stats_fpg_all(docker_names=funcp_obj.docker_names, fs_spec=fs_spec)
+                fun_test.log('FunethPerformance.cleanup: call cc_ethtool_stats_fpg_all')
+                cc_ethtool_stats_fpg_all(docker_names=funcp_obj.docker_names, fs_spec=fs_spec)
         except Exception as e:
-                print(e)
+            fun_test.log(str(e))
 
         try:
             results = fun_test.shared_variables['results']
