@@ -176,6 +176,19 @@ class FunethPerformance(sanity.FunethSanity):
 
     def cleanup(self):
         try:
+            fs_name = fun_test.get_job_environment_variable('test_bed_type')
+
+            if fs_name == 'fs-11' and sanity.control_plane:
+                from scripts.networking.funcp.helper import *
+                fs_spec = fun_test.get_asset_manager().get_fs_spec(fs_name)
+                funcp_obj = FunControlPlaneBringup(fs_name)
+
+                cc_dmesg(docker_names=funcp_obj.docker_names, fs_spec=fs_spec)
+                cc_cc_ethtool_stats_fpg_all(docker_names=funcp_obj.docker_names, fs_spec=fs_spec)
+        except Exception as e:
+                print(e)
+
+        try:
             results = fun_test.shared_variables['results']
             if not debug_mode:
                 perf_utils.db_helper(results)

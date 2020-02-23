@@ -553,6 +553,32 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
                 container.disconnect()
     return result
 
+def cc_dmesg(docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
+    for docker in docker_names:
+        container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
+                                         ssh_username=fs_spec['come']['mgmt_ssh_username'],
+                                         ssh_password=fs_spec['come']['mgmt_ssh_password'])
+
+        cmd = 'sudo dmesg > %s/CC_dmesg_%s.log' % (path, docker)
+        container.command(command=cmd, timeout=300)
+
+        container.disconnect()
+
+def cc_ethtool_stats_fpg_all(docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
+    for docker in docker_names:
+        container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
+                                         ssh_username=fs_spec['come']['mgmt_ssh_username'],
+                                         ssh_password=fs_spec['come']['mgmt_ssh_password'])
+
+        out_file = '%s/CC_ethtool_%s.log' % (path, docker)
+        cmd = 'echo running ethtool/fpg in %s > %s' % (docker, out_file)
+        container.command(command=cmd, timeout=300)
+
+        for fpg in range(0, 24):
+            cmd = 'sudo ethtool -S fpg%s >> %s' % (fpg, out_file)
+            container.command(command=cmd, timeout=300)
+
+        container.disconnect()
 
 def test_scp(source_host, dest_host, source_data_ip, dest_data_ip):
     result = True
