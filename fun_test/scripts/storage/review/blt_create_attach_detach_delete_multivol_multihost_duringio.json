@@ -180,7 +180,7 @@
       "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
     }
-  }
+  },
   "CreateAttachDetachDeleteMultivolMultihostSharedEncrypt":{
     "num_f1": 1,
     "blt_count": 8,
