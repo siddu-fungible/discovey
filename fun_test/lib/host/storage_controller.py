@@ -37,7 +37,7 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
-            if True:
+            if False:
                 if api_logging_level <= logging.DEBUG:
                     # configuration.debug = True
                     httplib.HTTPConnection.debuglevel = 2
