@@ -49,7 +49,7 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-        self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
+        self.blt_template = BltVolumeOperationsTemplate(topology=self.topology, api_logging_level=logging.ERROR)
         self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed,
                                      format_drives=format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
