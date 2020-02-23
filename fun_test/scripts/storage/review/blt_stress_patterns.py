@@ -189,7 +189,7 @@ class CADtADt(FunTestCase):
         print "vol_uuid:", vol_uuid
         fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
         hosts = self.topology.get_available_host_instances()
-	print "loop_count:", self.loop_count
+        print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                 volume_uuid=vol_uuid,
@@ -229,14 +229,153 @@ class CADtADt(FunTestCase):
         self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
 
 
-class CCDD(FunTestCase):
+class CADtDl(FunTestCase):
     topology = None
     storage_controller_template = None
     attach_result = None
 
     def describe(self):
-        self.set_test_details(id=1,
-                              summary="CCDD",
+        self.set_test_details(id=2,
+                              summary="CADtDl",
+                              steps='''
+                              1. Make sure API server is up and running
+                              2. Create a Volume using API Call
+                              3. Attach Volume to a remote host
+                              4. Run FIO from host
+                              ''')
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        testcase_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("json file being used: {}".format(testcase_file))
+        testcase_dict = utils.parse_file_to_json(testcase_file)
+        parsing = True
+
+        if testcase not in testcase_dict or not testcase_dict[testcase]:
+            parsing = False
+            fun_test.critical("Input is not available for the current testcase {} in {} file".
+                              format(testcase, testcase_file))
+            fun_test.test_assert(parsing, "Parsing json file for this {} testcase".format(testcase))
+
+        for k, v in testcase_dict[testcase].iteritems():
+            setattr(self, k, v)
+
+        self.name = "blt_VOL"
+        self.vol_type = VolumeTypes().LOCAL_THIN
+        compression_effort = False
+        self.topology = fun_test.shared_variables["topology"]
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
+
+        if "loop_count" in job_inputs:
+            self.loop_count = job_inputs["loop_count"]
+
+        if "pattern" in job_inputs:
+            self.pattern = job_inputs["pattern"]
+
+        if "capacity" in job_inputs:
+            self.capacity = job_inputs["capacity"]
+
+        if "encrypt" in job_inputs:
+            self.encrypt = job_inputs["encrypt"]
+
+        if "volume_count" in job_inputs:
+            self.volume_count = job_inputs["volume_count"]
+
+        if "dpu_count" in job_inputs:
+            self.dpu_count = job_inputs["dpu_count"]
+
+        if self.dpu_count == 2:
+            dpu_indexes = [0, 1]
+        else:
+            dpu_indexes = [0]
+
+        if self.encrypt == "Y":
+            encrypt = True
+        else:
+            encrypt = False
+
+        self.already_deployed = fun_test.shared_variables["already_deployed"]
+        self.format_drive = fun_test.shared_variables["format_drive"]
+
+        print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
+
+        body_volume_intent_create = BodyVolumeIntentCreate(name=self.name, vol_type=self.vol_type,
+                                                           capacity=self.capacity,
+                                                           compression_effort=compression_effort,
+                                                           encrypt=encrypt, data_protection={})
+        body_volume_intent_create.vol_type = self.vol_type
+        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology,
+                                                                       api_logging_level=logging.ERROR)
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed,
+                                                    format_drives=self.format_drive,
+                                                    dpu_indexes=dpu_indexes)
+
+        fs_obj_list = []
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            fs_obj_list.append(fs_obj)
+
+        sfx = 0
+        fs_obj = fs_obj_list[0]
+
+        print "loop_count:", self.loop_count
+        for counter in range(self.loop_count):
+            vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
+                                     name=self.name, sfx=str(sfx))
+
+            print "vol_uuid:", vol_uuid
+            fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
+            hosts = self.topology.get_available_host_instances()
+
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
+                                                                               volume_uuid=vol_uuid,
+                                                                               validate_nvme_connect=False,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result["status"], message="Attach Volume Successful")
+            self.attach_result = attach_vol_result
+            print "attach_vol_result", attach_vol_result
+            print "attach_vol_result[data][uuid]", attach_vol_result["data"]["uuid"]
+            # Lets wait for some time before we detach
+            fun_test.sleep("Lets wait for some time before we detach..", seconds=5)
+            port = attach_vol_result["data"]["uuid"]
+            detach_vol_result = detach(fs_obj, port)
+            print "detach_vol_result:", detach_vol_result
+            fun_test.test_assert(expression=True, message="Detach Volume Successful")
+
+            delete_vol_result = delete(fs_obj, vol_uuid)
+            print "delete_vol_result:", delete_vol_result
+            fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
+
+    def run(self):
+        pass
+        hosts = self.topology.get_available_host_instances()
+        for host_obj in hosts:
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
+                                                                                     subsys_nqn=self.attach_result[
+                                                                                         'data']['subsys_nqn'],
+                                                                                     nsid=self.attach_result[
+                                                                                         'data']['nsid'])
+            storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
+            traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
+            fun_test.test_assert(expression=traffic_result,
+                                 message="Host : {} FIO traffic result".format(host_obj.name))
+            fun_test.log(traffic_result)
+
+    def cleanup(self):
+        self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
+
+
+class CCDlDl(FunTestCase):
+    topology = None
+    storage_controller_template = None
+    attach_result = None
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="CCDlDl",
                               steps='''
                               1. Make sure API server is up and running
                               2. Create a Volume using API Call
@@ -323,7 +462,7 @@ class CCDD(FunTestCase):
         sfx = 0
         fs_obj = fs_obj_list[0]
         volumes = []
-	print "loop_count:", self.loop_count
+        print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
                                      name=self.name, sfx=str(counter))
@@ -338,10 +477,10 @@ class CCDD(FunTestCase):
 
     def run(self):
         pass  # Do not run FIO.
-        #super(CCDD, self).run()
+        #super(CCDlDl, self).run()
 
     def cleanup(self):
-        super(CCDD, self).cleanup()
+        super(CCDlDl, self).cleanup()
 
 
 class CADtADt1(CADtADt):
@@ -362,7 +501,25 @@ class CADtADt1(CADtADt):
         super(CADtADt1, self).cleanup()
 
 
-class CCDD1(CCDD):
+class CADtADt2(CADtADt):
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="create. attach-detach in loop, delete with Encryption",
+                              steps='''
+                              ''')
+
+    def setup(self):
+        super(CADtADt2, self).setup()
+
+    def run(self):
+        pass  # Do not run FIO.
+        #super(CADtADt1, self).run()
+
+    def cleanup(self):
+        super(CADtADt2, self).cleanup()
+
+
+class CCDlDl1(CCDlDl):
     def describe(self):
         self.set_test_details(id=2,
                               summary="create in loop, detach in loop",
@@ -370,18 +527,54 @@ class CCDD1(CCDD):
                               ''')
 
     def setup(self):
-        super(CCDD1, self).setup()
+        super(CCDlDl1, self).setup()
 
     def run(self):
         pass  # Do not run FIO.
-        #super(CCDD1, self).run()
+        #super(CCDlDl1, self).run()
 
     def cleanup(self):
-        super(CCDD1, self).cleanup()
+        super(CCDlDl1, self).cleanup()
 
+class CADtDl1(CADtDl):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="create attach detach delete in loop",
+                              steps='''
+                              ''')
+
+    def setup(self):
+        super(CADtDl1, self).setup()
+
+    def run(self):
+        pass  # Do not run FIO.
+        #super(CADtDl1, self).run()
+
+    def cleanup(self):
+        super(CADtDl1, self).cleanup()
+
+class CADtDl2(CADtDl):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="create attach detach delete in loop with encryption",
+                              steps='''
+                              ''')
+
+    def setup(self):
+        super(CADtDl2, self).setup()
+
+    def run(self):
+        pass  # Do not run FIO.
+        #super(CADtDl2, self).run()
+
+    def cleanup(self):
+        super(CADtDl2, self).cleanup()
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
     setup_bringup.add_test_case(CADtADt1())
-    setup_bringup.add_test_case(CCDD1())
+    setup_bringup.add_test_case(CADtADt2())
+    setup_bringup.add_test_case(CCDlDl1())
+    setup_bringup.add_test_case(CADtDl1())
+    setup_bringup.add_test_case(CADtDl2())
     setup_bringup.run()
