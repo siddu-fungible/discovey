@@ -7,6 +7,7 @@ from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCrea
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import EcVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
+from lib.templates.storage.storage_traffic_template import StorageTrafficTemplate
 from scripts.storage.storage_helper import *
 import string, random,re
 from collections import OrderedDict, Counter
@@ -17,7 +18,6 @@ def fio_parser(arg1, host_index, **kwargs):
     fun_test.shared_variables["fio"][host_index] = fio_output
     fun_test.test_assert(fio_output, "Fio test for thread {}".format(host_index), ignore_on_success=True)
     arg1.disconnect()
-
 
 class BringupSetup(FunTestScript):
     topology = None
@@ -67,7 +67,7 @@ class BringupSetup(FunTestScript):
         self.topology.cleanup()
 
 
-class DateIntegrityCheck(FunTestCase):
+class DataIntegrityCheck(FunTestCase):
 
     def describe(self):
 
@@ -351,6 +351,75 @@ class DateIntegrityCheck(FunTestCase):
     def cleanup(self):
         pass
 
+class TestCompressionRatio(FunTestCase):
+
+    topology = None
+    storage_controller_template = None
+
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Test compression ratio for each effort level",
+                              steps='''
+                                 ''')
+
+    def setup(self):
+        testcase = self.__class__.__name__
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        fun_test.log("Benchmark file being used: {}".format(benchmark_file))
+
+        tc_config = {}
+        tc_config = utils.parse_file_to_json(benchmark_file)
+
+        if testcase not in tc_config or not tc_config[testcase]:
+            tc_config = False
+            fun_test.critical("Benchmarking is not available for the current testcase {} in {} file".
+                              format(testcase, benchmark_file))
+            fun_test.test_assert(tc_config, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        fun_test.test_assert(tc_config, "Parsing Benchmark json file for this {} testcase".format(testcase))
+        for k, v in tc_config[testcase].iteritems():
+            setattr(self, k, v)
+
+        self.hosts = fun_test.shared_variables["hosts"]
+        self.topology = fun_test.shared_variables["topology"]
+        self.ec_template = fun_test.shared_variables["ec_template"]
+        self.vol_uuid_list = fun_test.shared_variables["vol_uuid_list"]
+        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
+
+        fs = self.fs_obj_list[0]
+        come = fs.get_come()
+        self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
+        self.storage_controller = fs.get_storage_controller(f1_index=0)
+
+        # FIO write
+        for host_obj in self.hosts:
+            for nvme_device_name  in host_obj.nvme_block_device_list:
+                server_written_total_bytes = 0
+                total_bytes_pushed_to_disk = 0
+
+                # Volume stats before write
+                initial_vol_stats = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                 chunk=8192,
+                                                                 command_duration=self.command_timeout)
+                fun_test.test_assert(initial_vol_stats, "Volume stats collected before write")
+                fun_test.debug("{}:: Volume stats before write: {}".format(nvme_device_name, initial_vol_stats))
+                fio_wr_output = host_obj.pcie_fio(filename=nvme_device_name, **self.fio_write_cmd_args)
+                fun_test.log("FIO write Command Output:\n{}".format(fio_wr_output))
+                fun_test.test_assert(fio_wr_output, "nvme device name:{} "
+                                                    "write on host {}".format(nvme_device_name, host_obj.name))
+                server_written_total_bytes = fio_wr_output["write"]["io_bytes"]
+
+                # Volume stats after write
+                final_vol_stats = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                 chunk=8192,
+                                                                 command_duration=self.command_timeout)
+                fun_test.test_assert(final_vol_stats, "Volume stats collected after write")
+
+                # Diff stats to measure compression ratio
+                if initial_vol_stats["status"] and final_vol_stats["status"]:
+                    fun_test.log(final_vol_stats["VOL_TYPE_BLK_LSV"])
+                    #diff_vol_stats = final_vol_stats["EC"][vol_uuid]["stats"]["wr"] - \
+                    #                 initial_vol_stats["EC"][vol_uuid]["stats"]["wr"]
+
 
 class DataIntegrityAfterReset(FunTestCase):
 
@@ -358,7 +427,7 @@ class DataIntegrityAfterReset(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=3,
                               summary="Reset FS1600 and Do IO from host",
                               steps='''
                                  1. Reset FS1600 
@@ -574,6 +643,7 @@ class DataIntegrityAfterReset(FunTestCase):
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
-    setup_bringup.add_test_case(DateIntegrityCheck())
+    setup_bringup.add_test_case(DataIntegrityCheck())
+    setup_bringup.add_test_case(TestCompressionRatio())
     setup_bringup.add_test_case(DataIntegrityAfterReset())
     setup_bringup.run()
