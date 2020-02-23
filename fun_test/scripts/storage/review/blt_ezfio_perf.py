@@ -397,14 +397,15 @@ class SingleBltSingleHost(FunTestCase):
             stop_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, stats_obj=stats_obj,
                              stats_list=self.stats_collect_details)
             # Copy ezfio output
-            ezfio_output_dir = fun_test.get_test_case_artifact_file_name(post_fix_name=
-                                                                         "{}_ezfio_perf".format(testcase))
+            ezfio_artifact_file = fun_test.get_test_case_artifact_file_name(
+                post_fix_name="{}_ezfio_perf.csv".format(testcase))
             fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
                          source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
-                         source_file_path=outputdir_name,
-                         target_file_path=ezfio_output_dir, recursive=True)
+                         source_file_path="{}/*/ezfio_tests*.csv".format(outputdir_name),
+                         target_file_path=ezfio_artifact_file, recursive=True)
+
             fun_test.add_auxillary_file(description="Ezfio test result",
-                                        filename="{}/*/ezfio_tests*.csv".format(ezfio_output_dir))
+                                        filename=ezfio_artifact_file)
 
     def cleanup(self):
         pass
