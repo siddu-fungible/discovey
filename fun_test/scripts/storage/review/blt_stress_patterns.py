@@ -98,6 +98,7 @@ class CADtADt(FunTestCase):
     attach_result = None
 
     def describe(self):
+        pass
         self.set_test_details(id=1,
                               summary="CADtADt",
                               steps='''
@@ -235,6 +236,7 @@ class CADtDl(FunTestCase):
     attach_result = None
 
     def describe(self):
+        pass
         self.set_test_details(id=2,
                               summary="CADtDl",
                               steps='''
@@ -376,6 +378,7 @@ class CCDlDl(FunTestCase):
     attach_result = None
 
     def describe(self):
+        pass
         self.set_test_details(id=3,
                               summary="CCDlDl",
                               steps='''
@@ -505,7 +508,7 @@ class CADtADt1(CADtADt):
 
 class CADtADt2(CADtADt):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="create. attach-detach in loop, delete with Encryption",
                               steps='''
                               ''')
@@ -523,7 +526,7 @@ class CADtADt2(CADtADt):
 
 class CCDlDl1(CCDlDl):
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=3,
                               summary="create in loop, detach in loop",
                               steps='''
                               ''')
@@ -540,7 +543,7 @@ class CCDlDl1(CCDlDl):
 
 class CADtDl1(CADtDl):
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=4,
                               summary="create attach detach delete in loop",
                               steps='''
                               ''')
@@ -557,7 +560,7 @@ class CADtDl1(CADtDl):
 
 class CADtDl2(CADtDl):
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=5,
                               summary="create attach detach delete in loop with encryption",
                               steps='''
                               ''')
