@@ -21,7 +21,6 @@ from lib.system import utils
   // "CADtDlADtDl": Create Attach Detach Delete, Attch, Detach, Delete (Same volume)
 '''
 
-
 def create_volume(fs_obj, body_volume_intent_create, name, sfx):
     """
     Create a volume for the fs_obj
@@ -79,6 +78,16 @@ class BootupSetup(FunTestScript):
         else:
             self.format_drive = True
 
+        if "dpu_count" in job_inputs:
+            self.dpu_count = job_inputs["dpu_count"]
+        else:
+            self.dpu_count = 1
+
+        if self.dpu_count == 2:
+            dpu_indexes = [0, 1]
+        else:
+            dpu_indexes = [0]
+
         fun_test.shared_variables["already_deployed"] = self.already_deployed
         fun_test.shared_variables["format_drive"] = self.format_drive
 
@@ -88,7 +97,21 @@ class BootupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
+        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology,
+                                                                       api_logging_level=logging.ERROR)
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed,
+                                                    format_drives=self.format_drive,
+                                                    dpu_indexes=dpu_indexes)
+        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+        self.fs_obj_list = []
+        for dut_index in self.topology.get_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.fs_obj_list.append(fs_obj)
+
+        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+
     def cleanup(self):
+        self.storage_controller_template.cleanup()
         self.topology.cleanup()
 
 
@@ -109,6 +132,10 @@ class CADtADt(FunTestCase):
                               ''')
 
     def setup(self):
+        self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
+
         testcase = self.__class__.__name__
         testcase_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("json file being used: {}".format(testcase_file))
@@ -148,21 +175,10 @@ class CADtADt(FunTestCase):
         if "volume_count" in job_inputs:
             self.volume_count = job_inputs["volume_count"]
 
-        if "dpu_count" in job_inputs:
-            self.dpu_count = job_inputs["dpu_count"]
-
-        if self.dpu_count == 2:
-            dpu_indexes = [0, 1]
-        else:
-            dpu_indexes = [0]
-
         if self.encrypt == "Y":
             encrypt = True
         else:
             encrypt = False
-
-        self.already_deployed = fun_test.shared_variables["already_deployed"]
-        self.format_drive = fun_test.shared_variables["format_drive"]
 
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
@@ -171,19 +187,13 @@ class CADtADt(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         body_volume_intent_create.vol_type = self.vol_type
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology,
-                                                                       api_logging_level=logging.ERROR)
-        self.storage_controller_template.initialize(already_deployed=self.already_deployed,
-                                                    format_drives=self.format_drive,
-                                                    dpu_indexes=dpu_indexes)
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+
+
 
         sfx = 0
-        fs_obj = fs_obj_list[0]
+
+        fs_obj = self.fs_obj_list[0]
         vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
                                  name=self.name, sfx=str(sfx))
 
@@ -227,6 +237,7 @@ class CADtADt(FunTestCase):
             fun_test.log(traffic_result)
 
     def cleanup(self):
+        pass
         self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
 
 
@@ -247,6 +258,10 @@ class CADtDl(FunTestCase):
                               ''')
 
     def setup(self):
+        self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
+
         testcase = self.__class__.__name__
         testcase_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("json file being used: {}".format(testcase_file))
@@ -286,23 +301,14 @@ class CADtDl(FunTestCase):
         if "volume_count" in job_inputs:
             self.volume_count = job_inputs["volume_count"]
 
-        if "dpu_count" in job_inputs:
-            self.dpu_count = job_inputs["dpu_count"]
 
-        if self.dpu_count == 2:
-            dpu_indexes = [0, 1]
-        else:
-            dpu_indexes = [0]
 
         if self.encrypt == "Y":
             encrypt = True
         else:
             encrypt = False
 
-        self.already_deployed = fun_test.shared_variables["already_deployed"]
-        self.format_drive = fun_test.shared_variables["format_drive"]
-        #self.already_deployed = True
-        #self.format_drive = True
+
 
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
@@ -311,19 +317,13 @@ class CADtDl(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         body_volume_intent_create.vol_type = self.vol_type
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology,
-                                                                       api_logging_level=logging.ERROR)
-        self.storage_controller_template.initialize(already_deployed=self.already_deployed,
-                                                    format_drives=self.format_drive,
-                                                    dpu_indexes=dpu_indexes)
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+
+
+
 
         sfx = 0
-        fs_obj = fs_obj_list[0]
+        fs_obj = self.fs_obj_list[0]
 
         print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
@@ -369,6 +369,7 @@ class CADtDl(FunTestCase):
             fun_test.log(traffic_result)
 
     def cleanup(self):
+        pass
         self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
 
 
@@ -390,6 +391,10 @@ class CCDlDl(FunTestCase):
                               )
 
     def setup(self):
+        self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
+
         testcase = self.__class__.__name__
         testcase_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("json file being used: {}".format(testcase_file))
@@ -429,23 +434,14 @@ class CCDlDl(FunTestCase):
         if "volume_count" in job_inputs:
             self.volume_count = job_inputs["volume_count"]
 
-        if "dpu_count" in job_inputs:
-            self.dpu_count = job_inputs["dpu_count"]
 
-        if self.dpu_count == 2:
-            dpu_indexes = [0, 1]
-        else:
-            dpu_indexes = [0]
 
         if self.encrypt == "Y":
             encrypt = True
         else:
             encrypt = False
 
-        self.already_deployed = fun_test.shared_variables["already_deployed"]
-        self.format_drive = fun_test.shared_variables["format_drive"]
-        #self.already_deployed = True
-        #self.format_drive = True
+
 
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
@@ -454,18 +450,10 @@ class CCDlDl(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         body_volume_intent_create.vol_type = self.vol_type
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology,
-                                                                       api_logging_level=logging.ERROR)
-        self.storage_controller_template.initialize(already_deployed=self.already_deployed,
-                                                    format_drives=self.format_drive,
-                                                    dpu_indexes=dpu_indexes)
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(fs_obj)
+
 
         sfx = 0
-        fs_obj = fs_obj_list[0]
+        fs_obj = self.fs_obj_list[0]
         volumes = []
         print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
@@ -485,6 +473,7 @@ class CCDlDl(FunTestCase):
         #super(CCDlDl, self).run()
 
     def cleanup(self):
+        pass
         super(CCDlDl, self).cleanup()
 
 
