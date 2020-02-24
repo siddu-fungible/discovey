@@ -430,7 +430,8 @@ class SharedVolumePerfTest(FunTestCase):
 
                         num_jobs_string = " --numjobs={}".format(num_jobs)
                         required_io_depth = io_depth / num_jobs
-                        combo = str(num_jobs, required_io_depth)
+                        # combo = str(num_jobs, required_io_depth)
+                        combo = "(" + str(num_jobs) + "," + str(required_io_depth) + ")"
                         self.fio_jobs_iodepth.append(combo)
                         fio_result[combo] = {}
                         internal_result[combo] = {}
