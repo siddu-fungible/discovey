@@ -3074,11 +3074,19 @@ if __name__ == "__main_data_plane_operations__":
                            workspace_ids=[])
     print "added charts for concurrent and serial chart for all operations"
 
-if __name__ == "__main__":
+if __name__ == "__main_pooled_test_beds__":
     names = ["fs-functional-1", "fs-inspur", "fs-regression1", "fs-regression2", "fs-storage-test-cab04"]
     for name in names:
         test_bed = TestBed.objects.get(name=name)
         test_bed.pooled = True
         test_bed.save()
     print "set the pooled boolean to be true for few test beds"
+
+if __name__ == "__main__":
+    internal_chart_name = "multi_host_raw_block_nvmetcp_12_vols"
+    chart = MetricChart.objects.get(internal_chart_name=internal_chart_name)
+    model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+    block_size = "12_vols_block_8k_"
+    iops_charts = ["rand_read_qd_multi_host_nvmetcp_output_iops", "rand_write_qd_multi_host_nvmetcp_output_iops"]
+    latency_charts = [""]
 
