@@ -227,6 +227,29 @@
     "warm_up_fio_cmd_args": {
       "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
+    },
+    "CreateAttachIoInjectVolfaultDetachDelete":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : true,
+    "detach_duringio": true,
+    "multi_host_test": "True",
+    "raw_api_call": true,
+    "compression_effort": "False",
+    "encrypt": true,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 180
     }
   }
 }
