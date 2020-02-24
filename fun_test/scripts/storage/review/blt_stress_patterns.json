@@ -41,8 +41,8 @@
   },
    "CCDlDl1": {
     "capacity": 17179869184, //16GB
-    "volume_count": 1024,
-    "loop_count": 4,
+    "volume_count": 3,
+    "loop_count": 3,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
@@ -55,7 +55,7 @@
   "CADtDl1": {
     "capacity": 34359738368, //32GB
     "volume_count": 1024,
-    "loop_count": 5,
+    "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
@@ -81,7 +81,7 @@
   "CreateDeleteNCreateAgain1": {
     "capacity": 68719476736, //64GB
     "volume_count": 1024,
-    "loop_count": 40,
+    "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
@@ -94,7 +94,7 @@
   "ScaleMaxAttached1": {
     "capacity": 17179869184, //16GB
     "volume_count": 1024,
-    "loop_count": 30,
+    "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
