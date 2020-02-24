@@ -48,7 +48,7 @@
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
-    "encrypt": "False",
+    "encrypt": false,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -72,7 +72,7 @@
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
-    "encrypt": "False",
+    "encrypt": false,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -96,7 +96,7 @@
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
-    "encrypt": "False",
+    "encrypt": false,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -120,7 +120,7 @@
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
-    "encrypt": "False",
+    "encrypt": false,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -144,7 +144,7 @@
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
-    "encrypt": "True",
+    "encrypt": true,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -168,7 +168,7 @@
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
-    "encrypt": "True",
+    "encrypt": true,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -192,7 +192,7 @@
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
-    "encrypt": "True",
+    "encrypt": true,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
@@ -216,7 +216,7 @@
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
-    "encrypt": "True",
+    "encrypt": true,
     "name": "raw_volume_",
     "DUT":1,
     "override_numa_node": {
