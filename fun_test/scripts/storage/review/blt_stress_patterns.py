@@ -588,7 +588,7 @@ class CreateDeleteNCreateAgain(FunTestCase):
                                      name=self.name, sfx=str(counter2))
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
-            volumes.append(vol_uuid)
+            volumes.insert(counter2, vol_uuid)
 
         # finally delete all of them
         for counter3 in range(len(volumes)):
