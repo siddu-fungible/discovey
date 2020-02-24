@@ -555,33 +555,24 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
 
 def cc_dmesg(docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
     for docker in docker_names:
-        container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
-                                         ssh_username=fs_spec['come']['mgmt_ssh_username'],
-                                         ssh_password=fs_spec['come']['mgmt_ssh_password'])
-
         out_file = '%s/CC_dmesg_%s.log' % (path, docker)
-        with open(out_file, "w") as f:
-            cmd = 'sudo dmesg'
-            output = container.command(command=cmd, timeout=300)
-            f.write(cmd + '\n' + output + '\n')
-
-        container.disconnect()
+        cmd_prefix = 'docker exec %s bash -c' % (docker)
+        cmd = '%s "dmesg" > %s' % (cmd_prefix, out_file)
+        linux_obj.command(cmd)
 
 def cc_ethtool_stats_fpg_all(docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
     for docker in docker_names:
-        container = FunCpDockerContainer(name=docker, host_ip=fs_spec['come']['mgmt_ip'],
-                                         ssh_username=fs_spec['come']['mgmt_ssh_username'],
-                                         ssh_password=fs_spec['come']['mgmt_ssh_password'])
-
         out_file = '%s/CC_ethtool_%s.log' % (path, docker)
-        with open(out_file, "w") as f:
-            f.write('running ethtool/fpg in %s\n' % docker)
-            for fpg in range(0, 24):
-                cmd = 'sudo ethtool -S fpg%s' % fpg
-                output = container.command(command=cmd, timeout=300)
-                f.write(cmd + '\n' + output + '\n')
+        cmd_prefix = 'docker exec %s bash -c' % (docker)
+        linux_obj.command('touch %s' % out_file)
 
-        container.disconnect()
+        for fpg in range(0, 24):
+            cmd = '%s "echo ethtool fpg%s" >> %s' % (cmd_prefix, fpg, out_file)
+            linux_obj.command(cmd)
+            cmd = '%s "ethtool -S fpg%s" >> %s' % (cmd_prefix, fpg, out_file)
+            linux_obj.command(cmd)
+            cmd = '%s "echo" >> %s' % (cmd_prefix, out_file)
+            linux_obj.command(cmd)
 
 def test_scp(source_host, dest_host, source_data_ip, dest_data_ip):
     result = True
