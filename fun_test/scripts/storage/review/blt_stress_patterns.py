@@ -456,23 +456,30 @@ class CCDlDl(FunTestCase):
         fs_obj = self.fs_obj_list[0]
         volumes = []
         print "loop_count:", self.loop_count
-        for counter in range(self.loop_count):
-            vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
-                                     name=self.name, sfx=str(counter))
-            print "vol_uuid:", vol_uuid
-            fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
-            volumes.append(vol_uuid)
+        for outer_counter in range(5):
+            self.total_volumes = 0
+            for counter in range(self.loop_count):
+                vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
+                                        name=self.name, sfx=str(counter))
+                print "vol_uuid:", vol_uuid
+                fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
+                volumes.append(vol_uuid)
+                self.total_volumes += 1
+                fun_test.shared_variables["total_volumes"] = self.total_volumes
 
-        for counter in range(len(volumes)):
-            delete_vol_result = delete(fs_obj, volumes[counter])
-            print "delete_vol_result:", delete_vol_result
-            fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
+            for counter in range(len(volumes)):
+                delete_vol_result = delete(fs_obj, volumes[counter])
+                print "delete_vol_result:", delete_vol_result
+                fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
+                print "total_volumes:", self.total_volumes
 
     def run(self):
         pass  # Do not run FIO.
         #super(CCDlDl, self).run()
 
     def cleanup(self):
+        self.total_volumes = fun_test.shared_variables["total_volumes"]
+        print "total_volumes:", self.total_volumes
         pass
         super(CCDlDl, self).cleanup()
 
@@ -568,24 +575,24 @@ class CreateDeleteNCreateAgain(FunTestCase):
             volumes.append(vol_uuid)
 
         # now delete first 25 volumes
-        for counter in range(25):
-            vol_uuid = volumes[counter]
-            delete_vol_result = delete(fs_obj, volumes[counter])
+        for counter1 in range(25):
+            vol_uuid = volumes[counter1]
+            delete_vol_result = delete(fs_obj, volumes[counter1])
             print "delete_vol_result:", delete_vol_result
             fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
             volumes.remove(vol_uuid)
 
         # now create 25 volumes again
-        for counter in range(25):
+        for counter2 in range(25):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
-                                     name=self.name, sfx=str(counter))
+                                     name=self.name, sfx=str(counter2))
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             volumes.append(vol_uuid)
 
         # finally delete all of them
-        for counter in range(len(volumes)):
-            delete_vol_result = delete(fs_obj, volumes[counter])
+        for counter3 in range(len(volumes)):
+            delete_vol_result = delete(fs_obj, volumes[counter3])
             print "delete_vol_result:", delete_vol_result
             fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
 
@@ -606,7 +613,7 @@ class ScaleMaxAttached(FunTestCase):
     def describe(self):
         pass
         self.set_test_details(id=2,
-                              summary="CADtDl",
+                              summary="ScaleMaxAttached",
                               steps='''
                               1. Make sure API server is up and running
                               2. Create a Volume using API Call
@@ -689,7 +696,7 @@ class ScaleMaxAttached(FunTestCase):
 
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
-            created_vols[counter] = vol_uuid
+            created_vols.append(vol_uuid)
             if (counter == self.loop_count -1):
                 connect = True
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
@@ -700,7 +707,7 @@ class ScaleMaxAttached(FunTestCase):
             self.attach_result = attach_vol_result
             print "attach_vol_result", attach_vol_result
             print "attach_vol_result[data][uuid]", attach_vol_result["data"]["uuid"]
-            created_ports[counter] = attach_vol_result["data"]["uuid"]
+            created_ports.append(attach_vol_result["data"]["uuid"])
 
         print "created vols:", len(created_vols)
         print "created ports:", len(created_ports)
