@@ -474,6 +474,11 @@ class Bmc(Linux):
                 self.command(gpio_command)
                 fun_test.sleep("After removing F1 reset")
         else:
+            """
+            self.command("cd {}".format(self.SCRIPT_DIRECTORY))
+            self.command("./f1_reset.sh {}".format(f1_index))
+            """
+
             bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
             if f1_index == 0:
                 self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
@@ -1014,6 +1019,14 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
+                if self.fs.bundle_image_parameters:
+                    try:
+                        bmc.upload_bundle_f1_logs(prefix="pre-boot")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    bmc.clear_bundle_f1_logs()
+                    bmc.start_bundle_f1_logs()
+
                 come = fs.get_come()
                 fs.get_bundle_version()
                 fs_health = False
@@ -1196,12 +1209,16 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
+
             if self.fs.bundle_compatible and self.fs.bundle_image_parameters:
+                """
                 try:
                     bmc.upload_bundle_f1_logs()
                 except Exception as ex:
                     fun_test.critical(str(ex))
+                
                 bmc.clear_bundle_f1_logs()
+                """
                 bmc.start_bundle_f1_logs()
 
             if self.fs.fun_cp_callback:
@@ -3137,11 +3154,11 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main33__":
+if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
     iterations = 0
-    hard = True
+    hard = False
     while True:
         fun_test.log("Current iteration: {}".format(iterations))
         fun_test.test_assert(fs.reset(hard=hard), "Reset iteration: {}".format(iterations))
@@ -3203,7 +3220,7 @@ if __name__ == "__main222__":
         print bond_interface_obj.ip
 
 
-if __name__ == "__main__":
+if __name__ == "__main_22_":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
