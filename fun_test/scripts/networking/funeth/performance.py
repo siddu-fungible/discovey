@@ -183,11 +183,11 @@ class FunethPerformance(sanity.FunethSanity):
 
             fun_test.log('FunethPerformance.cleanup: %s' % fs_name)
             if fs_name == 'fs-11' and sanity.control_plane:
-                global funcp_obj
+                docker_names = [ 'F1-0', 'F1-1' ]
                 fs_spec = fun_test.get_asset_manager().get_fs_spec(fs_name)
 
                 fun_test.log('FunethPerformance.cleanup: call cc_dmesg')
-                cc_dmesg(come_linux_obj, funcp_obj.docker_names, fs_spec)
+                cc_dmesg(come_linux_obj, docker_names, fs_spec)
                 fun_test.log('FunethPerformance.cleanup: call cc_ethtool_stats_fpg_all')
                 cc_ethtool_stats_fpg_all(come_linux_obj, funcp_obj.docker_names, fs_spec)
         except Exception as e:
