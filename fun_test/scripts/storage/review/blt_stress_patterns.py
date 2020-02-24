@@ -585,7 +585,7 @@ class CreateDeleteNCreateAgain(FunTestCase):
         # now create 25 volumes again
         for counter2 in range(25):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
-                                     name=self.name, sfx=str(counter2))
+                                     name=self.name, sfx="new"+ str(counter2))
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             volumes.insert(counter2, vol_uuid)
