@@ -374,7 +374,7 @@ class SharedVolumePerfTest(FunTestCase):
                               "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999"
                            ]
 
         table_data_rows = []
@@ -396,6 +396,7 @@ class SharedVolumePerfTest(FunTestCase):
                 file_size_in_gb = self.capacity / 1073741824
                 row_data_dict["size"] = str(file_size_in_gb) + "GB"
                 file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
+                fio_job_name = file_suffix
                 for index, stat_detail in enumerate(self.stats_collect_details):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(
@@ -505,7 +506,6 @@ class SharedVolumePerfTest(FunTestCase):
                             aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
                         row_data_dict[op + field] = aggr_fio_output[op][field]
                 fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
@@ -520,6 +520,7 @@ class SharedVolumePerfTest(FunTestCase):
                 row_data_list.insert(0, self.blt_count)
                 row_data_list.insert(0, self.num_ssd)
                 row_data_list.insert(0, get_data_collection_time())
+                row_data_list.append(fio_job_name)
                 row_data_list.append(self.num_f1)
                 row_data_list.append(len(self.hosts))
                 shared_volume = True
