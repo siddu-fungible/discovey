@@ -665,7 +665,7 @@ class MultiHostVolumePerformanceTestcase8(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -1126,7 +1126,7 @@ class MultiHostVolumePerformanceTestcase9(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -1482,7 +1482,9 @@ class MultiHostVolumePerformanceTestcase10(FunTestCase):
 
                     for i in self.thin_uuid_list:
                         command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-                    fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+                        fun_test.log("DPCSH command result")
+                        fun_test.log(command_result)
+                    fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                                   message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -1735,7 +1737,7 @@ class MultiHostVolumePerformanceTestcase11(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -2014,7 +2016,7 @@ class MultiHostVolumePerformanceTestcase12(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -2315,7 +2317,7 @@ class MultiHostVolumePerformanceTestcase13(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -2605,7 +2607,7 @@ class MultiHostVolumePerformanceTestcase14(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -2883,7 +2885,7 @@ class MultiHostVolumePerformanceTestcase15(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -3140,7 +3142,7 @@ class MultiHostVolumePerformanceTestcase16(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -3350,7 +3352,7 @@ class MultiHostVolumePerformanceTestcase17(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
@@ -3627,7 +3629,7 @@ class MultiHostVolumePerformanceTestcase18(FunTestCase):
 
             for i in self.thin_uuid_list:
                 command_result = self.storage_controller.peek("storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/" + i)
-            fun_test.test_assert_expected(expected=False, actual=command_result["data"],
+            fun_test.test_assert_expected(expected=False, actual=command_result["Status"],
                                           message="Checking if the volume id is deleted after deleting the volume")
 
 
