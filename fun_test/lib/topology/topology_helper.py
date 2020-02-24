@@ -14,6 +14,7 @@ from lib.host.linux import Linux
 from lib.host.router import Router
 from lib.topology.host import Host
 from lib.fun.fs import ComE, BootPhases
+from lib.fun.fungible_controller import FungibleController
 
 
 class TopologyHelper:
@@ -363,8 +364,8 @@ class TopologyHelper:
                 fungible_controller_name = fungible_controllers.keys()[0]
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller_name))
-                linux_obj = Linux(**host_spec)
-                fungible_controllers[fungible_controller_name].set_instance(linux_obj)
+                fungible_controller_obj = FungibleController(**host_spec)
+                fungible_controllers[fungible_controller_name].set_instance(fungible_controller_obj)
 
             duts = topology.duts
 
