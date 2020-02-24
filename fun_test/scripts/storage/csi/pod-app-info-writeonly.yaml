@@ -9,8 +9,11 @@ spec:
       volumeDevices:
         - name: volume-write-fio-test
           devicePath: /dev/xvda
+      env:
+      - name: CMD-ARG
+        value: " --name=writeonly --ioengine=libaio --direct=1 --numjobs=1 --rw=write --iodepth=32 --bs=4k --filename=/dev/xvda --size=1% --verify=md5 --verify_pattern=0x0123456789abcdef%o --do_verify=0 --group_reporting"
       command: ["fio"]
-      args: ["--name=writeonly","--ioengine=libaio","--direct=1","--numjobs=1","--rw=write","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1%", "--verify=md5","--verify_pattern=0x0123456789abcdef%o","--do_verify=0","--group_reporting"]
+      args: ["$(CMD-ARG)"]
   restartPolicy: Never
   volumes:
     - name: volume-write-fio-test

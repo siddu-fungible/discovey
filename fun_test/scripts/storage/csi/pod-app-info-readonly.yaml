@@ -9,9 +9,11 @@ spec:
       volumeDevices:
         - name: volume-read-fio-test
           devicePath: /dev/xvda
+      env:
+      - name: CMD-ARG
+        value: " --name=readnchk --ioengine=libaio --direct=1 --numjobs=1 --rw=read --iodepth=32 --bs=4k --filename=/dev/xvda --size=1% --do_verify=1 --verify=md5 --group_reporting"
       command: ["fio"]
-      # args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=600","--time_based","--size=10m"]
-      args: ["--name=readnchk","--ioengine=libaio","--direct=1","--numjobs=1","--rw=read","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1%","--do_verify=1","--verify=md5","--group_reporting"]
+      args: ["$(CMD-ARG)"]
   restartPolicy: Never
   volumes:
     - name: volume-read-fio-test
