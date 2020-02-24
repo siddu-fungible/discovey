@@ -18,24 +18,14 @@ class FsStorage:
         result = True
         error_message = ""
         fun_test.log("Checking if SSD's are present and online")
+        ssd_present_count = 0
         for f1_index in range(self.fs_obj.NUM_F1S):
             if f1_index == self.fs_obj.disable_f1_index:
                 continue
-            expected_ssds = int(num_ssds/2)
             ssd_info_f1 = self.nvme_ssds(f1_index)
-            all_ssd_present = True
-            for ssd in range(expected_ssds):
-                ssd_str = str(ssd)
-                if ssd_str in ssd_info_f1 and ssd_info_f1[ssd_str]["device state"] == "DEV_ONLINE":
-                    pass
-                else:
-                    if all_ssd_present:
-                        error_message += "F1_{}:".format(f1_index)
-                    all_ssd_present = False
-                    error_message += ssd_str + ","
-            if not all_ssd_present:
-                error_message += " SSD(s) not present "
-                result = False
+            ssd_present_count += len(ssd_info_f1)
+        if ssd_present_count != num_ssds:
+            error_message += "Expected ssds: {}, actual ssds: {}".format(num_ssds, ssd_present_count)
         if with_error_details:
             result = result, error_message
         return result
