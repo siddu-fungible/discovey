@@ -78,7 +78,7 @@ class DurableVolScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
 
