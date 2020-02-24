@@ -3074,11 +3074,75 @@ if __name__ == "__main_data_plane_operations__":
                            workspace_ids=[])
     print "added charts for concurrent and serial chart for all operations"
 
-if __name__ == "__main__":
+if __name__ == "__main_pooled_test_beds__":
     names = ["fs-functional-1", "fs-inspur", "fs-regression1", "fs-regression2", "fs-storage-test-cab04"]
     for name in names:
         test_bed = TestBed.objects.get(name=name)
         test_bed.pooled = True
         test_bed.save()
     print "set the pooled boolean to be true for few test beds"
+
+if __name__ == "__main__":
+    internal_chart_names = ["raw_block_teramarks_shared_8_vols_8k_rand_read_iops",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd128_latency",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd256_latency",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd512_latency"]
+    qds = [128, 256, 512]
+    output_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+    base_line_date = datetime(year=2020, month=2, day=23, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "iops" in internal_chart_name:
+            chart_name = "IOPS"
+            positive = True
+            y1_axis_title = PerfUnit.UNIT_OPS
+            data_sets = []
+            for qd in qds:
+                one_data_set = {}
+                one_data_set["name"] = "qd" + str(qd)
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 4, "input_num_ssd":
+                    12, "input_num_dpu": 1, "input_num_volume": 8, "input_block_size": "8k", "input_io_depth": qd,
+                                          "input_operation": "randread", "input_shared_volume": True,
+                                          "input_compression": False, "input_encryption": False}
+                one_data_set["output"] = {"name": "output_read_iops", "min": 0, "max": -1, "expected": -1,
+                                          "reference": -1, "best": -1, "unit": PerfUnit.UNIT_OPS}
+                data_sets.append(one_data_set)
+        else:
+            if "qd128" in internal_chart_name:
+                qd = 128
+            elif "qd256" in internal_chart_name:
+                qd = 256
+            else:
+                qd = 512
+            chart_name = "Latency, QDepth=" + str(qd)
+            positive = False
+            y1_axis_title = PerfUnit.UNIT_USECS
+            data_sets = []
+            for output in output_names:
+                if "avg" in output:
+                    name = "avg"
+                elif "99_99" in output:
+                    name = "99.99%"
+                else:
+                    name = "99%"
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 4, "input_num_ssd":
+                    12, "input_num_dpu": 1, "input_num_volume": 8, "input_block_size": "8k", "input_io_depth": qd,
+                                          "input_operation": "randread", "input_shared_volume": True,
+                                          "input_compression": False, "input_encryption": False}
+                one_data_set["output"] = {"name": output, "min": 0, "max": -1, "expected": -1,
+                                          "reference": -1, "best": -1, "unit": PerfUnit.UNIT_USECS}
+                data_sets.append(one_data_set)
+        ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                       data_sets=data_sets, leaf=True,
+                       description="TBD",
+                       owner_info="Indrani P (indrani.p@fungible.com)", source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/review/blt_shared_volume_perf.py",
+                       positive=positive, y1_axis_title=y1_axis_title,
+                       visualization_unit=y1_axis_title,
+                       metric_model_name="RawVolumeNvmeTcpMultiHostPerformance",
+                       base_line_date=base_line_date,
+                       work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                       peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                       workspace_ids=[])
+        print "created shared volumes random read charts"
 

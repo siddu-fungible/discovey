@@ -77,7 +77,7 @@
     //value for plex_fail_method could be either 'ssd_power_off' or 'inject_fault'
     "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
-    "plex_failure_combination": "random"
+    "plex_failure_combination": "all"
   },
   "RecoveryWithMplus1Failure": {
     "test_rail_case_id": ["C18804"],
