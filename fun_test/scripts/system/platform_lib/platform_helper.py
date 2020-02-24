@@ -218,6 +218,15 @@ class RedFishTool:
             result["data"] = output
         return result
 
+    def task_service(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/TaskService"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
     def get_temperature(self):
         result = {}
         response = self.chassis_thermal()
@@ -1496,4 +1505,3 @@ class PwmTachtool:
             speed = int(match_speed.group("speed"))
             fun_test.log("Fan {} speed: {}".format(fan, speed))
         return speed
-

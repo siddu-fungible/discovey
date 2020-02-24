@@ -84,23 +84,54 @@ class ChassisPowerMonitoringAndControl(PlatformGeneralTestCase):
         self.set_test_details(id=5,
                               summary="Chassis power monitoring and control",
                               steps="""""")
+    @run_decorator
+    def run(self):
+        task = self.task_service()
+
+        chassis_power = self.chassis_power()
+        aw = chassis_power['data']["PowerControl"][0]["PowerMetrics"]["AverageConsumedWatts"]
+        if aw==0:
+            result = False
+        else:
+            result = True
+        fun_test.test_assert(result, "PASS")
+
+class Taskserviceverify(PlatformGeneralTestCase):
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              summary="Service to initiate and manage system specific asynchronous tasks",
+                              steps="""""")
 
     @run_decorator
     def run(self):
-        chassis_power = self.chassis_power()
-        res = True if chassis_power else False
-        fun_test.test_assert(res, "Chassis information obtained")
+        result = False
+        task = self.task_service()
+        d = task["data"]["DateTime"]
+        pyear=datetime.datetime.now().year
+        pmonth=datetime.datetime.now().month
+        fun_test.log(pyear)
+        fun_test.log(pyear)
+
+        if int(d[0:4]) == pyear and int(d[5:7]) == pmonth:
+            result=True
+        fun_test.test_assert(result, "datetime is matching")
+
+
+
 
 
 if __name__ == "__main__":
     platform = PlatformScriptSetup()
     test_case_list = [
-        # TopLevelChassisInformation,
+        #TopLevelChassisInformation,
         # ChassisThermalMonitoringAndControl,
         # ArrayOfTemperatureSensors,
         # ArrayOfFanSensors,
-        ChassisPowerMonitoringAndControl
+        # ChassisPowerMonitoringAndControl,
+        Taskserviceverify
     ]
     for i in test_case_list:
         platform.add_test_case(i())
     platform.run()
+
