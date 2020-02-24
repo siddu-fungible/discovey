@@ -20,7 +20,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -57,7 +57,7 @@ class blt_data_integrity(FunTestCase):
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
         self.name = 2
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = int(128*1024*1024*1024)
+        capacity = int(64*1024*1024*1024)
         # capacity = 1460000000
 
 
@@ -87,7 +87,6 @@ class blt_data_integrity(FunTestCase):
         modes = [("write", "read"), ("write", "randread"), ("randwrite", "read"), ("randwrite", "randread")]
         bsizes = ["4k", "8k", "16k", "32k", "64k", "128k", "256k", "512k", "1m", "2m"]
         # # Fetch testcase numa cpus to be used
-        ethernet_adapter = "Mellanox"
 
         for host in self.hosts:
             nvme_device_name = self.storage_controller_template._get_fungible_nvme_namespaces(host_handle=host.get_instance())
@@ -111,13 +110,13 @@ class blt_data_integrity(FunTestCase):
                                                               cpus_allowed=host_numa_cpus,
                                                               **fio_write_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                    fun_test.test_assert(fio_output, "Write completed on the nvme device {}".format(nvme_device_name[0]))
+                    fun_test.test_assert(fio_output, "{}  on the nvme device {} with block size {}".format(wmode,nvme_device_name[0],bsz))
 
                     fio_output = host.get_instance().pcie_fio(filename=nvme_device_name[0],
                                                               cpus_allowed=host_numa_cpus,
                                                               **fio_read_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                    fun_test.test_assert(fio_output, "Read completed on the nvme device {}".format(nvme_device_name[0]))
+                    fun_test.test_assert(fio_output, "{} on the nvme device {} with block size {}".format(rmode,nvme_device_name[0],bsz))
 
 
 
