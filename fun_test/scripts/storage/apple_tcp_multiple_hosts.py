@@ -132,7 +132,7 @@ class StripeVolumeLevelScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
 
         self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
         fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
