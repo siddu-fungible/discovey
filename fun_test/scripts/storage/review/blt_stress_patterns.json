@@ -14,7 +14,7 @@
   // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...single volume 1 host
 
   "CADtADt1": {
-    "capacity": 17179869184, //16GB
+    "capacity": 4294967296, //4GB
     "volume_count": 1,
     "loop_count": 2,
     "host_count": 1,
@@ -27,7 +27,7 @@
     "tcid" : 1
   },
   "CADtADt2": {
-    "capacity": 17179869184, //16GB
+    "capacity": 8589934592, //8GB
     "volume_count": 1,
     "loop_count": 3,
     "host_count": 1,
@@ -53,7 +53,7 @@
     "tcid" : 3
   },
   "CADtDl1": {
-    "capacity": 17179869184, //16GB
+    "capacity": 34359738368, //32GB
     "volume_count": 1024,
     "loop_count": 5,
     "host_count": 1,
@@ -66,9 +66,35 @@
     "tcid" : 4
   },
   "CADtDl2": {
-    "capacity": 17179869184, //16GB
+    "capacity": 68719476736, //64GB
     "volume_count": 1024,
     "loop_count": 6,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  },
+  "CreateDeleteNCreateAgain1": {
+    "capacity": 68719476736, //64GB
+    "volume_count": 1024,
+    "loop_count": 40,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  },
+  "ScaleMaxAttached1": {
+    "capacity": 17179869184, //16GB
+    "volume_count": 1024,
+    "loop_count": 30,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
