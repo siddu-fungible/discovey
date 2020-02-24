@@ -179,7 +179,7 @@ class RecoveryWithFailures(FunTestCase):
                         drive_uuid_list.append(blt_uuid_get_result["data"]["stats"]["stats"]["drive_uuid"])
                 device_id_list = []
                 for drive_uuid in drive_uuid_list:
-                    drive_uuid_get_result = raw_sc_api.execute_api(method="GET", cmd_url="topology/drive/{}/slot_id".format(drive_uuid)).json()
+                    drive_uuid_get_result = raw_sc_api.execute_api(method="GET", cmd_url="topology/drives/{}/slot_id".format(drive_uuid)).json()
                     if drive_uuid_get_result["status"]:
                         device_id_list.append(drive_uuid_get_result["data"]["slot_id"])
                 #get_lsv = self.storage_controller_dpcsh_obj.storage_api.get_volume(vol_uuid_list[0])
@@ -200,7 +200,7 @@ class RecoveryWithFailures(FunTestCase):
                     host_handle = host_obj.get_instance()
                     nvme_device_name = self.sc_template.get_host_nvme_device(host_obj=host_obj)
                     # Perform initial WRITE
-                    fio_output = host_handle.pcie_fio(filename="/dev/" + nvme_device_name[0],
+                    fio_output = host_handle.pcie_fio(filename=nvme_device_name[0],
                                                       **self.fio_write_cmd_args)
                     """
                     fio_output = self.sc_template.traffic_from_host(host_obj=host_obj,
@@ -221,7 +221,7 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log(fio_output)
                     self.vol_stats["vol_stats_before_initial_read"] = raw_sc_api.execute_api(method="GET", cmd_url="storage/volumes/{}/stats".format(ec_vol_uuid)).json()
                     # Perform initial READ
-                    fio_output = host_handle.pcie_fio(filename="/dev/" + nvme_device_name[0],
+                    fio_output = host_handle.pcie_fio(filename=nvme_device_name[0],
                                                       **self.fio_read_cmd_args)
                     """
                     fio_output = self.sc_template.traffic_from_host(host_obj=host_obj,
