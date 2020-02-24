@@ -243,11 +243,8 @@
               <td><span class="fun-attribute-label">{{ asset_request.key }}</span></td>
               <td *ngIf="_hasKey(asset_request.value, 'num')">Num: {{ asset_request.value.num }}
               </td>
-              <td *ngIf="_hasKey(asset_request.value, 'pool_member_type_options')">
-                {{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}
-              </td>
-              <td *ngIf="_hasKey(asset_request.value, 'names')">Specific
-                instances: {{ asset_request.value.names | json }}
+              <td *ngIf="_hasKey(asset_request.value, 'pool_member_type_options') && !_hasKey(asset_request.value, 'names')">{{ _getPoolMemberOptionsString(asset_request.key, asset_request.value.pool_member_type_options)}}</td>
+              <td *ngIf="_hasKey(asset_request.value, 'names')">Specific instances: {{ asset_request.value.names | json }}
               </td>
             </tr>
           </ng-container>

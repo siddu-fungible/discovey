@@ -421,9 +421,8 @@ class TestCompressionRatio(FunTestCase):
 
                 # Diff stats to measure compression ratio
                 if initial_vol_stats["status"] and final_vol_stats["status"]:
-                    diff_bytes = final_bytes - initial_bytes
-                    fun_test.log("Diff bytes: {}".format(diff_bytes))
-                fun_test.test_assert(diff_bytes, "Diff volume write bytes")
+                    total_bytes_pushed_to_disk = final_bytes - initial_bytes
+                fun_test.test_assert(total_bytes_pushed_to_disk, "Total bytes pushed to disk")
                 comp_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
                 fun_test.test_assert(comp_ratio, "Compression ratio for vol {}, "
                                                  "device {}".format(self.vol_uuid_list[idx], nvme_device_name))
@@ -461,12 +460,12 @@ class TestCompressionRatio(FunTestCase):
 
                 # Diff stats to measure compression ratio
                 if initial_vol_stats["status"] and final_vol_stats["status"]:
-                    diff_bytes = final_bytes - initial_bytes
-                    fun_test.log("Diff bytes: {}".format(diff_bytes))
-                fun_test.test_assert(diff_bytes, "Diff volume write bytes")
+                    total_bytes_pushed_to_disk = final_bytes - initial_bytes
+                fun_test.test_assert(total_bytes_pushed_to_disk, "Total bytes pushed to disk")
                 comp_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
                 fun_test.test_assert(comp_ratio, "Compression ratio for vol {}, "
                                                  "device {}".format(self.vol_uuid_list[idx], nvme_device_name))
+                
 
     def cleanup(self):
         pass
