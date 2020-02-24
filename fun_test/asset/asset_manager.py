@@ -782,6 +782,44 @@ class AssetManager:
             f.write(json.dumps(json_spec, indent=4))
             f.close()
 
+    def get_custom_test_bed_spec_from_local_settings(self):
+        result = None
+        pooled_test_bed_options = fun_test.get_local_setting("pooled_test_bed_options")
+        if pooled_test_bed_options:
+            base_test_bed = pooled_test_bed_options.get("base_test_bed", None)
+            if base_test_bed:
+                test_bed_spec = fun_test.get_asset_manager().get_test_bed_spec(name=base_test_bed)
+                spec_dut_info = test_bed_spec["dut_info"]
+                for dut_index, dut_info in spec_dut_info.iteritems():
+                    pooled_duts = pooled_test_bed_options.get("duts", None)
+                    if pooled_duts:
+                        if dut_info["dut"] not in pooled_duts:
+                            dut_info["disabled"] = True
+
+                pooled_hosts = pooled_test_bed_options.get("hosts")
+                host_names = test_bed_spec["host_info"]
+
+                disabled_hosts = []
+                if pooled_hosts:
+                    for host_name in host_names:
+                        if host_name not in pooled_hosts:
+                            disabled_hosts.append(host_name)
+
+                if disabled_hosts:
+                    test_bed_spec["disabled_hosts"] = disabled_hosts
+                disabled_fungible_controllers = []
+                fungible_controller_names = test_bed_spec["fungible_controller_info"]
+                pooled_fungible_controllers = pooled_test_bed_options.get("fungible_controllers")
+                if pooled_fungible_controllers:
+                    for fungible_controller_name in fungible_controller_names:
+                        if fungible_controller_name not in pooled_fungible_controllers:
+                            disabled_fungible_controllers.append(fungible_controller_name)
+
+                if disabled_fungible_controllers:
+                    test_bed_spec["disabled_fungible_controllers"] = disabled_fungible_controllers
+                result = test_bed_spec
+        return result
+
 asset_manager = AssetManager()
 
 if __name__ == "__main2__":

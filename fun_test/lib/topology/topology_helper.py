@@ -50,6 +50,8 @@ class TopologyHelper:
             else:
                 am = fun_test.get_asset_manager()
                 spec = am.get_test_bed_spec(name=test_bed_name)
+                if not spec:
+                    spec = am.get_custom_test_bed_spec_from_local_settings()
                 fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
                 self.spec = spec
 
@@ -227,6 +229,8 @@ class TopologyHelper:
     def deploy(self, already_deployed=False):
         if not already_deployed:
             already_deployed = fun_test.get_job_environment_variable("already_deployed")
+            if not already_deployed:
+                already_deployed = fun_test.get_local_setting("already_deployed")
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")

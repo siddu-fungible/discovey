@@ -13,14 +13,6 @@ if fun_test.storage_api_enabled:
     from swagger_client.configuration import Configuration
 
 
-class ApiLogHandler(logging.StreamHandler):
-    def emit(self, record):
-        try:
-            message = self.format(record)
-            fun_test.log(message)
-        except Exception as ex:
-            self.handleError(record)
-
 
 class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
@@ -37,25 +29,29 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
-            if False:
+            if True:
                 if api_logging_level <= logging.DEBUG:
                     # configuration.debug = True
                     httplib.HTTPConnection.debuglevel = 2
                 try:
+                    storage_api_log_handler = fun_test.get_storage_api_log_handler()
                     logger = logging.getLogger('swagger_client.rest')
-                    logger.setLevel(api_logging_level)
-                    api_log_handler = ApiLogHandler()
-                    logger.addHandler(api_log_handler)
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
 
                     logger = logging.getLogger("requests.packages.urllib3")
-                    logger.setLevel(api_logging_level)
-                    api_log_handler = ApiLogHandler()
-                    logger.addHandler(api_log_handler)
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
 
                     logger = logging.getLogger("httplib")
-                    logger.setLevel(api_logging_level)
-                    api_log_handler = ApiLogHandler()
-                    logger.addHandler(api_log_handler)
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
 
                 except Exception as ex:
                     fun_test.critical(str(ex))
