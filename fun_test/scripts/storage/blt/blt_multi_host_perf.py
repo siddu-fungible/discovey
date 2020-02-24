@@ -65,6 +65,7 @@ class BringupSetup(FunTestScript):
 class MultiHostFioRandRead(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for muiltple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
@@ -606,6 +607,7 @@ class MultiHostFioRandWrite(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=2,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
@@ -630,6 +632,7 @@ class MultiHostFioRandWrite8k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=3,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 8K",
                               steps='''
@@ -654,6 +657,7 @@ class MultiHostFioRandRead8k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=4,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 8K",
                               steps='''
@@ -678,6 +682,7 @@ class MultiHostFioRandWrite16k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=5,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 16K",
                               steps='''
@@ -702,6 +707,7 @@ class MultiHostFioRandRead16k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=6,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 16K",
                               steps='''
@@ -726,6 +732,7 @@ class MultiHostFioRandWrite32k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=7,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 32K",
                               steps='''
@@ -750,6 +757,7 @@ class MultiHostFioRandRead32k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=8,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 32K",
                               steps='''
@@ -774,6 +782,7 @@ class MultiHostFioRandWrite64k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=9,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 64K",
                               steps='''
@@ -798,6 +807,7 @@ class MultiHostFioRandRead64k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=10,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 64K",
                               steps='''
