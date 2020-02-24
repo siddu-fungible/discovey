@@ -417,7 +417,7 @@ class TestCompressionRatio(FunTestCase):
                                                                  chunk=8192,
                                                                  command_duration=self.command_timeout)
                 fun_test.test_assert(final_vol_stats, "Volume stats collected after write")
-                final_bytes = initial_vol_stats["data"]["VOL_TYPE_BLK_LSV"][self.vol_uuid_list[idx]]["stats"]["write_bytes"]
+                final_bytes = final_vol_stats["data"]["VOL_TYPE_BLK_LSV"][self.vol_uuid_list[idx]]["stats"]["write_bytes"]
 
                 # Diff stats to measure compression ratio
                 if initial_vol_stats["status"] and final_vol_stats["status"]:
@@ -429,7 +429,44 @@ class TestCompressionRatio(FunTestCase):
                                                  "device {}".format(self.vol_uuid_list[idx], nvme_device_name))
 
     def run(self):
-        pass
+
+        # FIO write
+        self.command_timeout = 5
+        for host_obj in self.hosts:
+            for idx, nvme_device_name  in enumerate(host_obj.nvme_block_device_list):
+                server_written_total_bytes = 0
+                total_bytes_pushed_to_disk = 0
+
+                # Volume stats before write
+                initial_vol_stats = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                 chunk=8192,
+                                                                 command_duration=self.command_timeout)
+                fun_test.test_assert(initial_vol_stats, "Volume stats collected before write")
+                fun_test.debug("{}:: Volume stats before write: {}".format(nvme_device_name, initial_vol_stats))
+                initial_bytes = initial_vol_stats["data"]["VOL_TYPE_BLK_LSV"][self.vol_uuid_list[idx]]["stats"]["write_bytes"]
+                fio_wr_output = host_obj.get_instance().pcie_fio(filename=nvme_device_name, **self.fio_write_cmd_args)
+                fun_test.log("FIO write Command Output:\n{}".format(fio_wr_output))
+                fun_test.test_assert(fio_wr_output, "nvme device name:{} "
+                                                    "write on host {}".format(nvme_device_name, host_obj.name))
+                server_written_total_bytes = fio_wr_output["write"]["io_bytes"]
+                fun_test.log("Bytes written by FIO:")
+                fun_test.log(server_written_total_bytes)
+
+                # Volume stats after write
+                final_vol_stats = self.storage_controller.peek(props_tree="storage/volumes", legacy=False,
+                                                                 chunk=8192,
+                                                                 command_duration=self.command_timeout)
+                fun_test.test_assert(final_vol_stats, "Volume stats collected after write")
+                final_bytes = final_vol_stats["data"]["VOL_TYPE_BLK_LSV"][self.vol_uuid_list[idx]]["stats"]["write_bytes"]
+
+                # Diff stats to measure compression ratio
+                if initial_vol_stats["status"] and final_vol_stats["status"]:
+                    diff_bytes = final_bytes - initial_bytes
+                    fun_test.log("Diff bytes: {}".format(diff_bytes))
+                fun_test.test_assert(diff_bytes, "Diff volume write bytes")
+                comp_ratio = round(server_written_total_bytes / float(total_bytes_pushed_to_disk), 2)
+                fun_test.test_assert(comp_ratio, "Compression ratio for vol {}, "
+                                                 "device {}".format(self.vol_uuid_list[idx], nvme_device_name))
 
     def cleanup(self):
         pass
