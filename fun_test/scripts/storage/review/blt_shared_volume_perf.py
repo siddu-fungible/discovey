@@ -8,7 +8,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
-import string, random,re
+import string, random,re,copy
 from collections import OrderedDict, Counter
 
 
@@ -130,7 +130,10 @@ class SharedVolumePerfTest(FunTestCase):
         for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
 
+        self.post_results = True
         job_inputs = fun_test.get_job_inputs()
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
@@ -351,7 +354,6 @@ class SharedVolumePerfTest(FunTestCase):
         fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
     def run(self):
-
         testcase = self.__class__.__name__
         test_method = testcase
         # self.test_mode = testca
@@ -359,7 +361,9 @@ class SharedVolumePerfTest(FunTestCase):
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
 
+        fio_result = {}
         internal_result = {}
+        self.fio_jobs_iodepth = []
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
@@ -426,6 +430,12 @@ class SharedVolumePerfTest(FunTestCase):
 
                         num_jobs_string = " --numjobs={}".format(num_jobs)
                         required_io_depth = io_depth / num_jobs
+                        combo = str(num_jobs, required_io_depth)
+                        self.fio_jobs_iodepth.append(combo)
+                        fio_result[combo] = {}
+                        internal_result[combo] = {}
+                        fio_result[combo][mode] = True
+                        internal_result[combo][mode] = True
                         io_depth_string = " --iodepth={}".format(required_io_depth)
                         io_size = self.capacity / num_jobs
                         io_size_string = " --io_size={}".format(io_size)
@@ -503,16 +513,32 @@ class SharedVolumePerfTest(FunTestCase):
                         row_data_list.append(row_data_dict[i])
                 table_data_rows.append(row_data_list)
 
+                table_data_list = copy.deepcopy(row_data_list)
+                table_data_rows.append(table_data_list)
+
+                row_data_list.insert(0, self.blt_count)
+                row_data_list.insert(0, self.num_ssd)
+                row_data_list.insert(0, get_data_collection_time())
+                row_data_list.append(self.num_f1)
+                row_data_list.append(len(self.hosts))
+                row_data_list.append(shared_volume=True)
+                if self.post_results:
+                    fun_test.log("Posting results on dashboard")
+                    post_results("Shared_Volume_Test", test_method, *row_data_list)
+
                 table_data = {"headers": table_data_headers, "rows": table_data_rows}
                 fun_test.add_table(panel_header="BLT Shared Volume Performance Table", table_name=self.summary,
                                    table_data=table_data)
+
+                # Posting the final status of the test result
+        post_final_test_results(fio_result=fio_result, internal_result=internal_result,
+                                fio_jobs_iodepth=self.fio_jobs_iodepth, fio_modes=self.fio_modes)
 
     def cleanup(self):
         pass
 
 
-class ConfigPeristenceAfterReset(FunTestCase):
-
+class ConfigPersistenceAfterReset(FunTestCase):
     topology = None
     storage_controller_template = None
 
@@ -761,7 +787,6 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
-
     def cleanup(self):
         pass
 
@@ -811,5 +836,5 @@ class ConfigPeristenceAfterReset(FunTestCase):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(SharedVolumePerfTest())
-    setup_bringup.add_test_case(ConfigPeristenceAfterReset())
+    setup_bringup.add_test_case(ConfigPersistenceAfterReset())
     setup_bringup.run()
