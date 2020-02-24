@@ -113,7 +113,7 @@ class ECVolumeLevelScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "disable_dsld" in job_inputs:
             self.disable_dsld = job_inputs["disable_dsld"]
         else:
