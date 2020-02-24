@@ -21,7 +21,7 @@ def fio_parser(arg1, host_index, **kwargs):
 
 class BringupSetup(FunTestScript):
     topology = None
-    format_drives = None
+    format_drives = True
     testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
     def describe(self):

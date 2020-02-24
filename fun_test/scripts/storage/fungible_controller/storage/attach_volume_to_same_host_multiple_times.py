@@ -35,6 +35,7 @@ class BringupSetup(FunTestScript):
 class VolumeManagement(FunTestCase):
     topology = None
     storage_controller_template = None
+    fs_obj = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -46,11 +47,17 @@ class VolumeManagement(FunTestCase):
 
     def setup(self, enable_encryption=False, skip_initialize=False, stripe_enabled=False, ec_vol=False):
         self.topology = fun_test.shared_variables["topology"]
+        fs_obj_list = []
+        for dut_index in self.topology.get_available_duts().keys():
+            self.fs_obj = self.topology.get_dut_instance( index=dut_index )
+            fs_obj_list.append(self.fs_obj)
+
         storage_controller = self.fs_obj.get_storage_controller()
         min_volume_capacity = 1073741824
         max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3 * 4096)
         capacity = random.randint(min_volume_capacity,max_volume_capacity)
         #capacity = 1073741824
+
         compression_effort = 0
         if enable_encryption:
             encrypt = True
@@ -73,11 +80,6 @@ class VolumeManagement(FunTestCase):
 
         if not skip_initialize:
             self.storage_controller_template.initialize()
-
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            self.fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(self.fs_obj)
 
         vol_uuid_dict = {}
         self.final_vol_uuid_dict = {}
