@@ -4,6 +4,7 @@ import {Observable, of, Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged, switchMap} from "rxjs/operators";
 import {LoggerService} from "../../../services/logger/logger.service";
 import {PagerService} from "../../../services/pager/pager.service";
+import {ActivatedRoute, Router} from "@angular/router";
 
 
 enum Mode {
@@ -37,8 +38,10 @@ export class SuitesViewComponent implements OnInit {
   mode: Mode = Mode.DEFAULT;
   showScriptPath: boolean = true;
   showAllSuites: boolean = false;
+  ownerEmail: string = null;
 
-  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService) {
+  constructor(private service: SuiteEditorService, private loggerService: LoggerService, private pagerService: PagerService,
+              private router: Router, private route: ActivatedRoute) {
     this.recordsPerPage = this.DEFAULT_RECORDS_PER_PAGE;
 
   }
@@ -51,14 +54,16 @@ export class SuitesViewComponent implements OnInit {
     }
     this.driver =
       of(true).pipe(switchMap(response => {
+        return this.getQueryParam();
+      })).pipe(switchMap(response => {
         return this.service.categories();
       })).pipe(switchMap(response => {
         this.availableCategories = response;
-        return this.service.suites<number>(true, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        return this.service.suites<number>(true, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText, this.ownerEmail);
       })).pipe(switchMap(suiteCount => {
         this.suitesCount = suiteCount;
         this.pager = this.pagerService.getPager(this.suitesCount, this.currentPage, this.recordsPerPage);
-        return this.service.suites<Suite[]>(null, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText);
+        return this.service.suites<Suite[]>(null, this.recordsPerPage, this.currentPage, this.selectedCategories, this.byNameSearchText, this.ownerEmail);
       })).pipe(switchMap((response: Suite []) => {
         //console.log(typeof response);
         //console.log(Object.prototype.toString.call(response[0]));
@@ -83,6 +88,11 @@ export class SuitesViewComponent implements OnInit {
     }
     this.currentPage = page;
     this.refreshAll();
+  }
+
+  cloneSuite(id) {
+    let url = "/regression/suite_editor?clone_id=" + String(id);
+    this.router.navigateByUrl(url);
   }
 
   refreshAll() {
@@ -167,5 +177,14 @@ export class SuitesViewComponent implements OnInit {
       this.recordsPerPage = this.suitesCount;
     }
     this.refreshAll();
+  }
+
+   getQueryParam() {
+    return this.route.queryParams.pipe(switchMap(params => {
+      if (params.hasOwnProperty('owner_email')) {
+        this.ownerEmail = params["owner_email"]
+      }
+      return of(params);
+    }))
   }
 }

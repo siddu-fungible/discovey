@@ -1,0 +1,43 @@
+router_mac:
+  00:de:ad:be:ef:00
+
+# HU host - the keyword must start with "hu". Picked from FS-FCP-SCALE_NETWORKING.YML
+hu7:
+  hostname: mpoc-server47
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu1-f0
+  vf_interface: hu1-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu1-f0:
+            ipv4_addr: 20.2.3.3
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.2.0.0/16
+          nexthop: 20.2.3.1
+        - prefix: 30.0.0.0/8
+          nexthop: 20.2.3.1
+
+hu9:
+  hostname: mpoc-server45
+  username: localadmin
+  password: Precious1*
+  mgmt_interface: eno1
+  pcie_width: 16
+  pf_interface: hu3-f0
+  vf_interface: hu3-f8
+  namespaces:
+    default:
+      interfaces:
+        - hu3-f0:
+            ipv4_addr: 20.2.4.3
+            ipv4_netmask: 255.255.255.0
+      routes:
+        - prefix: 20.2.0.0/16
+          nexthop: 20.2.4.1
+        - prefix: 30.0.0.0/8
+          nexthop: 20.2.4.1

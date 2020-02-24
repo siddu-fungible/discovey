@@ -50,11 +50,14 @@ def test_beds(request, id):
     if request.method == "GET":
         minimal = request.GET.get("minimal", False)
         name = request.GET.get("name", None)
+        pooled = int(request.GET.get("pooled", 0))
         q = Q()
         if not id:
             valid_test_beds = am.get_valid_test_beds()
             if name:
                 q = q & Q(name=name)
+            if pooled:
+                q = q & Q(pooled=True)
             all_test_beds = TestBed.objects.filter(q).order_by('name')
             all_test_beds = [x for x in all_test_beds if x.name in valid_test_beds]
             result = []
@@ -71,7 +74,8 @@ def test_beds(request, id):
                      "health_status": test_bed.health_status,
                      "disabled": test_bed.disabled,
                      "health_check_message": test_bed.health_check_message,
-                     "health_check_enabled": test_bed.health_check_enabled}
+                     "health_check_enabled": test_bed.health_check_enabled,
+                     "pooled": test_bed.pooled}
                 if not minimal:
                     if not test_bed.manual_lock:
                         if not all_test_bed_specs:
@@ -98,7 +102,8 @@ def test_beds(request, id):
                       "note": t.note,
                       "manual_lock": t.manual_lock,
                       "manual_lock_expiry_time": str(t.manual_lock_expiry_time),
-                      "manual_lock_submitter": t.manual_lock_submitter}
+                      "manual_lock_submitter": t.manual_lock_submitter,
+                      "pooled": t.pooled}
             test_bed_availability = am.get_test_bed_availability(test_bed_type=t.name)
             if not t.manual_lock:
                 asset_level_manual_locked, error_message, manual_lock_user, assets_required = am.check_test_bed_manual_locked(
@@ -337,7 +342,9 @@ def assets(request, name, asset_type):
         q = Q()
         if not name:
             if test_bed_name:
-                q = q & Q(test_beds__contains=test_bed_name)
+                test_bed_name = test_bed_name.split(',')
+                for test_bed in test_bed_name:
+                    q = q | Q(test_beds__contains=test_bed)
             all_assets = Asset.objects.filter(q)
             result = []
             for one_asset in all_assets:
@@ -484,6 +491,9 @@ def suites(request, id):
             search_by_name_text = request.GET.get("search_by_name", None)
             if search_by_name_text:
                 q &= Q(name__icontains=search_by_name_text)
+            owner_email = request.GET.get('owner_email', None)
+            if owner_email:
+                q &= Q(owner_email=owner_email)
             all_suites = Suite.objects.filter(q).extra(select={'case_insensitive_name': 'lower(name)'}).order_by(
                 'case_insensitive_name')
             if get_count is None:
@@ -507,6 +517,7 @@ def suites(request, id):
             s = Suite()
         else:
             s = Suite.objects.get(id=id)
+            s.modified_date = datetime.datetime.now()
         request_json = json.loads(request.body)
         name = request_json.get("name", None)
         short_description = request_json.get("short_description", None)
@@ -515,12 +526,14 @@ def suites(request, id):
         custom_test_bed_spec = request_json.get("custom_test_bed_spec", None)
         suite_entries = request_json.get("entries", None)
         type = request_json.get("type", "SUITE")  # TODO
+        owner_email = request_json.get("owner_email", "john.abraham@fungible.com")
         s.type = type
         s.name = name
         s.short_description = short_description
         s.categories = categories
         s.tags = tags
         s.custom_test_bed_spec = custom_test_bed_spec
+        s.owner_email = owner_email
         if suite_entries is not None:
             s.entries = suite_entries
         s.save()

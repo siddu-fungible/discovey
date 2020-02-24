@@ -117,7 +117,7 @@ class Singledpu(FunTestScript):
         fun_test.shared_variables["command_timeout"] = self.command_timeout
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.end_host = self.host_handles[self.host_ips[0]]
-
+        fun_test.shared_variables["end_host"] = self.end_host
 
     def cleanup(self):
         # Cleanup
@@ -125,7 +125,7 @@ class Singledpu(FunTestScript):
         nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nqn)
         nvme_disconnect_output = self.end_host.sudo_command(command=nvme_disconnect_cmd, timeout=60)
         nvme_disconnect_exit_status = self.end_host.exit_status()
-            fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
+        fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                           message="Host {} - NVME Disconnect Status".format(self.host_ips[0]))
         self.ctrlr_uuid1 = fun_test.shared_variables["ctrlr_uuid1"]
         self.target_uuid = fun_test.shared_variables["target_uuid"]
@@ -136,7 +136,7 @@ class Singledpu(FunTestScript):
             command_duration=self.command_timeout,
             uuid=self.target_uuid,
             type="VOL_TYPE_BLK_LOCAL_THIN")
-            fun_test.test_assert(not command_result["status"], "Deleting Clone volume while  attached  uuid {}".
+        fun_test.test_assert(not command_result["status"], "Deleting Clone volume while  attached  uuid {}".
                                  format(self.target_uuid))
 
 
@@ -145,7 +145,7 @@ class Singledpu(FunTestScript):
                                                                                ns_id=self.ns_id + 1,
                                                                                command_duration=self.command_timeout)
 
-            fun_test.test_assert(command_result["status"], "Detached Clone volume from ctrlr {}".
+        fun_test.test_assert(command_result["status"], "Detached Clone volume from ctrlr {}".
                                  format(self.ctrlr_uuid1))
 
         # Delete Clone volume
@@ -153,7 +153,7 @@ class Singledpu(FunTestScript):
             command_duration=self.command_timeout,
             uuid=self.target_uuid,
             type="VOL_TYPE_BLK_LOCAL_THIN")
-            fun_test.test_assert(command_result["status"], "Deleted Clone volume  uuid {}".
+        fun_test.test_assert(command_result["status"], "Deleted Clone volume  uuid {}".
                                  format(self.target_uuid))
 
 
@@ -162,14 +162,14 @@ class Singledpu(FunTestScript):
                                                                                ns_id=self.ns_id,
                                                                                command_duration=self.command_timeout)
 
-            fun_test.test_assert(command_result["status"], "Detached Base volume   from ctrlr".
+        fun_test.test_assert(command_result["status"], "Detached Base volume   from ctrlr".
                                  format(self.ctrlr_uuid1))
 
 
         # Delete the controller detached from Base and Clone volume
         command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid1,
                                                                    command_duration=self.command_timeout)
-            fun_test.test_assert(command_result["status"], "Deleted the controller {}".
+        fun_test.test_assert(command_result["status"], "Deleted the controller {}".
                                  format(self.ctrlr_uuid1))
 
 
@@ -179,7 +179,7 @@ class Singledpu(FunTestScript):
             uuid=self.thin_uuid,
             type="VOL_TYPE_BLK_LOCAL_THIN")
 
-            fun_test.test_assert(command_result["status"], "Deleted BV with uuid {}".
+        fun_test.test_assert(command_result["status"], "Deleted BV with uuid {}".
                                  format(self.thin_uuid))
 
 
@@ -229,6 +229,7 @@ class CloneTestCase(FunTestCase):
         self.num_duts = fun_test.shared_variables["num_duts"]
         self.storage_controller = fun_test.shared_variables["sc_obj"][0]
         self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
+
 
         # contrller, base and clone uids
         self.ctrlr_uuid1 = utils.generate_uuid()
@@ -354,8 +355,8 @@ class CloneTestCase(FunTestCase):
     def run(self):
         testcase = self.__class__.__name__
         self.test_method = testcase[:]
-
-
+        self.end_host = fun_test.shared_variables["end_host"]
+        self.host_numa_cpus = fun_test.shared_variables["numa_cpus"]
 
         if self.test_method == 'CloneRead':
 

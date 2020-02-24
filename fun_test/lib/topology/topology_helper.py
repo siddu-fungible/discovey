@@ -50,6 +50,8 @@ class TopologyHelper:
             else:
                 am = fun_test.get_asset_manager()
                 spec = am.get_test_bed_spec(name=test_bed_name)
+                if not spec:
+                    spec = am.get_custom_test_bed_spec_from_local_settings()
                 fun_test.simple_assert(spec, "topology spec available for {}".format(test_bed_name))
                 self.spec = spec
 
@@ -58,6 +60,8 @@ class TopologyHelper:
         spec = self.spec
 
         disabled_hosts = spec.get("disabled_hosts", [])
+        disabled_fungible_controllers = spec.get("disabled_fungible_controllers", [])
+
         if "host_info" in spec:
             hosts = spec["host_info"]
             for host_name in hosts:
@@ -67,6 +71,16 @@ class TopologyHelper:
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=host_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host_name))
                 self.expanded_topology.hosts[host_name] = Host(name=host_name, spec=host_spec)
+
+        if "fungible_controller_info" in spec:
+            fungible_controller_info = spec["fungible_controller_info"]
+            for fungible_controller_name in fungible_controller_info:
+                if fungible_controller_name in disabled_fungible_controllers:
+                    fun_test.log("Disabling Fungible controller: {}".format(fungible_controller_name))
+                    continue
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
+                fun_test.simple_assert(host_spec, "Retrieve fungible-controller-spec for {}".format(fungible_controller_name))
+                self.expanded_topology.fungible_controllers[fungible_controller_name] = Host(name=fungible_controller_name, spec=host_spec)
 
         disabled_perf_listener_hosts = spec.get("disabled_perf_listener_hosts", [])
         if "perf_listener_host_info" in spec:
@@ -213,6 +227,10 @@ class TopologyHelper:
 
     @fun_test.safe
     def deploy(self, already_deployed=False):
+        if not already_deployed:
+            already_deployed = fun_test.get_job_environment_variable("already_deployed")
+            if not already_deployed:
+                already_deployed = fun_test.get_local_setting("already_deployed")
         if not self.expanded_topology:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
@@ -339,6 +357,14 @@ class TopologyHelper:
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(host.name))
                 linux_obj = Linux(**host_spec)
                 host.set_instance(linux_obj)
+
+            fungible_controllers = topology.fungible_controllers
+            if fungible_controllers:
+                fungible_controller_name = fungible_controllers.keys()[0]
+                host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
+                fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller_name))
+                linux_obj = Linux(**host_spec)
+                fungible_controllers[fungible_controller_name].set_instance(linux_obj)
 
             duts = topology.duts
 
@@ -500,10 +526,10 @@ class TopologyHelper:
         ##### Let us print out the topology
         asset_manager.describe()  # TODO Just for debugging
 
-        d = topology.to_dict()
-        topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
-                                                                         contents=json.dumps(d, indent=4))
-        fun_test.set_topology_json_filename(filename=topology_json_artifact)
+        # d = topology.to_dict()
+        # topology_json_artifact = fun_test.create_test_case_artifact_file(post_fix_name="topology.json",
+        #                                                                 contents=json.dumps(d, indent=4))
+        # fun_test.set_topology_json_filename(filename=topology_json_artifact)
         return True  # TODO
 
     @fun_test.safe

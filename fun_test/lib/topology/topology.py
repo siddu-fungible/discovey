@@ -14,6 +14,7 @@ class ExpandedTopology(ToDictMixin):
         self.spec = spec
         self.cleaned_up = False
         self.perf_listener_hosts = {}
+        self.fungible_controllers = {}
 
     def is_cleaned_up(self):
         return self.cleaned_up
@@ -57,7 +58,6 @@ class ExpandedTopology(ToDictMixin):
         return result
 
     def get_switch_instance(self, name):
-        result = None
         result = self.get_switch(name=name)
         return result
 
@@ -72,6 +72,15 @@ class ExpandedTopology(ToDictMixin):
 
     def get_pcie_hosts(self):
         return self.pcie_hosts
+
+    def get_fungible_controllers(self):
+        return self.fungible_controllers
+
+    def get_fungible_controller_instance(self):
+        result = None
+        if self.fungible_controllers:
+            result = self.fungible_controllers[self.fungible_controllers.keys()[0]].get_instance()
+        return result
 
     def get_host(self, name):
         host = self.hosts.get(name, None)

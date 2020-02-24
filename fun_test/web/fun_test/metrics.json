@@ -2836,6 +2836,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_2_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_2_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -2913,6 +2918,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_4_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_4_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -2990,6 +3000,11 @@
                                 "name": "rand_read_qd256_multi_host_nvmetcp_8_vols_output_latency",
                                 "label": "Latency, QDepth=256",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_8_vols_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -3067,6 +3082,11 @@
                                 "label": "Latency, QDepth=256",
                                 "metric_model_name": "BltVolumePerformance",
                                 "children": []
+                              },
+                              {
+                                "metric_model_name": "BltVolumePerformance",
+                                "name": "rand_read_qd512_multi_host_nvmetcp_output_latency",
+                                "label": "Latency, QDepth=512"
                               }
                             ]
                           },
@@ -7329,6 +7349,88 @@
             ]
           }
         ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fungible_controller",
+        "label": "Fungible controller",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "fungible_controller_api",
+            "label": "API",
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "fungible_controller_api_create",
+                "label": "Create",
+                "children": [
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_create_avg_time_concurrent",
+                    "label": "Average time per volume - concurrent"
+                  },
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_create_avg_time_serial",
+                    "label": "Average time per volume - serial"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "fungible_controller_api_attach",
+                "label": "Attach",
+                "children": [
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_attach_avg_time_concurrent",
+                    "label": "Average time per volume - concurrent"
+                  },
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_attach_avg_time_serial",
+                    "label": "Average time per volume - serial"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "fungible_controller_api_delete",
+                "label": "Delete",
+                "children": [
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_delete_avg_time_concurrent",
+                    "label": "Average time per volume - concurrent"
+                  },
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_delete_avg_time_serial",
+                    "label": "Average time per volume - serial"
+                  }
+                ]
+              },
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "fungible_controller_api_detach",
+                "label": "Detach",
+                "children": [
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_detach_avg_time_concurrent",
+                    "label": "Average time per volume - concurrent"
+                  },
+                  {
+                    "metric_model_name": "DataPlaneOperationsPerformance",
+                    "name": "fungible_controller_api_detach_avg_time_serial",
+                    "label": "Average time per volume - serial"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },
@@ -7923,6 +8025,12 @@
             "metric_model_name": "MetricContainer",
             "name": "multi_host_raw_block_nvmetcp",
             "label": "NVMe/TCP - Multi host",
+            "reference": true
+          },
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
+            "label": "NVMe/TCP - Single host",
             "reference": true
           }
         ]

@@ -314,10 +314,14 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
                     self.host_info[curr_host_name]["num_volumes"] += 1
-
+                if "device_id" in self.ec_info:
+                    del self.ec_info["device_id"]
+                if "drive_uuid" in self.ec_info:
+                    del self.ec_info["drive_uuid"]
                 # Get the device id for the plexes
                 self.ec_info = get_plex_device_id(self.ec_info, self.storage_controller)
                 #fun_test.shared_variables["ec_info"] = self.ec_info
+                fun_test.log("EC volume plexes are created in drives {}".format(self.ec_info["device_id"]))
 
                 # Do nvme connect, check if host is able to see the volume
                 for host_name in self.host_info:
@@ -355,7 +359,7 @@ class RecoveryWithFailures(FunTestCase):
                             fun_test.log("NVMe Block Device/s: {}".
                                          format(self.host_info[host_name]["nvme_block_device_list"]))
 
-                    fun_test.test_assert_expected(expected=self.host_info[host_name]["num_volumes"],
+                    fun_test.test_assert_expected(expected=self.ec_info["num_volumes"],
                                                   actual=len(self.host_info[host_name]["nvme_block_device_list"]),
                                                   message="Expected NVMe devices are available")
 

@@ -371,7 +371,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.storage_controller_template.verify_dataplane_ip(storage_controller=fs_obj.get_storage_controller(),
-                                                                 dut_index=dut_index)
+                                                                 fs_obj=fs_obj)
 
     def run(self):
 

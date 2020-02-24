@@ -1,0 +1,58 @@
+{
+  "GlobalSetup": {
+    "already_deployed": false,
+    "reboot_hosts" : true,
+    "bootargs": [
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "num_f1": 1,
+    "num_hosts": 12,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": "default",
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300
+  },
+  "MaxHostsConnections":{
+    "num_f1": 1,
+    "blt_count": 256,
+    "num_hosts": 1,
+    "capacity": 1099511627776,
+    "num_of_vhosts": 256,
+    "tcp_connections_per_connect": 17,
+    "compression_effort": "False",
+    "encrypt": "False",
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {"override": true, "override_node":0},
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --group_reporting=1  --norandommap --randrepeat=0 ",
+      "timeout": 3600
+    }
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "GlobalSetup": {
+    "already_deployed": false,
+    "reboot_hosts" : true,
+    "bootargs": [
+      "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
+      "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
+    ],
+    "dut_start_index": 0,
+    "host_start_index": 0,
+    "num_f1": 1,
+    "num_hosts": 12,
+    "fpg_int_prefix": "fpg",
+    "disable_f1_index": 1,
+    "f1_in_use": 0,
+    "load_modules": [
+      "nvme",
+      "nvme_tcp"
+    ],
+    "huid": 7,
+    "ctlid": 0,
+    "syslog": "default",
+    "command_timeout": 5,
+    "reboot_timeout": 600,
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {
+      "override": true,
+      "override_node": "NUMA node0 CPU(s)"
+    },
+    "api_server_port": 50220,
+    "api_server_username": "admin",
+    "api_server_password": "password",
+    "install": "fresh",
+    "sc_script_dir": "/opt/fungible/StorageController/etc",
+    "run_sc_script": "start_sc.sh",
+    "run_sc_restart_timeout": 120,
+    "container_up_timeout": 120,
+    "api_server_up_timeout": 300
+  },
+  "CreateAttachDetachDeleteMultivolMultihost":{
+    "num_f1": 1,
+    "blt_count": 48,
+    "num_hosts": 1,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : false,
+    "detach_duringio": false,
+    "raw_api_call": true,
+    "multi_host_test": "True",
+    "compression_effort": "False",
+    "encrypt": false,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
+      "timeout": 600
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostDuringIO":{
+    "num_f1": 1,
+    "blt_count": 48,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : false,
+    "detach_duringio": true,
+    "raw_api_call": true,
+    "multi_host_test": "True",
+    "compression_effort": "False",
+    "encrypt": false,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 180
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostShared":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : true,
+    "detach_duringio": false,
+    "multi_host_test": "True",
+    "raw_api_call": true,
+    "compression_effort": "False",
+    "encrypt": false,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 600
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIO":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : true,
+    "detach_duringio": true,
+    "multi_host_test": "True",
+    "raw_api_call": true,
+    "compression_effort": "False",
+    "encrypt": false,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 180
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostEncrypt":{
+    "num_f1": 1,
+    "blt_count": 48,
+    "num_hosts": 1,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : false,
+    "detach_duringio": false,
+    "raw_api_call": true,
+    "multi_host_test": "True",
+    "compression_effort": "False",
+    "encrypt": true,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
+      "timeout": 600
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt":{
+    "num_f1": 1,
+    "blt_count": 48,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : false,
+    "detach_duringio": true,
+    "raw_api_call": true,
+    "multi_host_test": "True",
+    "compression_effort": "False",
+    "encrypt": true,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 180
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostSharedEncrypt":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : true,
+    "detach_duringio": false,
+    "multi_host_test": "True",
+    "raw_api_call": true,
+    "compression_effort": "False",
+    "encrypt": true,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 600
+    }
+  },
+  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 2,
+    "capacity": 8589934592,
+    "test_iteration_count": 24,
+    "shared_volume" : true,
+    "detach_duringio": true,
+    "multi_host_test": "True",
+    "raw_api_call": true,
+    "compression_effort": "False",
+    "encrypt": true,
+    "name": "raw_volume_",
+    "DUT":1,
+    "override_numa_node": {
+      "override": true,
+      "override_node": 0
+    },
+    "ethernet_adapter": "Mellanox",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 180
+    }
+  }
+}

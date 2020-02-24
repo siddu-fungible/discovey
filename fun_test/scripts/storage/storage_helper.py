@@ -66,7 +66,7 @@ def single_fs_setup(obj, set_dataplane_ips=True):
         fun_test.log("{} Testbed Config: {}".format(obj.testbed_type, obj.testbed_config))
         obj.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/inspur_fs_hosts_mapping.json")
         obj.available_hosts = obj.fs_hosts_map[obj.testbed_type]["host_info"]
-        obj.full_dut_indexes = [int(i) for i in sorted(obj.testbed_config["dut_info"].keys())]
+        obj.full_dut_indexes = [int(i) for i in sorted(obj.fs_hosts_map[obj.testbed_type]["dut_info"].keys())]
         # Skipping DUTs not required for this test
         obj.skip_dut_list = []
         for index in xrange(0, obj.dut_start_index):
@@ -322,6 +322,43 @@ def single_fs_setup(obj, set_dataplane_ips=True):
     fun_test.simple_assert(expression=ensure_api_server_is_up(obj.sc_api, timeout=obj.api_server_up_timeout, come_obj=obj.come_obj[0]),
                            message="Bundle Image boot: API server is up")
     fun_test.sleep("Bundle Image boot: waiting for API server to be ready", 60)
+    num_drives = 0
+    drives = obj.sc_api.get_all_drives()
+    for dpu in drives:
+        num_drives += len(drives[dpu])
+    fun_test.log("Number of drives in FS is {}".format(num_drives))
+    format_result = obj.sc_api.format_drives(drives)
+    # Drive formatting
+    for dpu in format_result:
+        for drive in format_result[dpu]:
+            fun_test.test_assert(drive.get("status"), "Drive with uuid {} on slot {} of {} formatted".format(drive.get("uuid"), drive.get("slot_id"), dpu))
+    drive_format_timer = FunTimer(max_time=getattr(obj, "drive_format_timeout", 120))
+    drive_state = obj.sc_api.get_all_drives()
+    total_system_drives = 0
+    for dpu in drive_state:
+        total_system_drives += len(drive_state[dpu])
+    all_drive_state = []
+    list_failed_drives = []
+    while not drive_format_timer.is_expired():
+        drive_state = obj.sc_api.get_all_drives()
+        for dpu in drive_state:
+            total_drives = len(drive_state[dpu])
+            current_drive_count = 0
+            for drive in drive_state[dpu]:
+                if drive.get("state") == 'Online':
+                    all_drive_state.append(True)
+                else:
+                    fun_test.log("Drive with uuid {} in slot {} on {}, not in Online state".format(drive.get("uuid"), drive.get("slot_id"), dpu))
+                    list_failed_drives.append((dpu, drive.get("slot_id"), drive.get("uuid")))
+        if len(all_drive_state) == total_system_drives:
+            fun_test.test_assert((all(all_drive_state)), "All drives in FS is online")
+            break
+        elif list_failed_drives:
+            fun_test.sleep("Waiting for drives to come online", 10)
+    if drive_format_timer.is_expired() and list_failed_drives:
+        for elem in list_failed_drives:
+            fun_test.test_assert(False, "Drive in slot {} on dpu {} is not online".format(elem[1], dpu))
+
     # Check if bond interface status is Up and Running
     for f1_index, container_name in enumerate(obj.funcp_spec[0]["container_names"]):
         if container_name == "run_sc":
@@ -519,8 +556,8 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name, compression=False, encryption=False, compression_effort=-1,
-                 key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
+                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, compression=False, encryption=False,
+                 compression_effort=-1, key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
               "read_99_latency", "read_99_99_latency", "fio_job_name"]:
@@ -557,37 +594,47 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                       read_99_99_latency_unit="usecs")
     else:
         model_name = "RawVolumeNvmeTcpMultiHostPerformance"
-        blt = ModelHelper(model_name=model_name)
-        blt.set_units(validate=True, **blt_unit_dict)
-        blt.add_entry(date_time=log_time,
-                      volume=volume,
-                      test=test,
-                      block_size=block_size,
-                      io_depth=int(io_depth),
-                      size=size,
-                      operation=operation,
-                      num_ssd=num_ssd,
-                      num_volume=num_volumes,
-                      fio_job_name=fio_job_name,
-                      write_iops=write_iops,
-                      read_iops=read_iops,
-                      write_throughput=write_bw,
-                      read_throughput=read_bw,
-                      write_avg_latency=write_latency,
-                      read_avg_latency=read_latency,
-                      write_90_latency=write_90_latency,
-                      write_95_latency=write_95_latency, write_99_latency=write_99_latency,
-                      write_99_99_latency=write_99_99_latency, read_90_latency=read_90_latency,
-                      read_95_latency=read_95_latency, read_99_latency=read_99_latency,
-                      read_99_99_latency=read_99_99_latency,
-                      compression=compression,
-                      encryption=encryption,
-                      compression_effort=compression_effort,
-                      key_size=key_size,
-                      xtweak=xtweak,
-                      io_size=io_size,
-                      platform=platform
-        )
+        status = fun_test.PASSED
+        blt_value_dict = {
+            "date_time": log_time,
+            "num_hosts": num_hosts,
+            "num_ssd": num_ssd,
+            "num_dpu": num_dpu,
+            "num_volume": num_volumes,
+            "block_size": block_size,
+            "io_depth": int(io_depth),
+            "operation": operation,
+            "compression": compression,
+            "encryption": encryption,
+            "compression_effort": compression_effort,
+            "key_size": key_size,
+            "xtweak": xtweak,
+            "io_size": io_size,
+            "platform": platform,
+
+            "write_iops": write_iops,
+            "read_iops": read_iops,
+            "write_throughput": write_bw,
+            "read_throughput": read_bw,
+            "write_avg_latency": write_latency,
+            "write_90_latency": write_90_latency,
+            "write_95_latency": write_95_latency,
+            "write_99_latency": write_99_latency,
+            "write_99_99_latency": write_99_99_latency,
+            "read_avg_latency": read_latency,
+            "read_90_latency": read_90_latency,
+            "read_95_latency": read_95_latency,
+            "read_99_latency": read_99_latency,
+            "read_99_99_latency": read_99_99_latency
+        }
+        try:
+            blt = ModelHelper(model_name=model_name)
+            blt.set_units(validate=True, **blt_unit_dict)
+            blt.add_entry(**blt_value_dict)
+            blt.set_status(status)
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        fun_test.log("Results posted to performance database")
 
     result = []
     arg_list = post_results.func_code.co_varnames[:12]
@@ -688,6 +735,14 @@ def get_device_numa_node(end_host, ethernet_adapter):
     lspci_verbose_output = end_host.lspci(slot=adapter_id, verbose=True)
     numa_node = lspci_verbose_output[0]['numa_node']
     return numa_node
+
+
+def get_total_numa_cpus(host_numa_cpu_range):
+    total_numa_cpus = 0
+    for cpu_group in host_numa_cpu_range.split(","):
+        cpu_range = cpu_group.split("-")
+        total_numa_cpus += len(range(int(cpu_range[0]), int(cpu_range[1]))) + 1
+    return total_numa_cpus
 
 
 def fetch_numa_cpus(end_host, ethernet_adapter):
@@ -1265,6 +1320,26 @@ def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout)
         fun_test.log("Successfully set the fcp scheduler bandwidth to: {}".format(command_result["data"]))
         result = True
     return result
+
+
+def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest, cpu_list, timeout=3600):
+    """
+    :param host_handle: Handle to host
+    :param host_index: Index of host in case this function is called for multiple hosts
+    :param ezfio_path: Directory where ezfio is installed
+    :param device: nvme volume
+    :param dev_util: % of volume to test
+    :param output_dest: Dir where results should be stored
+    :param timeout:
+    :return: None
+    """
+
+    ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {} --cpus {}".\
+        format(ezfio_path, device, dev_util, output_dest, cpu_list)
+    ezfio_output = host_handle.sudo_command(ezfio_command, timeout)
+    fun_test.shared_variables["ezfio"][host_index] = ezfio_output
+
+    return ezfio_output
 
 
 def fio_parser(arg1, host_index, **kwargs):
@@ -2519,56 +2594,56 @@ class CollectStats(object):
                                  "complete...".format(thread_id))
                 fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
 
-    def populate_stats_to_file(self, stats_collect_details, mode, iodepth):
+    def populate_stats_to_file(self, stats_collect_details, job_string):
         for index, value in enumerate(stats_collect_details):
             for func, arg in value.iteritems():
                 filename = arg.get("output_file")
                 if filename:
                     if func == "vp_utils":
-                        fun_test.add_auxillary_file(description="F1 VP Utilization - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 VP Utilization - {}".format(job_string),
+                                                    filename=filename)
                     if func == "per_vp":
-                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 Per VP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "resource_bam_args":
-                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="F1 Resource bam stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "vol_stats":
-                        fun_test.add_auxillary_file(description="Volume Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="Volume Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "vppkts_stats":
-                        fun_test.add_auxillary_file(description="VP Pkts Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="VP Pkts Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "psw_stats":
-                        fun_test.add_auxillary_file(description="PSW Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="PSW Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "fcp_stats":
-                        fun_test.add_auxillary_file(description="FCP Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="FCP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "wro_stats":
-                        fun_test.add_auxillary_file(description="WRO Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="WRO Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "erp_stats":
-                        fun_test.add_auxillary_file(description="ERP Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="ERP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "etp_stats":
-                        fun_test.add_auxillary_file(description="ETP Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="ETP Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "eqm_stats":
-                        fun_test.add_auxillary_file(description="EQM Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="EQM Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "hu_stats":
-                        fun_test.add_auxillary_file(description="HU Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="HU Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "ddr_stats":
-                        fun_test.add_auxillary_file(description="DDR Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="DDR Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "ca_stats":
-                        fun_test.add_auxillary_file(description="CA Stats - {} IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="CA Stats - {}".format(job_string),
+                                                    filename=filename)
                     if func == "cdu_stats":
-                        fun_test.add_auxillary_file(description="CDU Stats - {} - IO depth {}".
-                                                    format(mode, iodepth), filename=filename)
+                        fun_test.add_auxillary_file(description="CDU Stats - {}".format(job_string),
+                                                    filename=filename)
 
 
 def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
@@ -2588,7 +2663,6 @@ def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TI
         fun_test.critical("Unable to get the individual drive status...")
 
     return min_capacity
-
 
 
 def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
@@ -2611,6 +2685,7 @@ def get_drive_uuid_from_device_id(storage_controller, drive_ids_list):
         result["status"] = True
 
     return result
+
 
 def extract_funos_log_time(log_string, get_plex_number=False):
     result = {"status": False, "time": None, "plex_number": None}
@@ -2661,6 +2736,7 @@ def get_plex_operation_time(bmc_linux_handle, log_file, ec_uuid, plex_count=1, p
             fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
 
     return result
+
 
 def get_plex_device_id(ec_info, storage_controller):
     if "device_id" not in ec_info:

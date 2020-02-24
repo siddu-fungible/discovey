@@ -40,7 +40,8 @@ from web.fun_test.models import (
     TestCaseInfo,
     Suite,
     RegresssionScripts,
-    MetricsDataRunTime
+    MetricsDataRunTime,
+    LastGoodBuild
 )
 
 SUITE_EXECUTION_FILTERS = {"PENDING": "PENDING",
@@ -736,4 +737,12 @@ def get_script_id(test_case_execution_id):
                 result = regression_script.id
             except ObjectDoesNotExist:
                 pass
+    return result
+
+def get_stable_build_number(release_train):
+    result = None
+    try:
+        result = LastGoodBuild.get(release_train=release_train)
+    except Exception as ex:
+        print "Exception: {}".format(str(ex))
     return result

@@ -31,7 +31,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        already_deployed = True
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -39,6 +39,7 @@ class BringupSetup(FunTestScript):
 
     def cleanup(self):
         self.topology.cleanup()
+        #pass
 
 
 class RunNvmeIdentifyCommands(FunTestCase):
@@ -57,7 +58,7 @@ class RunNvmeIdentifyCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol2"
-        already_deployed = False
+        already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -131,7 +132,7 @@ class RunNvmeIdentifyCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device_ns = '/dev/' + nvme_device_name
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
@@ -303,7 +304,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol"
-        already_deployed = False
+        already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -366,9 +367,10 @@ class RunNvmeGetFeatureCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
+
 
             feature_id_list = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
                                0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x77, 0x78, 0x7F, 0x80, 0xBF, 0xC0, 0xFF,
@@ -456,7 +458,7 @@ class RunNvmeGetLogCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol2"
-        already_deployed = False
+        already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -520,18 +522,19 @@ class RunNvmeGetLogCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device_ns = '/dev/' + nvme_device_name
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
+            known_issues = [0xC0]
 
             log_identifier_list = [0x00 , 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E,
-                                   0x0F, 0x10, 0x6F, 0x70, 0x71, 0x7F, 0x80, 0x81, 0xC0, 0xFF, 0x82, 0xBF]
+                                   0x0F, 0x10, 0x6F, 0x70, 0x71, 0x7F, 0x80, 0x81, 0xFF, 0x82, 0xBF]
 
             variations = [None, ' --lpo=50 --rae']
 
             test_result = True
-            if 0:
+            if 1:
                 for log_id in log_identifier_list:
                     for variation in variations:
                         variation_args = ''
@@ -746,7 +749,7 @@ class RunNvmeGetPropertyCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
@@ -825,7 +828,7 @@ class RunNvmeOtherCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol2"
-        already_deployed = False
+        already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -894,7 +897,7 @@ class RunNvmeOtherCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device_ns = '/dev/' + nvme_device_name
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
@@ -1026,7 +1029,7 @@ class RunNvmeIOCommands(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol2"
-        already_deployed = False
+        already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -1095,7 +1098,7 @@ class RunNvmeIOCommands(FunTestCase):
         for host_id in hosts:
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
-            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)
+            nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
             nvme_device_ns = '/dev/' + nvme_device_name
             nvme_device = '/dev/' + nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
@@ -1131,7 +1134,7 @@ class RunNvmeIOCommands(FunTestCase):
 
                     if 'USE_NS' in variation_args:
                         dev = nvme_device_ns
-                        variation_args.replace('USE_NS', '')
+                        variation_args = variation_args.replace('USE_NS', '')
                     else:
                         dev = nvme_device
 
@@ -1164,15 +1167,31 @@ class RunNvmeIOCommands(FunTestCase):
                     uart_last_timestamp = last_timestamp.replace("[", '')
                     print "Next Uart last time stamp is " + str(uart_last_timestamp)
 
+                    if nvme_option is not 'reset':
+                        # Connection should not be reset
+                        result_temp = "Got close notification for queue " not in relevant_logs
+                        if not result_temp:
+                            fun_test.critical("Connection is reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd))
+                        fun_test.add_checkpoint(checkpoint="Validate whether connection is not reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd),
+                                                        expected=True, actual=result_temp)
 
-                    # Connection should not be reset
-                    result_temp = "Got close notification for queue " not in relevant_logs
-                    if not result_temp:
-                        fun_test.critical("Connection is reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd))
-                    fun_test.add_checkpoint(checkpoint="Validate whether connection is not reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd),
-                                                    expected=True, actual=result_temp)
+                        test_result &= result_temp
+                    else:
+                        # Connection should not be reset
+                        result_temp = "Got close notification for queue " in relevant_logs
+                        if not result_temp:
+                            fun_test.critical("Connection is NOT reset for {NVME_CMD}".format(NVME_CMD=nvme_cmd))
+                        fun_test.add_checkpoint(
+                            checkpoint="Validate whether connection is reset for {NVME_CMD}".format(
+                                NVME_CMD=nvme_cmd),
+                            expected=True, actual=result_temp)
 
-                    test_result &= result_temp
+                        test_result &= result_temp
+
+                    if nvme_option == 'reset':
+                        time.sleep(20)
+
+
 
 
             fun_test.test_assert(expression=test_result, message="Run NVME IO test result")

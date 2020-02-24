@@ -123,7 +123,7 @@
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
     "fs_type": "ext3",
-    "test_volume_start_index": 1,
+    "test_volume_start_index": 0,
     "test_file_size": 107374182400,
     // Ensure that dividing block size with the test_file_size doesn't give any fractions
     "dd_create_file": {"input_file": "/dev/urandom", "output_file": "/tmp/input", "block_size": 1048576},

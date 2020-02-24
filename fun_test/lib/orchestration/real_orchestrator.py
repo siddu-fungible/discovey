@@ -2,6 +2,8 @@ from lib.system.fun_test import fun_test
 from lib.orchestration.orchestrator import Orchestrator
 from lib.system.utils import ToDictMixin
 from lib.fun.fs import Fs
+from lib.topology.end_points import EndPoint
+from lib.fun.networking.fs_networking import Route
 
 
 class RealOrchestrator(Orchestrator, ToDictMixin):
@@ -48,6 +50,30 @@ class RealOrchestrator(Orchestrator, ToDictMixin):
                             fs_parameters=fs_parameters,
                             already_deployed=already_deployed)
             self.dut_instance = fs_obj
+            for f1_index in dut_obj.fpg_interfaces:
+                for interface_index in dut_obj.fpg_interfaces[f1_index]:
+                    fpg_interface = fs_obj.networking.add_fpg_interface(f1_index=f1_index,
+                                                                        interface_index=interface_index)
+                    peer_info = dut_obj.fpg_interfaces[f1_index][interface_index].peer_info
+                    if peer_info and peer_info.type == EndPoint.END_POINT_TYPE_SWITCH:
+                        fpg_interface.set_switch_info(switch_info=peer_info.spec)
+
+            for f1_index in dut_obj.bond_interfaces:
+                for interface_index in dut_obj.bond_interfaces[f1_index]:
+                    bond_interface = fs_obj.networking.add_bond_interface(f1_index=f1_index,
+                                                                          interface_index=interface_index)
+                    bond_interface_info = dut_obj.bond_interfaces[f1_index][interface_index]
+                    if hasattr(bond_interface_info, "ip"):
+                        bond_interface.set_ip(ip=bond_interface_info.ip)
+                    if hasattr(bond_interface_info, "fpg_slaves"):
+                        bond_interface.set_fpg_slaves(bond_interface_info.fpg_slaves)
+                    if hasattr(bond_interface_info, "route"):
+                        routes_to_add = bond_interface_info.route
+                        for route_to_add in routes_to_add:
+                            route_obj = Route(network=route_to_add["network"], gateway=route_to_add["gateway"])
+                            bond_interface.add_route(route_obj)
+
+
             # Start Fs
             fun_test.test_assert(fs_obj.bootup(non_blocking=True, threaded=True), "FS bootup non-blocking initiated")
 

@@ -2,6 +2,8 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.network_controller import NetworkController
 from lib.system.fun_test import *
 from lib.system import utils
+import httplib
+import logging
 if fun_test.storage_api_enabled:
     from swagger_client.api.storage_api import StorageApi
     from swagger_client.api.topology_api import TopologyApi
@@ -11,11 +13,12 @@ if fun_test.storage_api_enabled:
     from swagger_client.configuration import Configuration
 
 
+
 class StorageController(NetworkController, DpcshClient):
     TIMEOUT = 2
 
     def __init__(self, mode="storage", target_ip=None, target_port=None, verbose=True, api_username="admin",
-                 api_password="password", api_server_ip=None, api_server_port=9000):
+                 api_password="password", api_server_ip=None, api_server_port=9000, api_logging_level=logging.DEBUG):
         DpcshClient.__init__(self, mode=mode, target_ip=target_ip, target_port=target_port, verbose=verbose)
         if fun_test.storage_api_enabled:
             if not api_server_ip:
@@ -26,6 +29,33 @@ class StorageController(NetworkController, DpcshClient):
             configuration.username = api_username
             configuration.password = api_password
             configuration.verify_ssl = False
+            if True:
+                if api_logging_level <= logging.DEBUG:
+                    # configuration.debug = True
+                    httplib.HTTPConnection.debuglevel = 2
+                try:
+                    storage_api_log_handler = fun_test.get_storage_api_log_handler()
+                    logger = logging.getLogger('swagger_client.rest')
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
+
+                    logger = logging.getLogger("requests.packages.urllib3")
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
+
+                    logger = logging.getLogger("httplib")
+                    logger.propagate = False
+                    if not logger.handlers:
+                        logger.setLevel(api_logging_level)
+                        logger.addHandler(storage_api_log_handler)
+
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
             api_client = ApiClient(configuration)
             self.apigateway_api = ApigatewayApi(api_client)
             self.storage_api = StorageApi(api_client)
@@ -425,7 +455,7 @@ class StorageController(NetworkController, DpcshClient):
 
                 this_uuid = utils.generate_uuid()
                 ec_info["uuids"][num]["lsv"].append(this_uuid)
-                if compression_enabled:
+                if compression_enabled and not encryption_enabled:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
                                                         block_size=ec_info["volume_block"]["lsv"],
@@ -439,7 +469,7 @@ class StorageController(NetworkController, DpcshClient):
                                                         zip_filter=ec_info['zip_filter'],
                                                         group_id=num+3,
                                                         command_duration=command_timeout)
-                elif encryption_enabled:
+                elif encryption_enabled and not compression_enabled:
                     ec_info["key"][num] = utils.generate_key(ec_info["key_size"])
                     ec_info["xtweak"][num] = utils.generate_key(ec_info["xtweak_size"])
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
@@ -455,7 +485,25 @@ class StorageController(NetworkController, DpcshClient):
                                                         xtweak=ec_info['xtweak'][num],
                                                         group_id=num + 3,
                                                         command_duration=command_timeout)
-
+                elif compression_enabled and encryption_enabled:
+                    ec_info["key"][num] = utils.generate_key(ec_info["key_size"])
+                    ec_info["xtweak"][num] = utils.generate_key(ec_info["xtweak_size"])
+                    command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
+                                                        capacity=ec_info["volume_capacity"][num]["lsv"],
+                                                        block_size=ec_info["volume_block"]["lsv"],
+                                                        name="lsv_" + this_uuid[-4:],
+                                                        uuid=this_uuid,
+                                                        group=ec_info["ndata"],
+                                                        jvol_uuid=ec_info["uuids"][num]["jvol"],
+                                                        pvol_id=ec_info["uuids"][num]["ec"],
+                                                        compress=ec_info['compress'],
+                                                        zip_effort=ec_info['zip_effort'],
+                                                        zip_filter=ec_info['zip_filter'],
+                                                        encrypt=ec_info['encrypt'],
+                                                        key=ec_info['key'][num],
+                                                        xtweak=ec_info['xtweak'][num],
+                                                        group_id=num+3,
+                                                        command_duration=command_timeout)
                 else:
                     command_result = self.create_volume(type=ec_info["volume_types"]["lsv"],
                                                         capacity=ec_info["volume_capacity"][num]["lsv"],
@@ -569,6 +617,16 @@ class StorageController(NetworkController, DpcshClient):
         except Exception as ex:
             fun_test.critical(str(ex))
         return command_result
+
+    def format_drive(self, device_id, label, command_timeout=TIMEOUT):
+        try:
+            format_cmd = {}
+            format_cmd["class"] = "device"
+            format_cmd["opcode"] = "FORMAT"
+            format_cmd["params"] = {"device_id": device_id, "label": label}
+            command_result = self.json_execute(verb="storage", data=format_cmd, command_duration=command_timeout)
+        except Exception as ex:
+            fun_test.critical(str(ex))
 
 
 if __name__ == "__main__":

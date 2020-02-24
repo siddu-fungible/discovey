@@ -198,10 +198,12 @@ export class CommonService {
     return queryParamString;
   }
 
-  navigateByQuery(queryParams, baseUrl) {
+  navigateByQuery(queryParams=null, baseUrl) {
     let query = [];
     if (queryParams) {
-      query.push([queryParams.name, queryParams.value]);
+      Object.keys(queryParams).forEach(param => {
+        query.push([param, queryParams[param]]);
+      });
     }
     let queryParamString = this.queryParamsToString(query);
     let url = `${baseUrl}${queryParamString}`;

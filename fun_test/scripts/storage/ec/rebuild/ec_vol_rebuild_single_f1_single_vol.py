@@ -38,7 +38,7 @@ def add_to_data_base(value_dict):
         fun_test.critical(str(ex))
 
 
-class DurableVolScript(FunTestScript):
+class ECVolScript(FunTestScript):
     def describe(self):
         self.set_test_details(steps="""
         1. Deploy the topology. i.e Start 1 POSIXs and allocate a Linux instance 
@@ -124,7 +124,6 @@ class DurableVolScript(FunTestScript):
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
             host_cleanup = cleanup_host(host_obj=host_handle)
-            host_cleanup = cleanup_host(host_obj=host_handle)
             fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_list"],
                                           message="Host {} cleanup: Fetch NVMe list".format(host_name))
             fun_test.test_assert_expected(expected=True, actual=host_cleanup["nvme_disconnect"],
@@ -136,61 +135,9 @@ class DurableVolScript(FunTestScript):
             fun_test.test_assert_expected(expected=True, actual=host_cleanup["unload_nvme_modules"],
                                           message="Host {} cleanup: Unload NVMe modules".format(host_name))
         fun_test.log("Rest is Handled in Test case level cleanup section")
-        """
-        if fun_test.shared_variables["ec"]["setup_created"]:
-            self.fs = self.fs_objs[0]
-            self.storage_controller = fun_test.shared_variables["sc_obj"][0]
-            try:
-                self.ec_info = fun_test.shared_variables["ec_info"]
-                self.attach_transport = fun_test.shared_variables["attach_transport"]
-                self.ctrlr_uuid = fun_test.shared_variables["ctrlr_uuid"]
-                self.nvme_subsystem = fun_test.shared_variables["nvme_subsystem"]
-
-                # Saving the pcap file captured during the nvme connect to the pcap_artifact_file file
-                for host_name in self.host_info:
-                    host_handle = self.host_info[host_name]["handle"]
-                    pcap_post_fix_name = "{}_nvme_connect.pcap".format(host_name)
-                    pcap_artifact_file = fun_test.get_test_case_artifact_file_name(post_fix_name=pcap_post_fix_name)
-
-                    fun_test.scp(source_port=host_handle.ssh_port, source_username=host_handle.ssh_username,
-                                 source_password=host_handle.ssh_password, source_ip=host_handle.host_ip,
-                                 source_file_path="/tmp/nvme_connect.pcap", target_file_path=pcap_artifact_file)
-                    fun_test.add_auxillary_file(description="Host {} NVME connect pcap".format(host_name),
-                                                filename=pcap_artifact_file)
-
-                # Executing NVMe disconnect from all the hosts
-                nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
-                for host_name in self.host_info:
-                    host_handle = self.host_info[host_name]["handle"]
-                    nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
-                    nvme_disconnect_exit_status = host_handle.exit_status()
-                    fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
-                                                  message="{} - NVME Disconnect Status".format(host_name))
-
-                # Detaching all the EC/LS volumes to the external server
-                for num in xrange(self.ec_info["num_volumes"]):
-                    command_result = self.storage_controller.detach_volume_from_controller(
-                        ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
-                    fun_test.log(command_result)
-                    fun_test.test_assert(command_result["status"], "Detaching {} EC/LS volume from DUT".format(num))
-
-                # Unconfiguring all the LSV/EC and it's plex volumes
-                self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
-                                                              command_timeout=self.command_timeout)
-
-                # Deleting all the storage controller
-                for index in xrange(len(self.host_info)):
-                    command_result = self.storage_controller.delete_controller(ctrlr_uuid=self.ctrlr_uuid[index],
-                                                                               command_duration=self.command_timeout)
-                    fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
-                                         format(self.ctrlr_uuid[index]))
-                self.storage_controller.disconnect()
-            except Exception as ex:
-                fun_test.critical(str(ex))
-        """
 
 
-class DurableVolumeTestcase(FunTestCase):
+class ECVolumeTestcase(FunTestCase):
 
     def describe(self):
         pass
@@ -220,12 +167,6 @@ class DurableVolumeTestcase(FunTestCase):
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
         # End of benchmarking json file parsing
-        '''
-        # As ec_info is being modified with new key additions, retaining the pervious case info
-        if "ec" in fun_test.shared_variables:
-            fun_test.log("Overriding EC info from existing shared variables")
-            self.ec_info = fun_test.shared_variables["ec_info"]
-        '''
 
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
@@ -465,16 +406,6 @@ class DurableVolumeTestcase(FunTestCase):
 
     def run(self):
         testcase = self.__class__.__name__
-        test_method = testcase[4:]
-
-        '''
-        table_data_headers = ["Num Hosts", "Volume Size", "Test File Size", "Base File Copy Time (sec)",
-                              "File Copy Time During Plex Fail (sec)", "File Copy Time During Rebuild (sec)",
-                              "Plex Rebuild Time (sec)", "Job Name"]
-        table_data_cols = ["num_hosts", "vol_size", "test_file_size", "base_copy_time", "copy_time_during_plex_fail",
-                           "copy_time_during_rebuild", "plex_rebuild_time", "fio_job_name"]
-        table_data_rows = []
-        '''
 
         # Test Preparation
         # Checking whether the ec_info is having the drive and device ID for the EC's plex volumes
@@ -756,13 +687,6 @@ class DurableVolumeTestcase(FunTestCase):
 
             #  TODO: Bring the plex rebuild time check logic here
             # Parsing f1 uart log file to search rebuild start and finish time
-            '''
-            log file output:
-            [2537.762236 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 under rebuild total failed:1"
-            [2774.291395 2.2.3] ALERT ecvol "storage/flvm/ecvol/ecvol.c:3312:ecvol_rebuild_done_process_push() 
-            Rebuild operation complete for plex:5"
-            [2774.292149 2.2.3] CRIT ecvol "UUID: 98cc5a18ea501fb0 plex: 5 marked active total failed:0"
-            '''
             for num in xrange(self.test_volume_start_index, self.ec_info["num_volumes"]):
                 rebuild_time["start"][num] = {}
                 rebuild_time["complete"][num] = {}
@@ -916,44 +840,6 @@ class DurableVolumeTestcase(FunTestCase):
                                          self.fio_verify_cmd_args["numjobs"], self.fio_verify_cmd_args["size"],
                                          host_name))
 
-        '''
-        # Building the table raw for this variation
-        row_data_list = []
-        for i in table_data_cols:
-            if i not in row_data_dict:
-                row_data_list.append(-1)
-            else:
-                row_data_list.append(row_data_dict[i])
-        table_data_rows.append(row_data_list)
-
-        table_data = {"headers": table_data_headers, "rows": table_data_rows}
-        fun_test.add_table(panel_header="Single Drive Failure Result Table", table_name=self.summary,
-                           table_data=table_data)
-        '''
-
-        '''
-        # Datetime required for daily Dashboard data filter
-        try:
-            # Building value_dict for dashboard update
-            value_dict = {
-                "date_time": self.db_log_time,
-                "platform": FunPlatform.F1,
-                "version": fun_test.get_version(),
-                "num_hosts": self.num_hosts,
-                "num_f1s": self.num_f1s,
-                "base_file_copy_time": base_file_copy_time,
-                "copy_time_during_plex_fail": copy_time_during_plex_fail,
-                "file_copy_time_during_rebuild": file_copy_time_during_rebuild,
-                "plex_rebuild_time": plex_rebuild_time
-            }
-            if self.post_results:
-                fun_test.log("Posting results on dashboard")
-                add_to_data_base(value_dict)
-                post_results("Inspur Performance Test", test_method, *row_data_list)
-        except Exception as ex:
-            fun_test.critical(str(ex))
-        '''
-
         try:
             if hasattr(self, "back_pressure") and self.back_pressure:
                 # Check if back pressure is still running, if yes, stop it
@@ -1042,10 +928,10 @@ class DurableVolumeTestcase(FunTestCase):
                 fun_test.critical(str(ex))
 
 
-class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
+class ECVolSingleDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
-
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         benchmark_dict = utils.parse_file_to_json(benchmark_file)
@@ -1072,17 +958,18 @@ class DurVolSingleDriveFailRebuild(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolSingleDriveFailRebuild, self).setup()
+        super(ECVolSingleDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolSingleDriveFailRebuild, self).run()
+        super(ECVolSingleDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolSingleDriveFailRebuild, self).cleanup()
+        super(ECVolSingleDriveFailRebuild, self).cleanup()
 
 
-class DurVolmDriveFailRebuild(DurableVolumeTestcase):
+class ECVolmDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1111,17 +998,18 @@ class DurVolmDriveFailRebuild(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolmDriveFailRebuild, self).setup()
+        super(ECVolmDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolmDriveFailRebuild, self).run()
+        super(ECVolmDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolmDriveFailRebuild, self).cleanup()
+        super(ECVolmDriveFailRebuild, self).cleanup()
 
 
-class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
+class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmPlusOneDriveFailRebuild, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1150,17 +1038,18 @@ class DurVolmPlusOneDriveFailRebuild(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).setup()
+        super(ECVolmPlusOneDriveFailRebuild, self).setup()
 
     def run(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).run()
+        super(ECVolmPlusOneDriveFailRebuild, self).run()
 
     def cleanup(self):
-        super(DurVolmPlusOneDriveFailRebuild, self).cleanup()
+        super(ECVolmPlusOneDriveFailRebuild, self).cleanup()
 
 
-class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
+class ECVolSingleDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolSingleDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1190,17 +1079,18 @@ class DurVolSingleDriveFailReSync(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolSingleDriveFailReSync, self).setup()
+        super(ECVolSingleDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolSingleDriveFailReSync, self).run()
+        super(ECVolSingleDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolSingleDriveFailReSync, self).cleanup()
+        super(ECVolSingleDriveFailReSync, self).cleanup()
 
 
-class DurVolmDriveFailReSync(DurableVolumeTestcase):
+class ECVolmDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1230,17 +1120,18 @@ class DurVolmDriveFailReSync(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolmDriveFailReSync, self).setup()
+        super(ECVolmDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolmDriveFailReSync, self).run()
+        super(ECVolmDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolmDriveFailReSync, self).cleanup()
+        super(ECVolmDriveFailReSync, self).cleanup()
 
 
-class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
+class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase):
     def __init__(self):
+        super(ECVolmPlusOneDriveFailReSync, self).__init__()
         testcase = self.__class__.__name__
 
         # Start of benchmarking json file parsing and initializing various variables to run this testcase
@@ -1270,21 +1161,63 @@ class DurVolmPlusOneDriveFailReSync(DurableVolumeTestcase):
         """)
 
     def setup(self):
-        super(DurVolmPlusOneDriveFailReSync, self).setup()
+        super(ECVolmPlusOneDriveFailReSync, self).setup()
 
     def run(self):
-        super(DurVolmPlusOneDriveFailReSync, self).run()
+        super(ECVolmPlusOneDriveFailReSync, self).run()
 
     def cleanup(self):
-        super(DurVolmPlusOneDriveFailReSync, self).cleanup()
+        super(ECVolmPlusOneDriveFailReSync, self).cleanup()
+
+
+class ECVolSingleDriveFailRebuildMultiWriter(ECVolumeTestcase):
+    def __init__(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).__init__()
+        testcase = self.__class__.__name__
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
+                              steps="""
+        1. Bring up F1 in FS1600
+        2. Reboot network connected host and ensure connectivity with F1
+        3. Configure a LSV (on 4:2 EC volume1 on top of the 6 BLT volumes) for back-pressure (If enabled)
+        4. Configure a LSV (on 4:2 EC volume2 on top of the 6 BLT volumes) for actual test
+        5. Configure spare BLT volume/s to use it as spare volume during rebuild
+        6. Export (Attach) the above volume to the Remote Host
+        7. Execute nvme-connect from the network host and ensure that the above volume is accessible from the host.
+        8. Perform 50% write with multiple threads (FIO numjobs > 1) on test volume with --verify=md5 option & during 
+        write trigger Single Plex failure
+        9. After Write is completed, verify data integrity with read mode IO and with --verify=md5
+        10. Perform remaining 50% write (FIO numjobs > 1) on test volume with --verify option & during write trigger
+        Rebuild on spare plex
+        11. After Write is completed, verify data integrity with read mode IO and with --verify=md5 of write done in #10
+        12. After data reconstruction is completed, verify data integrity for 100% volume size
+        """)
+
+    def setup(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).setup()
+
+    def run(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).run()
+
+    def cleanup(self):
+        super(ECVolSingleDriveFailRebuildMultiWriter, self).cleanup()
 
 
 if __name__ == "__main__":
-    ecscript = DurableVolScript()
-    ecscript.add_test_case(DurVolSingleDriveFailRebuild())
-    ecscript.add_test_case(DurVolmDriveFailRebuild())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailRebuild())
-    ecscript.add_test_case(DurVolSingleDriveFailReSync())
-    ecscript.add_test_case(DurVolmDriveFailReSync())
-    ecscript.add_test_case(DurVolmPlusOneDriveFailReSync())
+    ecscript = ECVolScript()
+    ecscript.add_test_case(ECVolSingleDriveFailRebuild())
+    ecscript.add_test_case(ECVolmDriveFailRebuild())
+    ecscript.add_test_case(ECVolmPlusOneDriveFailRebuild())
+    ecscript.add_test_case(ECVolSingleDriveFailReSync())
+    ecscript.add_test_case(ECVolmDriveFailReSync())
+    ecscript.add_test_case(ECVolmPlusOneDriveFailReSync())
+    ecscript.add_test_case(ECVolSingleDriveFailRebuildMultiWriter())
     ecscript.run()
