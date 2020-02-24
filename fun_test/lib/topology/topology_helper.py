@@ -403,7 +403,7 @@ class TopologyHelper:
                 fun_test.simple_assert(fungible_controller_instance, "Fungible controller instance")
                 fungible_controller_ready_timer = FunTimer(max_time=60 * 15)
 
-                while not fungible_controller_ready_timer.is_expired(print_remaining_time=True) and not fungible_controller_instance.is_ready():
+                while not fungible_controller_ready_timer.is_expired(print_remaining_time=True) and not fungible_controller_instance.is_ready_for_deploy():
                     fun_test.sleep("Fungible controller readiness check", seconds=60)
 
                 fun_test.simple_assert(not fungible_controller_ready_timer.is_expired(), "Fungible controller ready timer expired")
