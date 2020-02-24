@@ -1,0 +1,25 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-test1
+spec:
+  containers:
+    - name: container0-test1
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: volume-test1
+          devicePath: /dev/xvda
+      command: ["fio"]
+      args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=60","--time_based","--size=10m"]
+    - name: container1-test1
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: volume-test1
+          devicePath: /dev/xvda
+      command: ["fio"]
+      args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=60","--time_based","--size=10m"]
+  restartPolicy: Never
+  volumes:
+    - name: volume-test1
+      persistentVolumeClaim:
+        claimName: csi-fungible-csi-sp-c35530-pvc-raw4

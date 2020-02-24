@@ -1,0 +1,20 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: app-example2
+spec:
+  containers:
+    - name: app-example2
+      image: nginx
+      volumeMounts:
+      - name: shared-data
+        mountPath: /usr/share/nginx/html
+      volumeDevices:
+        - name: test-csi-raw-volume
+          devicePath: /dev/xvda
+  volumes:
+    - name: test-csi-raw-volume
+      persistentVolumeClaim:
+        claimName: csi-fungible-pvc-raw2
+  hostNetwork: true
+  dnsPolicy: Default
