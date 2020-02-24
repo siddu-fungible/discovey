@@ -474,17 +474,31 @@ class Bmc(Linux):
                 self.command(gpio_command)
                 fun_test.sleep("After removing F1 reset")
         else:
-            """
-            self.command("cd {}".format(self.SCRIPT_DIRECTORY))
-            self.command("./f1_reset.sh {}".format(f1_index))
-            """
+            new_reset = False
+            try:
+                fw_date = self.command('cat /proc/ractrends/Helper/FwInfo  | grep "FW_DATE"')  #WORKAROUND
+                m = re.search("FW_DATE=(\S+.*)", fw_date)
+                if m:
+                    dt = m.group(1)
+                    if "2020" in dt:
+                        parts = dt.split()
+                        month, day, year = parts
 
-            bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
-            if f1_index == 0:
-                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
+                        month_map = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                        month_index = month_map.index(month)
+                        if int(year) >= 2020 and int(day) >= 10 and month_index >= 1:
+                            new_reset = True
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            if not new_reset:
+                bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
+                if f1_index == 0:
+                    self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
+                else:
+                    self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5C 0x5D 0x01 0x00"))
             else:
-                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5C 0x5D 0x01 0x00"))
-
+                self.command("cd {}".format(self.SCRIPT_DIRECTORY))
+                self.command("./f1_reset.sh {}".format(f1_index))
 
     def u_boot_load_image(self,
                           index,
@@ -3154,7 +3168,7 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main__":
+if __name__ == "__main_333_":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
     iterations = 0
@@ -3228,3 +3242,9 @@ if __name__ == "__main_22_":
     # topology = th.get_expanded_topology()
     fc = topology.get_fungible_controller_instance()
     fc.command("date")
+
+
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    bmc = fs.get_bmc()
+    bmc.reset_f1(f1_index=0)
