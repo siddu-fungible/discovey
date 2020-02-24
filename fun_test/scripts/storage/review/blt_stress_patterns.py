@@ -71,7 +71,7 @@ class BootupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
         else:
-            self.already_deployed = False
+            self.already_deployed = True
 
         if "format_drive" in job_inputs:
             self.format_drive = job_inputs["format_drive"]
@@ -683,7 +683,6 @@ class ScaleMaxAttached(FunTestCase):
 
 
 
-        sfx = 0
         fs_obj = self.fs_obj_list[0]
         hosts = self.topology.get_available_host_instances()
         connect = False
@@ -692,7 +691,7 @@ class ScaleMaxAttached(FunTestCase):
         print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
-                                     name=self.name, sfx=str(sfx))
+                                     name=self.name, sfx=str(counter))
 
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
