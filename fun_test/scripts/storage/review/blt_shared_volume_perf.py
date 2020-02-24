@@ -522,7 +522,8 @@ class SharedVolumePerfTest(FunTestCase):
                 row_data_list.insert(0, get_data_collection_time())
                 row_data_list.append(self.num_f1)
                 row_data_list.append(len(self.hosts))
-                row_data_list.append(shared_volume=True)
+                shared_volume = True
+                row_data_list.append(shared_volume)
                 if self.post_results:
                     fun_test.log("Posting results on dashboard")
                     post_results("Shared_Volume_Test", test_method, *row_data_list)
