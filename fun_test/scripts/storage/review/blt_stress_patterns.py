@@ -71,7 +71,7 @@ class BootupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
         else:
-            self.already_deployed = True
+            self.already_deployed = False
 
         if "format_drive" in job_inputs:
             self.format_drive = job_inputs["format_drive"]
@@ -872,11 +872,11 @@ class ScaleMaxAttached1(ScaleMaxAttached):
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
-    setup_bringup.add_test_case(CCDlDl1())
-    setup_bringup.add_test_case(CreateDeleteNCreateAgain1())
-    setup_bringup.add_test_case(CADtDl2())
-    setup_bringup.add_test_case(CADtADt1())
-    setup_bringup.add_test_case(CADtADt2())
-    setup_bringup.add_test_case(CADtDl1())
+    #setup_bringup.add_test_case(CCDlDl1())
+    #setup_bringup.add_test_case(CreateDeleteNCreateAgain1())
+    #setup_bringup.add_test_case(CADtDl2())
+    #setup_bringup.add_test_case(CADtADt1())
+    #setup_bringup.add_test_case(CADtADt2())
+    #setup_bringup.add_test_case(CADtDl1())
     setup_bringup.add_test_case(ScaleMaxAttached1())
     setup_bringup.run()
