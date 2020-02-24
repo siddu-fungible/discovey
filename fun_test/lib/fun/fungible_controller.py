@@ -6,6 +6,6 @@ class FungibleController(Linux):
     pass
 
     def initialize(self, reset=False):
-        fun_test.log("Fungible controller intialize")
+        fun_test.log("Fungible controller initialize")
 
 
