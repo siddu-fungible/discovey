@@ -556,7 +556,7 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, compression=False, encryption=False,
+                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, shared_volume=False, compression=False, encryption=False,
                  compression_effort=-1, key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
@@ -598,6 +598,7 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
         blt_value_dict = {
             "date_time": log_time,
             "num_hosts": num_hosts,
+            "shared_volume":shared_volume,
             "num_ssd": num_ssd,
             "num_dpu": num_dpu,
             "num_volume": num_volumes,
