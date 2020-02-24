@@ -1,0 +1,18 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-app-example
+spec:
+  containers:
+    - name: app-test
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: test-csi-raw-volume
+          devicePath: /dev/xvda
+      command: ["fio"]
+      args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=60","--time_based","--size=10m"]
+  restartPolicy: Never
+  volumes:
+    - name: test-csi-raw-volume
+      persistentVolumeClaim:
+        claimName: csi-fungible-csi-sp-c35530-pvc-raw4

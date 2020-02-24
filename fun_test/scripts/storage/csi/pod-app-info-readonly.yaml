@@ -1,0 +1,19 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-read-fio-test
+spec:
+  containers:
+    - name: container0-read-fio-test
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: volume-read-fio-test
+          devicePath: /dev/xvda
+      command: ["fio"]
+      # args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=600","--time_based","--size=10m"]
+      args: ["--name=readnchk","--ioengine=libaio","--direct=1","--numjobs=1","--rw=read","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1%","--do_verify=1","--verify=md5","--group_reporting"]
+  restartPolicy: Never
+  volumes:
+    - name: volume-read-fio-test
+      persistentVolumeClaim:
+        claimName: csi-test-pvc01

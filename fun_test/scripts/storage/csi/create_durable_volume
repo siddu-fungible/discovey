@@ -1,0 +1,1 @@
+ curl -u admin:password -k -s -H 'Content-Type: application/json' -X POST https://fs141-come:9000/FunCC/v1/storage/pools/88d4056420744449/volumes -d '{"name": "ec1", "capacity": 107374182400,  "vol_type": "VOL_TYPE_BLK_EC", "encrypt": false, "allow_expansion": true,  "stripe_count": 0, "data_protection": {"num_failed_disks": 2, "num_redundant_dpus": 0},  "compression_effort": 8}'
