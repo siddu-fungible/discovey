@@ -6,6 +6,7 @@ class AssetType(Codes):
     HOST = "Host"
     PERFORMANCE_LISTENER_HOST = "Perf Listener"
     PCIE_HOST = "PCIE-host"
+    FUNGIBLE_CONTROLLER = "Fungible-controller"
 
 
 class AssetHealthStates(Codes):

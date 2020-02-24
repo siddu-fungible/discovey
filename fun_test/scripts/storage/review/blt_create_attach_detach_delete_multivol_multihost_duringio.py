@@ -49,7 +49,7 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-        self.blt_template = BltVolumeOperationsTemplate(topology=self.topology)
+        self.blt_template = BltVolumeOperationsTemplate(topology=self.topology, api_logging_level=logging.ERROR)
         self.blt_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed,
                                      format_drives=format_drives)
         fun_test.shared_variables["blt_template"] = self.blt_template
@@ -127,7 +127,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                 body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i),
                                                                    vol_type=self.vol_type,
                                                                    capacity=self.capacity, compression_effort=False,
-                                                                   encrypt=False, data_protection={})
+                                                                   encrypt=self.encrypt, data_protection={})
                 vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
                 fun_test.test_assert(expression=vol_uuid[0], message="Create Volume{} Successful with uuid {}".
                                      format(i+1, vol_uuid[0]))
@@ -414,6 +414,103 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(GenericCreateAttac
     def cleanup(self):
         super(CreateAttachDetachDeleteMultivolMultihostSharedDuringIO, self).cleanup()
 
+class CreateAttachDetachDeleteMultivolMultihostEncrypt(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(id=5,
+                              summary="Create, attach, connect, disconnect, detach & delete N different volumes "
+                                      "attached to M hosts with IO",
+                              steps='''
+                                    1. Create 48 volumes
+                                    2. Attach 8 volume to 6 hosts
+                                    3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                                    4. Let IO complete, then perform nvme disconnect during I/O on all hosts
+                                    5. Detach and delete the volumes
+                                    6. Continue this in a loop for 24 times  
+                              ''')
+
+        def setup(self):
+            super(CreateAttachDetachDeleteMultivolMultihostEncrypt, self).setup()
+
+        def run(self):
+            super(CreateAttachDetachDeleteMultivolMultihostEncrypt, self).run()
+
+        def cleanup(self):
+            super(CreateAttachDetachDeleteMultivolMultihostEncrypt, self).cleanup()
+
+
+class CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=6,
+            summary="Create,attach,connect,disconnect,detach & delete N different volumes attached to M hosts along "
+                    "with active IO during disconnect & detach",
+            steps='''
+                1. Create 48 volumes
+                2. Attach 8 volume to 6 hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
+                5. Detach and delete the volumes
+                6. Continue this in a loop for 24 times
+                ''')
+
+    def setup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt, self).setup()
+
+    def run(self):
+        super(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt, self).run()
+
+    def cleanup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt, self).cleanup()
+
+
+class CreateAttachDetachDeleteMultivolMultihostSharedEncrypt(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=7,
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts with IO",
+            steps='''
+                1. Create 8 volumes
+                2. Attach same 8 volume to 6 hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO complete, then perform nvme disconnect on all hosts
+                5. Detach and delete the volumes
+                6. Continue this in a loop for 24 times
+                ''')
+
+    def setup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt, self).setup()
+
+    def run(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt, self).run()
+
+    def cleanup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt, self).cleanup()
+
+
+class CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=8,
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
+                    "active IO during disconnect & detach",
+            steps='''
+                1. Create 8 volumes
+                2. Attach 8 volume to 6 hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
+                5. Detach and delete the volumes
+                6. Continue this in a loop for 24 times
+                ''')
+
+    def setup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt, self).setup()
+
+    def run(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt, self).run()
+
+    def cleanup(self):
+        super(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt, self).cleanup()
+
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
@@ -421,4 +518,8 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIO())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostShared())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIO())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostEncrypt())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt())
+    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt())
     setup_bringup.run()
