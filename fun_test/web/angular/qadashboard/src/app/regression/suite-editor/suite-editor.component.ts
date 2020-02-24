@@ -116,7 +116,7 @@ export class SuiteEditorComponent implements OnInit {
       return this.regressionService.tags();
     })).pipe(switchMap((response) => {
       this.availableTags = response;
-      return this.testBedService.testBeds();
+      return this.testBedService.testBeds(true);
     })).pipe(switchMap(response => {
       this.testBeds = response;
       this.testBeds = this.testBeds.filter(testBed => testBed.name.startsWith('fs'));
