@@ -680,10 +680,16 @@ def get_suite_based_test_bed_spec(job_id):
 
 def lock_assets(job_id, assets):
     if assets:
-        for asset_type, assets in assets.items():
-            for asset in assets:
-                Asset.add_update(name=asset, type=asset_type)
-                Asset.add_job_id(name=asset, type=asset_type, job_id=job_id)
+        for asset_type, asset_names in assets.items():
+            for asset_name in asset_names:
+                Asset.add_update(name=asset_name, type=asset_type)
+                Asset.add_job_id(name=asset_name, type=asset_type, job_id=job_id)
+        set_suite_run_time_environment_variable(job_id=job_id, variable="assets_used", value=assets)
+
+def set_suite_run_time_environment_variable(job_id, variable, value):
+    suite_execution = models_helper.get_suite_execution(suite_execution_id=job_id)
+    if suite_execution:
+        suite_execution.add_run_time_variable(variable, value)
 
 def un_lock_assets(job_id):
     assets = Asset.objects.filter(job_ids__contains=[job_id])

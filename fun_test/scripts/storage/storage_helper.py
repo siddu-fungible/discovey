@@ -332,7 +332,7 @@ def single_fs_setup(obj, set_dataplane_ips=True):
     for dpu in format_result:
         for drive in format_result[dpu]:
             fun_test.test_assert(drive.get("status"), "Drive with uuid {} on slot {} of {} formatted".format(drive.get("uuid"), drive.get("slot_id"), dpu))
-    drive_format_timer = FunTimer(max_time=obj.drive_format_timeout)
+    drive_format_timer = FunTimer(max_time=getattr(obj, "drive_format_timeout", 120))
     drive_state = obj.sc_api.get_all_drives()
     total_system_drives = 0
     for dpu in drive_state:
@@ -556,7 +556,7 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
                  read_iops,
                  write_bw, read_bw, write_latency, write_90_latency, write_95_latency, write_99_latency,
                  write_99_99_latency, read_latency, read_90_latency, read_95_latency, read_99_latency,
-                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, compression=False, encryption=False,
+                 read_99_99_latency, fio_job_name, num_dpu=-1, num_hosts=-1, shared_volume=False, compression=False, encryption=False,
                  compression_effort=-1, key_size=-1, xtweak=-1, io_size=-1, platform=FunPlatform.F1):
     for i in ["write_iops", "read_iops", "write_bw", "read_bw", "write_latency", "write_90_latency", "write_95_latency",
               "write_99_latency", "write_99_99_latency", "read_latency", "read_90_latency", "read_95_latency",
@@ -598,6 +598,7 @@ def post_results(volume, test, log_time, num_ssd, num_volumes, block_size, io_de
         blt_value_dict = {
             "date_time": log_time,
             "num_hosts": num_hosts,
+            "shared_volume":shared_volume,
             "num_ssd": num_ssd,
             "num_dpu": num_dpu,
             "num_volume": num_volumes,
@@ -1322,7 +1323,7 @@ def set_fcp_scheduler(storage_controller, config_fcp_scheduler, command_timeout)
     return result
 
 
-def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest, timeout=3600):
+def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest, cpu_list, timeout=3600):
     """
     :param host_handle: Handle to host
     :param host_index: Index of host in case this function is called for multiple hosts
@@ -1334,8 +1335,8 @@ def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest
     :return: None
     """
 
-    ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {}".\
-        format(ezfio_path, device, dev_util, output_dest)
+    ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {} --cpus {}".\
+        format(ezfio_path, device, dev_util, output_dest, cpu_list)
     ezfio_output = host_handle.sudo_command(ezfio_command, timeout)
     fun_test.shared_variables["ezfio"][host_index] = ezfio_output
 

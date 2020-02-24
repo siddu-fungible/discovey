@@ -21,6 +21,7 @@ from datetime import datetime
 import re
 import os
 import socket
+import logging
 
 DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
@@ -931,7 +932,7 @@ class Bmc(Linux):
             if self.bundle_compatible:
                 log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
 
-                context_prefix = self._get_context_prefix(data="F1_{}_FunOS log {}".format(f1_index, prefix))
+                context_prefix = self._get_context_prefix(data="F1_{}_FunOS_log_{}".format(f1_index, prefix))
                 uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
                                                          linux_obj=self,
                                                          source_file_path=log_path,
@@ -1195,7 +1196,7 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
-            if self.fs.bundle_compatible:
+            if self.fs.bundle_compatible and self.fs.bundle_image_parameters:
                 try:
                     bmc.upload_bundle_f1_logs()
                 except Exception as ex:
@@ -2132,9 +2133,11 @@ class F1InFs:
         dpcsh_client = DpcshClient(target_ip=host_ip, target_port=dpc_port, auto_disconnect=auto_disconnect)
         return dpcsh_client
 
-    def get_dpc_storage_controller(self):
+    def get_dpc_storage_controller(self, api_logging_level=logging.DEBUG):
         come = self.fs.get_come()
-        return StorageController(target_ip=come.host_ip, target_port=come.get_dpc_port(self.index))
+        return StorageController(target_ip=come.host_ip,
+                                 target_port=come.get_dpc_port(self.index),
+                                 api_logging_level=api_logging_level)
 
     def get_dpc_network_controller(self):
         come = self.fs.get_come()
@@ -3097,9 +3100,9 @@ class Fs(object, ToDictMixin):
 
         return True
 
-    def get_storage_controller(self, f1_index=0):
+    def get_storage_controller(self, f1_index=0, api_logging_level=logging.DEBUG):
         f1 = self.get_f1(index=f1_index)
-        return f1.get_dpc_storage_controller()
+        return f1.get_dpc_storage_controller(api_logging_level=api_logging_level)
 
     def get_dpc_client(self, f1_index, auto_disconnect=False, statistics=None, csi_perf=None):
         f1 = self.get_f1(index=f1_index)
@@ -3204,7 +3207,7 @@ if __name__ == "__main__":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
-    # topology = th.deploy(already_deployed=True)
-    topology = th.get_expanded_topology()
+    topology = th.deploy(already_deployed=True)
+    # topology = th.get_expanded_topology()
     fc = topology.get_fungible_controller_instance()
     fc.command("date")

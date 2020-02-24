@@ -161,6 +161,7 @@ export class TestBedComponent implements OnInit {
           let hostAssets = [];
           let perfListenerAssets = [];
           let pcieHostAssets = [];
+          let fungibleControllerAssets = [];
           /*let dutWithSsdsAssets = [];
           let dutWithServersAssets= [];*/
           this.assets = response;
@@ -178,8 +179,12 @@ export class TestBedComponent implements OnInit {
             if (asset.type === 'PCIE-host') {
               pcieHostAssets.push(asset);
             }
+            if (asset.type === 'Fungible-controller') {
+              fungibleControllerAssets.push(asset);
+            }
+
           });
-          this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
+          this.assets = [...dutAssets, ...hostAssets, ...perfListenerAssets, ...pcieHostAssets, ...fungibleControllerAssets]; // ...dutWithServersAssets, ...dutWithSsdsAssets];
           return of(true);
         }));
       }

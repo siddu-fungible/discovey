@@ -25,7 +25,7 @@
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {
       "override": true,
-      "override_node": "NUMA node0 CPU(s)"
+      "override_node": 0
     },
     "api_server_port": 50220,
     "api_server_username": "admin",
@@ -37,25 +37,92 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "DataIntegrityTest":{
+  "DataIntegrityCheck":{
     "num_f1": 1,
-    "ec_count": 1,
-    "num_hosts": 1,
+    "blt_count": 8,
+    "num_hosts": 4,
     "capacity": 10737418240,
-    "compression_effort": "True",
-    "effort_levels": [1, 2, 3, 4, 5, 6, 7, 8],
-    "encrypt": "False",
+    "effort_levels": [1, 2],
+    "encrypt": false,
     "name": "ec_volume_",
+    "raw_api_call": true,
     "DUT":1,
-    "override_numa_node": {"override": true, "override_node": "NUMA node0 CPU(s)"},
+    "dpu_indices" : [0],
     "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=write --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=0 --verify=md5",
+      "timeout": 2460
+    },
+    "fio_modes": ["randread"],
+    "fio_bs": "4k",
+    "fio_iodepth": [128,256,512],
+    "fio_cmd_args": {
+      "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "timeout": 2460
+    },
     "fio_write_cmd_args": {
-      "multiple_jobs": "--rw=write --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=0 --verify=md5 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface ",
+      "multiple_jobs": " --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=0 --verify=md5 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface ",
       "timeout": 3600
     },
     "fio_read_cmd_args": {
-      "multiple_jobs": "--rw=read --bs=4k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=1 --verify=md5 ",
+      "multiple_jobs": " --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=1 --verify=md5 ",
       "timeout": 3600
-    }
+    },
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
+  },
+   "TestCompressionRatio":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 4,
+    "capacity": 10737418240,
+    "effort_levels": [1, 2],
+    "encrypt": false,
+    "name": "ec_volume_",
+    "raw_api_call": true,
+    "DUT":1,
+    "dpu_indices" : [0],
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "fio_write_cmd_args": {"bs": "4k", "iodepth": 16, "size": "100%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "ioengine": "libaio", "name": "bs_write", "do_verify": 0, "verify": "md5", "buffer_compress_percentage": "50", "buffer_pattern": "0xdeadface", "timeout": 3600},
+    "fio_read_cmd_args": {"bs": "4k", "iodepth": 16, "size": "100%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "ioengine": "libaio", "name": "bs_write", "do_verify": 1, "verify": "md5", "timeout": 3600}
+  },
+   "DataIntegrityAfterReset":{
+    "num_f1": 1,
+    "blt_count": 8,
+    "num_hosts": 4,
+    "capacity": 10737418240,
+    "effort_levels": [1, 2, 3, 4, 5, 6, 7, 8],
+    "encrypt": false,
+    "name": "ec_volume_",
+    "raw_api_call": true,
+    "DUT": 1,
+    "dpu_indices" : [0],
+    "ethernet_adapter": "Mellanox",
+    "override_numa_node": {"override": true, "override_node": 0},
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=read --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=1 --verify=md5",
+      "timeout": 2460
+    },
+    "fio_modes": ["randread"],
+    "fio_iodepth": [128],
+    "fio_bs": "4k",
+    "fio_write_cmd_args": {
+      "multiple_jobs": " --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=0 --verify=md5 --buffer_compress_percentage=50 --buffer_pattern=0xdeadface ",
+      "timeout": 3600
+    },
+    "fio_read_cmd_args": {
+      "multiple_jobs": " --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --ioengine=libaio --group_reporting=1 --do_verify=1 --verify=md5 ",
+      "timeout": 3600
+    },
+    "fio_cmd_args": {
+      "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=1 --verify=md5",
+      "timeout": 2460
+    },
+    "stats_collect_details": [{"vp_utils": {"interval": 60}}, {"per_vp": {"interval": 60}}, {"resource_bam_args": {"interval": 60}}, {"vol_stats": {"interval": 60}}, {"vppkts_stats": {"interval": 60}}, {"psw_stats": {"interval": 60, "nu": true}}, {"fcp_stats": {"interval": 60, "nu": true}}, {"wro_stats": {"interval": 60, "nu": true}}, {"erp_stats": {"interval": 60, "nu": true}}, {"etp_stats": {"interval": 60, "nu": true}}, {"eqm_stats": {"interval": 60}}, {"hu_stats": {"interval": 60}}, {"ddr_stats": {"interval": 60}}, {"ca_stats": {"interval": 60}}, {"cdu_stats": {"interval": 60}}],
+    "collect_network_stats": false,
+    "csi_perf_iodepth": [128]
   }
 }

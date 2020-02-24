@@ -138,6 +138,14 @@ class FunAlert:
         self.level = level
         self.message = message
 
+class ApiLogHandler(logging.StreamHandler):
+    def emit(self, record):
+        try:
+            message = self.format(record)
+            fun_test.log(message)
+        except Exception as ex:
+            self.handleError(record)
+
 
 class FunTest:
     PASSED = RESULTS["PASSED"]
@@ -342,6 +350,12 @@ class FunTest:
         # if os.path.exists(api_path):
         #    shutil.rmtree(api_path)
 
+    def get_storage_api_log_handler(self):
+        if not hasattr(self, "storage_api_log_handler"):
+            self.storage_api_log_handler = ApiLogHandler()
+        return self.storage_api_log_handler
+
+
     def get_current_test_case_execution_id(self):
         return self.current_test_case_execution_id
 
@@ -460,10 +474,18 @@ class FunTest:
 
     def _prepare_build_parameters(self):
         tftp_image_path = self.get_job_environment_variable("tftp_image_path")
+        if not tftp_image_path:
+            tftp_image_path = self.get_local_setting("tftp_image_path")
         with_stable_master = self.get_job_environment_variable("with_stable_master")
+        if not with_stable_master:
+            with_stable_master = self.get_local_setting("with_stable_master")
         bundle_image_parameters = self.get_job_environment_variable("bundle_image_parameters")
+        if not bundle_image_parameters:
+            bundle_image_parameters = self.get_local_setting("bundle_image_parameters")
         pre_built_artifacts = self.get_job_environment_variable("pre_built_artifacts")
         start_with_bundle_options = self.get_job_environment_variable("start_with_bundle_options")
+        if not start_with_bundle_options:
+            start_with_bundle_options = self.get_local_setting("start_with_bundle_options")
 
         if tftp_image_path:
             self.build_parameters["tftp_image_path"] = tftp_image_path

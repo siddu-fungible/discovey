@@ -46,11 +46,12 @@ class StorageControllerOperationsTemplate:
     """
     Do basic API operations
     """
-    def __init__(self, topology):
+    def __init__(self, topology, api_logging_level=logging.DEBUG):
         self.topology = topology
         self.node_ids = []
         self.duts_state_object = DutsState()
         self.hosts_state_object = HostsState()
+        self.api_logging_level = api_logging_level
 
     def get_health(self, fs_obj):
         result = True
@@ -60,36 +61,32 @@ class StorageControllerOperationsTemplate:
         else:
             fs_obj_list = fs_obj
         for fs_obj in fs_obj_list:
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             dut_health = storage_controller.health()
             fun_test.add_checkpoint(expected=True, actual=dut_health,
                                     checkpoint="Check health of DUT: {}".format(fs_obj))
             result &= dut_health
         return result
 
-    def set_dataplane_ips(self, dut_index, dpu_indexes=None):
+    def set_dataplane_ips(self, fs_obj, dpu_indexes=None):
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         result = False
 
-        dut = self.topology.get_dut(index=dut_index)
-        fs_obj = self.topology.get_dut_instance(index=dut_index)
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         topology_result = None
         try:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
             fun_test.log(topology_result)
         except ApiException as e:
-            fun_test.critical("Exception while getting topology%s\n" % e)
+            fun_test.critical("Exception while getting topology{}\n".format(e))
+        except Exception as e:
+            fun_test.critical("Exception while getting topology{}\n".format(e))
         node_ids = [x.uuid for x in topology_result.data.values()]
         fun_test.test_assert(expression=node_ids, message="Fetch node IDs using topology API")
         for node in node_ids:
             for f1_index in dpu_indexes:
-
-                bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
-                fun_test.test_assert(expression=bond_interfaces, message="Bond interface info found")
-
-                first_bond_interface = bond_interfaces[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 ip_obj = ipaddress.ip_network(address=unicode(first_bond_interface.ip), strict=False)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 subnet_mask = str(ip_obj.netmask)
@@ -113,7 +110,10 @@ class StorageControllerOperationsTemplate:
                     self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
-                    fun_test.critical("Exception while updating dataplane IP %s\n" % e)
+                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
+                    result = False
+                except Exception as e:
+                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
                     result = False
 
         return result
@@ -129,7 +129,9 @@ class StorageControllerOperationsTemplate:
                         result = True
                         break
                 except ApiException as e:
-                    fun_test.critical("Exception while getting DPU state%s\n" % e)
+                    fun_test.critical("Exception while getting DPU state{}\n".format(e))
+                except Exception as e:
+                    fun_test.critical("Exception while getting DPU state{}\n".format(e))
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
                 api_result = raw_sc_api.execute_api(method="GET",
@@ -149,12 +151,14 @@ class StorageControllerOperationsTemplate:
         result = 0
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             topology_result = None
             try:
                 topology_result = storage_controller.topology_api.get_hierarchical_topology()
             except ApiException as e:
-                fun_test.critical("Exception while getting topology%s\n" % e)
+                fun_test.critical("Exception while getting topology{}\n".format(e))
+            except Exception as e:
+                fun_test.critical("Exception while getting topology{}\n".format(e))
             self.node_ids = [x.uuid for x in topology_result.data.values()]
             fun_test.test_assert(expression=self.node_ids, message="Fetch node IDs using topology API")
             for node in self.node_ids:
@@ -170,15 +174,13 @@ class StorageControllerOperationsTemplate:
 
         return result
 
-    def verify_dataplane_ip(self, storage_controller, dut_index, raw_api_call=True):
+    def verify_dataplane_ip(self, storage_controller, fs_obj, raw_api_call=True):
         result = True
 
         for node in self.node_ids:
-            dut = self.topology.get_dut(index=dut_index)
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
             for f1_index in range(fs_obj.NUM_F1S):
                 dpu_id = node + "." + str(f1_index)
-                first_bond_interface = dut.get_bond_interfaces(f1_index=f1_index)[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 if raw_api_call:
                     raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -190,14 +192,22 @@ class StorageControllerOperationsTemplate:
                     try:
                         get_dpu = storage_controller.topology_api.get_dpu(dpu_id=dpu_id)
                     except ApiException as e:
-                        fun_test.critical("Exception while getting DPU info: {}".format(e))
+                        fun_test.critical("Exception while getting DPU: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while getting DPU: {}\n".format(e))
                     fun_test.test_assert(expression=get_dpu, message="Fetch dataplane IP")
                     result &= (str(get_dpu.dataplane_ip) == str(dataplane_ip))
         return result
 
     def format_all_drives(self, fs_obj):
-        storage_controller = fs_obj.get_storage_controller()
-        topology = storage_controller.topology_api.get_hierarchical_topology()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
+        topology = None
+        try:
+            topology = storage_controller.topology_api.get_hierarchical_topology()
+        except ApiException as e:
+            fun_test.critical("Exception while getting topology: {}\n".format(e))
+        except Exception as e:
+            fun_test.critical("Exception while getting topology: {}\n".format(e))
         for node in topology.data:
             for dpu in topology.data[node].dpus:
                 for drive_info in dpu.drives:
@@ -231,6 +241,8 @@ class StorageControllerOperationsTemplate:
     def initialize(self, already_deployed=False, dpu_indexes=None, format_drives=True):
         if not already_deployed:
             already_deployed = fun_test.get_job_environment_variable("already_deployed")
+            if not already_deployed:
+                already_deployed = fun_test.get_local_setting("already_deployed")
         if dpu_indexes is None:
             dpu_indexes = [0, 1]
         for dut_index in self.topology.get_available_duts().keys():
@@ -240,7 +252,7 @@ class StorageControllerOperationsTemplate:
                                  message="DUT: {} Health of API server".format(dut_index))
             if not already_deployed:
                 fun_test.sleep(message="Wait before sending dataplane IP commands", seconds=60)  # WORKAROUND
-                fun_test.test_assert(self.set_dataplane_ips(dut_index=dut_index, dpu_indexes=dpu_indexes),
+                fun_test.test_assert(self.set_dataplane_ips(fs_obj=fs_obj, dpu_indexes=dpu_indexes),
                                      message="DUT: {} Assign dataplane IP".format(dut_index))
             num_dpus = len(dpu_indexes)
             fun_test.test_assert_expected(expected=num_dpus, actual=self.get_online_dpus(dpu_indexes=dpu_indexes),
@@ -262,8 +274,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
     host_nvme_device = {}
     NVME_HOST_MODULES = ["nvme_core", "nvme", "nvme_fabrics", "nvme_tcp"]
 
-    def __init__(self, topology):
-        super(GenericVolumeOperationsTemplate, self).__init__(topology)
+    def __init__(self, topology, **kwargs):
+        super(GenericVolumeOperationsTemplate, self).__init__(topology, **kwargs)
         self.topology = topology
 
     def create_volume(self, fs_obj, body_volume_intent_create):
@@ -285,13 +297,15 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 body_volume_intent_create.name = body_volume_intent_create.name + str(fs_index)
 
             body_volume_intent_create.vol_type = self.vol_type
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             try:
                 create_vol_result = storage_controller.storage_api.create_volume(body_volume_intent_create)
                 vol_uuid = create_vol_result.data.uuid
                 result.append(vol_uuid)
             except ApiException as e:
-                fun_test.critical("Exception when creating volume on fs %s: %s\n" % (fs_obj, e))
+                fun_test.critical("Exception when creating volume on fs {}: {}\n" .format(fs_obj, e))
+            except Exception as e:
+                fun_test.critical("Exception when creating volume on fs {}: {}\n" .format(fs_obj, e))
         return result
 
     def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False,
@@ -318,7 +332,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             if cur_host_obj not in self.host_nvme_device:
                 self.host_nvme_device[cur_host_obj] = []
             fun_test.add_checkpoint(checkpoint="Attaching volume %s to host %s" % (volume_uuid, cur_host_obj.name))
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             host_data_ip = cur_host_obj.get_test_interface(index=0).ip.split('/')[0]
             if not raw_api_call:
                 attach_fields = BodyVolumeAttach(transport=Transport().TCP,
@@ -330,7 +344,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                     result_list.append(result)
                 except ApiException as e:
                     fun_test.test_assert(expression=False,
-                                         message="Exception when attach volume on fs %s: %s\n" % (fs_obj, e))
+                                         message="Exception when attach volume on fs {}: {}\n".format(fs_obj, e))
+                    result = None
+                except Exception as e:
+                    fun_test.test_assert(expression=False,
+                                         message="Exception when attach volume on fs {}: {}\n".format(fs_obj, e))
                     result = None
             else:
                 raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -378,7 +396,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def _check_host_target_existing_connection(self, fs_obj, volume_uuid, subsys_nqn, host_nqn, host_obj):
         result = False
-        storage_controller = fs_obj.get_storage_controller()
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
         # get_volume_result = storage_controller.storage_api.get_volumes()
         # WORKAROUND : get_volumes errors out.
         raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -393,7 +411,13 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 for port in get_volume_result["data"][vol_uuid]["ports"]:
                     if result:
                         break
-                    port_details = storage_controller.storage_api.get_port(port_uuid=port)
+                    port_details = None
+                    try:
+                        port_details = storage_controller.storage_api.get_port(port_uuid=port)
+                    except ApiException as e:
+                        fun_test.critical("Exception while getting port info: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while getting port info: {}\n".format(e))
                     if port_details.data.host_nqn == host_nqn:
 
                         host_handle = host_obj.get_instance()
@@ -623,16 +647,23 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
     def get_volume_attach_status(self, fs_obj, volume_uuid):
         result = False
-        storage_controller = fs_obj.get_storage_controller()
-        all_pools = storage_controller.storage_api.get_all_pools()
-        for pool in all_pools.data:
-            if result:
-                break
-            for volume in all_pools.data[pool].volumes:
-                if volume == volume_uuid:
-                    result = True
+        storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
+        all_pools = None
+        try:
+            all_pools = storage_controller.storage_api.get_all_pools()
+            for pool in all_pools.data:
+                if result:
                     break
-
+                for volume in all_pools.data[pool].volumes:
+                    if volume == volume_uuid:
+                        result = True
+                        break
+        except ApiException as e:
+            fun_test.critical("Exception while getting port info: {}\n".format(e))
+            result = False
+        except Exception as e:
+            fun_test.critical("Exception while getting port info: {}\n".format(e))
+            result = False
         return result
 
     def deploy(self):
@@ -648,11 +679,9 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         dmesg_output = host_obj.dmesg()
 
         for dut_index in self.topology.get_duts().keys():
-            dut = self.topology.get_dut(index=dut_index)
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             for f1_index in range(fs_obj.NUM_F1S):
-                bond_interfaces = dut.get_bond_interfaces(f1_index=f1_index)
-                first_bond_interface = bond_interfaces[0]
+                first_bond_interface = fs_obj.networking.get_bond_interface(f1_index=f1_index, interface_index=0)
                 dataplane_ip = str(first_bond_interface.ip).split('/')[0]
                 fun_test.add_checkpoint(expected=True, actual=host_obj.ping(dataplane_ip),
                                         checkpoint="{host} can ping FS {fs_name} F1_{f1_index} dataplane IP"
@@ -730,7 +759,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
 
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            storage_controller = fs_obj.get_storage_controller()
+            storage_controller = fs_obj.get_storage_controller(api_logging_level=self.api_logging_level)
             # volumes = storage_controller.storage_api.get_volumes()
             # WORKAROUND : get_volumes errors out.
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
@@ -738,12 +767,30 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
             fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
-                    detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.add_checkpoint(expected=True, actual=detach_volume.status,
+                    detach_volume = None
+                    try:
+                        detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    except ApiException as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    detach_result = False
+                    if detach_volume:
+                        detach_result = detach_volume.status
+                    fun_test.add_checkpoint(expected=True, actual=detach_result,
                                             checkpoint="Detach Volume {} from host with host_nqn {}".format(
                                                 volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
-                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                fun_test.add_checkpoint(expected=True, actual=delete_volume.status,
+                delete_volume = None
+                try:
+                    delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                except ApiException as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                except Exception as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                delete_volume_result = False
+                if delete_volume:
+                    delete_volume_result = delete_volume.status
+                fun_test.add_checkpoint(expected=True, actual=delete_volume_result,
                                         checkpoint="Delete Volume {}".format(volume))
 
         super(GenericVolumeOperationsTemplate, self).cleanup()
@@ -761,3 +808,7 @@ class EcVolumeOperationsTemplate(GenericVolumeOperationsTemplate, object):
     This template abstracts the operations of EC volume
     """
     vol_type = VolumeTypes().EC
+
+
+if __name__ == "__main__":
+    BltVolumeOperationsTemplate(None, api_logging_level=logging.ERROR)
