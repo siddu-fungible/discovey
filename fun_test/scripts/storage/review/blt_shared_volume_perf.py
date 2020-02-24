@@ -130,11 +130,10 @@ class SharedVolumePerfTest(FunTestCase):
         for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
 
+        self.post_results = True
         job_inputs = fun_test.get_job_inputs()
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
-        else:
-            self.post_results = False
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
