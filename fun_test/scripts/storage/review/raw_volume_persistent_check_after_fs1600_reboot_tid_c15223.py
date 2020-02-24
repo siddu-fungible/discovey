@@ -144,10 +144,47 @@ class CreateDeleteVolumeRebootFS1600(FunTestCase):
                 vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle,vol_uuid=volume_uuid)
                 fun_test.test_assert( expression=vol_db_status["status"], message="Volume Deletion Check {}".format(vol_db_status))
 
+    def reboot_fs1600(self):
+        fun_test.log("Rebooting FS1600")
+
+        api_server_timeout = 240
+        total_reconnect_time = 600
+        add_on_time = 180  # Needed for getting through 60 iterations of reconnect from host
+        reboot_timer = FunTimer(
+            max_time=total_reconnect_time + add_on_time)  # WORKAROUND, why do we need so much time
+
+        # Reset FS1600
+        reset = self.fs_obj_list[0].reset(hard=False)
+        fun_test.test_assert(reset, "FS1600 reset successfully done")
+
+        # Ensure FS1600 is up
+        ensure_up = self.fs_obj_list[0].ensure_is_up()
+        fun_test.test_assert(ensure_up, "Ensure FS1600 is up")
+
+        # Ensure all containers are up
+        fs_obj = self.fs_obj_list[0]
+        come = fs_obj.get_come()
+        containers_status = come.ensure_expected_containers_running()
+        fun_test.test_assert(containers_status, "All containers up")
+
+        # Ensure API server is up
+        sc_api = StorageControllerApi(api_server_ip=come.host_ip)
+        fun_test.test_assert(ensure_api_server_is_up(sc_api, timeout=api_server_timeout),
+                              "Ensure API server is up")
+        fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))
+        ipmi_details = {
+            "username": "admin",
+            "password": "admin",
+            "host_ip": self.come_handle.host_ip
+        }
+        come_up = self.come_handle.ensure_host_is_up(max_wait_time=300,ipmi_details=ipmi_details,
+                                                     power_cycle=True)
+
     def run(self):
         self.delete_volumes() #Delete Volumes from Previous run
         self.create_volumes()
         self.volumes_persistent_check()
+        self.reboot_fs1600()
         self.delete_volumes()
         self.volumes_deletion_check()
 
