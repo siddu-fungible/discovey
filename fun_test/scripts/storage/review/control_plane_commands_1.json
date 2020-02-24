@@ -14,7 +14,7 @@
     ],
     "num_f1_per_fs": 1,
     "num_f1s": 1,
-    "num_hosts": 12,
+    "num_hosts": 1,
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 1,
     "f1_in_use": 0,
