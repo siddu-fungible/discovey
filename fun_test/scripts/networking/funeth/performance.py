@@ -189,7 +189,7 @@ class FunethPerformance(sanity.FunethSanity):
                 fun_test.log('FunethPerformance.cleanup: call cc_dmesg')
                 cc_dmesg(come_linux_obj, docker_names, fs_spec)
                 fun_test.log('FunethPerformance.cleanup: call cc_ethtool_stats_fpg_all')
-                cc_ethtool_stats_fpg_all(come_linux_obj, funcp_obj.docker_names, fs_spec)
+                cc_ethtool_stats_fpg_all(come_linux_obj, docker_names, fs_spec)
         except Exception as e:
             fun_test.log(str(e))
 
