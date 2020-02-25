@@ -387,7 +387,8 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
-                upd = fun_test.get_job_inputs() and update_funcp
+                inp = fun_test.get_job_inputs()
+                upd = inp and inp.get('update_funcp', False)
                 funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=upd)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
