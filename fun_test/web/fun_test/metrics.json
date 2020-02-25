@@ -3123,6 +3123,47 @@
                             ]
                           }
                         ]
+                      },
+                      {
+                        "metric_model_name": "MetricContainer",
+                        "name": "raw_block_teramarks_shared_8_vols",
+                        "label": "8 Shared volumes",
+                        "children": [
+                          {
+                            "metric_model_name": "MetricContainer",
+                            "name": "raw_block_teramarks_shared_8_vols_8k",
+                            "label": "Block size=8k",
+                            "children": [
+                              {
+                                "metric_model_name": "MetricContainer",
+                                "name": "raw_block_teramarks_shared_8_vols_8k_rand_read",
+                                "label": "Random Read",
+                                "children": [
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "raw_block_teramarks_shared_8_vols_8k_rand_read_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "raw_block_teramarks_shared_8_vols_8k_rand_read_qd128_latency",
+                                    "label": "Latency, QDepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "raw_block_teramarks_shared_8_vols_8k_rand_read_qd256_latency",
+                                    "label": "Latency, QDepth=256"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "raw_block_teramarks_shared_8_vols_8k_rand_read_qd512_latency",
+                                    "label": "Latency, QDepth=512"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
                       }
                     ]
                   }

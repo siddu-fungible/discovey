@@ -1,0 +1,18 @@
+ ./get_fs_uuid fs141
+ ./change_uuid <uuid> csi-01 10737418240 ./create_raw_volume
+ ./create_raw_volume
+ ./get_fs_volume_uuid fs141
+
+ ./change_pv_info  <uuid> csi-test-pv01 5Gi pv-info.yaml
+ ./change_pvc_info  csi-test-pvc01 5Gi pvc-info.yaml
+ ./change_pod_app_info csi-test-pvc01 write-fio-test pod-app-info-writeonly.yaml
+ ./change_pod_app_info csi-test-pvc01 read-fio-test pod-app-info-readonly.yaml
+
+ ./create_pv pv-info.yaml
+ ./create_pvc pvc-info.yaml
+ ./create_pod_app pod-app-info-writeonly.yaml
+ ## run this once above pod is finished 
+ kubectl get pods
+
+ ./create_pod_app pod-app-info-readonly.yaml
+

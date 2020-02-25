@@ -1,0 +1,3 @@
+sed -i 's/volumeHandle: [0-9a-z]*/volumeHandle: '$1'/g'  $4
+sed -i 's/name: [a-z_0-9\-]*/name: '$2'/g'  $4
+sed -i 's/storage: [0-9A-Za-z]*/storage: '$3'/g'  $4

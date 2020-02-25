@@ -1,0 +1,1 @@
+curl -u admin:password -k -s -H 'Content-Type: application/json' -X POST https://fs141-come:9000/FunCC/v1/storage/pools/88d4056420744449/volumes -d '{"name": "csi_static_provision", "capacity": 536870912000, "vol_type": "VOL_TYPE_BLK_LOCAL_THIN", "encrypt": false, "allow_expansion": false, "stripe_count": 0, "data_protection": {}}'

@@ -1,0 +1,17 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-hash-only-app-example
+spec:
+  containers:
+    - name: hash-only-app-test
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: test-csi-raw-volume
+          devicePath: /dev/xvda
+      command: ["/bin/ash"]
+  restartPolicy: Never
+  volumes:
+    - name: test-csi-raw-volume
+      persistentVolumeClaim:
+        claimName: csi-fungible-csi-sp-c35530-pvc-raw4
