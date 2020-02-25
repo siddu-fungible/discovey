@@ -554,16 +554,16 @@ def cc_sanity_pings(docker_names, vlan_ips, fs_spec, nu_hosts, hu_hosts_0, hu_ho
     return result
 
 def cc_dmesg(come_linux_obj, docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
-    fun_test.log('cc_dmesg(%s)' % str(docker_names))
+    #fun_test.log('cc_dmesg(%s)' % str(docker_names))
     for docker in docker_names:
         out_file = '%s/CC_dmesg_%s.log' % (path, docker)
         cmd_prefix = 'docker exec %s bash -c' % (docker)
         cmd = '%s "dmesg" > %s' % (cmd_prefix, out_file)
-        fun_test.log('cc_dmesg: %s %s %s' % (docker, out_file, cmd))
+        #fun_test.log('cc_dmesg: %s %s %s' % (docker, out_file, cmd))
         come_linux_obj.command(cmd)
 
 def cc_ethtool_stats_fpg_all(come_linux_obj, docker_names, fs_spec, path='/scratch/opt/fungible/logs'):
-    fun_test.log('cc_ethtool(%s)' % str(docker_names))
+    #fun_test.log('cc_ethtool(%s)' % str(docker_names))
     for docker in docker_names:
         out_file = '%s/CC_ethtool_%s.log' % (path, docker)
         cmd_prefix = 'docker exec %s bash -c' % (docker)
@@ -573,7 +573,7 @@ def cc_ethtool_stats_fpg_all(come_linux_obj, docker_names, fs_spec, path='/scrat
             cmd = '%s "echo ethtool fpg%s" >> %s' % (cmd_prefix, fpg, out_file)
             come_linux_obj.command(cmd)
             cmd = '%s "ethtool -S fpg%s" >> %s' % (cmd_prefix, fpg, out_file)
-            fun_test.log('cc_ethtool: %s %s %s' % (docker, out_file, cmd))
+            #fun_test.log('cc_ethtool: %s %s %s' % (docker, out_file, cmd))
             come_linux_obj.command(cmd)
             cmd = '%s "echo" >> %s' % (cmd_prefix, out_file)
             come_linux_obj.command(cmd)
