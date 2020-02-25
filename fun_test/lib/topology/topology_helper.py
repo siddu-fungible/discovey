@@ -227,7 +227,7 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
-    def deploy(self, already_deployed=False):
+    def deploy(self, already_deployed=False, max_dut_ready_timeout=500):
         if not already_deployed:
             already_deployed = fun_test.get_job_environment_variable("already_deployed")
             if not already_deployed:
@@ -236,7 +236,7 @@ class TopologyHelper:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
         if not self.is_simulation():
-            fun_test.test_assert(self.validate_topology(), "Validate topology")
+            fun_test.test_assert(self.validate_topology(max_dut_ready_timeout=max_dut_ready_timeout), "Validate topology")
         return self.expanded_topology
 
 
@@ -284,7 +284,7 @@ class TopologyHelper:
         self.disabled_dut_indexes = indexes
 
     @fun_test.safe
-    def validate_topology(self):
+    def validate_topology(self, max_dut_ready_timeout=500):
         topology = self.expanded_topology
         duts = topology.duts
 
@@ -293,7 +293,7 @@ class TopologyHelper:
                 continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
             dut_ready = False
-            max_dut_ready_timeout = 1200
+            # max_dut_ready_timeout = 1200
             dut_ready_timer = FunTimer(max_time=max_dut_ready_timeout)
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
