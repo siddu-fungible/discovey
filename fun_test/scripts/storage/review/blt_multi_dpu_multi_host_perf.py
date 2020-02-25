@@ -176,7 +176,10 @@ class MultiHostFioRandRead(FunTestCase):
 
             # Finding the usable capacity of the drives which will be used as the BLT volume capacity, in case
             # the capacity is not overridden while starting the script
-            min_drive_capacity = find_min_drive_capacity(self.sc_dpcsh_obj)
+            min_drive_capacity_f1_0 = find_min_drive_capacity(self.sc_dpcsh_obj_f1_0)
+            min_drive_capacity_f1_1 = find_min_drive_capacity(self.sc_dpcsh_obj_f1_1)
+            min_drive_capacity = min_drive_capacity_f1_0 if \
+                min_drive_capacity_f1_1 >= min_drive_capacity_f1_0 else min_drive_capacity_f1_1
             if min_drive_capacity:
                 self.blt_details["capacity"] = min_drive_capacity
                 # Reducing the volume capacity by drive margin as a workaround for the bug SWOS-6862
@@ -225,7 +228,7 @@ class MultiHostFioRandRead(FunTestCase):
                 current_drive_list = f1_0_drive_id_list
                 props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
                 dpu_op = self.sc_dpcsh_obj_f1_0.peek(props_tree=props_tree)
-                if not current_vol_uuid in dpu_op:
+                if not current_vol_uuid in dpu_op["data"]:
                     current_dpu_index = 1
                     current_vol_list = f1_1_volume_list
                     current_drive_list = f1_1_drive_id_list
