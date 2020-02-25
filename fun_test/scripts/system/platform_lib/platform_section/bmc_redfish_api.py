@@ -41,7 +41,7 @@ class ChassisThermalMonitoringAndControl(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Chassis thermal monitoring and control",
-                              test_rail_case_ids=["T31257"],
+                              test_rail_case_ids=["T31258"],
                               steps="""""")
 
     @run_decorator
