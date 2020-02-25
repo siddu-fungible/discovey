@@ -293,7 +293,7 @@ class TopologyHelper:
                 continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
             dut_ready = False
-            max_dut_ready_timeout = 500
+            max_dut_ready_timeout = 1200
             dut_ready_timer = FunTimer(max_time=max_dut_ready_timeout)
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
