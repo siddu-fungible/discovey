@@ -35,12 +35,13 @@ class PlatformGeneralTestCase(FunTestCase, Platform):
         pass
 
     def cleanup(self):
-        if not getattr(self, "run_passed", False):
-            self.collect_logs()
-            if getattr(self, "work_around_power_cycle", False):
-                apc_obj = RebootFs(self.fs)
-                apc_obj.apc_pdu_reboot()
-                Platform().fs_basic_checks()
+        pass
+        # if not getattr(self, "run_passed", False):
+        #     self.collect_logs()
+        #     if getattr(self, "work_around_power_cycle", False):
+        #         apc_obj = RebootFs(self.fs)
+        #         apc_obj.apc_pdu_reboot()
+        #         Platform().fs_basic_checks()
 
 
 class DiscoverStaticIp(PlatformGeneralTestCase):
@@ -838,35 +839,35 @@ class General(PlatformGeneralTestCase):
 if __name__ == "__main__":
     myscript = PlatformScriptSetup()
     test_case_list = [
-        # DiscoverStaticIp,
-        # DiscoverDhcpIp,
-        # AlternateCommunicationToBmc,
-        # PlatformComponentVersioningDiscovery,
-        # BootSequenceFpga,
-        # BootSequenceBmc,
-        # BootSequenceCome,
-        # BmcLinkToggle,
-        # BmcColdBoot,
-        # BmcIpmiReset,
-        # BmcTransportForCommunication,
-        # TemperatureSensorBmcIpmi,
-        # FanSensorBootupIpmi,
-        # TemperatureFanMeasurement,
-        # InletExhasutThreshold,
+        DiscoverStaticIp,
+        DiscoverDhcpIp,
+        AlternateCommunicationToBmc,
+        PlatformComponentVersioningDiscovery,
+        BootSequenceFpga,
+        BootSequenceBmc,
+        BootSequenceCome,
+        BmcLinkToggle,
+        BmcColdBoot,
+        BmcIpmiReset,
+        BmcTransportForCommunication,
+        TemperatureSensorBmcIpmi,
+        FanSensorBootupIpmi,
+        TemperatureFanMeasurement,
+        InletExhasutThreshold,
         FanRedfishtool,
-        # F1AsicTemperature,
-        # BootComeUefiOrBios,
-        # PcieDiscoverySsdViaRc,
-        # PcieDeviceDetection,
-        # HostConnectionViaPcieBus,
-        # ComeVolumeCreation,
-        # SnakeTest,
-        # PortSplitTestCase,
-        # FanSpeedVariations,
-        # MultipleF1Reset,
-        # BroadcomLoginVerification,
-        # BundleInstallWithDisable,
-        # TftpImage
+        F1AsicTemperature,
+        BootComeUefiOrBios,
+        PcieDiscoverySsdViaRc,
+        PcieDeviceDetection,
+        HostConnectionViaPcieBus,
+        ComeVolumeCreation,
+        SnakeTest,
+        PortSplitTestCase,
+        FanSpeedVariations,
+        MultipleF1Reset,
+        BroadcomLoginVerification,
+        BundleInstallWithDisable,
+        TftpImage
         ]
     for i in test_case_list:
         myscript.add_test_case(i())

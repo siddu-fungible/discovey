@@ -218,9 +218,54 @@ class RedFishTool:
             result["data"] = output
         return result
 
+    def managers(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/Managers"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
     def task_service(self):
         result = {"status": False, "data": {}}
         sub_command = "raw GET /redfish/v1/TaskService"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def sessions(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/SessionService/Sessions"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def account_service(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/AccountService"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def event_service(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/EventService"
+        output = self.redfishtool(sub_command)
+        if output:
+            result["status"] = True
+            result["data"] = output
+        return result
+
+    def dynamic_extension(self):
+        result = {"status": False, "data": {}}
+        sub_command = "raw GET /redfish/v1/DynamicExtension"
         output = self.redfishtool(sub_command)
         if output:
             result["status"] = True
