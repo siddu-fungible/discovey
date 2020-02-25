@@ -7,7 +7,7 @@ class TopLevelChassisInformation(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=1,
                               summary="Top level chassis information",
-                              test_rail_case_ids=["T31257"],
+                              test_rail_case_ids=["C36743"],
                               steps="""""")
 
     def run(self):
@@ -41,7 +41,7 @@ class ChassisThermalMonitoringAndControl(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=2,
                               summary="Chassis thermal monitoring and control",
-                              test_rail_case_ids=["T31258"],
+                              test_rail_case_ids=["C36744"],
                               steps="""""")
 
     @run_decorator
@@ -61,7 +61,7 @@ class ArrayOfTemperatureSensors(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=3,
                               summary="Array of temperature sensors",
-                              test_rail_case_ids=["T31259"],
+                              test_rail_case_ids=["C36745"],
                               steps="""""")
 
     @run_decorator
@@ -86,7 +86,7 @@ class ArrayOfFanSensors(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=4,
                               summary="Array of fan sensors",
-                              test_rail_case_ids=["T31260"],
+                              test_rail_case_ids=["C36746"],
                               steps="""""")
 
     @run_decorator
@@ -116,7 +116,7 @@ class ChassisPowerMonitoringAndControl(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=5,
                               summary="Chassis power monitoring and control",
-                              test_rail_case_ids=["T31261"],
+                              test_rail_case_ids=["C36747"],
                               steps="""""")
 
     @run_decorator
@@ -135,7 +135,7 @@ class AnArrayOfVoltageSensors(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=6,
                               summary="An array of voltage sensors.",
-                              test_rail_case_ids=["T31262"],
+                              test_rail_case_ids=["C36748"],
                               steps="""""")
 
     @run_decorator
@@ -157,7 +157,7 @@ class ListOfManagementProcessorsInTheSystem(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=7,
                               summary="List of management processors in the system",
-                              test_rail_case_ids=["T31263"],
+                              test_rail_case_ids=["C36749"],
                               steps="""""")
 
     @run_decorator
@@ -179,7 +179,7 @@ class ServiceToInitiateSpecificAsynchronousTasks(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=8,
                               summary="Service to initiate and manage system specific asynchronous tasks",
-                              test_rail_case_ids=["T31264"],
+                              test_rail_case_ids=["C36750"],
                               steps="""""")
 
     @run_decorator
@@ -201,7 +201,7 @@ class HttpsSessionsToTheRedfishService(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=9,
                               summary="Service to establish and maintain HTTPS sessions to the Redfish service.",
-                              test_rail_case_ids=["T31265"],
+                              test_rail_case_ids=["C36751"],
                               steps="""""")
 
     @run_decorator
@@ -223,7 +223,7 @@ class ServiceToProvideUserAccountManagement(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=10,
                               summary="Service to provide user account management",
-                              test_rail_case_ids=["T31266"],
+                              test_rail_case_ids=["C36752"],
                               steps="""""")
 
     @run_decorator
@@ -247,7 +247,7 @@ class ServiceToProvideEventNotificationToExternalConsumers(PlatformGeneralTestCa
     def describe(self):
         self.set_test_details(id=11,
                               summary="Service to provide event notification to external consumers.",
-                              test_rail_case_ids=["T31267"],
+                              test_rail_case_ids=["C36753"],
                               steps="""""")
 
     @run_decorator
@@ -268,7 +268,7 @@ class OemSpecificExtensionsToTheRedfishSchema(PlatformGeneralTestCase):
     def describe(self):
         self.set_test_details(id=12,
                               summary="OEM specific extensions to the Redfish schema.",
-                              test_rail_case_ids=["T31268"],
+                              test_rail_case_ids=["C36754"],
                               steps="""""")
 
     @run_decorator
