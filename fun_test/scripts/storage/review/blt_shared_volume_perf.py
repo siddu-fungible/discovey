@@ -512,8 +512,6 @@ class SharedVolumePerfTest(FunTestCase):
                         row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
-
                 table_data_list = copy.deepcopy(row_data_list)
                 table_data_rows.append(table_data_list)
 
