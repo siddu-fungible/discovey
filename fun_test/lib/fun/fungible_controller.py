@@ -22,9 +22,10 @@ class FungibleController(Linux):
                               "docker.fungible.com/cfgmgr-controller",
                               "docker.fungible.com/run_apigateway",
                               "docker.fungible.com/storage-services",
-                              "confluentinc/cp-kafka",
-                              "confluentinc/cp-zookeeper",
-                              "cassandra"]
+                              "docker.fungible.com/tmaggregationagent",
+                              "docker.fungible.com/tmcollectoragent",
+                              "docker.fungible.com/tmctrl",
+                              "docker.fungible.com/tmdata"]
     EXPECTED_CONTAINERS = ["run_sc",
                            "apigateway",
                            "cfgmgr",
@@ -44,34 +45,33 @@ class FungibleController(Linux):
         fun_test.log("Fungible controller: {} initialize".format(self))
 
         # WORKAROUND
-        docker_images_output = self.sudo_command("docker images")
-        for docker_image in self.EXPECTED_DOCKER_IMAGES:
-            fun_test.simple_assert(docker_image in docker_images_output,
-                                   "Docker image: {} should exist".format(docker_image))
-
         self.command("export WORKSPACE={}".format(ws))
-
         self.install_fc_bundle()
-        self.command("rm -fr FunAPIGateway")
         self.command("cd {}".format(ws))
+        self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
+        self.command("rm -fr FunAPIGateway")
         self.command("git clone -o StrictHostKeyChecking=no"
                      " -o UserKnownHostsFile=/dev/null git@github.com:fungible-inc/FunAPIGateway.git")
-        self.command("cd FunAPIGateway/docker/containers/; ./fun_containers.sh start")
-
+        self.command("cd FunAPIGateway/docker/containers/; ./fun_containers.sh start", timeout=300)
         self.initialized = True
 
     def install_fc_bundle(self, ws="/opt/fungible/fc/"):
         self.command("cd {}".format(ws))
         docker_image_ids = self.command("docker images -q").split("\n")
         for docker_image_id in docker_image_ids:
-            delete_docker_image = self.command("docker rmi {}".format(docker_image_id))
-            fun_test.add_checkpoint(expected=True, actual="Deleted" in delete_docker_image,
-                                    checkpoint="Deleted docker image: ".format({docker_image_id}))
-
-        self.command("wget https://dochub.fungible.local/doc/jenkins/master/fc/12/setup_fc-bld-12.sh")
-        #  TODO: Enable once bundle is available without versions
-        self.sudo_command("chmod 777 setup_fc-bld-12.sh", timeout=300)
-        self.sudo_command("./setup_fc-bld-12.sh")
+            if docker_image_id:
+                delete_docker_image = self.command("docker rmi {}".format(docker_image_id))
+                fun_test.add_checkpoint(expected=True, actual="Deleted" in delete_docker_image,
+                                        checkpoint="Deleted docker image: ".format({docker_image_id}))
+        #  TODO: Remove hardcoding bundle number for FC
+        self.sudo_command("wget https://dochub.fungible.local/doc/jenkins/master/fc/12/setup_fc-bld-12.sh "
+                          "--no-check-certificate", timeout=300)
+        self.sudo_command("chmod 777 setup_fc-bld-12.sh")
+        self.sudo_command("./setup_fc-bld-12.sh", timeout=300)
+        docker_images_output = self.sudo_command("docker images")
+        for docker_image in self.EXPECTED_DOCKER_IMAGES:
+            fun_test.simple_assert(docker_image in docker_images_output,
+                                   "Docker image: {} should exist".format(docker_image))
 
     def is_ready_for_deploy(self):
         if not self.initialized:
@@ -91,15 +91,21 @@ class FungibleController(Linux):
         for fs_obj in fs_objs:
             bmc_handle = fs_obj.get_bmc()
             ifconfig = bmc_handle.ifconfig()
-            mac = ifconfig[0]['HWaddr'].lower()
-            self.create_oc_file(mac=mac, fs_name=fs_obj.asset_name)
+            bmc_mac = ifconfig[0]['HWaddr'].lower()
+            for index in fs_obj.NUM_F1S:
+                if index == 0:
+                    mac = bmc_mac
+                    self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name)
             come_handle = fs_obj.get_come()
-            file_name = self.create_come_fc_connect_file(come_handle=come_handle)
+            file_name = self.create_fc_connect_file(host_handle=come_handle)
 
             come_handle.sudo_command(
                 "cd /usr/local/bin; sudo ztp_dpu_discovery.py -i enp3s0f0 -s -b {}".format(file_name))
 
         return True
+
+    def change_mac(self, mac, offset):
+        return "{:012X}".format(int(mac, 16) + offset)
 
     def create_oc_file(self, mac, fs_name):
         file_name = "DPU_" + mac + "_oc.cfg"
@@ -109,7 +115,7 @@ class FungibleController(Linux):
             target_username=self.ssh_username, target_password=self.ssh_password),
             message="Create Open Config file on Fungible Controller")
 
-    def create_come_fc_connect_file(self, host_handle, file_name="connect_to_fc.sh", file_location="~/"):
+    def create_fc_connect_file(self, host_handle, file_name="connect_to_fc.sh", file_location="~/"):
 
         host_handle.sudo_command("rm {}".format(file_location + file_name))
         contents = COME_FC_CONNECT_FILE_CONTENTS.format(self.host_ip)
