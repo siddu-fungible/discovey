@@ -139,7 +139,7 @@ class DataIntegrityCheck(FunTestCase):
         for host in self.hosts:
             host.nvme_connect_info = {}
 
-        attach_vol_result = {}
+        attach_vol_result = []
         for i in range(self.ec_count):
             attach_vol_result[i] = self.ec_template.attach_volume(self.fs_obj_list[0],
                                                                    self.vol_uuid_list[i],
