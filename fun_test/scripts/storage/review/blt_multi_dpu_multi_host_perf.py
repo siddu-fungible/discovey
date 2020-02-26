@@ -318,20 +318,11 @@ class MultiHostFioRandRead(FunTestCase):
                     host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
             # Check number of volumes and devices found from hosts
-            for host in self.hosts:
-                host.nvme_block_device_list = []
-                nvme_devices = self.sc_template.get_host_nvme_device(host_obj=host)
-
-                if nvme_devices:
-                    if isinstance(nvme_devices, list):
-                        for nvme_device in nvme_devices:
-                            current_device = nvme_device
-                            host.nvme_block_device_list.extend(current_device)
-                    else:
-                        current_device = nvme_devices
-                        host.nvme_block_device_list.extend(current_device)
+            for host, nvme_device_list in self.sc_template.host_nvme_device.iteritems():
+                index = self.hosts.index(host)
+                self.hosts[index].nvme_block_device_list = nvme_device_list
                 fun_test.test_assert_expected(expected=len(self.attach_vol_result[host]),
-                                              actual=len(host.nvme_block_device_list),
+                                              actual=len(self.hosts[index].nvme_block_device_list),
                                               message="Check number of nvme block devices found "
                                                       "on host {} matches with attached ".format(host.name))
 
