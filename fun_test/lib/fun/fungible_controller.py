@@ -48,12 +48,14 @@ class FungibleController(Linux):
         self.command("export WORKSPACE={}".format(ws))
         self.install_fc_bundle()
         self.command("cd {}".format(ws))
-        self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
         self.command("rm -fr FunAPIGateway")
         self.command("git clone -o StrictHostKeyChecking=no"
                      " -o UserKnownHostsFile=/dev/null git@github.com:fungible-inc/FunAPIGateway.git")
         self.command("cd FunAPIGateway/docker/containers/; ./fun_containers.sh start", timeout=300)
+        result = self.ensure_expected_containers_running()
+        fun_test.test_assert(expression=result, message="Fungible Controller Containers started")
         self.initialized = True
+        return result
 
     def install_fc_bundle(self, ws="/opt/fungible/fc/"):
         self.command("cd {}".format(ws))
@@ -68,15 +70,24 @@ class FungibleController(Linux):
                           "--no-check-certificate", timeout=300)
         self.sudo_command("chmod 777 setup_fc-bld-12.sh")
         self.sudo_command("./setup_fc-bld-12.sh", timeout=300)
+        self.command("cd {}".format(ws))
+        self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
         docker_images_output = self.sudo_command("docker images")
         for docker_image in self.EXPECTED_DOCKER_IMAGES:
             fun_test.simple_assert(docker_image in docker_images_output,
                                    "Docker image: {} should exist".format(docker_image))
+        #  WORKAROUND: SWCTL-134
+        self.command("docker tag docker.fungible.com/sns-controller:11 docker.fungible.com/sns-controller:latest")
+        self.command("docker tag docker.fungible.com/cfgmgr-controller:11 docker.fungible.com/cfgmgr-controller:latest")
+        self.command("docker tag docker.fungible.com/run_apigateway:18 docker.fungible.com/run_apigateway:latest")
+        self.command("docker tag docker.fungible.com/storage-services:18 docker.fungible.com/storage-services:latest")
 
     def is_ready_for_deploy(self):
+
         if not self.initialized:
-            self.initialize()
-        result = self.ensure_expected_containers_running()
+            result = self.initialize()
+        else:
+            result = self.ensure_expected_containers_running()
         return result
 
     def health(self, only_reachability=False):
@@ -92,10 +103,12 @@ class FungibleController(Linux):
             bmc_handle = fs_obj.get_bmc()
             ifconfig = bmc_handle.ifconfig()
             bmc_mac = ifconfig[0]['HWaddr'].lower()
-            for index in fs_obj.NUM_F1S:
+            for index in range(fs_obj.NUM_F1S):
                 if index == 0:
-                    mac = bmc_mac
-                    self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name)
+                    bmc_mac = self.change_mac(mac=bmc_mac, offset=8)
+                elif index == 1:
+                    bmc_mac = self.change_mac(mac=bmc_mac, offset=52)
+                self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name, f1_index=index)
             come_handle = fs_obj.get_come()
             file_name = self.create_fc_connect_file(host_handle=come_handle)
 
@@ -105,12 +118,15 @@ class FungibleController(Linux):
         return True
 
     def change_mac(self, mac, offset):
-        return "{:012X}".format(int(mac, 16) + offset)
+        mac = mac.replace(":", "")
+        new_mac = "{:012X}".format(int(mac, 16) + offset)
+        new_mac = ':'.join(s.encode('hex') for s in new_mac.decode('hex'))
+        return new_mac.lower()
 
-    def create_oc_file(self, mac, fs_name):
+    def create_oc_file(self, mac, fs_name, f1_index):
         file_name = "DPU_" + mac + "_oc.cfg"
         fun_test.test_assert(expression=fun_test.scp(
-            source_file_path=ASSET_DIR + "/open_configs/{}_oc.json".format(fs_name),
+            source_file_path=ASSET_DIR + "/open_configs/{}_{}_oc.json".format(fs_name, f1_index),
             target_file_path="/opt/fungible/day1_configfiles/{}".format(file_name), target_ip=self.host_ip,
             target_username=self.ssh_username, target_password=self.ssh_password),
             message="Create Open Config file on Fungible Controller")
