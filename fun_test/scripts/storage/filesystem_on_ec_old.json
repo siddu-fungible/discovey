@@ -11,7 +11,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -39,7 +39,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -68,7 +68,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -96,7 +96,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -125,7 +125,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -153,7 +153,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -182,7 +182,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller
@@ -210,7 +210,7 @@
     // Head room needed for the LS volume in percentage
     "lsv_pct": 0.30,
     "lsv_chunk_size": 32,
-    "jvol_size_multiplier": 8,
+    "jvol_size_multiplier": 4,
     "ns_id": 1,
     "check_lsv_stats": 0,
     // timeout used for the storage controller

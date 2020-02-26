@@ -67,7 +67,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 4
     },
     "num_ssd": 12,
