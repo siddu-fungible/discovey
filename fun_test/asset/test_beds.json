@@ -3063,7 +3063,10 @@
     },
     "workarounds": {
       "enable_funcp": true
-    }
+    },
+    "fungible_controller_info": [
+      "cab03-qa-04"
+    ]
   },
   "fs-66": {
     "dut_info": {
