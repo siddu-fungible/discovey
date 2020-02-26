@@ -1338,7 +1338,6 @@ def ezfio_run(host_handle, host_index, ezfio_path, device, dev_util, output_dest
     ezfio_command = "{}/ezfio.py --yes -d {} -u {} -o {} --cpus {}".\
         format(ezfio_path, device, dev_util, output_dest, cpu_list)
     ezfio_output = host_handle.sudo_command(ezfio_command, timeout)
-    fun_test.shared_variables["ezfio"][host_index] = ezfio_output
 
     return ezfio_output
 

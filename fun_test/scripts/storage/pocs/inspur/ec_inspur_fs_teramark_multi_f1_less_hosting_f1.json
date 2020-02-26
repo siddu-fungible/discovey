@@ -64,7 +64,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 6,
       "transport_port": 1099
     },
@@ -119,7 +119,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 6,
       "transport_port": 1099
     },
@@ -174,7 +174,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 6,
       "transport_port": 1099
     },
@@ -229,7 +229,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1,
       "transport_port": 1099
     },
@@ -277,7 +277,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 4
     },
     "hosting_f1_indexes": [0],
@@ -324,7 +324,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 4
     },
     "hosting_f1_indexes": [0],
@@ -373,7 +373,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 4
     },
     "hosting_f1_indexes": [0],

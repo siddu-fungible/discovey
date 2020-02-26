@@ -30,7 +30,8 @@
     "run_sc_script": "start_sc.sh",
     "run_sc_restart_timeout": 120,
     "container_up_timeout": 120,
-    "api_server_up_timeout": 300
+    "api_server_up_timeout": 300,
+    "drive_format_timeout": 120
   },
   "RecoveryWithMFailure": {
     "ec_list": ["4,2"],
@@ -131,7 +132,7 @@
     "cal_amplification": true,
     "mplusfailure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'drive_pull'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
@@ -183,7 +184,7 @@
     "cal_amplification": true,
     "m_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'drive_pull'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
@@ -236,7 +237,7 @@
     "m_concurrent_failure": true,
     "m_plus_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'drive_pull'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   },
@@ -290,7 +291,7 @@
     "m_concurrent_failure": true,
     "m_plus_concurrent_failure": true,
     //value for plex_fail_method could be either 'ssd_power_off' or 'drive_pull'
-    "plex_fail_method": "ssd_power_off",
+    "plex_fail_method": "drive_pull",
     //value for combination_of_plex_failure could be either 'random' or 'all'
     "plex_failure_combination": "random"
   }

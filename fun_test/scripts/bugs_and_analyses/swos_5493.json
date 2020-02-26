@@ -63,7 +63,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 8,
       "transport_port": 1099
     },
@@ -108,7 +108,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_ssd": 12,
       "num_volumes": 8
     },
@@ -152,7 +152,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_ssd": 12,
       "num_volumes": 6
     },
@@ -199,7 +199,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -252,7 +252,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     // timeout used for the storage controller
@@ -305,7 +305,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.25,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     // timeout used for the storage controller

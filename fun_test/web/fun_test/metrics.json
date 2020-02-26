@@ -3049,76 +3049,174 @@
                         "children": [
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "raw_block_teramarks_multi_host_nvmetcp_rand_read",
-                            "label": "Random Read",
+                            "name": "multi_host_raw_block_nvmetcp_12_vols_4k",
+                            "label": "Block size=4k",
                             "children": [
                               {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd_multi_host_nvmetcp_output_iops",
-                                "label": "IOPS"
+                                "metric_model_name": "MetricContainer",
+                                "name": "raw_block_teramarks_multi_host_nvmetcp_rand_read",
+                                "label": "Random Read",
+                                "children": [
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd_multi_host_nvmetcp_output_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd1_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd32_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd64_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd128_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=128"
+                                  },
+                                  {
+                                    "name": "rand_read_qd256_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=256",
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "children": []
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_read_qd512_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=512"
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd1_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=1"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd32_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=32"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd64_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=64"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd128_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=128"
-                              },
-                              {
-                                "name": "rand_read_qd256_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=256",
-                                "metric_model_name": "BltVolumePerformance",
-                                "children": []
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_read_qd512_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=512"
+                                "metric_model_name": "MetricContainer",
+                                "name": "raw_block_teramarks_multi_host_nvmetcp_rand_write",
+                                "label": "Random Write",
+                                "children": [
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_write_qd_multi_host_nvmetcp_output_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_write_qd1_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_write_qd8_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=8"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_write_qd16_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "BltVolumePerformance",
+                                    "name": "rand_write_qd32_multi_host_nvmetcp_output_latency",
+                                    "label": "Latency, QDepth=32"
+                                  }
+                                ]
                               }
                             ]
                           },
                           {
                             "metric_model_name": "MetricContainer",
-                            "name": "raw_block_teramarks_multi_host_nvmetcp_rand_write",
-                            "label": "Random Write",
+                            "name": "multi_host_raw_block_nvmetcp_12_vols_8k",
+                            "label": "Block size=8k",
                             "children": [
                               {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_write_qd_multi_host_nvmetcp_output_iops",
-                                "label": "IOPS"
+                                "metric_model_name": "MetricContainer",
+                                "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read",
+                                "label": "Random Read",
+                                "children": [
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd1_latency",
+                                    "label": "Latency, QDepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd16_latency",
+                                    "label": "Latency, QDepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd32_latency",
+                                    "label": "Latency, QDepth=32"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd64_latency",
+                                    "label": "Latency, QDepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd128_latency",
+                                    "label": "Latency, QDepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_read_qd256_latency",
+                                    "label": "Latency, QDepth=256"
+                                  }
+                                ]
                               },
                               {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_write_qd1_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=1"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_write_qd8_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=8"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_write_qd16_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=16"
-                              },
-                              {
-                                "metric_model_name": "BltVolumePerformance",
-                                "name": "rand_write_qd32_multi_host_nvmetcp_output_latency",
-                                "label": "Latency, QDepth=32"
+                                "metric_model_name": "MetricContainer",
+                                "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write",
+                                "label": "Random Write",
+                                "children": [
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_iops",
+                                    "label": "IOPS"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd1_latency",
+                                    "label": "Latency, QDepth=1"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd16_latency",
+                                    "label": "Latency, QDepth=16"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd32_latency",
+                                    "label": "Latency, QDepth=132"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd64_latency",
+                                    "label": "Latency, QDepth=64"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd128_latency",
+                                    "label": "Latency, QDepth=128"
+                                  },
+                                  {
+                                    "metric_model_name": "RawVolumeNvmeTcpMultiHostPerformance",
+                                    "name": "multi_host_raw_block_nvmetcp_12_vols_8k_rand_write_qd256_latency",
+                                    "label": "Latency, QDepth=256"
+                                  }
+                                ]
                               }
                             ]
                           }
@@ -7390,88 +7488,6 @@
             ]
           }
         ]
-      },
-      {
-        "metric_model_name": "MetricContainer",
-        "name": "fungible_controller",
-        "label": "Fungible controller",
-        "children": [
-          {
-            "metric_model_name": "MetricContainer",
-            "name": "fungible_controller_api",
-            "label": "API",
-            "children": [
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "fungible_controller_api_create",
-                "label": "Create",
-                "children": [
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_create_avg_time_concurrent",
-                    "label": "Average time per volume - concurrent"
-                  },
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_create_avg_time_serial",
-                    "label": "Average time per volume - serial"
-                  }
-                ]
-              },
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "fungible_controller_api_attach",
-                "label": "Attach",
-                "children": [
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_attach_avg_time_concurrent",
-                    "label": "Average time per volume - concurrent"
-                  },
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_attach_avg_time_serial",
-                    "label": "Average time per volume - serial"
-                  }
-                ]
-              },
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "fungible_controller_api_delete",
-                "label": "Delete",
-                "children": [
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_delete_avg_time_concurrent",
-                    "label": "Average time per volume - concurrent"
-                  },
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_delete_avg_time_serial",
-                    "label": "Average time per volume - serial"
-                  }
-                ]
-              },
-              {
-                "metric_model_name": "MetricContainer",
-                "name": "fungible_controller_api_detach",
-                "label": "Detach",
-                "children": [
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_detach_avg_time_concurrent",
-                    "label": "Average time per volume - concurrent"
-                  },
-                  {
-                    "metric_model_name": "DataPlaneOperationsPerformance",
-                    "name": "fungible_controller_api_detach_avg_time_serial",
-                    "label": "Average time per volume - serial"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
       }
     ]
   },
@@ -8073,6 +8089,95 @@
             "name": "4kb_12_volume_12_ssd_raw_block_nvmetcp",
             "label": "NVMe/TCP - Single host",
             "reference": true
+          }
+        ]
+      },
+      {
+        "metric_model_name": "MetricContainer",
+        "name": "fs1600_controller",
+        "label": "Controller (using mock F1)",
+        "children": [
+          {
+            "metric_model_name": "MetricContainer",
+            "name": "fs1600_controller_storage",
+            "label": "Storage",
+            "children": [
+              {
+                "metric_model_name": "MetricContainer",
+                "name": "fs1600_controller_storage_raw",
+                "label": "Raw volume",
+                "children": [
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "fs1600_controller_storage_raw_create",
+                    "label": "Create",
+                    "children": [
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_create_avg_time_concurrent",
+                        "label": "Average time per volume - concurrent"
+                      },
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_create_avg_time_serial",
+                        "label": "Average time per volume - serial"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "fs1600_controller_storage_raw_attach",
+                    "label": "Attach",
+                    "children": [
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_attach_avg_time_concurrent",
+                        "label": "Average time per volume - concurrent"
+                      },
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_attach_avg_time_serial",
+                        "label": "Average time per volume - serial"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "fs1600_controller_storage_raw_delete",
+                    "label": "Delete",
+                    "children": [
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_delete_avg_time_concurrent",
+                        "label": "Average time per volume - concurrent"
+                      },
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_delete_avg_time_serial",
+                        "label": "Average time per volume - serial"
+                      }
+                    ]
+                  },
+                  {
+                    "metric_model_name": "MetricContainer",
+                    "name": "fs1600_controller_storage_raw_detach",
+                    "label": "Detach",
+                    "children": [
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_detach_avg_time_concurrent",
+                        "label": "Average time per volume - concurrent"
+                      },
+                      {
+                        "metric_model_name": "DataPlaneOperationsPerformance",
+                        "name": "fs1600_controller_storage_raw_detach_avg_time_serial",
+                        "label": "Average time per volume - serial"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
           }
         ]
       }
