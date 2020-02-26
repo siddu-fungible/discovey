@@ -237,7 +237,7 @@ class MultiHostFioRandRead(FunTestCase):
                 if use_unique_drives:
                     fun_test.test_assert(drive_id not in current_drive_list,
                                          message="Volume with uuid {} id created on DPU:{} having unique drive "
-                                                 " uuid {}".format(current_vol_uuid, current_dpu_index, drive_id))
+                                                 "uuid {}".format(current_vol_uuid, current_dpu_index, drive_id))
                 else:
                     fun_test.add_checkpoint(
                         checkpoint="Volume {} created on DPU:{} in drive with uuid {}".format(current_vol_uuid,
@@ -444,6 +444,8 @@ class MultiHostFioRandRead(FunTestCase):
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
+        if "collect_stats" in job_inputs:
+            self.collect_stats = job_inputs["collect_stats"]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
@@ -457,26 +459,27 @@ class MultiHostFioRandRead(FunTestCase):
             fio_numjobs = tmp[0].strip('() ')
             fio_iodepth = tmp[1].strip('() ')
 
-            stats_obj_list = []
-            for current_dpcsh_obj in self.sc_dpcsh_objs:
-                file_suffix = "{}_iodepth_{}_f1_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)),
-                                                               self.sc_dpcsh_objs.index(current_dpcsh_obj))
-                for index, stat_detail in enumerate(self.stats_collect_details):
-                    func = stat_detail.keys()[0]
-                    self.stats_collect_details[index][func]["count"] = int(
-                        self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
-                    if func == "vol_stats":
-                        self.stats_collect_details[index][func]["vol_details"] = vol_details
-                fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
-                             "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
-                self.current_dpcsh_obj.verbose = False
-                stats_obj = CollectStats(self.current_dpcsh_obj)
-                stats_obj_list.append(stats_obj)
-                stats_obj.start(file_suffix, self.stats_collect_details)
-                fun_test.log("Different stats collection thread details for f1 {} the current IO depth {} "
-                             "after starting them:\n{}".format(self.sc_dpcsh_objs.index(current_dpcsh_obj),
-                                                               (int(fio_iodepth) * int(fio_numjobs)),
-                                                               self.stats_collect_details))
+            if self.collect_stats:
+                stats_obj_list = []
+                for current_dpcsh_obj in self.sc_dpcsh_objs:
+                    file_suffix = "{}_iodepth_{}_f1_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)),
+                                                                   self.sc_dpcsh_objs.index(current_dpcsh_obj))
+                    for index, stat_detail in enumerate(self.stats_collect_details):
+                        func = stat_detail.keys()[0]
+                        self.stats_collect_details[index][func]["count"] = int(
+                            self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                        if func == "vol_stats":
+                            self.stats_collect_details[index][func]["vol_details"] = vol_details
+                    fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                                 "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+                    self.current_dpcsh_obj.verbose = False
+                    stats_obj = CollectStats(self.current_dpcsh_obj)
+                    stats_obj_list.append(stats_obj)
+                    stats_obj.start(file_suffix, self.stats_collect_details)
+                    fun_test.log("Different stats collection thread details for f1 {} the current IO depth {} "
+                                 "after starting them:\n{}".format(self.sc_dpcsh_objs.index(current_dpcsh_obj),
+                                                                   (int(fio_iodepth) * int(fio_numjobs)),
+                                                                   self.stats_collect_details))
 
             for i, host in enumerate(self.hosts):
                 fio_result[combo] = {}
@@ -558,14 +561,16 @@ class MultiHostFioRandRead(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
             finally:
-                for stats_obj in stats_obj_list:
-                    stats_obj.stop(self.stats_collect_details)
-                    self.stats_obj.verbose = True
+                if self.collect_stats:
+                    for stats_obj in stats_obj_list:
+                        stats_obj.stop(self.stats_collect_details)
+                        self.stats_obj.verbose = True
 
-            for stats_obj in stats_obj_list:
-                job_string = "{} - IO depth {} - F1 - {}".format(mode, row_data_dict["iodepth"],
-                                                                 stats_obj_list.index(stats_obj))
-                stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
+            if self.collect_stats:
+                for stats_obj in stats_obj_list:
+                    job_string = "{} - IO depth {} - F1 - {}".format(mode, row_data_dict["iodepth"],
+                                                                     stats_obj_list.index(stats_obj))
+                    stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
