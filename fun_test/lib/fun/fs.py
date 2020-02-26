@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR, DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -23,7 +23,7 @@ import os
 import socket
 import logging
 
-DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+# DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "bug_check on",
@@ -32,7 +32,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "Trap exception",
                  r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
-DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+# DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
