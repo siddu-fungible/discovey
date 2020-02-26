@@ -49,7 +49,7 @@ class blt_data_integrity(FunTestCase):
                               4. Perform FIO tests for various block sizes and read/write operations
                               ''')
 
-    def setup(self,comp_eff=False,encrypt=False):
+    def setup(self,encrypt=False):
         self.testcase = self.__class__.__name__
 
 
@@ -57,12 +57,11 @@ class blt_data_integrity(FunTestCase):
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
         self.name = 2
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = int(64*1024*1024*1024)
-        # capacity = 1460000000
+        capacity = int(16*1024*1024*1024)
+        # capacity = 1600143753216 - 3*4096
 
 
         body_volume_intent_create = BodyVolumeIntentCreate(name="blt_vol"+str(self.name), vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=comp_eff,
                                                            encrypt=encrypt, data_protection={})
 
 
@@ -100,11 +99,11 @@ class blt_data_integrity(FunTestCase):
                 for bsz in bsizes:
                     fio_write_cmd_args = {"ioengine": "libaio", "size": "100%", "rw": wmode, "direct": 1,
                                           "prio": 0, "iodepth": 64, "bs": bsz, "numjobs": 1, "do_verify": 0,
-                                          "verify": "md5", "cpus_allowed_policy": "split","timeout": 3600}
+                                          "verify": "md5", "cpus_allowed_policy": "split","timeout": 7200}
 
                     fio_read_cmd_args = {"ioengine": "libaio", "size": "100%", "rw": rmode, "direct": 1,
                                           "prio": 0, "iodepth": 64, "bs": bsz, "numjobs": 1, "do_verify": 1,
-                                          "verify": "md5", "cpus_allowed_policy": "split", "timeout": 3600}
+                                          "verify": "md5", "cpus_allowed_policy": "split", "timeout": 7200}
 
                     fio_output = host.get_instance().pcie_fio(filename=nvme_device_name[0],
                                                               cpus_allowed=host_numa_cpus,
@@ -124,10 +123,30 @@ class blt_data_integrity(FunTestCase):
     def cleanup(self):
 
         self.storage_controller_template.cleanup()
+class blt_data_integrity_encrypt(blt_data_integrity):
+    def describe(self):
+        self.set_test_details(id=2,
+                              summary="Data integrity in BLT encrypted volumes ",
+                              test_rail_case_ids=["C37719","C37720","C37721","C7722"],
+                              steps='''
+                              1. Make sure API server is up and running
+                              2. Create a  BLT encrypted Volume using API Call
+                              3. Attach the  BLT  Volume using API Call
+                              4. Perform FIO tests for various block sizes and read/write operations
+                              ''')
+    def setup(self):
+        super(blt_data_integrity_encrypt,self).setup(encrypt=True)
+
+    def run(self):
+        super(blt_data_integrity_encrypt,self).run()
+
+    def cleanup(self):
+        self.storage_controller_template.cleanup()
 
 
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(blt_data_integrity())
+    setup_bringup.add_test_case(blt_data_integrity_encrypt())
 
     setup_bringup.run()
