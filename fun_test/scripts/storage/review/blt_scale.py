@@ -21,6 +21,7 @@ from lib.system import utils
   // "CADtDlADtDl": Create Attach Detach Delete, Attch, Detach, Delete (Same volume)
 '''
 
+
 def create_volume(fs_obj, body_volume_intent_create, name, sfx):
     """
     Create a volume for the fs_obj
@@ -50,6 +51,15 @@ def delete(fs_obj, uuid):
     storage_controller = fs_obj.get_storage_controller()
     delete_vol_result = storage_controller.storage_api.delete_volume(volume_uuid=uuid)
     return delete_vol_result
+
+
+def fio_thread(nvme_device, host_obj, storage_controller_template):
+    print "fio_thread: nvme_device:", nvme_device
+    storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=storage_controller_template)
+    traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device)
+    fun_test.test_assert(expression=traffic_result,
+                         message="Host : {} FIO traffic result".format(host_obj.name))
+    fun_test.log(traffic_result)
 
 
 class BootupSetup(FunTestScript):
@@ -187,9 +197,6 @@ class CADtADt(FunTestCase):
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
         body_volume_intent_create.vol_type = self.vol_type
-
-
-
 
         sfx = 0
 
@@ -608,7 +615,6 @@ class CreateDeleteNCreateAgain(FunTestCase):
 class ScaleMaxAttached(FunTestCase):
     topology = None
     storage_controller_template = None
-    attach_result = []
 
     def describe(self):
         pass
@@ -620,6 +626,7 @@ class ScaleMaxAttached(FunTestCase):
                               3. Attach Volume to a remote host
                               4. Run FIO from host
                               ''')
+
     def setup(self):
         self.topology = fun_test.shared_variables["topology"]
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
@@ -669,8 +676,6 @@ class ScaleMaxAttached(FunTestCase):
         else:
             encrypt = False
 
-
-
         print "capacity:", self.capacity, " loop:", self.loop_count, " pattern:", self.pattern
 
         body_volume_intent_create = BodyVolumeIntentCreate(name=self.name, vol_type=self.vol_type,
@@ -679,16 +684,12 @@ class ScaleMaxAttached(FunTestCase):
                                                            encrypt=encrypt, data_protection={})
         body_volume_intent_create.vol_type = self.vol_type
 
-
-
-
-
         fs_obj = self.fs_obj_list[0]
         hosts = self.topology.get_available_host_instances()
         connect = False
         created_vols = []
         created_ports = []
-
+        attach_result = []
         print "loop_count:", self.loop_count
         for counter in range(self.loop_count):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
@@ -704,10 +705,10 @@ class ScaleMaxAttached(FunTestCase):
                                                                                validate_nvme_connect=connect,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result["status"], message="Attach Volume Successful")
-            self.attach_result.append(attach_vol_result)
+            attach_result.append(attach_vol_result)
             print "attach_vol_result", attach_vol_result
-            print "self.attach_result[counter][data][uuid]", self.attach_result[counter]["data"]["uuid"]
-            created_ports.append(self.attach_result[counter]["data"]["uuid"])
+            print "self.attach_result[counter][data][uuid]", attach_result[counter]["data"]["uuid"]
+            created_ports.append(attach_result[counter]["data"]["uuid"])
 
         print "created vols:", len(created_vols)
         print "created ports:", len(created_ports)
@@ -716,34 +717,36 @@ class ScaleMaxAttached(FunTestCase):
 
         fun_test.shared_variables["created_vols"] = created_vols
         fun_test.shared_variables["created_ports"] = created_ports
-
-
+        fun_test.shared_variables["attach_result"] = attach_result
 
     def run(self):
 
         hosts = self.topology.get_available_host_instances()
         created_vols = fun_test.shared_variables["created_vols"]
         created_ports = fun_test.shared_variables["created_ports"]
+        attach_result = fun_test.shared_variables["attach_result"]
         fs_obj_list = fun_test.shared_variables["fs_obj_list"]
         fs_obj = self.fs_obj_list[0]
-        len = len(self.attach_result)
+        attach_result_len = len(attach_result)
         host_obj = hosts[0]
-        print "len:", len, " all attached vols:", self.attach_result
-        for ctr in range(len):
-            print "subsys_nqn:", self.attach_result[ctr]['data']['subsys_nqn']
+        print "len:", len, " all attached vols:", attach_result_len
+        for ctr in range(attach_result_len):
+            print "subsys_nqn:", attach_result[ctr]['data']['subsys_nqn']
 
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
-                                                                                     subsys_nqn=self.attach_result[ctr][
+                                                                                     subsys_nqn=attach_result[ctr][
                                                                                          'data']['subsys_nqn'],
-                                                                                     nsid=self.attach_result[ctr][
+                                                                                     nsid=attach_result[ctr][
                                                                                          'data']['nsid'])
+            '''
             storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
             traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
             fun_test.test_assert(expression=traffic_result,
                                  message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
-
-
+            '''
+            fio_thread(host_obj=host_obj, nvme_device=nvme_device_name,
+                       storage_controller_template=self.storage_controller_template)
 
     def cleanup(self):
         created_vols = fun_test.shared_variables["created_vols"]

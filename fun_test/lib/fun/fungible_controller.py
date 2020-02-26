@@ -50,6 +50,7 @@ class FungibleController(Linux):
 
         # WORKAROUND
         self.command("export WORKSPACE={}".format(ws))
+        self.sudo_command("cd {}FunAPIGateway/docker/containers/; ./fun_containers.sh clean".format(ws), timeout=300)
         self.install_fc_bundle()
         self.command("cd {}".format(ws))
         self.command("rm -fr FunAPIGateway")
@@ -120,7 +121,7 @@ class FungibleController(Linux):
                     bmc_mac = self.change_mac(mac=bmc_mac, offset=8)
                 elif index == 1:
                     bmc_mac = self.change_mac(mac=bmc_mac, offset=52)
-                self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name, f1_index=index)
+                self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name.replace("-", ""), f1_index=index)
             come_handle = fs_obj.get_come()
             url = self.create_fc_connect_file(file_name="connect_to_fc_{}.sh".format(self.host_ip))
             come_handle.sudo_command(
