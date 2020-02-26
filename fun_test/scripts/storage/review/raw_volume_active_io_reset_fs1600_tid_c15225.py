@@ -21,7 +21,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -42,6 +42,9 @@ class GenericStorageTest(FunTestCase):
     IO_DEPTH = 2
     CAPACITY = []
     no_of_volumes = 0
+    fs_obj_list = []
+    come_handle = None
+    already_deployed = True
 
     def describe(self):
         self.set_test_details(id=self.test_case_id,
@@ -86,8 +89,6 @@ class GenericStorageTest(FunTestCase):
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
             max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3*4096)
-
-        total_capacity = 10737418240
 
         max_no_of_volumes = total_capacity/min_volume_capacity
         if total_capacity-min_volume_capacity >= max_volume_capacity:
@@ -174,13 +175,22 @@ class GenericStorageTest(FunTestCase):
                 fun_test.test_assert(expression=nvme_device_name,
                                      message="NVMe device found on Host : {}".format(nvme_device_name))
 
-                fio_integrity = self.storage_traffic_template.fio_with_integrity_check(
-                    host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=self.IO_DEPTH)
-                fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
-                self.nvme_device_name_list.append(nvme_device_name)
-                fun_test.shared_variables["nvme_device_name_list"] = self.nvme_device_name_list
-                fun_test.shared_variables["attach_result"] = self.attach_result
+                self.fio_threads_list = []
+                for dut_index in self.topology.get_duts().keys():
+                    fs_obj = self.topology.get_dut_instance(index=dut_index)
+                    thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=self.fio_integrity_check(),
+                                                              fs_obj=fs_obj)
+                    self.fio_threads_list.append(thread_id)
+                fun_test.shared_variables["fio_threads_list"] = self.fio_threads_list
                 break
+
+    def fio_integrity_check(self):
+        fio_integrity = self.storage_traffic_template.fio_with_integrity_check(
+            host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=self.IO_DEPTH )
+        fun_test.test_assert( message="Do FIO integrity check", expression=fio_integrity )
+        self.nvme_device_name_list.append( nvme_device_name )
+        fun_test.shared_variables["nvme_device_name_list"] = self.nvme_device_name_list
+        fun_test.shared_variables["attach_result"] = self.attach_result
 
 class ConfigPersistenceAfterReset(FunTestCase):
     topology = None
@@ -207,6 +217,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
         self.name = fun_test.shared_variables["name"]
         self.compression_effort = fun_test.shared_variables["compression_effort"]
         self.enctrypt = fun_test.shared_variables["encrypt"]
+        self.fio_threads_list = fun_test.shared_variables["fio_threads_list"]
         threads_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -235,25 +246,11 @@ class ConfigPersistenceAfterReset(FunTestCase):
     def run(self):
         storage_traffic_template = fun_test.shared_variables["storage_traffic_template"]
         attach_result = fun_test.shared_variables["attach_result"]
-
-        for volume in range(self.no_of_volumes):
-            for host_obj in self.topology.get_available_host_instances():
-                nvme_device_name_list_before_reboot = fun_test.shared_variables["nvme_device_name_list"]
-
-                nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
-                                                                                         subsys_nqn=attach_result[volume]['data'][
-                                                                                             'subsys_nqn'],
-                                                                                         nsid=attach_result[volume]['data'][
-                                                                                             'nsid'])
-                fun_test.test_assert_expected(expected=nvme_device_name_before_reboot[volume], actual=nvme_device_name,
-                                              message="NVMe device found on Host after FS reboot: {}".format(
-                                                  nvme_device_name))
-                fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
-                                                                                  filename=nvme_device_name,
-                                                                                  numjobs=1, iodepth=self.IO_DEPTH,
-                                                                                  verify_integrity=True)
-                fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
-                break
+        self.volumes_persistent_check()
+        for thread_id in self.fio_threads_list:
+            fun_test.join_thread(fun_test_thread_id=thread_id, sleep_time=1)
+        self.delete_volumes()
+        self.volumes_deletion_check()
 
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result_failed=fun_test.is_current_test_case_failed())
