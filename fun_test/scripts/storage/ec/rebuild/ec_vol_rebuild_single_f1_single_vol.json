@@ -83,8 +83,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -137,8 +137,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -191,8 +191,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -245,8 +245,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -299,8 +299,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -353,8 +353,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 16, "numjobs": 1, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "fio_job_name": "inspur_8k_random_read_write",
     "status_interval": 10
   },
@@ -407,8 +407,8 @@
     "huid": 7,
     "ctlid": 0,
     "nvme_subsystem": "nqn.2017-05.com.fungible:nss-uuid1",
-    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "randwrite", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
-    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "randread", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_write_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "write", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 0, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
+    "fio_verify_cmd_args": {"iodepth": 4, "numjobs": 16, "size": "50%", "rw": "read", "direct": 1, "prio": 0, "cpus_allowed_policy": "split", "verify":"md5", "do_verify": 1, "norandommap": "NO_VALUE", "randrepeat": 0, "timeout": 7200},
     "status_interval": 10
   }
 }
