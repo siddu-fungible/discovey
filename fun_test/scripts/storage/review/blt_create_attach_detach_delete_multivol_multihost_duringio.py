@@ -227,7 +227,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                             fio_cpus_allowed_args + offset + size + jobs
                     else:
-                        size = " --size=100%"
+                        size = " --size=10%"
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                                 fio_cpus_allowed_args + size + jobs
                     warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
@@ -243,7 +243,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
 
             fun_test.sleep("Fio threads started", 10)
             if self.detach_duringio:
-                fun_test.sleep("Wait before disconnect during IO", seconds=30)
+                fun_test.sleep("Wait before disconnect during IO", seconds=10)
                 self.cleanupio()
             try:
                 for i, host_name in enumerate(self.hosts):
@@ -251,7 +251,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                     fun_test.join_thread(fun_test_thread_id=thread_id[i])
                     fun_test.log("FIO Command Output:")
                     fun_test.log(fun_test.shared_variables["fio"][i])
-                    if not fun_test.shared_variables["fio"][i]:
+                    if not fun_test.shared_variables["fio"][i] and self.detach_duringio:
                         fun_test.test_assert(True, message="FIO interrupted due to disconnect")
                     else:
                         fun_test.test_assert(fun_test.shared_variables["fio"][i],
@@ -518,8 +518,8 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIO())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostShared())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIO())
-    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostEncrypt())
-    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt())
-    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt())
-    setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt())
+    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostEncrypt())
+    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt())
+    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt())
+    #setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt())
     setup_bringup.run()
