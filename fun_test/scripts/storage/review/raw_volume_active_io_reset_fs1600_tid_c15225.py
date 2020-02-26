@@ -41,6 +41,7 @@ class GenericStorageTest(FunTestCase):
     VOL_TYPE = VolumeTypes().LOCAL_THIN
     IO_DEPTH = 2
     CAPACITY = []
+    no_of_volumes = 0
 
     def describe(self):
         self.set_test_details(id=self.test_case_id,
@@ -55,13 +56,15 @@ class GenericStorageTest(FunTestCase):
     def setup(self):
         self.topology = fun_test.shared_variables["topology"]
         self.already_deployed = fun_test.shared_variables["already_deployed"]
-        self.fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
-                       for dut_index in self.topology.get_available_duts().keys()]
-        self.delete_volumes() #Deleting Volumes from previous run
-        self.create_volumes()
-        self.attach_volumes()
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.fs_obj_list.append(fs_obj)
+            self.come_handle = fs_obj.get_come()
 
     def run(self):
+        self.delete_volumes()  # Deleting Volumes from previous run
+        self.create_volumes()
+        self.attach_volumes()
         self.run_fio()
 
     def cleanup(self):
@@ -83,6 +86,8 @@ class GenericStorageTest(FunTestCase):
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
             max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3*4096)
+
+        total_capacity = 10737418240
 
         max_no_of_volumes = total_capacity/min_volume_capacity
         if total_capacity-min_volume_capacity >= max_volume_capacity:
@@ -205,7 +210,6 @@ class ConfigPersistenceAfterReset(FunTestCase):
         threads_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
-            self.come_handle = fs_obj.get_come()
             thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=self.reset_and_health_check,
                                                       fs_obj=fs_obj)
             threads_list.append(thread_id)
