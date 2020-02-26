@@ -911,7 +911,7 @@ class ECVolSingleDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of Single Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -949,7 +949,7 @@ class ECVolmDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of m Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -987,7 +987,7 @@ class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of m+1 Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1025,7 +1025,7 @@ class ECVolSingleDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of Single Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1064,7 +1064,7 @@ class ECVolmDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of m Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1103,7 +1103,7 @@ class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of m+1 Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600

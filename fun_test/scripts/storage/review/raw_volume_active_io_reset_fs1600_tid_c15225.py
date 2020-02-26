@@ -53,7 +53,7 @@ class GenericStorageTest(FunTestCase):
 
     def setup(self):
         self.topology = fun_test.shared_variables["topology"]
-        self.fs_obj_list = [self.topology.get_dut_instance( index=dut_index )
+        self.fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
         self.create_volumes()
         self.attach_volumes()
@@ -89,7 +89,7 @@ class GenericStorageTest(FunTestCase):
         random_capacity = random_capacity - (random_capacity%4096)
         remaining_capacity = total_capacity - random_capacity
         for volume in range(max_no_of_volumes):
-            self.capacity.append(random_capacity)
+            self.CAPACITY.append(random_capacity)
             self.no_of_volumes = self.no_of_volumes + 1
             if remaining_capacity == 0:
                 break
@@ -102,6 +102,8 @@ class GenericStorageTest(FunTestCase):
                 remaining_capacity = remaining_capacity - random_capacity
 
         fun_test.shared_variables["no_of_volumes"] = self.no_of_volumes
+        fun_test.shared_variables["capacity"] = self.CAPACITY
+        fun_test.shared_variables["vol_type"] = self.VOL_TYPE
         for volume in range(self.no_of_volumes):
             name = "blt_vol_" + str(volume + 1)
             compression_effort = False
@@ -113,9 +115,9 @@ class GenericStorageTest(FunTestCase):
                 self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
 
             self.body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=self.VOL_TYPE,
-                                                               capacity=self.CAPACITY[volume],
-                                                               compression_effort=compression_effort,
-                                                               encrypt=encrypt, data_protection={})
+                                                                    capacity=self.CAPACITY[volume],
+                                                                    compression_effort=compression_effort,
+                                                                    encrypt=encrypt, data_protection={})
 
             self.storage_controller_template.initialize(already_deployed=self.already_deployed)
 
@@ -124,36 +126,38 @@ class GenericStorageTest(FunTestCase):
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             self.vol_uuid_list.append(vol_uuid[0])
             fun_test.shared_variables["vol_uuid_list"] = self.vol_uuid_list
+            fun_test.shared_variables["name"] = name
+            fun_test.shared_variables["compression_effort"] = compression_effort
+            fun_test.shared_variables["encrypt"] = encrypt
 
     def attach_volumes(self):
         hosts = self.topology.get_available_host_instances()
         for volume in range(self.no_of_volumes):
-            for host in self.topology.get_available_host_instances():
-                attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
-                                                                                   volume_uuid=self.vol_uuid_list[volume],
-                                                                                   validate_nvme_connect=True,
-                                                                                   raw_api_call=True)
-                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-                self.attach_result.append(attach_vol_result)
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=self.fs_obj_list,
+                                                                               volume_uuid=self.vol_uuid_list[volume],
+                                                                               validate_nvme_connect=True,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            self.attach_result.append(attach_vol_result)
 
     def run_fio(self):
         hosts = self.topology.get_available_host_instances()
         self.storage_traffic_template = StorageTrafficTemplate(
-            storage_operations_template=self.storage_controller_template )
+            storage_operations_template=self.storage_controller_template)
 
         for volume in range(self.no_of_volumes):
             for host_obj in hosts:
-                nvme_device_name = self.storage_controller_template.get_host_nvme_device( host_obj=host_obj,
-                                                                                          subsys_nqn=self.attach_result[volume][
+                nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
+                                                                                         subsys_nqn=self.attach_result[volume][
                                                                                               'data']['subsys_nqn'],
-                                                                                          nsid=self.attach_result[volume][
+                                                                                         nsid=self.attach_result[volume][
                                                                                               'data']['nsid'] )
-                fun_test.test_assert( expression=nvme_device_name,
-                                      message="NVMe device found on Host : {}".format( nvme_device_name ) )
+                fun_test.test_assert(expression=nvme_device_name,
+                                     message="NVMe device found on Host : {}".format(nvme_device_name))
 
                 fio_integrity = self.storage_traffic_template.fio_with_integrity_check(
-                    host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=self.IO_DEPTH )
-                fun_test.test_assert( message="Do FIO integrity check", expression=fio_integrity )
+                    host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=self.IO_DEPTH)
+                fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
                 self.nvme_device_name_list.append(nvme_device_name)
                 fun_test.shared_variables["nvme_device_name_list"] = self.nvme_device_name_list
                 fun_test.shared_variables["attach_result"] = self.attach_result
@@ -178,10 +182,16 @@ class ConfigPersistenceAfterReset(FunTestCase):
     def setup(self):
         self.topology = fun_test.shared_variables["topology"]
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
-        threads_list = []
         self.no_of_volumes = fun_test.shared_variables["no_of_volumes"]
+        self.CAPACITY = fun_test.shared_variables["capacity"]
+        self.vol_uuid_list = fun_test.shared_variables["vol_uuid_list"]
+        self.name = fun_test.shared_variables["name"]
+        self.compression_effort = fun_test.shared_variables["compression_effort"]
+        self.enctrypt = fun_test.shared_variables["encrypt"]
+        threads_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.come_handle = fs_obj.get_come()
             thread_id = fun_test.execute_thread_after(time_in_seconds=2, func=self.reset_and_health_check,
                                                       fs_obj=fs_obj)
             threads_list.append(thread_id)
@@ -243,37 +253,37 @@ class ConfigPersistenceAfterReset(FunTestCase):
 
     def delete_volumes(self):
         for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance( index=dut_index )
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
-            raw_sc_api = StorageControllerApi( api_server_ip=storage_controller.target_ip )
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             get_volume_result = raw_sc_api.get_volumes()
-            fun_test.test_assert( message="Get Volume Details", expression=get_volume_result["status"] )
+            fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
-                delete_volume = storage_controller.storage_api.delete_volume( volume_uuid=volume )
-                fun_test.test_assert( expression=delete_volume.status, message="Delete Volume {}".format( volume ) )
+                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def volumes_persistent_check(self):
         for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance( index=dut_index )
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
-            raw_sc_api = StorageControllerApi( api_server_ip=storage_controller.target_ip )
-            for volume_num in range( self.no_of_volumes ):
-                vol_db_status = raw_sc_api.is_raw_vol_in_db( vol_uuid=self.vol_uuid_list[volume_num],
-                                                             come_handle=self.come_handle,
-                                                             capacity=self.capacity[volume_num], stripe_count=0,
-                                                             vol_type=self.vol_type, encrypt=self.encrypt )
-                fun_test.test_assert( expression=vol_db_status["status"],
-                                      message="Volume Persistent Check {}".format( vol_db_status ) )
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            for volume_num in range(self.no_of_volumes):
+                vol_db_status = raw_sc_api.is_raw_vol_in_db(vol_uuid=self.vol_uuid_list[volume_num],
+                                                            come_handle=self.come_handle,
+                                                            capacity=self.CAPACITY[volume_num], stripe_count=0,
+                                                            vol_type=self.VOL_TYPE, encrypt=self.encrypt)
+                fun_test.test_assert(expression=vol_db_status["status"],
+                                     message="Volume Persistent Check {}".format(vol_db_status))
 
     def volumes_deletion_check(self):
         for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance( index=dut_index )
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
-            raw_sc_api = StorageControllerApi( api_server_ip=storage_controller.target_ip )
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_uuid in self.vol_uuid_list:
-                vol_db_status = raw_sc_api.is_delete_in_db( come_handle=self.come_handle, vol_uuid=volume_uuid )
-                fun_test.test_assert( expression=vol_db_status["status"],
-                                      message="Volume Deletion Check {}".format( vol_db_status ) )
+                vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle, vol_uuid=volume_uuid)
+                fun_test.test_assert(expression=vol_db_status["status"],
+                                     message="Volume Deletion Check {}".format(vol_db_status))
 
 
 class BltApiStorageTest(GenericStorageTest):
