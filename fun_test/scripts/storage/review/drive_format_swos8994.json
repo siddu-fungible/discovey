@@ -1,0 +1,28 @@
+{
+  "CADtADt1": {
+    "capacity": 4294967296, //4GB
+    "volume_count": 1,
+    "loop_count": 2,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CADtADt",
+    "tcid" : 1
+  },
+  "CADtADt2": {
+    "capacity": 8589934592, //8GB
+    "volume_count": 1,
+    "loop_count": 3,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CADtADt",
+    "tcid" : 2
+  }
+}
