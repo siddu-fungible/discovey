@@ -39,7 +39,7 @@
   },
   "CreateAttachDetachDeleteMultivolMultihost": {
     "num_f1": 1,
-    "blt_count": 8,
+    "blt_per_host": 8,
     "num_hosts": 1,
     "capacity": 8589934592,
     "test_iteration_count": 48,
