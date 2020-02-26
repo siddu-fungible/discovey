@@ -33,7 +33,7 @@ export class PerformanceTableComponent implements OnInit {
     this.data["all"] = true;
     this.data["pageSize"] = 10;
     this.data["currentPageIndex"] = 1;
-    this.data["totalLenght"] = this.data["rows"].length;
+    this.data["totalLength"] = this.data["rows"].length;
     if (this.metricId) {
       let self = this;
       let payload = {};
@@ -54,14 +54,20 @@ export class PerformanceTableComponent implements OnInit {
                 for (let oneData of oneDataSet) {
                   if (!self.headers) {
                     self.headers = oneData;
+                    this.data["headers"].push("input_date_time");
                     Object.keys(self.headers).forEach((key) => {
-                      this.data["headers"].push(key);
+                      if (key !== "input_date_time") {
+                        this.data["headers"].push(key);
+                      }
                     });
                   }
                   let rowInTable = [];
+                  rowInTable.push(oneData["input_date_time"]);
                   Object.keys(self.headers).forEach((key) => {
-                    let value = oneData[key];
-                    rowInTable.push(value);
+                    if (key !== "input_date_time") {
+                      let value = oneData[key];
+                      rowInTable.push(value);
+                    }
                   });
                   self.data["rows"][index++] = rowInTable;
                 }

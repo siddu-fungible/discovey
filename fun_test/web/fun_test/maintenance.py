@@ -3146,7 +3146,7 @@ if __name__ == "__main_shared_volume__":
                        workspace_ids=[])
         print "created shared volumes random read charts"
 
-if __name__ == "__main__":
+if __name__ == "__main_8k_block_size_12_volumes__":
     internal_name = "multi_host_raw_block_nvmetcp_12_vols_8k_"
     base_line_date = datetime(year=2020, month=2, day=23, minute=0, hour=0, second=0)
     model_name = "RawVolumeNvmeTcpMultiHostPerformance"
@@ -3236,5 +3236,18 @@ if __name__ == "__main__":
                                    workspace_ids=[])
             print "created latency charts for 12 volumes 8k block size"
 
+if __name__ == "__main__":
+    charts = MetricChart.objects.filter(metric_model_name="DataPlaneOperationsPerformance")
+    for chart in charts:
+        data_sets = chart.get_data_sets()
+        print json.dumps(data_sets)
+        for data_set in data_sets:
+            del data_set["inputs"]["input_volume_size"]
+            del data_set["inputs"]["input_volume_size_unit"]
+            del data_set["inputs"]["input_total_volumes"]
+        print json.dumps(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "deleted the volume size and total volumes key from filter"
 
 
