@@ -34,7 +34,6 @@
     "drive_format_timeout": 120
   },
   "CreateAttachDetachDeleteMultivolMultihost": {
-    "ec_list": ["4,2"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -50,12 +49,14 @@
         "lsv": 4096,
         "jvol": 512
       },
-      "capacity": 34359738368,
+	"ndata": 4,
+	"nparity": 2,
+      "capacity": 1073741824,
       "use_lsv": 1,
       "lsv_pct": 0.5,
       "lsv_chunk_size": 128,
       "jvol_size_multiplier": 4,
-      "num_volumes": 1
+      "num_volumes": 128
     },
     "test_rail_case_id": ["C18036"],
     "num_ssd": 12,

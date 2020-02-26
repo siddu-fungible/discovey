@@ -193,8 +193,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         job_inputs = fun_test.get_job_inputs()
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
-        if "ec_count" in job_inputs:
-            self.ec_count = job_inputs["ec_count"]
+        if "num_volumes" in job_inputs:
+            self.num_volumes = job_inputs["num_volumes"]
         if "num_hosts" in job_inputs:
             self.num_host = job_inputs["num_hosts"]
         if "test_iteration_count" in job_inputs:
@@ -205,7 +205,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                 replace("numjobs=1", "numjobs={}".format(job_inputs["warmup_jobs"]))'''
 
 
-        fun_test.shared_variables["ec_count"] = self.ec_count
+        fun_test.shared_variables["num_volumes"] = self.num_volumes
         vol_type = VolumeTypes().EC
 
         self.available_hosts = self.topology.get_available_hosts()
@@ -222,7 +222,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
-            for i in range(self.ec_count):
+            for i in range(self.num_volumes):
                 suffix = utils.generate_uuid(length=4)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i),
                                                                    vol_type=vol_type,
@@ -293,8 +293,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             fun_test.shared_variables["host_info"] = self.host_info
 
             fun_test.log("Hosts info: {}".format(self.host_info))
-'''
-            self.fio_io_size = 100 / len(self.host_info)
+
+            '''self.fio_io_size = 100 / len(self.host_info)
             # self.offsets = ["1%", "26%", "51%", "76%"]
 
             thread_id = {}
@@ -371,8 +371,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                     if field == "runtime":
                         aggr_fio_output[op][field] = int(round(value / 1000) / len(self.host_info))
 
-            fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-'''
+            fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))'''
 
             self.ec_template.cleanup()
             fun_test.test_assert(expression=True, message="Iteration {} completed".format(count+1))
