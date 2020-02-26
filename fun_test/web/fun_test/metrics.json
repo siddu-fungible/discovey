@@ -8095,7 +8095,7 @@
       {
         "metric_model_name": "MetricContainer",
         "name": "fs1600_controller",
-        "label": "Controller",
+        "label": "Controller (using mock F1)",
         "children": [
           {
             "metric_model_name": "MetricContainer",
