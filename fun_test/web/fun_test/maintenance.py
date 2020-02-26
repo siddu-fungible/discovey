@@ -3236,7 +3236,7 @@ if __name__ == "__main_8k_block_size_12_volumes__":
                                    workspace_ids=[])
             print "created latency charts for 12 volumes 8k block size"
 
-if __name__ == "__main__":
+if __name__ == "__main_data_plane_fix__":
     charts = MetricChart.objects.filter(metric_model_name="DataPlaneOperationsPerformance")
     for chart in charts:
         data_sets = chart.get_data_sets()
@@ -3250,4 +3250,24 @@ if __name__ == "__main__":
         chart.save()
     print "deleted the volume size and total volumes key from filter"
 
+if __name__ == "__main__":
+    internal_chart_names = {"fungible_controller": "fs1600_controller",
+                            "fungible_controller_api": "fs1600_controller_storage",
+                            "fungible_controller_api_create": "fs1600_controller_storage_raw_create",
+                            "fungible_controller_api_create_avg_time_concurrent": "fs1600_controller_storage_raw_create_avg_time_concurrent",
+                            "fungible_controller_api_create_avg_time_serial": "fs1600_controller_storage_raw_create_avg_time_serial",
+                            "fungible_controller_api_attach": "fs1600_controller_storage_raw_attach",
+                            "fungible_controller_api_attach_avg_time_concurrent": "fs1600_controller_storage_raw_attach_avg_time_concurrent",
+                            "fungible_controller_api_attach_avg_time_serial": "fs1600_controller_storage_raw_attach_avg_time_serial",
+                            "fungible_controller_api_delete": "fs1600_controller_storage_raw_delete",
+                            "fungible_controller_api_delete_avg_time_concurrent": "fs1600_controller_storage_raw_delete_avg_time_concurrent",
+                            "fungible_controller_api_delete_avg_time_serial": "fs1600_controller_storage_raw_delete_avg_time_serial",
+                            "fungible_controller_api_detach": "fs1600_controller_storage_raw_detach",
+                            "fungible_controller_api_detach_avg_time_concurrent": "fs1600_controller_storage_raw_detach_avg_time_concurrent",
+                            "fungible_controller_api_detach_avg_time_serial": "fs1600_controller_storage_raw_detach_avg_time_serial"}
 
+    for internal_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_name)
+        chart.internal_chart_name = internal_chart_names[internal_name]
+        chart.save()
+    print "changed the internal chart names of all the fungible controller"
