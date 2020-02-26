@@ -57,8 +57,14 @@ class FungibleController(Linux):
         self.initialized = True
         return result
 
-    def install_fc_bundle(self, ws="/opt/fungible/fc/"):
+    def install_fc_bundle(self, ws="/opt/fungible/fc/", bundle_number=14):
         self.command("cd {}".format(ws))
+        docker_containers = self.command("docker ps -a --format '{{.Names}}'").split("\n")
+        for container in docker_containers:
+            if container:
+                kill_container = self.sudo_command("docker kill {}".format(container))
+                fun_test.add_checkpoint(expected=True, actual=container.strip() in kill_container,
+                                        checkpoint="Container Killed: ".format({container}))
         docker_image_ids = self.command("docker images -q").split("\n")
         for docker_image_id in docker_image_ids:
             if docker_image_id:
@@ -66,10 +72,12 @@ class FungibleController(Linux):
                 fun_test.add_checkpoint(expected=True, actual="Deleted" in delete_docker_image,
                                         checkpoint="Deleted docker image: ".format({docker_image_id}))
         #  TODO: Remove hardcoding bundle number for FC
-        self.sudo_command("wget https://dochub.fungible.local/doc/jenkins/master/fc/12/setup_fc-bld-12.sh "
-                          "--no-check-certificate", timeout=300)
-        self.sudo_command("chmod 777 setup_fc-bld-12.sh")
-        self.sudo_command("./setup_fc-bld-12.sh", timeout=300)
+        bundle_file = "setup_fc-bld-{}.sh".format(bundle_number)
+        self.sudo_command("rm {}".format(bundle_file))
+        self.sudo_command("wget https://dochub.fungible.local/doc/jenkins/master/fc/latest/{} "
+                          "--no-check-certificate".format(bundle_file), timeout=300)
+        self.sudo_command("chmod 777 {}".format(bundle_file))
+        self.sudo_command("./{}".format(bundle_file), timeout=300)
         self.command("cd {}".format(ws))
         self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
         docker_images_output = self.sudo_command("docker images")
@@ -110,10 +118,9 @@ class FungibleController(Linux):
                     bmc_mac = self.change_mac(mac=bmc_mac, offset=52)
                 self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name, f1_index=index)
             come_handle = fs_obj.get_come()
-            file_name = self.create_fc_connect_file(host_handle=come_handle)
-
+            url = self.create_fc_connect_file(file_name="connect_to_fc_{}.sh".format(self.host_ip))
             come_handle.sudo_command(
-                "cd /usr/local/bin; sudo ztp_dpu_discovery.py -i enp3s0f0 -s -b {}".format(file_name))
+                "cd /usr/local/bin; sudo ztp_dpu_discovery.py -i enp3s0f0 -s -b {}".format(url))
 
         return True
 
@@ -131,12 +138,17 @@ class FungibleController(Linux):
             target_username=self.ssh_username, target_password=self.ssh_password),
             message="Create Open Config file on Fungible Controller")
 
-    def create_fc_connect_file(self, host_handle, file_name="connect_to_fc.sh", file_location="~/"):
+    def create_fc_connect_file(self, file_name="connect_to_fc.sh",
+                               host_handle=Linux(host_ip="qa-ubuntu-01", ssh_username="localadmin",
+                                                 ssh_password="Precious1*"),
+                               file_location="/project/users/QA/regression/Integration/fun_test/web/static/media/",
+                               url="http://integration.fungible.local/static/media/"):
 
         host_handle.sudo_command("rm {}".format(file_location + file_name))
         contents = COME_FC_CONNECT_FILE_CONTENTS.format(self.host_ip)
-        host_handle.create_file(file_name=file_location + file_name, contents=contents)
-        return file_name
+        host_handle.create_file(file_name="~/" + file_name, contents=contents)
+        host_handle.copy(source="~/" + file_name, destination=file_location, sudo=True)
+        return url + file_name
 
     def ensure_expected_containers_running(self, max_time=CONTAINERS_BRING_UP_TIME_MAX):
         fun_test.sleep(seconds=10, message="Waiting for expected containers")
