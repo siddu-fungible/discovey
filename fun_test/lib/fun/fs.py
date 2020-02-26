@@ -2141,6 +2141,8 @@ class ComE(Linux):
 
                 if hbm_dump_timer.is_expired():
                     fun_test.log("HBM dump timer expired. Giving up ...")
+                self.fs.reset_device_handles()
+                self.fs.renew_device_handles()
                 fun_test.test_assert(self.fs.ensure_is_up(validate_uptime=False), "FS must be up after HBM dump")
                 try:
                     self.upload_hbm_dump(asset_type=asset_type, asset_id=asset_id)
@@ -3120,8 +3122,9 @@ class Fs(object, ToDictMixin):
 
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 7
-        fpga = self.get_fpga()
+
         """
+        fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
