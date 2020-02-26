@@ -21,11 +21,12 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        already_deployed = True
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
+        fun_test.shared_variables["already_deployed"] = already_deployed
 
     def cleanup(self):
         self.topology.cleanup()
@@ -53,8 +54,10 @@ class GenericStorageTest(FunTestCase):
 
     def setup(self):
         self.topology = fun_test.shared_variables["topology"]
+        self.already_deployed = fun_test.shared_variables["already_deployed"]
         self.fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
+        self.delete_volumes() #Deleting Volumes from previous run
         self.create_volumes()
         self.attach_volumes()
 
@@ -129,6 +132,17 @@ class GenericStorageTest(FunTestCase):
             fun_test.shared_variables["name"] = name
             fun_test.shared_variables["compression_effort"] = compression_effort
             fun_test.shared_variables["encrypt"] = encrypt
+
+    def delete_volumes(self):
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs_obj.get_storage_controller()
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            get_volume_result = raw_sc_api.get_volumes()
+            fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
+            for volume in get_volume_result["data"]:
+                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def attach_volumes(self):
         hosts = self.topology.get_available_host_instances()
