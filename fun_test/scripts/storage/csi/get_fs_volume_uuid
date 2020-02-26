@@ -1,0 +1,1 @@
+curl -u admin:password -k -X GET 'https://'$1'-come:9000/FunCC/v1/storage/volumes' | json_pp | grep "name\|uuid"

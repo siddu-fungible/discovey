@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: csi-fungible-pvc-raw
+spec:
+  accessModes:
+  - ReadWriteOnce
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: fungible-raw-volume
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: fungible-csi-raw-app
+spec:
+  containers:
+    - name: fungible-csi-raw-app
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: test-csi-raw-volume
+          devicePath: /dev/xvda
+      command: ["fio"]
+      args: ["--name=nvmetcp","--ioengine=libaio","--numjobs=1","--rw=randrw","--rwmixread=35","--iodepth=4","--bs=4k","--filename=/dev/xvda","--runtime=43200","--time_based","--size=10m"]
+  volumes:
+    - name: test-csi-raw-volume
+      persistentVolumeClaim:
+        claimName: csi-fungible-pvc-raw

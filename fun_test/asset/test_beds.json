@@ -3539,26 +3539,6 @@
       }
     }
   },
-  "fs-118": {
-    "dut_info": {
-      "0": {
-        "type": "DUT_TYPE_FSU",
-        "dut": "fs-118",
-        "fpg_interface_info": {
-          "0": {
-            "0": {
-              "switch_info": {
-                "name": "qfx-3",
-                "port": "et-0/0/20"
-              },
-              "type": "INTERFACE_TYPE_ETHERNET",
-              "ip": "15.118.1.2"
-            }
-          }
-        }
-      }
-    }
-  },
   "fs-131": {
     "dut_info": {
       "0": {
@@ -4352,6 +4332,46 @@
                 "name": "cab04-arista-100g",
                 "port": "Et6/1"
               },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "3": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-118",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et11/1"
+              },
+              "ip": "15.118.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.118.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab04-arista-100g",
+                "port": "Et12/1"
+              },
+              "ip": "15.118.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.118.2.1"
+                }
+              ],
               "type": "INTERFACE_TYPE_ETHERNET"
             }
           }

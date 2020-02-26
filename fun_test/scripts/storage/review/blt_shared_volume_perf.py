@@ -374,7 +374,7 @@ class SharedVolumePerfTest(FunTestCase):
                               "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999"
                            ]
 
         table_data_rows = []
@@ -396,6 +396,7 @@ class SharedVolumePerfTest(FunTestCase):
                 file_size_in_gb = self.capacity / 1073741824
                 row_data_dict["size"] = str(file_size_in_gb) + "GB"
                 file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
+                fio_job_name = file_suffix
                 for index, stat_detail in enumerate(self.stats_collect_details):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(
@@ -505,21 +506,19 @@ class SharedVolumePerfTest(FunTestCase):
                             aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
                         row_data_dict[op + field] = aggr_fio_output[op][field]
                 fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
                         row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
-
                 table_data_list = copy.deepcopy(row_data_list)
                 table_data_rows.append(table_data_list)
 
                 row_data_list.insert(0, self.blt_count)
                 row_data_list.insert(0, self.num_ssd)
                 row_data_list.insert(0, get_data_collection_time())
+                row_data_list.append(fio_job_name)
                 row_data_list.append(self.num_f1)
                 row_data_list.append(len(self.hosts))
                 shared_volume = True
@@ -603,9 +602,9 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -734,9 +733,9 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,

@@ -3074,7 +3074,7 @@ if __name__ == "__main_data_plane_operations__":
                            workspace_ids=[])
     print "added charts for concurrent and serial chart for all operations"
 
-if __name__ == "__main__":
+if __name__ == "__main_pooled_test_beds__":
     names = ["fs-functional-1", "fs-inspur", "fs-regression1", "fs-regression2", "fs-storage-test-cab04"]
     for name in names:
         test_bed = TestBed.objects.get(name=name)
@@ -3082,3 +3082,192 @@ if __name__ == "__main__":
         test_bed.save()
     print "set the pooled boolean to be true for few test beds"
 
+if __name__ == "__main_shared_volume__":
+    internal_chart_names = ["raw_block_teramarks_shared_8_vols_8k_rand_read_iops",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd128_latency",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd256_latency",
+                            "raw_block_teramarks_shared_8_vols_8k_rand_read_qd512_latency"]
+    qds = [128, 256, 512]
+    output_names = ["output_read_avg_latency", "output_read_99_latency", "output_read_99_99_latency"]
+    base_line_date = datetime(year=2020, month=2, day=23, minute=0, hour=0, second=0)
+    for internal_chart_name in internal_chart_names:
+        if "iops" in internal_chart_name:
+            chart_name = "IOPS"
+            positive = True
+            y1_axis_title = PerfUnit.UNIT_OPS
+            data_sets = []
+            for qd in qds:
+                one_data_set = {}
+                one_data_set["name"] = "qd" + str(qd)
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 4, "input_num_ssd":
+                    12, "input_num_dpu": 1, "input_num_volume": 8, "input_block_size": "8k", "input_io_depth": qd,
+                                          "input_operation": "randread", "input_shared_volume": True,
+                                          "input_compression": False, "input_encryption": False}
+                one_data_set["output"] = {"name": "output_read_iops", "min": 0, "max": -1, "expected": -1,
+                                          "reference": -1, "best": -1, "unit": PerfUnit.UNIT_OPS}
+                data_sets.append(one_data_set)
+        else:
+            if "qd128" in internal_chart_name:
+                qd = 128
+            elif "qd256" in internal_chart_name:
+                qd = 256
+            else:
+                qd = 512
+            chart_name = "Latency, QDepth=" + str(qd)
+            positive = False
+            y1_axis_title = PerfUnit.UNIT_USECS
+            data_sets = []
+            for output in output_names:
+                if "avg" in output:
+                    name = "avg"
+                elif "99_99" in output:
+                    name = "99.99%"
+                else:
+                    name = "99%"
+                one_data_set = {}
+                one_data_set["name"] = name
+                one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 4, "input_num_ssd":
+                    12, "input_num_dpu": 1, "input_num_volume": 8, "input_block_size": "8k", "input_io_depth": qd,
+                                          "input_operation": "randread", "input_shared_volume": True,
+                                          "input_compression": False, "input_encryption": False}
+                one_data_set["output"] = {"name": output, "min": 0, "max": -1, "expected": -1,
+                                          "reference": -1, "best": -1, "unit": PerfUnit.UNIT_USECS}
+                data_sets.append(one_data_set)
+        ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                       data_sets=data_sets, leaf=True,
+                       description="TBD",
+                       owner_info="Indrani P (indrani.p@fungible.com)", source="https://github.com/fungible-inc/Integration/blob/master/fun_test/scripts/storage/review/blt_shared_volume_perf.py",
+                       positive=positive, y1_axis_title=y1_axis_title,
+                       visualization_unit=y1_axis_title,
+                       metric_model_name="RawVolumeNvmeTcpMultiHostPerformance",
+                       base_line_date=base_line_date,
+                       work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                       peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                       workspace_ids=[])
+        print "created shared volumes random read charts"
+
+if __name__ == "__main_8k_block_size_12_volumes__":
+    internal_name = "multi_host_raw_block_nvmetcp_12_vols_8k_"
+    base_line_date = datetime(year=2020, month=2, day=23, minute=0, hour=0, second=0)
+    model_name = "RawVolumeNvmeTcpMultiHostPerformance"
+    qds = [1, 16, 32, 64, 128, 256]
+    operations = ["rand_read", "rand_write"]
+    metrics = ["iops", "latency"]
+    latency_data_sets = ["avg", "99%", "99.99%"]
+    for metric in metrics:
+        if "iops" == metric:
+            chart_name = "IOPS"
+            positive = True
+            y1_axis_title = PerfUnit.UNIT_OPS
+            for operation in operations:
+                internal_chart_name = internal_name + operation + "_iops"
+                op = "randwrite"
+                output = "output_write_iops"
+                if operation == "rand_read":
+                    op = "randread"
+                    output = "output_read_iops"
+                data_sets = []
+                for qd in qds:
+                    one_data_set = {}
+                    one_data_set["name"] = "qd" + str(qd)
+                    one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 12, "input_num_ssd":
+                        12, "input_num_dpu": 1, "input_num_volume": 12, "input_block_size": "8k", "input_io_depth": qd,
+                                              "input_operation": op, "input_shared_volume": False,
+                                              "input_compression": False, "input_encryption": False}
+                    one_data_set["output"] = {"name": output, "min": 0, "max": -1, "expected": -1,
+                                              "reference": -1, "best": -1, "unit": y1_axis_title}
+                    data_sets.append(one_data_set)
+                ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                               data_sets=data_sets, leaf=True,
+                               description="TBD",
+                               owner_info="Onkar Sarmalkar (onkar.sarmalkar@fungible.com)",
+                               source="Unknown",
+                               positive=positive, y1_axis_title=y1_axis_title,
+                               visualization_unit=y1_axis_title,
+                               metric_model_name=model_name,
+                               base_line_date=base_line_date,
+                               work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                               peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                               workspace_ids=[])
+            print "created iops charts for 12 volumes 8k block size"
+        else:
+            positive = False
+            y1_axis_title = PerfUnit.UNIT_USECS
+            for operation in operations:
+                for qd in qds:
+                    chart_name = "Latency, QDepth=" + str(qd)
+                    data_sets = []
+                    internal_chart_name = internal_name + operation + "_qd" + str(qd) + "_latency"
+                    op = "randwrite"
+                    output = "output_write_"
+                    if operation == "rand_read":
+                        op = "randread"
+                        output = "output_read_"
+                    for ds in latency_data_sets:
+                        if ds == "avg":
+                            output_name = output + "avg_latency"
+                        elif ds == "99.99%":
+                            output_name = output + "99_99_latency"
+                        else:
+                            output_name = output + "99_latency"
+                        one_data_set = {}
+                        one_data_set["name"] = ds
+                        one_data_set["inputs"] = {"input_platform": FunPlatform.F1, "input_num_hosts": 12,
+                                                  "input_num_ssd":
+                                                      12, "input_num_dpu": 1, "input_num_volume": 12,
+                                                  "input_block_size": "8k", "input_io_depth": qd,
+                                                  "input_operation": op, "input_shared_volume": False,
+                                                  "input_compression": False, "input_encryption": False}
+                        one_data_set["output"] = {"name": output_name, "min": 0, "max": -1, "expected": -1,
+                                                  "reference": -1, "best": -1, "unit": y1_axis_title}
+                        data_sets.append(one_data_set)
+
+                    ml.create_leaf(chart_name=chart_name, internal_chart_name=internal_chart_name,
+                                   data_sets=data_sets, leaf=True,
+                                   description="TBD",
+                                   owner_info="Onkar Sarmalkar (onkar.sarmalkar@fungible.com)",
+                                   source="Unknown",
+                                   positive=positive, y1_axis_title=y1_axis_title,
+                                   visualization_unit=y1_axis_title,
+                                   metric_model_name=model_name,
+                                   base_line_date=base_line_date,
+                                   work_in_progress=False, children=[], jira_ids=[], platform=FunPlatform.F1,
+                                   peer_ids=[], creator=TEAM_REGRESSION_EMAIL,
+                                   workspace_ids=[])
+            print "created latency charts for 12 volumes 8k block size"
+
+if __name__ == "__main_data_plane_fix__":
+    charts = MetricChart.objects.filter(metric_model_name="DataPlaneOperationsPerformance")
+    for chart in charts:
+        data_sets = chart.get_data_sets()
+        print json.dumps(data_sets)
+        for data_set in data_sets:
+            del data_set["inputs"]["input_volume_size"]
+            del data_set["inputs"]["input_volume_size_unit"]
+            del data_set["inputs"]["input_total_volumes"]
+        print json.dumps(data_sets)
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "deleted the volume size and total volumes key from filter"
+
+if __name__ == "__main__":
+    internal_chart_names = {"fungible_controller": "fs1600_controller",
+                            "fungible_controller_api": "fs1600_controller_storage",
+                            "fungible_controller_api_create": "fs1600_controller_storage_raw_create",
+                            "fungible_controller_api_create_avg_time_concurrent": "fs1600_controller_storage_raw_create_avg_time_concurrent",
+                            "fungible_controller_api_create_avg_time_serial": "fs1600_controller_storage_raw_create_avg_time_serial",
+                            "fungible_controller_api_attach": "fs1600_controller_storage_raw_attach",
+                            "fungible_controller_api_attach_avg_time_concurrent": "fs1600_controller_storage_raw_attach_avg_time_concurrent",
+                            "fungible_controller_api_attach_avg_time_serial": "fs1600_controller_storage_raw_attach_avg_time_serial",
+                            "fungible_controller_api_delete": "fs1600_controller_storage_raw_delete",
+                            "fungible_controller_api_delete_avg_time_concurrent": "fs1600_controller_storage_raw_delete_avg_time_concurrent",
+                            "fungible_controller_api_delete_avg_time_serial": "fs1600_controller_storage_raw_delete_avg_time_serial",
+                            "fungible_controller_api_detach": "fs1600_controller_storage_raw_detach",
+                            "fungible_controller_api_detach_avg_time_concurrent": "fs1600_controller_storage_raw_detach_avg_time_concurrent",
+                            "fungible_controller_api_detach_avg_time_serial": "fs1600_controller_storage_raw_detach_avg_time_serial"}
+
+    for internal_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_name)
+        chart.internal_chart_name = internal_chart_names[internal_name]
+        chart.save()
+    print "changed the internal chart names of all the fungible controller"

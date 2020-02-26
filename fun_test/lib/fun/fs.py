@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR, DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -23,7 +23,7 @@ import os
 import socket
 import logging
 
-DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+# DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "bug_check on",
@@ -32,7 +32,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "Trap exception",
                  r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
-DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+# DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
@@ -474,12 +474,31 @@ class Bmc(Linux):
                 self.command(gpio_command)
                 fun_test.sleep("After removing F1 reset")
         else:
-            bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
-            if f1_index == 0:
-                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
-            else:
-                self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5C 0x5D 0x01 0x00"))
+            new_reset = False
+            try:
+                fw_date = self.command('cat /proc/ractrends/Helper/FwInfo  | grep "FW_DATE"')  #WORKAROUND
+                m = re.search("FW_DATE=(\S+.*)", fw_date)
+                if m:
+                    dt = m.group(1)
+                    if "2020" in dt:
+                        parts = dt.split()
+                        month, day, year = parts
 
+                        month_map = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                        month_index = month_map.index(month)
+                        if int(year) >= 2020 and int(day) >= 10 and month_index >= 1:
+                            new_reset = True
+            except Exception as ex:
+                fun_test.critical(str(ex))
+            if not new_reset:
+                bmc_f1_reset = "i2c-test -w -b 4 -s 0x41 -d "
+                if f1_index == 0:
+                    self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5D 0x5C 0x01 0x00"))
+                else:
+                    self.command("{} {}".format(bmc_f1_reset, "0x00 0xEC 0x5C 0x5D 0x01 0x00"))
+            else:
+                self.command("cd {}".format(self.SCRIPT_DIRECTORY))
+                self.command("./f1_reset.sh {}".format(f1_index))
 
     def u_boot_load_image(self,
                           index,
@@ -792,7 +811,7 @@ class Bmc(Linux):
             artifact_file_name = fun_test.get_test_case_artifact_file_name(self._get_context_prefix("f1_{}_uart_log.txt".format(f1_index)))
             if self.fs.bundle_compatible:
                 artifact_file_name = fun_test.get_test_case_artifact_file_name(
-                    self._get_context_prefix("funos_f1_{}.log".format(f1_index)))
+                    self._get_context_prefix("funos_f1_{}.log.txt".format(f1_index)))
 
             fun_test.scp(source_ip=self.host_ip,
                          source_file_path=self.get_f1_uart_log_file_name(f1_index=f1_index),
@@ -932,7 +951,7 @@ class Bmc(Linux):
             if self.bundle_compatible:
                 log_path = self.get_f1_uart_log_file_name(f1_index=f1_index)
 
-                context_prefix = self._get_context_prefix(data="F1_{}_FunOS_log_{}".format(f1_index, prefix))
+                context_prefix = self._get_context_prefix(data="F1_{}_FunOS_log_{}.log.txt".format(f1_index, prefix))
                 uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
                                                          linux_obj=self,
                                                          source_file_path=log_path,
@@ -1014,6 +1033,14 @@ class BootupWorker(Thread):
                 fun_test.test_assert(expression=fs.funeth_reset(), message="Funeth ComE power-cycle ref: IN-373")
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
+                if self.fs.bundle_image_parameters:
+                    try:
+                        bmc.upload_bundle_f1_logs(prefix="pre-boot")
+                    except Exception as ex:
+                        fun_test.critical(str(ex))
+                    bmc.clear_bundle_f1_logs()
+                    bmc.start_bundle_f1_logs()
+
                 come = fs.get_come()
                 fs.get_bundle_version()
                 fs_health = False
@@ -1196,12 +1223,16 @@ class BootupWorker(Thread):
 
             come = self.fs.get_come()
             bmc = self.fs.get_bmc()
+
             if self.fs.bundle_compatible and self.fs.bundle_image_parameters:
+                """
                 try:
                     bmc.upload_bundle_f1_logs()
                 except Exception as ex:
                     fun_test.critical(str(ex))
+                
                 bmc.clear_bundle_f1_logs()
+                """
                 bmc.start_bundle_f1_logs()
 
             if self.fs.fun_cp_callback:
@@ -1584,9 +1615,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
-            # if self.fs.bundle_compatible:
-            #    fun_test.log("Clearing out HBM dump directory")
-            #    self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+            if self.fs.bundle_compatible:
+                fun_test.log("Clearing out HBM dump directory")
+                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1919,6 +1950,26 @@ class ComE(Linux):
             s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
+    def upload_hbm_dump(self, asset_type, asset_id):
+        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+        if not current_hbm_dump_files:
+            fun_test.critical("No HBM dump files found")
+        else:
+            for hbm_dump_file in current_hbm_dump_files:
+                file_name = hbm_dump_file["filename"]
+                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
+                                                             linux_obj=self,
+                                                             source_file_path=hbm_dump_file["filename"],
+                                                             display_name=os.path.basename(file_name),
+                                                             asset_type=asset_type,
+                                                             asset_id=asset_id,
+                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                             is_large_file=True,
+                                                             timeout=60)
+                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+
+
     def cleanup(self):
         asset_type = "unknown"
         asset_id = "unknown"
@@ -2072,38 +2123,32 @@ class ComE(Linux):
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
                 fun_test.add_checkpoint("HBM dumping going on. Switching to BMC to collect logs")
-
+                self.fs.hbm_dump_detected = True
                 try:
                     self.fs.get_bmc().cleanup()
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
-                while not hbm_dump_timer.is_expired(print_remaining_time=True):
-                    fun_test.sleep("HBM Dump", seconds=60)
-                    if not self.list_files(self.HBM_COLLECT_NOTIFY):
-                        fun_test.log("HBM dump completed")
-                        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
-                        if not current_hbm_dump_files:
-                            fun_test.critical("No HBM dump files found")
-                        else:
-                            for hbm_dump_file in current_hbm_dump_files:
-                                file_name = hbm_dump_file["filename"]
-                                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
-                                                                             linux_obj=self,
-                                                                             source_file_path=hbm_dump_file["filename"],
-                                                                             display_name=os.path.basename(file_name),
-                                                                             asset_type=asset_type,
-                                                                             asset_id=asset_id,
-                                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
-                                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
-                                                                             is_large_file=True,
-                                                                             timeout=60)
-                                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+                try:
+                    while not hbm_dump_timer.is_expired(print_remaining_time=True):
+                        fun_test.sleep("HBM Dump", seconds=60)
+                        if not self.list_files(self.HBM_COLLECT_NOTIFY):
+                            fun_test.log("HBM dump completed")
+                            break
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
-                        break
                 if hbm_dump_timer.is_expired():
                     fun_test.log("HBM dump timer expired. Giving up ...")
+                self.fs.reset_device_handles()
+                self.fs.renew_device_handles()
+                fun_test.test_assert(self.fs.ensure_is_up(validate_uptime=False), "FS must be up after HBM dump")
+                try:
+                    self.upload_hbm_dump(asset_type=asset_type, asset_id=asset_id)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2325,6 +2370,7 @@ class Fs(object, ToDictMixin):
         fun_test.register_fs(self)
 
         self.bmc_cleanup_attempted = False
+        self.hbm_dump_detected = False
         self.storage = FsStorage(fs_obj=self)
         self.networking = FsNetworking(fs_obj=self)
         self.platform = FsPlatform(fs_obj=self)
@@ -2532,6 +2578,7 @@ class Fs(object, ToDictMixin):
             except Exception as ex:
                 fun_test.critical(str(ex))
             fun_test.simple_assert(not self.errors_detected, "Errors detected")
+            fun_test.simple_assert(not self.hbm_dump_detected, "HBM dump detected")
         return True
 
     def get_f1_0(self):
@@ -2920,6 +2967,7 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
+                    """
                     if health_result:
                         try:
                             fpga = self.get_fpga()
@@ -2930,6 +2978,7 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                    """
                 result = health_result, health_error_message
 
             except Exception as ex:
@@ -3073,8 +3122,9 @@ class Fs(object, ToDictMixin):
 
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 7
-        fpga = self.get_fpga()
+
         """
+        fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
@@ -3137,11 +3187,11 @@ class Fs(object, ToDictMixin):
                 self.dpc_statistics_lock.release()
         return result
 
-if __name__ == "__main33__":
+if __name__ == "__main_333_":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
     iterations = 0
-    hard = True
+    hard = False
     while True:
         fun_test.log("Current iteration: {}".format(iterations))
         fun_test.test_assert(fs.reset(hard=hard), "Reset iteration: {}".format(iterations))
@@ -3203,7 +3253,7 @@ if __name__ == "__main222__":
         print bond_interface_obj.ip
 
 
-if __name__ == "__main__":
+if __name__ == "__main_22_":
     from lib.topology.topology_helper import TopologyHelper
     am = fun_test.get_asset_manager()
     th = TopologyHelper(spec=am.get_test_bed_spec(name="fs-functional-1"))
@@ -3211,3 +3261,9 @@ if __name__ == "__main__":
     # topology = th.get_expanded_topology()
     fc = topology.get_fungible_controller_instance()
     fc.command("date")
+
+
+if __name__ == "__main__":
+    fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
+    bmc = fs.get_bmc()
+    bmc.reset_f1(f1_index=0)

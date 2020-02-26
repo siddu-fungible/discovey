@@ -79,7 +79,7 @@ class StorageControllerOperationsTemplate:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
             fun_test.log(topology_result)
         except ApiException as e:
-            fun_test.critical("Exception while getting topology{}\n".format(e))
+            fun_test.critical("ApiException while getting topology{}\n".format(e))
         except Exception as e:
             fun_test.critical("Exception while getting topology{}\n".format(e))
         node_ids = [x.uuid for x in topology_result.data.values()]
@@ -110,7 +110,7 @@ class StorageControllerOperationsTemplate:
                     self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
-                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
+                    fun_test.critical("ApiException while updating dataplane IP {}\n".format(e))
                     result = False
                 except Exception as e:
                     fun_test.critical("Exception while updating dataplane IP {}\n".format(e))

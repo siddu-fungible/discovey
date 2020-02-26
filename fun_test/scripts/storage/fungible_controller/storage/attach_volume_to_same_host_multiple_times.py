@@ -7,6 +7,7 @@ from lib.templates.storage.storage_operations_template import EcVolumeOperations
 from swagger_client.models.volume_types import VolumeTypes
 from lib.templates.storage.storage_controller_api import *
 from lib.system import utils
+from scripts.storage.storage_helper import *
 from random import seed
 from random import randint
 
@@ -22,7 +23,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        already_deployed = True
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -52,11 +53,14 @@ class VolumeManagement(FunTestCase):
             self.fs_obj = self.topology.get_dut_instance( index=dut_index )
             fs_obj_list.append(self.fs_obj)
 
-        storage_controller = self.fs_obj.get_storage_controller()
-        min_volume_capacity = 1073741824
-        max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3 * 4096)
-        capacity = random.randint(min_volume_capacity,max_volume_capacity)
-        #capacity = 1073741824
+        if ec_vol:
+            capacity = 107374182400
+        else:
+            min_volume_capacity = 1073741824
+            max_volume_capacity = find_min_drive_capacity(self.fs_obj.get_storage_controller(),command_timeout=30)
+            max_volume_capacity = max_volume_capacity - (3*4096)
+            capacity = random.randint(min_volume_capacity,max_volume_capacity)
+            capacity = capacity - (capacity%4096)
 
         compression_effort = 0
         if enable_encryption:
@@ -110,24 +114,6 @@ class VolumeManagement(FunTestCase):
                 fun_test.test_assert(expression=attach_vol_result, message="Attach Volume with uuid {} Successful"
                                      .format(self.final_vol_uuid_dict[x][0]))
         self.attach_multiple()
-
-    def find_min_drive_capacity(storage_controller, command_timeout=DPCSH_COMMAND_TIMEOUT):
-        min_capacity = 0
-
-        command_result = storage_controller.peek( props_tree="storage/volumes/VOL_TYPE_BLK_LOCAL_THIN/drives",
-                                                  legacy=False, chunk=8192, command_duration=command_timeout )
-        if command_result["status"] and command_result["data"]:
-            for drive_id, stats in sorted( command_result["data"].iteritems() ):
-                if "capacity_bytes" in stats:
-                    if min_capacity == 0:
-                        min_capacity = stats["capacity_bytes"]
-                    if stats["capacity_bytes"] < min_capacity:
-                        min_capacity = stats["capacity_bytes"]
-            fun_test.log( "Minimum capacity found by traversing all the drive stats is: {}".format( min_capacity ) )
-        else:
-            fun_test.critical( "Unable to get the individual drive status..." )
-
-        return min_capacity
 
     def attach_multiple(self):
         count = 100

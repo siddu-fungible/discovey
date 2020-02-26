@@ -768,6 +768,22 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def copy(self, source, destination, recursive=False, sudo=False):
+        result = True
+        cmd = "cp {} {}".format(source, destination)
+        if recursive:
+            cmd = "cp -r {} {}".format(source, destination)
+        if sudo:
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
+        if "No such file or directory" in output:
+            result = False
+        elif "Permission denied" in output:
+            result = False
+        return result
+
+    @fun_test.safe
     def create_file(self, file_name, contents):
         self.command("touch %s" % file_name)
         lines = contents.split('\n')

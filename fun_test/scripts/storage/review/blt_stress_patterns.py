@@ -456,7 +456,7 @@ class CCDlDl(FunTestCase):
         fs_obj = self.fs_obj_list[0]
         volumes = []
         print "loop_count:", self.loop_count
-        for outer_counter in range(5):
+        for outer_counter in range(1):
             self.total_volumes = 0
             for counter in range(self.loop_count):
                 vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
@@ -871,11 +871,11 @@ class ScaleMaxAttached1(ScaleMaxAttached):
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
-    setup_bringup.add_test_case(CCDlDl1())
+    #setup_bringup.add_test_case(CCDlDl1())
     #setup_bringup.add_test_case(CreateDeleteNCreateAgain1())
     #setup_bringup.add_test_case(CADtDl2())
-    #setup_bringup.add_test_case(CADtADt1())
-    #setup_bringup.add_test_case(CADtADt2())
+    setup_bringup.add_test_case(CADtADt1())
+    setup_bringup.add_test_case(CADtADt2())
     #setup_bringup.add_test_case(CADtDl1())
     #setup_bringup.add_test_case(ScaleMaxAttached1())
     setup_bringup.run()

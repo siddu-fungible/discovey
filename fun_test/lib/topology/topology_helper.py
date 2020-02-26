@@ -14,6 +14,7 @@ from lib.host.linux import Linux
 from lib.host.router import Router
 from lib.topology.host import Host
 from lib.fun.fs import ComE, BootPhases
+from lib.fun.fungible_controller import FungibleController
 
 
 class TopologyHelper:
@@ -226,7 +227,7 @@ class TopologyHelper:
         return self.expanded_topology
 
     @fun_test.safe
-    def deploy(self, already_deployed=False):
+    def deploy(self, already_deployed=False, max_dut_ready_timeout=500):
         if not already_deployed:
             already_deployed = fun_test.get_job_environment_variable("already_deployed")
             if not already_deployed:
@@ -235,7 +236,7 @@ class TopologyHelper:
             self.expanded_topology = self.get_expanded_topology()
         fun_test.test_assert(self.allocate_topology(topology=self.expanded_topology, already_deployed=already_deployed), "Allocate topology")
         if not self.is_simulation():
-            fun_test.test_assert(self.validate_topology(), "Validate topology")
+            fun_test.test_assert(self.validate_topology(max_dut_ready_timeout=max_dut_ready_timeout), "Validate topology")
         return self.expanded_topology
 
 
@@ -283,7 +284,7 @@ class TopologyHelper:
         self.disabled_dut_indexes = indexes
 
     @fun_test.safe
-    def validate_topology(self):
+    def validate_topology(self, max_dut_ready_timeout=500):
         topology = self.expanded_topology
         duts = topology.duts
 
@@ -292,7 +293,7 @@ class TopologyHelper:
                 continue
             fun_test.debug("Validating DUT readiness {}".format(dut_index))
             dut_ready = False
-            max_dut_ready_timeout = 500
+            # max_dut_ready_timeout = 1200
             dut_ready_timer = FunTimer(max_time=max_dut_ready_timeout)
             while not dut_ready_timer.is_expired() and not dut_ready:
                 dut_instance = dut_obj.get_instance()
@@ -363,8 +364,8 @@ class TopologyHelper:
                 fungible_controller_name = fungible_controllers.keys()[0]
                 host_spec = fun_test.get_asset_manager().get_host_spec(name=fungible_controller_name)
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller_name))
-                linux_obj = Linux(**host_spec)
-                fungible_controllers[fungible_controller_name].set_instance(linux_obj)
+                fungible_controller_obj = FungibleController(**host_spec)
+                fungible_controllers[fungible_controller_name].set_instance(fungible_controller_obj)
 
             duts = topology.duts
 
@@ -397,6 +398,17 @@ class TopologyHelper:
                     simulation_mode_found = True
                     break
 
+            if fungible_controllers:
+                fungible_controller_instance = topology.get_fungible_controller_instance()
+                fun_test.simple_assert(fungible_controller_instance, "Fungible controller instance")
+                fungible_controller_ready_timer = FunTimer(max_time=60 * 15)
+
+                while not fungible_controller_ready_timer.is_expired(print_remaining_time=True) and not fungible_controller_instance.is_ready_for_deploy():
+                    fun_test.sleep("Fungible controller readiness check", seconds=60)
+
+                fun_test.simple_assert(not fungible_controller_ready_timer.is_expired(), "Fungible controller ready timer expired")
+                fun_test.test_assert(fungible_controller_instance.is_ready_for_deploy(), "Fungible controller is ready for deploy")
+
             """
             Give up time is function of number of DUTs but for now lets keep it 10 minutes
             """
@@ -404,7 +416,6 @@ class TopologyHelper:
             f1_bringup_all_duts_timer = FunTimer(max_time=f1_bringup_all_duts_time)
             fun_test.simple_assert(peer_allocation_duts or simulation_mode_found, "At least one DUT is required")
             while not simulation_mode_found and peer_allocation_duts and not f1_bringup_all_duts_timer.is_expired() and not fun_test.closed:
-
                 fun_test.sleep("allocate_topology: Waiting for F1 bringup on all DUTs", seconds=10)
                 for dut_obj in peer_allocation_duts:
                     if dut_obj.index in self.disabled_dut_indexes:
@@ -453,11 +464,20 @@ class TopologyHelper:
                     dut_instance = dut_obj.get_instance()
                     fun_test.log("DUT: {} bringup incomplete".format(dut_instance))
 
-
             fun_test.test_assert(not peer_allocation_duts or simulation_mode_found, "All DUT's bringups are complete")
             fun_test.simple_assert(not f1_bringup_all_duts_timer.is_expired() or simulation_mode_found, "F1 bringup all DUTS not expired")
 
+            if fungible_controllers:
+                fungible_controller_instance = topology.get_fungible_controller_instance()
+                fun_test.test_assert(fungible_controller_instance.is_ready_for_deploy(),
+                                     "Fungible controller is ready for deploy")
+                dut_instances = [x.get_instance() for x in duts.values()]
+                fun_test.test_assert(
+                    fungible_controller_instance.deploy(dut_instances=dut_instances, already_deployed=already_deployed),
+                    "Fungible controller deploy")
+
             for dut_index, dut_obj in duts.items():
+
                 if not simulation_mode_found:
                     for f1_index, interface_info in dut_obj.fpg_interfaces.iteritems():
                         for interface_index, interface_obj in interface_info.items():
