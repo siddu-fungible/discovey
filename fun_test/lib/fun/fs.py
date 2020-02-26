@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR, DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -23,7 +23,7 @@ import os
 import socket
 import logging
 
-DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+# DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "bug_check on",
@@ -32,7 +32,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "Trap exception",
                  r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
-DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+# DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
@@ -2141,6 +2141,8 @@ class ComE(Linux):
 
                 if hbm_dump_timer.is_expired():
                     fun_test.log("HBM dump timer expired. Giving up ...")
+                self.fs.reset_device_handles()
+                self.fs.renew_device_handles()
                 fun_test.test_assert(self.fs.ensure_is_up(validate_uptime=False), "FS must be up after HBM dump")
                 try:
                     self.upload_hbm_dump(asset_type=asset_type, asset_id=asset_id)
@@ -3120,8 +3122,9 @@ class Fs(object, ToDictMixin):
 
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 7
-        fpga = self.get_fpga()
+
         """
+        fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
