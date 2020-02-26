@@ -50,9 +50,11 @@ class FungibleController(Linux):
 
         # WORKAROUND
         self.command("export WORKSPACE={}".format(ws))
-        self.sudo_command("cd {}FunAPIGateway/docker/containers/; ./fun_containers.sh clean".format(ws), timeout=300)
-        self.install_fc_bundle()
+        fun_test.test_assert(expression=self.kill_containers(ws),
+                             message="Kill all containers inside Fungible Controller")
+        self.install_bundle()
         self.command("cd {}".format(ws))
+        self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
         self.command("rm -fr FunAPIGateway")
         self.command("git clone -o StrictHostKeyChecking=no"
                      " -o UserKnownHostsFile=/dev/null git@github.com:fungible-inc/FunAPIGateway.git")
@@ -62,38 +64,36 @@ class FungibleController(Linux):
         self.initialized = True
         return result
 
-    def install_fc_bundle(self, ws="/opt/fungible/fc/", bundle_number=14):
-        self.command("cd {}".format(ws))
+    def kill_containers(self, ws):
+        """
+        Kill all running containers inside the Fungible Controller System
+        :param ws: Workspace where FunAPIGateway Repository is present
+        :return: True if all containers are killed, otherwise false
+        """
+        result = True
+        self.sudo_command("cd {}FunAPIGateway/docker/containers/; ./fun_containers.sh clean".format(ws), timeout=300)
         docker_containers = self.command("docker ps -a --format '{{.Names}}'").split("\n")
         for container in docker_containers:
             if container:
                 kill_container = self.sudo_command("docker kill {}".format(container))
-                fun_test.add_checkpoint(expected=True, actual=container.strip() in kill_container,
+                kill_result = container.strip() in kill_container
+                fun_test.add_checkpoint(expected=True, actual=kill_result,
                                         checkpoint="Container Killed: ".format({container}))
+                result &= kill_result
+        return result
+
+    def delete_docker_images(self):
+        """
+        Delete all Docker Images present inside Fungible Controller system
+        :return: True
+        """
         docker_image_ids = self.command("docker images -q").split("\n")
         for docker_image_id in docker_image_ids:
             if docker_image_id:
                 delete_docker_image = self.command("docker rmi {}".format(docker_image_id))
                 fun_test.add_checkpoint(expected=True, actual="Deleted" in delete_docker_image,
                                         checkpoint="Deleted docker image: ".format({docker_image_id}))
-        #  TODO: Remove hardcoding bundle number for FC
-        bundle_file = "setup_fc-bld-{}.sh".format(bundle_number)
-        self.sudo_command("rm {}".format(bundle_file))
-        self.sudo_command("wget https://dochub.fungible.local/doc/jenkins/master/fc/latest/{} "
-                          "--no-check-certificate".format(bundle_file), timeout=300)
-        self.sudo_command("chmod 777 {}".format(bundle_file))
-        self.sudo_command("./{}".format(bundle_file), timeout=300)
-        self.command("cd {}".format(ws))
-        self.sudo_command("sudo chown -R {} .".format(self.ssh_username))
-        docker_images_output = self.sudo_command("docker images")
-        for docker_image in self.EXPECTED_DOCKER_IMAGES:
-            fun_test.simple_assert(docker_image in docker_images_output,
-                                   "Docker image: {} should exist".format(docker_image))
-        #  WORKAROUND: SWCTL-134
-        self.command("docker tag docker.fungible.com/sns-controller:11 docker.fungible.com/sns-controller:latest")
-        self.command("docker tag docker.fungible.com/cfgmgr-controller:11 docker.fungible.com/cfgmgr-controller:latest")
-        self.command("docker tag docker.fungible.com/run_apigateway:18 docker.fungible.com/run_apigateway:latest")
-        self.command("docker tag docker.fungible.com/storage-services:18 docker.fungible.com/storage-services:latest")
+        return True
 
     def is_ready_for_deploy(self):
 
@@ -113,15 +113,9 @@ class FungibleController(Linux):
             self.initialize()
         fs_objs = dut_instances
         for fs_obj in fs_objs:
-            bmc_handle = fs_obj.get_bmc()
-            ifconfig = bmc_handle.ifconfig()
-            bmc_mac = ifconfig[0]['HWaddr'].lower()
-            for index in range(fs_obj.NUM_F1S):
-                if index == 0:
-                    bmc_mac = self.change_mac(mac=bmc_mac, offset=8)
-                elif index == 1:
-                    bmc_mac = self.change_mac(mac=bmc_mac, offset=52)
-                self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name.replace("-", ""), f1_index=index)
+            fun_test.test_assert(expression=self.generate_fs_open_config_file(fs_obj),
+                                 message="Generate open config file on fungible controller for {}".format(
+                                     fs_obj.asset_name))
             come_handle = fs_obj.get_come()
             url = self.create_fc_connect_file(file_name="connect_to_fc_{}.sh".format(self.host_ip))
             come_handle.sudo_command(
@@ -129,26 +123,64 @@ class FungibleController(Linux):
 
         return True
 
-    def change_mac(self, mac, offset):
+    def generate_fs_open_config_file(self, fs_obj):
+        """
+        Create open config files on Fungible Controller for both F1s with file name as F1s MAC address
+        :param fs_obj: fs whose config files needs to be created on fc
+        :return: bool
+        """
+        result = True
+        bmc_handle = fs_obj.get_bmc()
+        ifconfig = bmc_handle.ifconfig()
+        bmc_mac = ifconfig[0]['HWaddr'].lower()
+        for index in range(fs_obj.NUM_F1S):
+            if index == 0:
+                bmc_mac = self.get_f1_mac(mac=bmc_mac, offset=8)
+            elif index == 1:
+                bmc_mac = self.get_f1_mac(mac=bmc_mac, offset=52)
+            result &= self.create_oc_file(mac=bmc_mac, fs_name=fs_obj.asset_name.replace("-", ""), f1_index=index)
+        return result
+
+    def get_f1_mac(self, mac, offset):
+        """
+        Add offset to MAC address
+        :param mac: MAC address
+        :param offset: offset in decimal format to be added to the mac
+        :return: MAC address with the offset added
+        """
         mac = mac.replace(":", "")
         new_mac = "{:012X}".format(int(mac, 16) + offset)
         new_mac = ':'.join(s.encode('hex') for s in new_mac.decode('hex'))
         return new_mac.lower()
 
     def create_oc_file(self, mac, fs_name, f1_index):
+        """
+        Find F1 open config file and push to Fungible Controller
+        :param mac: MAC of F1 whose Config file needs to be pushed
+        :param fs_name: name of fs
+        :param f1_index: Index of F1
+        :return: Success/Failure, bool
+        """
         file_name = "DPU_" + mac + "_oc.cfg"
-        fun_test.test_assert(expression=fun_test.scp(
-            source_file_path=ASSET_DIR + "/open_configs/{}_{}_oc.json".format(fs_name, f1_index),
-            target_file_path="/opt/fungible/day1_configfiles/{}".format(file_name), target_ip=self.host_ip,
-            target_username=self.ssh_username, target_password=self.ssh_password),
-            message="Create Open Config file on Fungible Controller")
+        result = fun_test.scp(source_file_path=ASSET_DIR + "/open_configs/{}_{}_oc.json".format(fs_name, f1_index),
+                              target_file_path="/opt/fungible/day1_configfiles/{}".format(file_name),
+                              target_ip=self.host_ip, target_username=self.ssh_username,
+                              target_password=self.ssh_password)
+        return result
 
     def create_fc_connect_file(self, file_name="connect_to_fc.sh",
                                host_handle=Linux(host_ip="qa-ubuntu-01", ssh_username="localadmin",
                                                  ssh_password="Precious1*"),
                                file_location="/project/users/QA/regression/Integration/fun_test/web/static/media/",
                                url="http://integration.fungible.local/static/media/"):
-
+        """
+        Craete a fungible controller connect file, which has details of the FC, and can be connected by the COMe
+        :param file_name: Name of the file to be created
+        :param host_handle: Host Linux object where this file is to be created
+        :param file_location: Location of the file ont he host, where the web server is running
+        :param url: url to be used for the same file location to access the file
+        :return: The full url which can be used to access the file over web
+        """
         host_handle.sudo_command("rm {}".format(file_location + file_name))
         contents = COME_FC_CONNECT_FILE_CONTENTS.format(self.host_ip)
         host_handle.create_file(file_name="~/" + file_name, contents=contents)
@@ -209,6 +241,7 @@ class FungibleController(Linux):
         return result
 
     def install_bundle(self, release_train="master", build_number="latest"):
+        fun_test.test_assert(expression=self.delete_docker_images(), message="Delete Old Docker Images")
         if build_number == "latest":
             build_number = self.get_build_number_for_latest(release_train=release_train)
             fun_test.test_assert(build_number, "Build number for latest")
@@ -222,7 +255,23 @@ class FungibleController(Linux):
         self.sudo_command("{} install".format(target_file_name), timeout=720)
         exit_status = self.exit_status()
         fun_test.test_assert(exit_status == 0, "FC bundle install complete. Exit status valid")
+        self.is_expected_docker_images_present()
+        self.tag_docker_images()
 
+    def is_expected_docker_images_present(self):
+        docker_images_output = self.sudo_command("docker images")
+        for docker_image in self.EXPECTED_DOCKER_IMAGES:
+            fun_test.simple_assert(docker_image in docker_images_output,
+                                   "Docker image: {} should exist".format(docker_image))
+        return True
+
+    def tag_docker_images(self):
+        #  WORKAROUND: SWCTL-134
+        self.command("docker tag docker.fungible.com/sns-controller:11 docker.fungible.com/sns-controller:latest")
+        self.command("docker tag docker.fungible.com/cfgmgr-controller:11 docker.fungible.com/cfgmgr-controller:latest")
+        self.command("docker tag docker.fungible.com/run_apigateway:18 docker.fungible.com/run_apigateway:latest")
+        self.command("docker tag docker.fungible.com/storage-services:18 docker.fungible.com/storage-services:latest")
+        self.sudo_command("docker images")
 
     def _setup_build_script_directory(self):
         """
@@ -234,6 +283,7 @@ class FungibleController(Linux):
         self.command("rm -rf {}".format(path))
         self.command("mkdir -p {}".format(path))
         return path
+
 
 if __name__ == "__main__":
     fc = FungibleController(host_ip="server17", ssh_username="root", ssh_password="fun123")
