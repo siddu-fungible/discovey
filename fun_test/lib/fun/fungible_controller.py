@@ -46,6 +46,7 @@ class FungibleController(Linux):
 
         # WORKAROUND
         self.command("export WORKSPACE={}".format(ws))
+        self.sudo_command("cd {}FunAPIGateway/docker/containers/; ./fun_containers.sh clean".format(ws), timeout=300)
         self.install_fc_bundle()
         self.command("cd {}".format(ws))
         self.command("rm -fr FunAPIGateway")
