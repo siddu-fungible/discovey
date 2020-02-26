@@ -727,15 +727,15 @@ class ScaleMaxAttached(FunTestCase):
         fs_obj_list = fun_test.shared_variables["fs_obj_list"]
         fs_obj = self.fs_obj_list[0]
         len = len(self.attach_result)
-        for host_obj in hosts:
-            print "len:", len, " all attached vols:", self.attach_result
-            for ctr in range(len):
-                print "subsys_nqn:", self.attach_result[ctr]['data']['subsys_nqn']
+        host_obj = hosts[0]
+        print "len:", len, " all attached vols:", self.attach_result
+        for ctr in range(len):
+            print "subsys_nqn:", self.attach_result[ctr]['data']['subsys_nqn']
 
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj,
-                                                                                     subsys_nqn=self.attach_result[0][
+                                                                                     subsys_nqn=self.attach_result[ctr][
                                                                                          'data']['subsys_nqn'],
-                                                                                     nsid=self.attach_result[0][
+                                                                                     nsid=self.attach_result[ctr][
                                                                                          'data']['nsid'])
             storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
             traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
