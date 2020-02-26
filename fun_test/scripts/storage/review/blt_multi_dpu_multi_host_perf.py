@@ -463,8 +463,8 @@ class MultiHostFioRandRead(FunTestCase):
                             self.stats_collect_details[index][func]["vol_details"] = vol_details
                     fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
                                  "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
-                    self.current_dpcsh_obj.verbose = False
-                    stats_obj = CollectStats(self.current_dpcsh_obj)
+                    current_dpcsh_obj.verbose = False
+                    stats_obj = CollectStats(current_dpcsh_obj)
                     stats_obj_list.append(stats_obj)
                     stats_obj.start(file_suffix, self.stats_collect_details)
                     fun_test.log("Different stats collection thread details for f1 {} the current IO depth {} "
@@ -555,7 +555,7 @@ class MultiHostFioRandRead(FunTestCase):
                 if self.collect_stats:
                     for stats_obj in stats_obj_list:
                         stats_obj.stop(self.stats_collect_details)
-                        self.stats_obj.verbose = True
+                        stats_obj.verbose = True
 
             if self.collect_stats:
                 for stats_obj in stats_obj_list:
