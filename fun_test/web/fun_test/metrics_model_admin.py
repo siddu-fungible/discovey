@@ -5,7 +5,7 @@ from web.fun_test.metrics_models import ModelMapping, VolumePerformance
 from web.fun_test.metrics_models import AllocSpeedPerformance
 from web.fun_test.metrics_models import LastMetricId
 from web.fun_test.metrics_models import WuLatencyUngated, WuLatencyAllocStack
-from web.fun_test.metrics_models import UnitTestPerformance
+from web.fun_test.metrics_models import UnitTestPerformance, DataPlaneOperationsPerformance
 from web.fun_test.metrics_models import EcPerformance, BcopyPerformance, BcopyFloodDmaPerformance
 from web.fun_test.metrics_models import LsvZipCryptoPerformance, EcVolPerformance, NuTransitPerformance
 from web.fun_test.metrics_models import VoltestPerformance, ShaxPerformance, WuDispatchTestPerformance
@@ -153,6 +153,10 @@ class TeraMarkJuniperNetworkingPerformanceAdmin(admin.ModelAdmin):
 
 @admin.register(TeraMarkFunTcpThroughputPerformance)
 class TeraMarkFunTcpThroughputPerformanceeAdmin(admin.ModelAdmin):
+    ordering = ('-input_date_time',)
+
+@admin.register(DataPlaneOperationsPerformance)
+class DataPlaneOperationsPerformanceAdmin(admin.ModelAdmin):
     ordering = ('-input_date_time',)
 
 @admin.register(ShaxPerformance)

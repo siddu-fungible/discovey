@@ -8,7 +8,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
-import string, random,re
+import string, random,re,copy
 from collections import OrderedDict, Counter
 
 
@@ -130,7 +130,10 @@ class SharedVolumePerfTest(FunTestCase):
         for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
 
+        self.post_results = True
         job_inputs = fun_test.get_job_inputs()
+        if "post_results" in job_inputs:
+            self.post_results = job_inputs["post_results"]
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
@@ -351,7 +354,6 @@ class SharedVolumePerfTest(FunTestCase):
         fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
     def run(self):
-
         testcase = self.__class__.__name__
         test_method = testcase
         # self.test_mode = testca
@@ -359,7 +361,9 @@ class SharedVolumePerfTest(FunTestCase):
         # Going to run the FIO test for the block size and iodepth combo listed in fio_jobs_iodepth in both write only
         # & read only modes
 
+        fio_result = {}
         internal_result = {}
+        self.fio_jobs_iodepth = []
 
         table_data_headers = ["Block Size", "IO Depth", "Size", "Operation", "Write IOPS", "Read IOPS",
                               "Write Throughput in MB/s", "Read Throughput in MB/s", "Write Latency in uSecs",
@@ -370,7 +374,7 @@ class SharedVolumePerfTest(FunTestCase):
                               "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999"
                            ]
 
         table_data_rows = []
@@ -392,6 +396,7 @@ class SharedVolumePerfTest(FunTestCase):
                 file_size_in_gb = self.capacity / 1073741824
                 row_data_dict["size"] = str(file_size_in_gb) + "GB"
                 file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(io_depth) * int(num_jobs)))
+                fio_job_name = file_suffix
                 for index, stat_detail in enumerate(self.stats_collect_details):
                     func = stat_detail.keys()[0]
                     self.stats_collect_details[index][func]["count"] = int(
@@ -426,6 +431,13 @@ class SharedVolumePerfTest(FunTestCase):
 
                         num_jobs_string = " --numjobs={}".format(num_jobs)
                         required_io_depth = io_depth / num_jobs
+                        # combo = str(num_jobs, required_io_depth)
+                        combo = "(" + str(num_jobs) + "," + str(required_io_depth) + ")"
+                        self.fio_jobs_iodepth.append(combo)
+                        fio_result[combo] = {}
+                        internal_result[combo] = {}
+                        fio_result[combo][mode] = True
+                        internal_result[combo][mode] = True
                         io_depth_string = " --iodepth={}".format(required_io_depth)
                         io_size = self.capacity / num_jobs
                         io_size_string = " --io_size={}".format(io_size)
@@ -494,25 +506,40 @@ class SharedVolumePerfTest(FunTestCase):
                             aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
                         row_data_dict[op + field] = aggr_fio_output[op][field]
                 fun_test.log("Processed Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
                 row_data_list = []
                 for i in table_data_cols:
                     if i not in row_data_dict:
                         row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
+                table_data_list = copy.deepcopy(row_data_list)
+                table_data_rows.append(table_data_list)
+
+                row_data_list.insert(0, self.blt_count)
+                row_data_list.insert(0, self.num_ssd)
+                row_data_list.insert(0, get_data_collection_time())
+                row_data_list.append(fio_job_name)
+                row_data_list.append(self.num_f1)
+                row_data_list.append(len(self.hosts))
+                shared_volume = True
+                row_data_list.append(shared_volume)
+                if self.post_results:
+                    fun_test.log("Posting results on dashboard")
+                    post_results("Shared_Volume_Test", test_method, *row_data_list)
 
                 table_data = {"headers": table_data_headers, "rows": table_data_rows}
                 fun_test.add_table(panel_header="BLT Shared Volume Performance Table", table_name=self.summary,
                                    table_data=table_data)
 
+                # Posting the final status of the test result
+        post_final_test_results(fio_result=fio_result, internal_result=internal_result,
+                                fio_jobs_iodepth=self.fio_jobs_iodepth, fio_modes=self.fio_modes)
+
     def cleanup(self):
         pass
 
 
-class ConfigPeristenceAfterReset(FunTestCase):
-
+class ConfigPersistenceAfterReset(FunTestCase):
     topology = None
     storage_controller_template = None
 
@@ -575,9 +602,9 @@ class ConfigPeristenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -706,9 +733,9 @@ class ConfigPeristenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -761,7 +788,6 @@ class ConfigPeristenceAfterReset(FunTestCase):
 
         fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
 
-
     def cleanup(self):
         pass
 
@@ -811,5 +837,5 @@ class ConfigPeristenceAfterReset(FunTestCase):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(SharedVolumePerfTest())
-    setup_bringup.add_test_case(ConfigPeristenceAfterReset())
+    setup_bringup.add_test_case(ConfigPersistenceAfterReset())
     setup_bringup.run()

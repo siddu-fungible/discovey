@@ -65,6 +65,7 @@ class BringupSetup(FunTestScript):
 class MultiHostFioRandRead(FunTestCase):
     def describe(self):
         self.set_test_details(id=1,
+                              test_rail_case_ids=["C34295"],
                               summary="Random read performance for muiltple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
@@ -430,6 +431,8 @@ class MultiHostFioRandRead(FunTestCase):
         if "io_depth" in job_inputs:
             self.fio_jobs_iodepth = job_inputs["io_depth"]
             fun_test.log("Overrided fio_jobs_iodepth: {}".format(self.fio_jobs_iodepth))
+        if "collect_stats" in job_inputs:
+            self.collect_stats = job_inputs["collect_stats"]
 
         if not isinstance(self.fio_jobs_iodepth, list):
             self.fio_jobs_iodepth = [self.fio_jobs_iodepth]
@@ -443,20 +446,21 @@ class MultiHostFioRandRead(FunTestCase):
             fio_numjobs = tmp[0].strip('() ')
             fio_iodepth = tmp[1].strip('() ')
 
-            file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
-            for index, stat_detail in enumerate(self.stats_collect_details):
-                func = stat_detail.keys()[0]
-                self.stats_collect_details[index][func]["count"] = int(
-                    self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
-                if func == "vol_stats":
-                    self.stats_collect_details[index][func]["vol_details"] = vol_details
-            fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
-                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
-            self.sc_dpcsh_obj.verbose = False
-            stats_obj = CollectStats(self.sc_dpcsh_obj)
-            stats_obj.start(file_suffix, self.stats_collect_details)
-            fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
-                         "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+            if self.collect_stats:
+                file_suffix = "{}_iodepth_{}.txt".format(self.test_mode, (int(fio_iodepth) * int(fio_numjobs)))
+                for index, stat_detail in enumerate(self.stats_collect_details):
+                    func = stat_detail.keys()[0]
+                    self.stats_collect_details[index][func]["count"] = int(
+                        self.fio_cmd_args["runtime"] / self.stats_collect_details[index][func]["interval"])
+                    if func == "vol_stats":
+                        self.stats_collect_details[index][func]["vol_details"] = vol_details
+                fun_test.log("Different stats collection thread details for the current IO depth {} before starting "
+                             "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
+                self.sc_dpcsh_obj.verbose = False
+                stats_obj = CollectStats(self.sc_dpcsh_obj)
+                stats_obj.start(file_suffix, self.stats_collect_details)
+                fun_test.log("Different stats collection thread details for the current IO depth {} after starting "
+                             "them:\n{}".format((int(fio_iodepth) * int(fio_numjobs)), self.stats_collect_details))
 
             for i, host in enumerate(self.hosts):
                 fio_result[combo] = {}
@@ -538,11 +542,13 @@ class MultiHostFioRandRead(FunTestCase):
                 fun_test.critical(str(ex))
                 fun_test.log("FIO Command Output for volume {}:\n {}".format(i, fio_output[combo][mode][i]))
             finally:
-                stats_obj.stop(self.stats_collect_details)
-                self.sc_dpcsh_obj.verbose = True
+                if self.collect_stats:
+                    stats_obj.stop(self.stats_collect_details)
+                    self.sc_dpcsh_obj.verbose = True
 
-            job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
-            stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
+            if self.collect_stats:
+                job_string = "{} - IO depth {}".format(mode, row_data_dict["iodepth"])
+                stats_obj.populate_stats_to_file(self.stats_collect_details, job_string)
 
             fun_test.sleep("Sleeping for {} seconds between iterations".format(self.iter_interval), self.iter_interval)
 
@@ -606,6 +612,7 @@ class MultiHostFioRandWrite(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=2,
+                              test_rail_case_ids=["C34296"],
                               summary="Random write performance for multiple hosts on TCP "
                                       "with different levels of numjobs & iodepth & block size 4K",
                               steps='''
@@ -626,10 +633,210 @@ class MultiHostFioRandWrite(MultiHostFioRandRead):
         super(MultiHostFioRandWrite, self).cleanup()
 
 
-class PreCommitSanity(MultiHostFioRandRead):
+class MultiHostFioRandWrite8k(MultiHostFioRandRead):
 
     def describe(self):
         self.set_test_details(id=3,
+                              test_rail_case_ids=["C34296"],
+                              summary="Random write performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 8K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite8k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite8k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite8k, self).cleanup()
+
+
+class MultiHostFioRandRead8k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=4,
+                              test_rail_case_ids=["C34295"],
+                              summary="Random read performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 8K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandRead8k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead8k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead8k, self).cleanup()
+
+
+class MultiHostFioRandWrite16k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=5,
+                              test_rail_case_ids=["C34296"],
+                              summary="Random write performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 16K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite16k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite16k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite16k, self).cleanup()
+
+
+class MultiHostFioRandRead16k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=6,
+                              test_rail_case_ids=["C34295"],
+                              summary="Random read performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 16K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandRead16k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead16k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead16k, self).cleanup()
+
+
+class MultiHostFioRandWrite32k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              test_rail_case_ids=["C34296"],
+                              summary="Random write performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 32K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite32k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite32k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite32k, self).cleanup()
+
+
+class MultiHostFioRandRead32k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=8,
+                              test_rail_case_ids=["C34295"],
+                              summary="Random read performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 32K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandRead32k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead32k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead32k, self).cleanup()
+
+
+class MultiHostFioRandWrite64k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=9,
+                              test_rail_case_ids=["C34296"],
+                              summary="Random write performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 64K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandWrite64k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandWrite64k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandWrite64k, self).cleanup()
+
+
+class MultiHostFioRandRead64k(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=10,
+                              test_rail_case_ids=["C34295"],
+                              summary="Random read performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 64K",
+                              steps='''
+        1. Create 1 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioRandRead64k, self).setup()
+
+    def run(self):
+        super(MultiHostFioRandRead64k, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioRandRead64k, self).cleanup()
+
+
+class PreCommitSanity(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=11,
                               summary="Pre-commit Sanity. Create BLT - Attach - IO (Write & Read) - Detach - Delete",
                               steps='''
         1. Bring-up F1 with latest image and configure Dataplane IP 
@@ -653,5 +860,13 @@ if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(MultiHostFioRandRead())
     setup_bringup.add_test_case(MultiHostFioRandWrite())
+    setup_bringup.add_test_case(MultiHostFioRandWrite8k())
+    setup_bringup.add_test_case(MultiHostFioRandRead8k())
+    setup_bringup.add_test_case(MultiHostFioRandWrite16k())
+    setup_bringup.add_test_case(MultiHostFioRandRead16k())
+    setup_bringup.add_test_case(MultiHostFioRandWrite32k())
+    setup_bringup.add_test_case(MultiHostFioRandRead32k())
+    setup_bringup.add_test_case(MultiHostFioRandWrite64k())
+    setup_bringup.add_test_case(MultiHostFioRandRead64k())
     setup_bringup.add_test_case(PreCommitSanity())
     setup_bringup.run()

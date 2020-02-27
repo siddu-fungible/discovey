@@ -1,0 +1,143 @@
+{
+    "openconfig-fun-global:fun-global": {
+        "openconfig-fun-global:fun-global": {
+	    "config":{
+	        "interface" : "bond0"
+	    }
+	}
+    },
+    "openconfig-lacp:lacp:[name='bond0']":{
+      "openconfig-lacp:lacp":{
+	"config":{"system-priority":0},
+	"interfaces":{
+	    "interface":[{
+                "name":"bond0",
+		"config": {
+		    "name":"bond0",
+		    "interval": "SLOW",
+		    "lacp-mode": "ACTIVE",
+		    "system-id-mac": "00:22:33:44:55:66",
+		    "system-priority":0
+		}
+	    }]
+	  }
+	}
+    },
+    "openconfig-interfaces:interfaces" :{
+	"openconfig-interfaces:interfaces": {
+	    "interface": [ {
+		"name": "bond0",
+		"config": {
+		    "loopback-mode": false,
+		    "type": "iana-if-type:ieee8023adLag",
+		    "description": "Connect with QFX",
+		    "enabled": true,
+		    "name": "bond0"
+		},
+		"openconfig-if-aggregate:aggregation": {
+		    "config":{
+			"lag-type": "LACP",
+			"min-links":0}
+		},
+		"openconfig-if-ethernet:ethernet":{
+		    "config":{
+			"mac-address": "00:22:33:44:55:66"
+		    }
+		},
+		"subinterfaces": {
+		    "subinterface": [
+			{
+			    "index": 1,
+			    "config": {
+				"index": 1,
+				"description": "Connect with QFX",
+				"enabled": true
+			    },
+			    "openconfig-if-ip:ipv4": {
+				"addresses": {
+				    "address": [
+					{
+					    "ip": "15.144.1.2",
+					    "config": {
+						"ip": "15.144.1.2",
+						"prefix-length": 24
+					    }
+					}
+				    ]
+				},
+				"config": {
+				    "enabled": true,
+				    "dhcp-client": false
+				}
+			    },
+			    "openconfig-if-ip:ipv6": {
+				"config": {
+				    "dhcp-client": false,
+				    "enabled": true
+				}
+			    }
+			}
+		    ]
+		}
+	    },
+		{
+		"name": "fpg0",
+		"config": {
+		    "loopback-mode": false,
+		    "type": "iana-if-type:ethernetCsmacd",
+		    "enabled": true,
+		    "name": "fpg0"
+		},
+		"openconfig-if-ethernet:ethernet":{
+		    "config":{
+		        "mac-address": "00:22:33:44:55:66",
+			"auto-negotiate":true,
+			"duplex-mode": "FULL",
+			"port-speed": "SPEED_100GB",
+			"enable-flow-control":false,
+			"openconfig-if-aggregate:aggregate-id":"bond0"}
+		}
+		},
+		{
+		"name": "fpg4",
+		"config": {
+		    "loopback-mode": false,
+		    "type": "iana-if-type:ethernetCsmacd",
+		    "enabled": true,
+		    "name": "fpg4"
+		},
+		"openconfig-if-ethernet:ethernet":{
+		    "config":{
+		        "mac-address": "00:22:33:44:55:66",
+			"auto-negotiate":true,
+			"duplex-mode": "FULL",
+			"port-speed": "SPEED_100GB",
+			"enable-flow-control":false,
+			"openconfig-if-aggregate:aggregate-id":"bond0"}
+		}
+	    }
+	    ]
+	}
+    },
+   "openconfig-local-routing:local-routes" : {
+      "openconfig-local-routing:local-routes":{
+        "static-routes" : {
+         "static" : [
+            {
+               "next-hops" : {
+                  "next-hop" : [
+                     {
+                        "index" : "1",
+                        "config" : {
+                           "next-hop" : "15.144.1.1"
+                        }
+                     }
+                  ]
+               },
+               "prefix" : "15.0.0.0/8"
+            }
+	 ]
+	}
+      }
+   }
+}

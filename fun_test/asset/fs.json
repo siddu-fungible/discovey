@@ -1132,8 +1132,8 @@
     "revision": "2",
     "bundle_compatible": true,
     "fpga": {
-      "mgmt_ssh_password": "root",
-      "mgmt_ssh_username": "root",
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "",
       "mgmt_ip": "fs143-fpga",
       "telnet_ip": "fs-terminal",
       "telnet_port": 2005,

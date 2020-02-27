@@ -1036,6 +1036,7 @@ def join_suite_workers():
             send_error_mail(submitter_email=submitter_email,
                             job_id=job_id,
                             message="Suite execution error at run_next. Exception: {}".format(str(ex)))
+            jobs_to_be_removed.append(job_id)
 
     for job_to_be_removed in jobs_to_be_removed:
         if job_to_be_removed in job_id_threads:

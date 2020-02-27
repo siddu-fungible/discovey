@@ -1,0 +1,5 @@
+sed -i 's/claimName: [a-zA-Z_0-9\-]*/claimName: '$1'/g'  $3
+sed -i 's/name: volume-[a-zA-Z_0-9\-]*/name: volume-'$2'/g'  $3
+sed -i 's/name: container0-[a-zA-Z_0-9\-]*/name: container0-'$2'/g'  $3
+sed -i 's/name: container1-[a-zA-Z_0-9\-]*/name: container1-'$2'/g'  $3
+sed -i 's/name: pod-[a-zA-Z_0-9\-]*/name: pod-'$2'/g'  $3

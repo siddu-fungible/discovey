@@ -152,7 +152,9 @@ def test_beds(request, id):
                 test_bed_name=test_bed.name)
             if manual_locked and not this_is_extension_request:
                 # raise Exception(error_message)
-                pass
+                if submitter_email:
+                    am.manual_lock_assets(user=submitter_email, assets=assets_required,
+                                          expiration_time=test_bed.manual_lock_expiry_time)
             else:
                 if submitter_email:
                     am.manual_lock_assets(user=submitter_email, assets=assets_required,

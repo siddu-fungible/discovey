@@ -1,7 +1,7 @@
 {
   "GlobalSetup": {
     "already_deployed": false,
-    "reboot_hosts" : true,
+    "reboot_hosts": true,
     "bootargs": [
       "app=mdt_test,load_mods cc_huid=3 workload=storage --serial --dpc-uart --all_100g",
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-uart --all_100g"
@@ -37,20 +37,20 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "CreateAttachDetachDeleteMultivolMultihost":{
+  "CreateAttachDetachDeleteMultivolMultihost": {
     "num_f1": 1,
-    "blt_count": 48,
+    "blt_per_host": 8,
     "num_hosts": 1,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : false,
+    "test_iteration_count": 48,
+    "shared_volume": false,
     "detach_duringio": false,
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
     "encrypt": false,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -61,20 +61,20 @@
       "timeout": 600
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostDuringIO":{
+  "CreateAttachDetachDeleteMultivolMultihostDuringIO": {
     "num_f1": 1,
-    "blt_count": 48,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : false,
+    "test_iteration_count": 48,
+    "shared_volume": false,
     "detach_duringio": true,
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
     "encrypt": false,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -85,20 +85,20 @@
       "timeout": 180
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostShared":{
+  "CreateAttachDetachDeleteMultivolMultihostShared": {
     "num_f1": 1,
-    "blt_count": 8,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : true,
+    "test_iteration_count": 48,
+    "shared_volume": true,
     "detach_duringio": false,
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
     "encrypt": false,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -109,20 +109,20 @@
       "timeout": 600
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIO":{
+  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIO": {
     "num_f1": 1,
-    "blt_count": 8,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : true,
+    "test_iteration_count": 48,
+    "shared_volume": true,
     "detach_duringio": true,
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
     "encrypt": false,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -133,20 +133,20 @@
       "timeout": 180
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostEncrypt":{
+  "CreateAttachDetachDeleteMultivolMultihostEncrypt": {
     "num_f1": 1,
-    "blt_count": 48,
+    "blt_per_host": 8,
     "num_hosts": 1,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : false,
+    "test_iteration_count": 48,
+    "shared_volume": false,
     "detach_duringio": false,
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
     "encrypt": true,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -157,20 +157,20 @@
       "timeout": 600
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt":{
+  "CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt": {
     "num_f1": 1,
-    "blt_count": 48,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : false,
+    "test_iteration_count": 48,
+    "shared_volume": false,
     "detach_duringio": true,
     "raw_api_call": true,
     "multi_host_test": "True",
     "compression_effort": "False",
     "encrypt": true,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -181,20 +181,20 @@
       "timeout": 180
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostSharedEncrypt":{
+  "CreateAttachDetachDeleteMultivolMultihostSharedEncrypt": {
     "num_f1": 1,
-    "blt_count": 8,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : true,
+    "test_iteration_count": 48,
+    "shared_volume": true,
     "detach_duringio": false,
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
     "encrypt": true,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0
@@ -205,20 +205,20 @@
       "timeout": 600
     }
   },
-  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt":{
+  "CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt": {
     "num_f1": 1,
-    "blt_count": 8,
+    "blt_per_host": 8,
     "num_hosts": 2,
     "capacity": 8589934592,
-    "test_iteration_count": 24,
-    "shared_volume" : true,
+    "test_iteration_count": 48,
+    "shared_volume": true,
     "detach_duringio": true,
     "multi_host_test": "True",
     "raw_api_call": true,
     "compression_effort": "False",
     "encrypt": true,
     "name": "raw_volume_",
-    "DUT":1,
+    "DUT": 1,
     "override_numa_node": {
       "override": true,
       "override_node": 0

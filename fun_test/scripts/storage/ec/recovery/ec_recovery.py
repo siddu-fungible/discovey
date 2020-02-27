@@ -84,7 +84,7 @@ class ECBlockRecoveryScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
         if "syslog" in job_inputs:
@@ -709,6 +709,7 @@ class RecoveryWithFailures(FunTestCase):
 class RecoveryWithMFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -759,6 +760,7 @@ class RecoveryWithMFailure(RecoveryWithFailures):
 class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMplus1Failure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -809,6 +811,7 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -859,6 +862,7 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMplusConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -909,6 +913,7 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithKplusMConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]

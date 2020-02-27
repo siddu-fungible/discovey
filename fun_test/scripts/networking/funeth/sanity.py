@@ -371,6 +371,7 @@ class FunethSanity(FunTestScript):
         else:
             #TB = 'FS11'
             TB = ''.join(test_bed_type.split('-')).upper()
+            max_dut_ready_timeout = 0
             if control_plane:
                 if test_bed_type == 'fs-11':
                     f1_0_boot_args = "app=load_mods cc_huid=3 sku=SKU_FS1600_0 retimer=0,1 --all_100g --dpc-uart --dpc-server"
@@ -387,7 +388,11 @@ class FunethSanity(FunTestScript):
                 if nu_all_clusters:
                     f1_0_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
                     f1_1_boot_args += ' override={"NetworkUnit/VP":[{"nu_bm_alloc_clusters":255,}]}'
-                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=False)
+                inp = fun_test.get_job_inputs()
+                upd = inp and inp.get('update_funcp', False)
+                if upd:
+                    max_dut_ready_timeout = 1800
+                funcp_setup_obj = FunCPSetup(test_bed_type=test_bed_type, update_funcp=upd)
                 topology_helper = TopologyHelper()
                 topology_helper.set_dut_parameters(dut_index=0,
                                                    f1_parameters={0: {"boot_args": f1_0_boot_args},
@@ -410,7 +415,11 @@ class FunethSanity(FunTestScript):
                                                    custom_boot_args=boot_args)
 
             if bootup_funos:
-                topology = topology_helper.deploy()
+                topology = None
+                if max_dut_ready_timeout:
+                    topology = topology_helper.deploy(max_dut_ready_timeout=max_dut_ready_timeout)
+                else:
+                    topology = topology_helper.deploy()
                 fun_test.shared_variables["topology"] = topology
                 fun_test.test_assert(topology, "Topology deployed")
                 fs = topology.get_dut_instance(index=0)

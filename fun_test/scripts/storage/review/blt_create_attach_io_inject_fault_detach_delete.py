@@ -21,6 +21,7 @@ def fio_parser(arg1, host_index, **kwargs):
 
 class BringupSetup(FunTestScript):
     topology = None
+    format_drives = True
     testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
     def describe(self):
@@ -109,6 +110,8 @@ class CreateAttachIoInjectVolfaultDetachDelete(FunTestCase):
             setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:

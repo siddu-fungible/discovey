@@ -2,7 +2,7 @@ from lib.system.fun_test import *
 fun_test.enable_storage_api()
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
-from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
+from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate, EcVolumeOperationsTemplate
 from lib.templates.storage.storage_traffic_template import StorageTrafficTemplate
 from swagger_client.models.volume_types import VolumeTypes
 
@@ -28,14 +28,18 @@ class BringupSetup(FunTestScript):
         self.topology.cleanup()
 
 
-class BltApiStorageTest(FunTestCase):
+class GenericStorageTest(FunTestCase):
+    test_case_id = 1
     topology = None
     storage_controller_template = None
     attach_result = None
     storage_traffic_template = None
+    VOL_TYPE = VolumeTypes().LOCAL_THIN
+    IO_DEPTH = 2
+    CAPACITY = 1073741824
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=self.test_case_id,
                               summary="Create Volume using API and run IO from host",
                               steps='''
                               1. Make sure API server is up and running
@@ -48,14 +52,17 @@ class BltApiStorageTest(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         name = "blt_vol"
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 107374182400
+
         compression_effort = False
         encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
+        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=self.VOL_TYPE, capacity=self.CAPACITY,
                                                            compression_effort=compression_effort,
                                                            encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
+        if self.VOL_TYPE == VolumeTypes().LOCAL_THIN:
+            self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
+        elif self.VOL_TYPE == VolumeTypes().EC:
+            self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
+
         self.storage_controller_template.initialize(already_deployed=False)
 
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
@@ -89,7 +96,7 @@ class BltApiStorageTest(FunTestCase):
                                  message="NVMe device found on Host : {}".format(nvme_device_name))
 
             fio_integrity = self.storage_traffic_template.fio_with_integrity_check(
-                host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=32)
+                host_linux_handle=host_obj.get_instance(), filename=nvme_device_name, numjobs=1, iodepth=self.IO_DEPTH)
             fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
             fun_test.shared_variables["nvme_device_name"] = nvme_device_name
             fun_test.shared_variables["attach_result"] = self.attach_result
@@ -100,9 +107,10 @@ class BltApiStorageTest(FunTestCase):
         fun_test.shared_variables["storage_traffic_template"] = self.storage_traffic_template
 
 
-class ConfigPeristenceAfterReset(FunTestCase):
+class ConfigPersistenceAfterReset(FunTestCase):
     topology = None
     storage_controller_template = None
+    IO_DEPTH = 2
 
     def describe(self):
         self.set_test_details(id=2,
@@ -160,7 +168,7 @@ class ConfigPeristenceAfterReset(FunTestCase):
                                               nvme_device_name))
             fio_integrity = storage_traffic_template.fio_with_integrity_check(host_linux_handle=host_obj.get_instance(),
                                                                               filename=nvme_device_name,
-                                                                              numjobs=1, iodepth=32,
+                                                                              numjobs=1, iodepth=self.IO_DEPTH,
                                                                               verify_integrity=True)
             fun_test.test_assert(message="Do FIO integrity check", expression=fio_integrity)
             break
@@ -180,8 +188,36 @@ class ConfigPeristenceAfterReset(FunTestCase):
                              message="{}: API server health".format(fs_obj))
 
 
+class BltApiStorageTest(GenericStorageTest):
+    VOL_TYPE = VolumeTypes().LOCAL_THIN
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Create BLT Volume using API and run IO from host",
+                              steps='''
+                              1. Make sure API server is up and running
+                              2. Create a Volume using API Call
+                              3. Attach Volume to a remote host
+                              4. Run FIO from host
+                              ''')
+
+class EcApiStorageTest(GenericStorageTest):
+    VOL_TYPE = VolumeTypes().EC
+    test_case_id = 3
+
+    def describe(self):
+        self.set_test_details(id=self.test_case_id,
+                              summary="Create EC Volume using API and run IO from host",
+                              steps='''
+                              1. Make sure API server is up and running
+                              2. Create a Volume using API Call
+                              3. Attach Volume to a remote host
+                              4. Run FIO from host
+                              ''')
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(BltApiStorageTest())
-    setup_bringup.add_test_case(ConfigPeristenceAfterReset())
+    setup_bringup.add_test_case(ConfigPersistenceAfterReset())
+    setup_bringup.add_test_case(EcApiStorageTest())
     setup_bringup.run()

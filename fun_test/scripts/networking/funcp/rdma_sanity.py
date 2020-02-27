@@ -1487,6 +1487,12 @@ class IbWriteScale(FunTestCase):
         f11_storage_controller = fun_test.shared_variables["f11_storage_controller"]
         self.fcp = fun_test.shared_variables["enable_fcp"]
 
+        # Check if ping works before running tests
+        command_result = f10_hosts[0]["handle"].ping(dst=f11_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F10 HU -> F11 HU ping")
+        command_result = f11_hosts[0]["handle"].ping(dst=f10_hosts[0]["ipaddr"])
+        fun_test.simple_assert(command_result, "F11 HU -> F10 HU ping")
+
         # Load RDMA modules
         f10_host_roce.rdma_setup()
         f11_host_roce.rdma_setup()

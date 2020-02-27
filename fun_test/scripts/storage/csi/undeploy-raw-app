@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo "- removing app"
+kubectl delete pod fungible-csi-raw-app
+
+echo "- removing pvc"
+kubectl delete pvc csi-fungible-pvc-raw

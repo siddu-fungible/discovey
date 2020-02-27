@@ -79,7 +79,7 @@ class StorageControllerOperationsTemplate:
             topology_result = storage_controller.topology_api.get_hierarchical_topology()
             fun_test.log(topology_result)
         except ApiException as e:
-            fun_test.critical("Exception while getting topology{}\n".format(e))
+            fun_test.critical("ApiException while getting topology{}\n".format(e))
         except Exception as e:
             fun_test.critical("Exception while getting topology{}\n".format(e))
         node_ids = [x.uuid for x in topology_result.data.values()]
@@ -110,7 +110,7 @@ class StorageControllerOperationsTemplate:
                     self.duts_state_object.add_dataplane_ip(ip=dataplane_ip, f1_index=f1_index)
                     result = assign_dataplane_ip.status
                 except ApiException as e:
-                    fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
+                    fun_test.critical("ApiException while updating dataplane IP {}\n".format(e))
                     result = False
                 except Exception as e:
                     fun_test.critical("Exception while updating dataplane IP {}\n".format(e))
@@ -523,7 +523,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
-                               transport_type='tcp', transport_port=4420, nvme_io_queues=None):
+                               transport_type='tcp', transport_port=4420, host_ip=None, nvme_io_queues=None):
         """
 
         :param host_obj: host handle from topology
@@ -543,7 +543,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
                                                               port=transport_port, transport=transport_type,
-                                                              nvme_io_queues=nvme_io_queues, hostnqn=host_nqn)
+                                                              nvme_io_queues=nvme_io_queues, hostnqn=host_nqn,
+                                                              host_ip=host_ip)
         return nvme_connect_command
 
     def get_host_nvme_device(self, host_obj, subsys_nqn=None, nsid=None):

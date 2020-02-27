@@ -1,0 +1,22 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-write-read-fio-test
+spec:
+  initContainers:
+  - name: init-write-read-fio-test
+    command: ["fio"]
+    args: [" --name=writeonly","--ioengine=libaio","--direct=1","--numjobs=1","--rw=write","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1m","--do_verify=0","--verify=md5","--group_reporting"]
+  containers:
+    - name: container0-write-read-fio-test
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: volume-write-read-fio-test
+          devicePath: /dev/xvda
+      command: ["fio"]
+      args: ["--name=readnchk","--ioengine=libaio","--direct=1","--numjobs=1","--rw=read","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1m","--do_verify=1","--verify=md5","--group_reporting"]
+  restartPolicy: Never
+  volumes:
+    - name: volume-write-read-fio-test
+      persistentVolumeClaim:
+        claimName: csi-test-pvc01

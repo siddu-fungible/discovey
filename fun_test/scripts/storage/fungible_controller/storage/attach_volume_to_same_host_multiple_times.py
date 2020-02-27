@@ -7,7 +7,9 @@ from lib.templates.storage.storage_operations_template import EcVolumeOperations
 from swagger_client.models.volume_types import VolumeTypes
 from lib.templates.storage.storage_controller_api import *
 from lib.system import utils
-
+from scripts.storage.storage_helper import *
+from random import seed
+from random import randint
 
 
 class BringupSetup(FunTestScript):
@@ -21,7 +23,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = False
+        already_deployed = True
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -34,6 +36,7 @@ class BringupSetup(FunTestScript):
 class VolumeManagement(FunTestCase):
     topology = None
     storage_controller_template = None
+    fs_obj = None
 
     def describe(self):
         self.set_test_details(id=1,
@@ -45,7 +48,20 @@ class VolumeManagement(FunTestCase):
 
     def setup(self, enable_encryption=False, skip_initialize=False, stripe_enabled=False, ec_vol=False):
         self.topology = fun_test.shared_variables["topology"]
-        capacity = 107374182400
+        fs_obj_list = []
+        for dut_index in self.topology.get_available_duts().keys():
+            self.fs_obj = self.topology.get_dut_instance( index=dut_index )
+            fs_obj_list.append(self.fs_obj)
+
+        if ec_vol:
+            capacity = 107374182400
+        else:
+            min_volume_capacity = 1073741824
+            max_volume_capacity = find_min_drive_capacity(self.fs_obj.get_storage_controller(),command_timeout=30)
+            max_volume_capacity = max_volume_capacity - (3*4096)
+            capacity = random.randint(min_volume_capacity,max_volume_capacity)
+            capacity = capacity - (capacity%4096)
+
         compression_effort = 0
         if enable_encryption:
             encrypt = True
@@ -69,12 +85,6 @@ class VolumeManagement(FunTestCase):
         if not skip_initialize:
             self.storage_controller_template.initialize()
 
-        fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():
-            self.fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fs_obj_list.append(self.fs_obj)
-
-        storage_controller = self.fs_obj.get_storage_controller()
         vol_uuid_dict = {}
         self.final_vol_uuid_dict = {}
         for x in range(1, self.volume_count + 1, 1):

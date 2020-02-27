@@ -32,6 +32,7 @@
     "api_server_up_timeout": 300
   },
   "ECVolRebuildSingleDiskFailure": {
+    "test_rail_case_id": ["C16369"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
@@ -53,7 +54,7 @@
       "use_lsv": 1,
       "lsv_pct": 1,
       "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 8,
+      "jvol_size_multiplier": 4,
       "num_volumes": 1
     },
     "num_ssd": 12,
@@ -90,7 +91,7 @@
     "fail_drive": true,
     "trigger_rebuild_wait_time": 25,
     "rebuild_on_spare_volume": true,
-    "rebuild_rate": 80,
+    "rebuild_rate": 100,
     "rebuild_timeout": 3600,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",

@@ -1,0 +1,22 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: pod-write-fio-test
+spec:
+  containers:
+    - name: container0-write-fio-test
+      image: ljishen/fio:latest
+      volumeDevices:
+        - name: volume-write-fio-test
+          devicePath: /dev/xvda
+      env:
+      - name: CMD-ARG
+        value:  --name=writeonly --refill_buffers --ioengine=libaio --direct=1 --numjobs=1 --rw=write --iodepth=32 --bs=4k --filename=/dev/xvda --size=1m --verify=md5 --verify_pattern=0x0123456789abcdef%o --do_verify=0 --group_reporting"
+      command: ["fio"]
+     # args: ["$(CMD-ARG)"]
+      args: [" --name=writeonly","--refill_buffers","--ioengine=libaio","--direct=1","--numjobs=1","--rw=write","--iodepth=32","--bs=4k","--filename=/dev/xvda","--size=1m","--verify=md5","--verify_pattern=0x0123456789abcdef%o","--do_verify=0","--group_reporting"]
+  restartPolicy: Never
+  volumes:
+    - name: volume-write-fio-test
+      persistentVolumeClaim:
+        claimName: csi-test-pvc01

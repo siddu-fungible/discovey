@@ -134,6 +134,9 @@ class RdmaTemplate(object):
                                                                                       self.connection_type,
                                                                                       self.qpairs, ibv_device,
                                                                                       port_num, self.size)
+                if self.qpairs > 256:
+                    cmd += "--mr_per_qp "
+
                 if self.run_infinitely:
                     cmd += "--run_infinitely -D %d " % (self.run_infinitely)
                 else:
@@ -363,7 +366,7 @@ class RdmaTemplate(object):
                         if "Latency" in output and "tps average" in output:
                             index = 1
                         else:
-                            index = -1
+                            index = -2  # Picks last but 2nd value from test
                     else:
                         index = 1
                     values = list(map(float, re.split(r'\s+', chunk.split('\n')[index].strip())))
@@ -612,6 +615,7 @@ class RdmaLatencyUnderLoadTemplate(object):
 class RdmaHelper(object):
     SCENARIO_TYPE_1_1 = "1_1"
     SCENARIO_TYPE_N_1 = "N_1"
+    SCENARIO_TYPE_N_2 = "N_2"
     SCENARIO_TYPE_N_N = "N_N"
     SCENARIO_TYPE_LATENCY_UNDER_LOAD = 'lat_under_load'
     SCENARIO_TYPE_ABBA_LATENCY_UNDER_LOAD = 'abba_under_load'
@@ -667,6 +671,20 @@ class RdmaHelper(object):
         except Exception as ex:
             fun_test.critical(str(ex))
         return client_server_map
+
+    def get_client_server_map_n_2(self):
+        result = []
+        try:
+            client_dict = self.get_list_of_clients()
+            server_dict = self.get_list_of_servers()
+            if len(server_dict) != 2:
+                fun_test.simple_assert(False, "Not enough servers")
+            for client in client_dict:
+                for server in server_dict:
+                    result.append({client['host_ip']: server['host_ip']})
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
 
     def is_parallel(self):
         result = None
@@ -943,6 +961,43 @@ class RdmaHelper(object):
                     lat_test_map = bw_test_map
                     result['bw'].extend(bw_test_map)
                     result['lat'].extend(lat_test_map)
+                if key == self.SCENARIO_TYPE_LATENCY_UNDER_LOAD and self.scenario_type == "N_2":
+                    lat_test_map = {}
+                    bw_test_map = {}
+                    lat_test_map = self.get_client_server_map_n_2()
+                    bw_test_map = self.get_client_server_map_n_2()
+                    result['bw'].extend(self._get_lat_under_test_map_n2_objects(test_map=bw_test_map))
+                    result['lat'].extend(self._get_lat_under_test_map_n2_objects(test_map=lat_test_map))
+                    for map_obj in result['bw']:
+                        self.host_objs.extend(map_obj.keys())
+                    self.host_objs.append(result['bw'][0].values()[0])
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        return result
+
+    def _get_lat_under_test_map_n2_objects(self, test_map):
+        result = []
+        try:
+            for list_items in test_map:
+                client_id = 1
+                server_id = 1
+                for client, server in list_items.items():
+                    client_dict = self._fetch_client_dict(client)
+                    fun_test.simple_assert(client_dict, "Unable to find client %s info in hosts.json under asset. " %
+                                           client)
+                    server_dict = self._fetch_server_dict(server)
+                    fun_test.simple_assert(server_dict, "Unable to find server %s info in hosts.json under asset. " %
+                                           server)
+                    hu_interface_ip = self._get_hu_interface_ip(server_name=server)
+                    client_obj = RdmaClient(host_ip=client_dict['host_ip'], ssh_username=client_dict['ssh_username'],
+                                            ssh_password=client_dict['ssh_password'], server_ip=None,
+                                            rdma_port=None, client_id=client_id)
+                    server_obj = RdmaServer(host_ip=server_dict['host_ip'], ssh_password=server_dict['ssh_password'],
+                                            ssh_username=server_dict['ssh_username'], interface_ip=hu_interface_ip,
+                                            server_port=None, server_id=server_id)
+                    result.append({client_obj: server_obj})
+                    client_id += 1
+                    server_id += 1
         except Exception as ex:
             fun_test.critical(str(ex))
         return result

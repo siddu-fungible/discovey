@@ -139,7 +139,7 @@ class ECVolRebuildScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "f1_in_use" in job_inputs:
             self.f1_in_use = job_inputs["f1_in_use"]
         if "already_deployed" in job_inputs:
@@ -1098,9 +1098,19 @@ class ECVolRebuildTestcase(FunTestCase):
 
 
 class ECVolRebuildSingleDiskFailure(ECVolRebuildTestcase):
+    def __init__(self):
+        super(ECVolRebuildSingleDiskFailure, self).__init__()
+        testcase = self.__class__.__name__
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=1,
                               summary="EC Volume Rebuild on single disk fail on EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1

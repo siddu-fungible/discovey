@@ -94,7 +94,7 @@ class ECVolScript(FunTestScript):
         if "disable_wu_watchdog" in job_inputs:
             self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
         else:
-            self.disable_wu_watchdog = True
+            self.disable_wu_watchdog = False
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
 
@@ -716,7 +716,7 @@ class ECVolumeTestcase(FunTestCase):
                 ec_uuid = self.ec_info["uuids"][num]["ec"][num - self.test_volume_start_index]
                 rebuild_start_time = get_plex_operation_time(
                     bmc_linux_handle=bmc_handle, log_file=uart_log_file,
-                    ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True, plex_count=self.plex_failure_count,
+                    ec_uuid=ec_uuid, get_start_time=True, get_plex_number=True, plex_count=self.plex_failure_count - i,
                     status_interval=self.status_interval * 5)
                 fun_test.log("Rebuild start time for EC UUID: {} is: {}".format(ec_uuid, rebuild_start_time))
                 fun_test.test_assert(rebuild_start_time["status"], "EC UUID: {} started at: {}".format(
@@ -911,7 +911,7 @@ class ECVolSingleDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=1,
-                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of Single Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -949,7 +949,7 @@ class ECVolmDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=2,
-                              summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of m Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -987,7 +987,7 @@ class ECVolmPlusOneDriveFailRebuild(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=3,
-                              summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              summary="Rebuild: Data reconstruction of m+1 Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1025,7 +1025,7 @@ class ECVolSingleDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=4,
-                              summary="Data reconstruction of Single Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of Single Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1064,7 +1064,7 @@ class ECVolmDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=5,
-                              summary="Data reconstruction of m Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of m Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
@@ -1103,7 +1103,7 @@ class ECVolmPlusOneDriveFailReSync(ECVolumeTestcase):
 
     def describe(self):
         self.set_test_details(id=6,
-                              summary="Data reconstruction of m+1 Drive Failure in k:m EC volume",
+                              summary="ReSync: Data reconstruction of m+1 Drive Failure in k:m EC volume",
                               test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600

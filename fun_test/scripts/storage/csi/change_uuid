@@ -1,0 +1,3 @@
+sed -i 's/pools\/[a-z0-9]*\/volumes/pools\/'$1'\/volumes/g'  $4
+sed -i 's/\"name\": \"[a-z_0-9\-]*\",/\"name\": \"'$2'\",/g'  $4
+sed -i 's/\"capacity\": [0-9]*,/\"capacity\": '$3',/g'  $4

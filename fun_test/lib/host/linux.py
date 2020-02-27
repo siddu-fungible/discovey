@@ -768,6 +768,22 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
+    def copy(self, source, destination, recursive=False, sudo=False):
+        result = True
+        cmd = "cp {} {}".format(source, destination)
+        if recursive:
+            cmd = "cp -r {} {}".format(source, destination)
+        if sudo:
+            output = self.sudo_command(cmd)
+        else:
+            output = self.command(cmd)
+        if "No such file or directory" in output:
+            result = False
+        elif "Permission denied" in output:
+            result = False
+        return result
+
+    @fun_test.safe
     def create_file(self, file_name, contents):
         self.command("touch %s" % file_name)
         lines = contents.split('\n')
@@ -1964,43 +1980,51 @@ class Linux(object, ToDictMixin):
                     elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
-                                for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
-                                    if key.startswith("50.00"):
-                                        stat = "latency50"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("90.00"):
-                                        stat = "latency90"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("95.00"):
-                                        stat = "latency95"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.00"):
-                                        stat = "latency99"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.50"):
-                                        stat = "latency9950"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.99"):
-                                        stat = "latency9999"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
+                                if "percentile" in fio_result_dict["jobs"][0][operation]["clat_ns"]:
+                                    for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                        if key.startswith("50.00"):
+                                            stat = "latency50"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("90.00"):
+                                            stat = "latency90"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("95.00"):
+                                            stat = "latency95"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.00"):
+                                            stat = "latency99"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.50"):
+                                            stat = "latency9950"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.99"):
+                                            stat = "latency9999"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                else:
+                                    fio_dict[operation]["latency50"] = 0
+                                    fio_dict[operation]["latency90"] = 0
+                                    fio_dict[operation]["latency95"] = 0
+                                    fio_dict[operation]["latency99"] = 0
+                                    fio_dict[operation]["latency9950"] = 0
+                                    fio_dict[operation]["latency9999"] = 0
             fun_test.debug(fio_dict)
         except Exception as ex:
             fun_test.critical(ex.message)
@@ -2878,7 +2902,7 @@ class Linux(object, ToDictMixin):
         return iostat_output
 
     def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", nvme_io_queues=None, hostnqn=None,
-                     retries=2, timeout=61):
+                    host_ip=None, retries=2, timeout=61):
         result = False
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
                                                                          nvme_subsystem)
@@ -2886,6 +2910,8 @@ class Linux(object, ToDictMixin):
             nvme_connect_cmd += " -i {}".format(nvme_io_queues)
         if hostnqn:
             nvme_connect_cmd += " -q {}".format(hostnqn)
+        if host_ip:
+            nvme_connect_cmd += " -w {}".format(host_ip)
 
         for i in range(retries):
             try:

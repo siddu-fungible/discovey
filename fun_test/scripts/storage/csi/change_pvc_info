@@ -1,0 +1,2 @@
+sed -i 's/name: [a-z_0-9\-]*/name: '$1'/g'  $3
+sed -i 's/storage: [0-9A-Za-z]*/storage: '$2'/g'  $3
