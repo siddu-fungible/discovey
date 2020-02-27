@@ -754,7 +754,7 @@ class ScaleMaxAttached(FunTestCase):
             thread_args.update({'storage_controller_template': self.storage_controller_template})
             print "thread args:", thread_args
             my_args.append(thread_args)
-            x = threading.Thread(target=fio_thread, args=my_args[ctr])
+            x = threading.Thread(target=fio_thread, args=(my_args[ctr],))
             threads.append(x)
             x.start()
 
@@ -784,7 +784,6 @@ class ScaleMaxAttached(FunTestCase):
             print "delete_vol_result:", delete_vol_result
             fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
         self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
-
 
 
 class CADtADt1(CADtADt):
