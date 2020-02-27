@@ -53,7 +53,7 @@ def delete(fs_obj, uuid):
     return delete_vol_result
 
 
-def fio_thread(nvme_device, host_obj, storage_controller_template):
+def fio_thread(host_obj, nvme_device, storage_controller_template):
     print "fio_thread: nvme_device:", nvme_device
     storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=storage_controller_template)
     traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device)
@@ -729,7 +729,6 @@ class ScaleMaxAttached(FunTestCase):
         fs_obj = self.fs_obj_list[0]
         attach_result_len = len(attach_result)
         host_obj = hosts[0]
-        my_args = []
         print "len:", len, " all attached vols:", attach_result_len
         threads = list()
         for ctr in range(attach_result_len):
@@ -753,8 +752,7 @@ class ScaleMaxAttached(FunTestCase):
             thread_args.update({'nvme_device': nvme_device_name})
             thread_args.update({'storage_controller_template': self.storage_controller_template})
             print "thread args:", thread_args
-            my_args.append(thread_args)
-            x = threading.Thread(target=fio_thread, args=(my_args[ctr],))
+            x = threading.Thread(target=fio_thread, args=(host_obj, nvme_device_name, self.storage_controller_template))
             threads.append(x)
             x.start()
 
