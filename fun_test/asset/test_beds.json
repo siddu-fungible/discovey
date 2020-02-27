@@ -1190,6 +1190,81 @@
       }
     }
   },
+  "fs-43": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "pcie_interface_info": {
+          "0": {
+            "host_info": {
+              "name": "cab16-qa-05"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "1": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "2": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "3": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 0
+          },
+          "4": {
+            "host_info": {
+              "name": "cab16-qa-06"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "5": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "6": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "7": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 4
+          },
+          "8": {
+            "host_info": {
+              "name": "cab16-qa-07"
+            },
+            "type": "INTERFACE_TYPE_PCIE",
+            "hosts": 1
+          },
+          "9": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 8
+          },
+          "14": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "15": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "16": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          },
+          "17": {
+            "type": "INTERFACE_TYPE_PCIE",
+            "dual": 14
+          }
+        },
+        "dut": "fs-43"
+      }
+    }
+  },
   "fs-48": {
     "dut_info": {
       "0": {
