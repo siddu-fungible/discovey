@@ -64,7 +64,7 @@ class BaseBltDataIntegrity(FunTestCase):
                                                            capacity=capacity, encrypt=self.encrypt, data_protection={})
 
         self.fs_obj_list = []
-        for dut_index in self.topology.get_available_duts().keys():  # dut means FS
+        for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.fs_obj_list.append(fs_obj)
         # creates volume on all available FS's list
@@ -149,12 +149,6 @@ class BltDataIntegrity(BaseBltDataIntegrity):
         self.encrypt = False
         super(BltDataIntegrity, self).setup()
 
-    def run(self):
-        super(BltDataIntegrity, self).run()
-
-    def cleanup(self):
-        super(BltDataIntegrity, self).cleanup()
-
 
 class BltDataIntegrityEncrypt(BaseBltDataIntegrity):
     def describe(self):
@@ -171,12 +165,6 @@ class BltDataIntegrityEncrypt(BaseBltDataIntegrity):
     def setup(self):
         self.encrypt = True
         super(BltDataIntegrityEncrypt, self).setup()
-
-    def run(self):
-        super(BltDataIntegrityEncrypt, self).run()
-
-    def cleanup(self):
-        super(BltDataIntegrityEncrypt, self).cleanup()
 
 
 if __name__ == "__main__":
