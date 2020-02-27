@@ -37,8 +37,8 @@ def execute_command(method, cmd_url, params, show_exceptions=True):
     #controller = os.environ['SC_HOST']
     controller = "fs141-come"
     headers = {'content-type': 'application/json'}
-    #agent_url = 'http://fs141-come:50220/FunCC/v1/{}'.format(cmd_url)
-    agent_url = 'http://fs141-come:50220/FunCC/v1/storage/pools'
+    agent_url = 'http://fs141-come:50220/FunCC/v1/{}'.format(cmd_url)
+    #agent_url = 'http://fs141-come:50220/FunCC/v1/storage/pools'
     basic_auth = requests.auth.HTTPBasicAuth('admin', 'password')
     r = None
 
@@ -729,12 +729,31 @@ class SimpleAPITest(unittest.TestCase):
                           msg='expected failure when creating excessively'
                           'striped drive, but passed.')
 
+def get_fs_uuid():
+    """Check that global pool exists and is configured."""
+    r = execute_command('GET', 'storage/pools', None, show_exceptions=False)
+    resp = r.json()
+   # assertEquals(True, resp['status'])
+    pool_data = resp['data']
+    print pool_data
+   # assertEqual('global', pool_data['name'])
+   # assertLessEqual(0, len(pool_data['volumes']))
+   # assertLessEqual(1, len(pool_data['dpus']))
+   # uuid = pool_data['uuid']
+   # uuid = pool_data['uuid']
+    global_pool = pool_data[pool_data.keys()[0]]
+    uuid = global_pool['uuid']
+    return uuid
+
+
 
 if __name__ == '__main__':
-   print(" Running test")
-   # unittest.main()
-   r = execute_command('GET', 'storage/pools', None, show_exceptions=False)
-   if not r or r.status_code != 200:
-      print('No VMs present')
-   else:
-      print('VM present')
+    print(" Running test")
+    # unittest.main()
+    r = execute_command('GET', 'storage/pools', None, show_exceptions=False)
+    if not r or r.status_code != 200:
+        print('No VMs present\n')
+    else:
+        print('VM present\n')
+    uuid = get_fs_uuid()
+    print('VM present:uuid={}\n'.format(uuid))
