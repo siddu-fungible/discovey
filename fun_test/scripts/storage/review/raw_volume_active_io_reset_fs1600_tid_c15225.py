@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+
 fun_test.enable_storage_api()
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
@@ -160,9 +161,36 @@ class GenericStorageTest(FunTestCase):
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def attach_volumes(self):
-        hosts = self.topology.get_available_host_instances()
+        self.available_hosts = self.topology.get_available_hosts()
+        self.host_objs = self.available_hosts.values()
+
+        self.host_info = {}
+        # Populating the linux handles of the hosts
+        for host_name, host_obj in self.available_hosts.items():
+            self.host_info[host_name] = {}
+            self.host_info[host_name]["test_interface"] = host_obj.get_test_interface( index=0 )
+            self.host_info[host_name]["ip"] = host_obj.get_test_interface( index=0 ).ip.split( '/' )[0]
+            self.host_info[host_name]["handle"] = host_obj.get_instance()
+
+        # Extracting the host CPUs
+        for host_name in self.host_info:
+            host_handle = self.host_info[host_name]["handle"]
+            if host_name.startswith( "cab0" ):
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu( "node[01]" )
+                    self.host_info[host_name]["host_numa_cpus"] = ",".join( host_numa_cpus_filter.values() )
+            else:
+                if self.override_numa_node["override"]:
+                    host_numa_cpus_filter = host_handle.lscpu( self.override_numa_node["override_node"] )
+                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
+                        self.override_numa_node["override_node"]]
+                else:
+                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus( host_handle,
+                                                                                    self.ethernet_adapter )
+
+        hosts = self.topology.get_available_hosts()
         for volume in range(self.no_of_volumes):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=self.fs_obj_list,
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=self.fs_obj_list[0],
                                                                                volume_uuid=self.vol_uuid_list[volume],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
@@ -170,7 +198,7 @@ class GenericStorageTest(FunTestCase):
             self.attach_result.append(attach_vol_result)
 
     def run_fio(self):
-        hosts = self.topology.get_available_host_instances()
+        hosts = self.topology.get_available_hosts()
         self.storage_traffic_template = StorageTrafficTemplate(
             storage_operations_template=self.storage_controller_template)
 
@@ -263,7 +291,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result_failed=fun_test.is_current_test_case_failed())
         if not fun_test.is_current_test_case_failed():
-            hosts = self.topology.get_available_host_instances()
+            hosts = self.topology.get_available_hosts()
             for host_obj in hosts:
                 self.storage_controller_template.host_diagnostics(host_obj=host_obj.get_instance())
 
