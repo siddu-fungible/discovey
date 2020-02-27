@@ -729,7 +729,9 @@ class ScaleMaxAttached(FunTestCase):
         fs_obj = self.fs_obj_list[0]
         attach_result_len = len(attach_result)
         host_obj = hosts[0]
+        my_args = []
         print "len:", len, " all attached vols:", attach_result_len
+        threads = list()
         for ctr in range(attach_result_len):
             print "subsys_nqn:", attach_result[ctr]['data']['subsys_nqn']
 
@@ -745,8 +747,25 @@ class ScaleMaxAttached(FunTestCase):
                                  message="Host : {} FIO traffic result".format(host_obj.name))
             fun_test.log(traffic_result)
             '''
+
+            thread_args = {}
+            thread_args.update({'host_obj': host_obj})
+            thread_args.update({'nvme_device': nvme_device_name})
+            thread_args.update({'storage_controller_template': self.storage_controller_template})
+            print "thread args:", thread_args
+            my_args.append(thread_args)
+            x = threading.Thread(target=fio_thread, args=my_args[ctr])
+            threads.append(x)
+            x.start()
+
+            '''
             fio_thread(host_obj=host_obj, nvme_device=nvme_device_name,
                        storage_controller_template=self.storage_controller_template)
+            '''
+            for index, thread in enumerate(threads):
+                print "before joining thread"
+                thread.join()
+                print "thread done"
 
     def cleanup(self):
         created_vols = fun_test.shared_variables["created_vols"]
