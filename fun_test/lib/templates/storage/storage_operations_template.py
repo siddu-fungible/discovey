@@ -167,8 +167,7 @@ class StorageControllerOperationsTemplate:
                     dpu_id = node + "." + str(f1_index)
                     dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
                                                         dpu_id=dpu_id, raw_api_call=True)
-                    fun_test.add_checkpoint(expected=True, actual=dpu_status,
-                                            checkpoint="DPU {} is online".format(dpu_id))
+                    fun_test.test_assert_expected(expected=True, actual=dpu_status, message="DPU {} is online".format(dpu_id))
                     if dpu_status:
                         result += 1
 
