@@ -53,10 +53,21 @@ def delete(fs_obj, uuid):
     return delete_vol_result
 
 
-def fio_thread(host_obj, nvme_device, storage_controller_template):
-    print "fio_thread: nvme_device:", nvme_device
+def fio_thread(host_obj, nvme_devices, storage_controller_template):
+    print "fio_thread: nvme_device:", nvme_devices
+    host_instance = host_obj.get_instance()
     storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=storage_controller_template)
-    traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device)
+    # traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device)
+    job_name = ""
+    for ctr in range(len(nvme_devices) - 1):
+        job_name += "fiojob" + str(ctr) + " --filename=" + str(nvme_devices[ctr]) + " --name="
+
+    job_name += "fiojob" + str(ctr)
+    filename = nvme_devices[len(nvme_devices) - 1]
+    print "jobname:", job_name
+    print "filename:", filename
+    traffic_result = host_instance.fio(name=job_name, filename=filename, timeout=1200)
+
     fun_test.test_assert(expression=traffic_result,
                          message="Host : {} FIO traffic result".format(host_obj.name))
     fun_test.log(traffic_result)
@@ -698,7 +709,7 @@ class ScaleMaxAttached(FunTestCase):
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             created_vols.append(vol_uuid)
-            if (counter == self.loop_count -1):
+            if (counter == self.loop_count - 1):
                 connect = True
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid,
@@ -743,13 +754,6 @@ class ScaleMaxAttached(FunTestCase):
                                                                                          'data']['nsid'])
             all_nvme_device_names.append(nvme_device_name)
             '''
-            storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
-            traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
-            fun_test.test_assert(expression=traffic_result,
-                                 message="Host : {} FIO traffic result".format(host_obj.name))
-            fun_test.log(traffic_result)
-            '''
-
             thread_args = {}
             thread_args.update({'host_obj': host_obj})
             thread_args.update({'nvme_device': nvme_device_name})
@@ -760,16 +764,16 @@ class ScaleMaxAttached(FunTestCase):
             x.start()
 
             '''
-            fio_thread(host_obj=host_obj, nvme_device=nvme_device_name,
-                       storage_controller_template=self.storage_controller_template)
-            '''
+        fio_thread(host_obj=host_obj, nvme_devices=all_nvme_device_names,
+                   storage_controller_template=self.storage_controller_template)
 
         fun_test.shared_variables["all_nvme_device_names"] = all_nvme_device_names
-
+        '''
         for index, thread in enumerate(threads):
             print "before joining thread"
             thread.join()
             print "thread done"
+        '''
 
     def cleanup(self):
         created_vols = fun_test.shared_variables["created_vols"]
