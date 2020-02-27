@@ -1965,9 +1965,10 @@ class ComE(Linux):
                                                              asset_id=asset_id,
                                                              artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                              artifact_sub_category=self.fs.ArtifactSubCategory.COME,
-                                                             is_large_file=True,
+                                                             is_large_file=False,
                                                              timeout=60)
-                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+                fun_test.log("HBM dump available at: {}".format(hbm_uploaded_path))
+                fun_test.report_message("HBM dump available at: {}".format(hbm_uploaded_path))
 
 
     def cleanup(self):
