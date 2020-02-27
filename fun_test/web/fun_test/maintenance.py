@@ -3250,7 +3250,7 @@ if __name__ == "__main_data_plane_fix__":
         chart.save()
     print "deleted the volume size and total volumes key from filter"
 
-if __name__ == "__main__":
+if __name__ == "__main_internal_name_change__":
     internal_chart_names = {"fungible_controller": "fs1600_controller",
                             "fungible_controller_api": "fs1600_controller_storage",
                             "fungible_controller_api_create": "fs1600_controller_storage_raw_create",
@@ -3271,3 +3271,15 @@ if __name__ == "__main__":
         chart.internal_chart_name = internal_chart_names[internal_name]
         chart.save()
     print "changed the internal chart names of all the fungible controller"
+
+if __name__ == "__main__":
+    metric_model_name = "DataPlaneOperationsPerformance"
+    charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
+    for chart in charts:
+        data_sets = chart.get_data_sets()
+        for data_set in data_sets:
+            data_set["inputs"]["input_real_f1"] = False
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "changed filter for old charts"
+
