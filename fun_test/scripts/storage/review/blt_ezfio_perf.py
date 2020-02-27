@@ -408,11 +408,11 @@ class SingleBltSingleHost(FunTestCase):
 
         # Tar details* directory and copy it out
         ezfio_details_dir = end_host_thread.sudo_command(
-            "pushd {}; ls -d details_*; popd".format(outputdir_name)
+            "pushd {} > /dev/null; ls -d details_*; popd > /dev/null".format(outputdir_name)
         )
         ezfio_details_dir = str(ezfio_details_dir).strip()
         end_host_thread.sudo_command(
-            "pushd {}; tar -zcvf {}.tgz {}; popd".format(outputdir_name, ezfio_details_dir, ezfio_details_dir))
+            "pushd {} > /dev/null; tar -zcvf {}.tgz {}; popd > /dev/null".format(outputdir_name, ezfio_details_dir, ezfio_details_dir))
 
         ezfio_artifact_tarball = fun_test.get_test_case_artifact_file_name(
             post_fix_name="{}_ezfio_detailed_logs.tgz".format(testcase))
