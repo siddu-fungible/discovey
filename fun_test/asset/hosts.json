@@ -867,6 +867,11 @@
       "numa_node_ranges": ["0-3"]
     }
   },
+   "cab02-qa-10-vm05": {
+    "host_ip": "cab02-qa-10-vm05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
+  },
   "cab02-qa-09": {
     "host_ip": "cab02-qa-09",
     "ssh_username": "localadmin",
