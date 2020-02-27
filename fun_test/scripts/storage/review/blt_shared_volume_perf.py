@@ -512,8 +512,6 @@ class SharedVolumePerfTest(FunTestCase):
                         row_data_list.append(-1)
                     else:
                         row_data_list.append(row_data_dict[i])
-                table_data_rows.append(row_data_list)
-
                 table_data_list = copy.deepcopy(row_data_list)
                 table_data_rows.append(table_data_list)
 
@@ -604,9 +602,9 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -735,9 +733,9 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                # size = " --size={}%".format(self.fio_io_size)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + size + jobs
+                                                        fio_cpus_allowed_args + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,

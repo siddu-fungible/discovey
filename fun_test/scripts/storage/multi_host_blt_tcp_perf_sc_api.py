@@ -1110,7 +1110,11 @@ class MultiHostFioRandReadAfterReboot(MultiHostVolumePerformanceTestcase):
 
         # Ensure API server is up
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
-        fun_test.test_assert(ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout),
+        api_server_status = ensure_api_server_is_up(self.sc_api, timeout=self.api_server_timeout)
+        if not api_server_status:
+            come.command("netstat -nlap")
+            come.command("ps -ef")
+        fun_test.test_assert(api_server_status,
                              "Ensure API server is up")
 
         fun_test.log("TOTAL TIME ELAPSED IN REBOOT IS {}".format(reboot_timer.elapsed_time()))

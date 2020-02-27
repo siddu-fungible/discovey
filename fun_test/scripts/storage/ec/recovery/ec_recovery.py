@@ -709,6 +709,7 @@ class RecoveryWithFailures(FunTestCase):
 class RecoveryWithMFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -759,6 +760,7 @@ class RecoveryWithMFailure(RecoveryWithFailures):
 class RecoveryWithMplus1Failure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMplus1Failure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -809,6 +811,7 @@ class RecoveryWithMplus1Failure(RecoveryWithFailures):
 class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -859,6 +862,7 @@ class RecoveryWithMConcurrentFailure(RecoveryWithFailures):
 class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithMplusConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]
@@ -909,6 +913,7 @@ class RecoveryWithMplusConcurrentFailure(RecoveryWithFailures):
 class RecoveryWithKplusMConcurrentFailure(RecoveryWithFailures):
 
     def __init__(self):
+        super(RecoveryWithKplusMConcurrentFailure, self).__init__()
         testcase = self.__class__.__name__
         #self.sc_lock = Lock()
         #self.syslog = fun_test.shared_variables["syslog"]

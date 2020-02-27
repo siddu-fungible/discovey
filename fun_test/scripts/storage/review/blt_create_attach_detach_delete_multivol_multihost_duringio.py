@@ -8,6 +8,7 @@ from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import BltVolumeOperationsTemplate
 from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
+from swagger_client.rest import ApiException
 import string, random
 from collections import OrderedDict, Counter
 
@@ -31,7 +32,7 @@ class BringupSetup(FunTestScript):
 
     def setup(self):
 
-        format_drives = False
+        format_drives = True
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
@@ -98,14 +99,14 @@ class GenericCreateAttachDetachDelete(FunTestCase):
             job_inputs = {}
         if "capacity" in job_inputs:
             self.capacity = job_inputs["capacity"]
-        if "blt_count" in job_inputs:
-            self.blt_count = job_inputs["blt_count"]
+        if "blt_per_host" in job_inputs:
+            self.blt_per_host = job_inputs["blt_per_host"]
         if "num_hosts" in job_inputs:
             self.num_host = job_inputs["num_hosts"]
         if "test_iteration_count" in job_inputs:
             self.test_iteration_count = job_inputs["test_iteration_count"]
 
-        fun_test.shared_variables["blt_count"] = self.blt_count
+        fun_test.shared_variables["blt_per_host"] = self.blt_per_host
         self.vol_type = VolumeTypes().LOCAL_THIN
         self.hosts = self.topology.get_available_host_instances()
 
@@ -120,6 +121,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                 host.host_numa_cpus = host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
     def run(self):
+        self.blt_count = self.blt_per_host if self.shared_volume else self.blt_per_host * len(self.hosts)
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
             for i in range(self.blt_count):
@@ -129,26 +131,18 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                                                                    capacity=self.capacity, compression_effort=False,
                                                                    encrypt=self.encrypt, data_protection={})
                 vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
-                fun_test.test_assert(expression=vol_uuid[0], message="Create Volume{} Successful with uuid {}".
-                                     format(i+1, vol_uuid[0]))
+                fun_test.test_assert(expression=vol_uuid and vol_uuid[0], message="Create Volume{} Successful with "
+                                                                                  "uuid {}".format(i+1, vol_uuid[0]))
                 self.vol_uuid_list.append(vol_uuid[0])
 
-            if self.shared_volume:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
-                                                                               fs_obj=self.fs_obj_list[0],
-                                                                               volume_uuid_list=self.vol_uuid_list,
-                                                                               validate_nvme_connect=False,
-                                                                               raw_api_call=True,
-                                                                               nvme_io_queues=None,
-                                                                               volume_is_shared=True)
-            else:
-                self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
-                                                                               fs_obj=self.fs_obj_list[0],
-                                                                               volume_uuid_list=self.vol_uuid_list,
-                                                                               validate_nvme_connect=False,
-                                                                               raw_api_call=True,
-                                                                               nvme_io_queues=None,
-                                                                               volume_is_shared=False)
+            self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
+                                                                           fs_obj=self.fs_obj_list[0],
+                                                                           volume_uuid_list=self.vol_uuid_list,
+                                                                           validate_nvme_connect=False,
+                                                                           raw_api_call=True,
+                                                                           nvme_io_queues=None,
+                                                                           volume_is_shared=self.shared_volume)
+
             for host in self.hosts:
                 host.nvme_connect_info = {}
                 for result in self.attach_vol_result[host]:
@@ -186,9 +180,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                         nvme_devices = self.blt_template.get_host_nvme_device(host_obj=host)
                         if nvme_devices:
                             if isinstance(nvme_devices, list):
-                                for nvme_device in nvme_devices:
-                                    current_device = nvme_device
-                                    host.nvme_block_device_list.append(current_device)
+                                host.nvme_block_device_list.extend(nvme_devices)
                             else:
                                 current_device = nvme_devices
                                 host.nvme_block_device_list.append(current_device)
@@ -211,7 +203,6 @@ class GenericCreateAttachDetachDelete(FunTestCase):
             fun_test.shared_variables["fio"] = {}
             for index, host in enumerate(self.hosts):
                 fio_output[index] = {}
-                #end_host_thread[index] = self.hosts[host_name]["handle"].clone()
                 end_host_thread[index] = host.instance.clone()
                 wait_time = len(self.hosts) - index
                 if "multiple_jobs" in self.warm_up_fio_cmd_args:
@@ -227,7 +218,7 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                             fio_cpus_allowed_args + offset + size + jobs
                     else:
-                        size = " --size=100%"
+                        size = " --size=10%"
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                                 fio_cpus_allowed_args + size + jobs
                     warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
@@ -241,22 +232,22 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                     fio_offset += self.fio_io_size
                     fun_test.sleep("Fio threadzz", seconds=1)
 
-            fun_test.sleep("Fio threads started", 10)
             if self.detach_duringio:
-                fun_test.sleep("Wait before disconnect during IO", seconds=30)
+                fun_test.sleep("Wait before disconnect during IO", seconds=10)
                 self.cleanupio()
+            fun_test.sleep("Fio threads started", 10)
             try:
                 for i, host_name in enumerate(self.hosts):
                     fun_test.log("Joining fio thread {}".format(i))
                     fun_test.join_thread(fun_test_thread_id=thread_id[i])
                     fun_test.log("FIO Command Output:")
                     fun_test.log(fun_test.shared_variables["fio"][i])
-                    if not fun_test.shared_variables["fio"][i]:
+                    if not fun_test.shared_variables["fio"][i] and self.detach_duringio:
                         fun_test.test_assert(True, message="FIO interrupted due to disconnect")
                     else:
                         fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                             "FIO randwrite test with IO depth 16 in host {}".
-                                             format(host_name.instance))
+                                             "FIO randwrite test with verify in host {}".
+                                             format(host_name.name))
                     fio_output[i] = fun_test.shared_variables["fio"][i]
 
             except Exception as ex:
@@ -264,29 +255,6 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                 fun_test.log("FIO Command Output from host {}:\n {}".format(host_name, fio_output[i]))
 
             if not self.detach_duringio:
-                aggr_fio_output = {}
-                for index, host_name in enumerate(self.hosts):
-                    for op, stats in fun_test.shared_variables["fio"][index].items():
-                        if op not in aggr_fio_output:
-                            aggr_fio_output[op] = {}
-                        aggr_fio_output[op] = Counter(aggr_fio_output[op]) + Counter(fio_output[i][op])
-
-                fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
-
-                for op, stats in aggr_fio_output.items():
-                    for field, value in stats.items():
-                        if field == "iops":
-                            aggr_fio_output[op][field] = int(round(value))
-                        if field == "bw":
-                            # Converting the KBps to MBps
-                            aggr_fio_output[op][field] = int(round(value / 1000))
-                        if "latency" in field:
-                            aggr_fio_output[op][field] = int(round(value) / len(self.hosts))
-                        # Converting the runtime from milliseconds to seconds and taking the average out of it
-                        if field == "runtime":
-                            aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
-
-                fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
                 self.cleanupio()
             fun_test.test_assert(expression=True, message="Test completed {} Iteration".format(count + 1))
 
@@ -306,11 +274,29 @@ class GenericCreateAttachDetachDelete(FunTestCase):
             fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
-                    detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    detach_volume = None
+                    try:
+                        detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    except ApiException as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    detach_result = False
+                    if detach_volume:
+                        detach_result = detach_volume.status
                     fun_test.test_assert(expression=detach_volume.status,
                                          message="Detach Volume {} from host with host_nqn {}".format(
                                              volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
-                delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                delete_volume = None
+                try:
+                    delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                except ApiException as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                except Exception as e:
+                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                delete_volume_result = False
+                if delete_volume:
+                    delete_volume_result = delete_volume.status
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def cleanup(self):
@@ -322,6 +308,7 @@ class CreateAttachDetachDeleteMultivolMultihost(GenericCreateAttachDetachDelete)
         self.set_test_details(id=1,
                               summary="Create, attach, connect, disconnect, detach & delete N different volumes "
                                       "attached to M hosts with IO",
+                              test_rail_case_ids=["T31394"],
                               steps='''
                                     1. Create 48 volumes
                                     2. Attach 8 volume to 6 hosts
@@ -347,6 +334,7 @@ class CreateAttachDetachDeleteMultivolMultihostDuringIO(GenericCreateAttachDetac
             id=2,
             summary="Create,attach,connect,disconnect,detach & delete N different volumes attached to M hosts along "
                     "with active IO during disconnect & detach",
+            test_rail_case_ids=["T31395"],
             steps='''
                 1. Create 48 volumes
                 2. Attach 8 volume to 6 hosts
@@ -371,6 +359,7 @@ class CreateAttachDetachDeleteMultivolMultihostShared(GenericCreateAttachDetachD
         self.set_test_details(
             id=3,
             summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts with IO",
+            test_rail_case_ids=["T31397"],
             steps='''
                 1. Create 8 volumes
                 2. Attach same 8 volume to 6 hosts
@@ -396,6 +385,7 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIO(GenericCreateAttac
             id=4,
             summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
                     "active IO during disconnect & detach",
+            test_rail_case_ids=["T31398"],
             steps='''
                 1. Create 8 volumes
                 2. Attach 8 volume to 6 hosts

@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR, DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -23,7 +23,7 @@ import os
 import socket
 import logging
 
-DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+# DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
 ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "bug_check on",
@@ -32,7 +32,7 @@ ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
                  "Trap exception",
                  r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
-DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+# DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
@@ -1615,9 +1615,9 @@ class ComE(Linux):
             if self.hbm_dump_enabled:
                 fun_test.test_assert(self.setup_hbm_tools(), "HBM tools and dump directory ready")
             self.command("rm -f {}/*core*".format(self.CORES_DIRECTORY))
-            # if self.fs.bundle_compatible:
-            #    fun_test.log("Clearing out HBM dump directory")
-            #    self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+            if self.fs.bundle_compatible:
+                fun_test.log("Clearing out HBM dump directory")
+                self.sudo_command("rm -f {}/*".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
         else:
             self.fs.dpc_for_statistics_ready = True
             self.dpc_ready = True
@@ -1950,6 +1950,26 @@ class ComE(Linux):
             s = "{}_{}".format(self.original_context_description.replace(":", "_"), data)
         return s
 
+    def upload_hbm_dump(self, asset_type, asset_id):
+        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
+        if not current_hbm_dump_files:
+            fun_test.critical("No HBM dump files found")
+        else:
+            for hbm_dump_file in current_hbm_dump_files:
+                file_name = hbm_dump_file["filename"]
+                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
+                                                             linux_obj=self,
+                                                             source_file_path=hbm_dump_file["filename"],
+                                                             display_name=os.path.basename(file_name),
+                                                             asset_type=asset_type,
+                                                             asset_id=asset_id,
+                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
+                                                             is_large_file=True,
+                                                             timeout=60)
+                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+
+
     def cleanup(self):
         asset_type = "unknown"
         asset_id = "unknown"
@@ -2103,38 +2123,32 @@ class ComE(Linux):
         if self.fs.bundle_compatible:
             if self.list_files(self.HBM_COLLECT_NOTIFY):
                 fun_test.add_checkpoint("HBM dumping going on. Switching to BMC to collect logs")
-
+                self.fs.hbm_dump_detected = True
                 try:
                     self.fs.get_bmc().cleanup()
                 except Exception as ex:
                     fun_test.critical(str(ex))
 
                 hbm_dump_timer = FunTimer(max_time=self.HBM_COLLECT_MAX_TIMER)
-                while not hbm_dump_timer.is_expired(print_remaining_time=True):
-                    fun_test.sleep("HBM Dump", seconds=60)
-                    if not self.list_files(self.HBM_COLLECT_NOTIFY):
-                        fun_test.log("HBM dump completed")
-                        current_hbm_dump_files = self.list_files("{}/*bz2".format(self.BUNDLE_HBM_DUMP_DIRECTORY))
-                        if not current_hbm_dump_files:
-                            fun_test.critical("No HBM dump files found")
-                        else:
-                            for hbm_dump_file in current_hbm_dump_files:
-                                file_name = hbm_dump_file["filename"]
-                                hbm_uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=os.path.basename(file_name),
-                                                                             linux_obj=self,
-                                                                             source_file_path=hbm_dump_file["filename"],
-                                                                             display_name=os.path.basename(file_name),
-                                                                             asset_type=asset_type,
-                                                                             asset_id=asset_id,
-                                                                             artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
-                                                                             artifact_sub_category=self.fs.ArtifactSubCategory.COME,
-                                                                             is_large_file=True,
-                                                                             timeout=60)
-                                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+                try:
+                    while not hbm_dump_timer.is_expired(print_remaining_time=True):
+                        fun_test.sleep("HBM Dump", seconds=60)
+                        if not self.list_files(self.HBM_COLLECT_NOTIFY):
+                            fun_test.log("HBM dump completed")
+                            break
+                except Exception as ex:
+                    fun_test.critical(str(ex))
 
-                        break
                 if hbm_dump_timer.is_expired():
                     fun_test.log("HBM dump timer expired. Giving up ...")
+                self.fs.reset_device_handles()
+                self.fs.renew_device_handles()
+                fun_test.test_assert(self.fs.ensure_is_up(validate_uptime=False), "FS must be up after HBM dump")
+                try:
+                    self.upload_hbm_dump(asset_type=asset_type, asset_id=asset_id)
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
         fun_test.simple_assert(not self.list_files("{}/*core*".format(self.CORES_DIRECTORY)), "Core files detected")
 
 
@@ -2356,6 +2370,7 @@ class Fs(object, ToDictMixin):
         fun_test.register_fs(self)
 
         self.bmc_cleanup_attempted = False
+        self.hbm_dump_detected = False
         self.storage = FsStorage(fs_obj=self)
         self.networking = FsNetworking(fs_obj=self)
         self.platform = FsPlatform(fs_obj=self)
@@ -2563,6 +2578,7 @@ class Fs(object, ToDictMixin):
             except Exception as ex:
                 fun_test.critical(str(ex))
             fun_test.simple_assert(not self.errors_detected, "Errors detected")
+            fun_test.simple_assert(not self.hbm_dump_detected, "HBM dump detected")
         return True
 
     def get_f1_0(self):
@@ -2951,6 +2967,7 @@ class Fs(object, ToDictMixin):
                         fun_test.critical(str(ex))
                     else:
                         come.disconnect()
+                    """
                     if health_result:
                         try:
                             fpga = self.get_fpga()
@@ -2961,6 +2978,7 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                    """
                 result = health_result, health_error_message
 
             except Exception as ex:
@@ -3104,8 +3122,9 @@ class Fs(object, ToDictMixin):
 
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 7
-        fpga = self.get_fpga()
+
         """
+        fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
