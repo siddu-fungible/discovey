@@ -893,11 +893,13 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
-            if self.fs.get_revision() in ["2"]:
-                ERROR_REGEXES.append('i2c write error.*')
-                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
-            for error_regex in ERROR_REGEXES:
-                regex += "{}|".format(error_regex)
+            if self.fs.bundle_compatible:
+                error_regexes = [r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
+                error_regexes.append('i2c write error.*')
+                error_regexes.append(r'smbus read cmd write failed(-6)! master:2')
+
+                for error_regex in error_regexes:
+                    regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
             with open(file_name, "r") as f:
                 content = f.read()
@@ -1034,12 +1036,14 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 if self.fs.bundle_image_parameters:
+                    """
                     try:
                         bmc.upload_bundle_f1_logs(prefix="pre-boot")
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     bmc.clear_bundle_f1_logs()
                     bmc.start_bundle_f1_logs()
+                    """
 
                 come = fs.get_come()
                 fs.get_bundle_version()
