@@ -372,63 +372,65 @@ class SingleBltSingleHost(FunTestCase):
         else:
             host_numa_cpus = self.host.spec["cpus"]["numa_node_ranges"][numa_node_to_use]
 
-        try:
-            # Start stats collection
-            ezfio_runtime = 5 * 3600
-            mpstat_artifact_file, mpstat_pid = \
-                start_mpstat(host_handle=end_host_thread, runtime=ezfio_runtime,
-                             stats_args=self.mpstat_args)
-            stats_obj = start_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, vol_details=vol_details,
-                                          runtime=ezfio_runtime, interval=60, stats_list=self.stats_collect_details)
-            ezfio_output = ezfio_run(host_handle=end_host_thread,
-                                     ezfio_path=self.ezfio_host_path,
-                                     device=self.host.nvme_block_device_list[0],
-                                     output_dest=outputdir_name,
-                                     dev_util=100, host_index=0, cpu_list=host_numa_cpus,
-                                     timeout=ezfio_runtime)
-            fun_test.test_assert("COMPLETED!" in ezfio_output, message="Ezfio completed successful")
+        # Start stats collection
+        ezfio_runtime = 5 * 3600
+        mpstat_artifact_file, mpstat_pid = \
+            start_mpstat(host_handle=end_host_thread, runtime=ezfio_runtime,
+                         stats_args=self.mpstat_args)
+        stats_obj = start_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, vol_details=vol_details,
+                                      runtime=ezfio_runtime, interval=60, stats_list=self.stats_collect_details)
+        ezfio_output = ezfio_run(host_handle=end_host_thread,
+                                 ezfio_path=self.ezfio_host_path,
+                                 device=self.host.nvme_block_device_list[0],
+                                 output_dest=outputdir_name,
+                                 dev_util=100, host_index=0, cpu_list=host_numa_cpus,
+                                 timeout=ezfio_runtime)
+        fun_test.test_assert("COMPLETED!" in ezfio_output, message="Ezfio completed successful")
 
-            file_match_obj = re.search("Spreadsheet file: (.*\.ods)", ezfio_output)
-            ezfio_ods_file = None
-            if file_match_obj:
-                ezfio_ods_file = file_match_obj.group(1)
+        # Stop mpstat logs
+        stop_mpstat(host_handle=end_host_thread, stats_args=self.mpstat_args,
+                    mpstat_pid=mpstat_pid, mpstat_artifact_file=mpstat_artifact_file)
+        # Stop funos stats
+        stop_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, stats_obj=stats_obj,
+                         stats_list=self.stats_collect_details)
 
-        except Exception as ex:
-            fun_test.critical("Ezfio failed...{}".format(ex))
-        finally:
-            # Stop mpstat logs
-            stop_mpstat(host_handle=end_host_thread, stats_args=self.mpstat_args,
-                        mpstat_pid=mpstat_pid, mpstat_artifact_file=mpstat_artifact_file)
-            # Stop funos stats
-            stop_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, stats_obj=stats_obj,
-                             stats_list=self.stats_collect_details)
-
-            # Copy ezfio output (.ods file)
-            # Override file name here, since above search doesn't work
-            ezfio_ods_file = "{}/*.ods".format(outputdir_name)
-            if ezfio_ods_file:
-                ezfio_artifact_final_report = fun_test.get_test_case_artifact_file_name(
-                    post_fix_name="{}_ezfio_perf.ods".format(testcase))
-                fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
-                             source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
-                             source_file_path=ezfio_ods_file,
-                             target_file_path=ezfio_artifact_final_report)
-                fun_test.add_auxillary_file(description="Ezfio final test result: *.ods",
-                                            filename=ezfio_artifact_final_report)
-
-            # Tar details* directory and copy it out
-            ezfio_details_dir = end_host_thread.sudo_command("ls -d {}/details_*".format(outputdir_name))
-            ezfio_details_dir = str(ezfio_details_dir).strip()
-            end_host_thread.sudo_command("tar -zcvf {}.tgz {}".format(ezfio_details_dir, ezfio_details_dir))
-
-            ezfio_artifact_tarball = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_ezfio_detailed_logs.tgz".format(testcase))
+        # Copy ezfio output (.ods file)
+        ezfio_ods_file = "{}/*.ods".format(outputdir_name)
+        if ezfio_ods_file:
+            ezfio_artifact_final_report = fun_test.get_test_case_artifact_file_name(
+                post_fix_name="{}_ezfio_perf.ods".format(testcase))
             fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
                          source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
-                         source_file_path="{}.tgz".format(ezfio_details_dir),
-                         target_file_path=ezfio_artifact_tarball)
-            fun_test.add_auxillary_file(description="Ezfio detailed test results (tarball)",
-                                        filename=ezfio_artifact_tarball)
+                         source_file_path=ezfio_ods_file,
+                         target_file_path=ezfio_artifact_final_report)
+            fun_test.add_auxillary_file(description="Ezfio final test result: *.ods",
+                                        filename=ezfio_artifact_final_report)
+
+        # Tar details* directory and copy it out
+        ezfio_details_dir = end_host_thread.sudo_command(
+            "pushd {}; ls -d details_*; popd".format(outputdir_name)
+        )
+        ezfio_details_dir = str(ezfio_details_dir).strip()
+        end_host_thread.sudo_command(
+            "pushd {}; tar -zcvf {}.tgz {}; popd".format(outputdir_name, ezfio_details_dir, ezfio_details_dir))
+
+        ezfio_artifact_tarball = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="{}_ezfio_detailed_logs.tgz".format(testcase))
+        fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
+                     source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
+                     source_file_path="{}/{}.tgz".format(outputdir_name, ezfio_details_dir),
+                     target_file_path=ezfio_artifact_tarball)
+        fun_test.add_auxillary_file(description="Ezfio detailed test results (tarball)",
+                                    filename=ezfio_artifact_tarball)
+
+        # Collect syslog from host
+        syslog_artifact_file = fun_test.get_test_case_artifact_file_name(
+            post_fix_name="{}_syslog".format(testcase))
+        fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
+                     source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
+                     source_file_path="/var/log/syslog",
+                     target_file_path=syslog_artifact_file)
+        fun_test.add_auxillary_file(description="Host syslog", filename=syslog_artifact_file)
 
     def cleanup(self):
         pass
