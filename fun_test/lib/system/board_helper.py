@@ -3,6 +3,7 @@ import pexpect
 import dlipower
 import time, os
 import json, commentjson
+import re
 
 class board_helper:
     def __init__(self, target_machine):
@@ -99,3 +100,33 @@ class board_helper:
             print("CRITICAL: There was a problem logging into the BMC : (" + self.BMC + ") " + self.BMCU )
             print(e)
             return( None )
+
+    def fault_stop_heartbeat( self, fnum = 0):
+        # `define F1_SUBSYSTEM_CPC_REG_BLOCK_PUT_1_1_RESET_N_LSB   33
+        # `define F1_SUBSYSTEM_CPC_REG_BLOCK_CUT_2_2_RESET_N_LSB   37
+        # f1_subsystem_cpc_reg                  :0xB0 00 00 00 88
+        bus = self.FBUS.get(fnum, "3" )
+        s = pxssh.pxssh()
+        try:
+            s.login(self.BMC, self.BMCU, self.BMCP)
+            v = 0;            
+            s.sendline("i2c-test -b " + bus + " -s 0x70 -m 1 -rc 9 -d 0x00 0xB0 00 00 00 88"); # f1_subsystem (read)
+            s.prompt()
+            m = re.search("Bytes read:\s+9\s*\n80 (\w+) (\w+) (\w+) (\w+) (\w+) (\w+) (\w+) (\w+)", s.before)
+            if (m):
+                v = 0
+                for i in range(1, 8+1):
+                    v = v << 8 | int(m.group(i), 16)
+                pc1 = 1 << 33 # PUT 1 reset
+                v = v & ~pc1
+                data = "";
+                for i in range(8): 
+                    data = " " + hex(v & 0xff) + data
+                    v >>= 8
+                print( " putting PUT1 into reset new subsystem_cpc_reg CSR value : " + data)
+                s.sendline("i2c-test -b " + bus + " -s 0x70 -m 1 -rc 1 -d 0x01 0xB0 0x00 0x00 0x00 0x88 " + data ); # f1_subsystem (write)
+            else: print(" --- CRITICAL : cannot find I2C read data for subsystem_cpc_reg CSR read" + s.before);
+            s.logout()
+        except pxssh.ExceptionPxssh as e:
+            print("CRITICAL: There was a problem logging into the BMC : (" + self.BMC + ") " + self.BMCU )
+            print(e)
