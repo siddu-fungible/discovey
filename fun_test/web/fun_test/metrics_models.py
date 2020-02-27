@@ -3195,6 +3195,7 @@ class DataPlaneOperationsPerformance(FunModel):
     input_concurrent = models.BooleanField(default=False)
     input_split_performance_data = models.TextField(verbose_name="Split perf data", default={})
     input_platform = models.TextField(default=FunPlatform.F1)
+    input_real_f1 = models.BooleanField(default=False)
     run_time_id = models.IntegerField(default=None, null=True)
     status = models.CharField(max_length=30, verbose_name="Status", default=RESULTS["PASSED"])
 

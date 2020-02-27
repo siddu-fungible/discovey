@@ -1668,6 +1668,7 @@ class MetricParser():
                 self.metrics["input_action_type"] = line["action_type"]
                 self.metrics["input_split_performance_data"] = line["split_performance_data"] if \
                     "split_performance_data" in line else "{}"
+                self.metrics["input_real_f1"] = line["real_f1"] if "real_f1" in line else False
 
                 self.status = RESULTS["PASSED"]
                 date_time = self.get_time_from_timestamp(line["date_time"])
