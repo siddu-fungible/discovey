@@ -2963,6 +2963,13 @@ class Fs(object, ToDictMixin):
                             health_result = come.ensure_expected_containers_running(max_time=15)
                             if not health_result:
                                 fun_test.critical("Expected container not running")
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds,
+                                                                                                    with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     else:
@@ -2978,6 +2985,12 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds, with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     """
                 result = health_result, health_error_message
 

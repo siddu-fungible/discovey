@@ -934,7 +934,8 @@
       "outlet_number": 1,
       "password": "Precious1*",
       "host_ip": "cab02-pdu1"
-    }
+    },
+    "num_ssds": 24
   },
   {
     "name": "fs-168",
