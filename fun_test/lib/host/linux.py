@@ -994,42 +994,6 @@ class Linux(object, ToDictMixin):
                 result["size"] = int(m.group(1))
         return result
 
-    def create_sub_interfaces(self, num_sub_interfaces=None, interface="enp216s0", netmask='255.255.255.0'):
-        sub_interface_ip_list = []
-        if num_sub_interfaces == None or num_sub_interfaces >= 128:
-            fun_test.test_assert(False, message="Cannot create {} subinterfaces".format(num_sub_interfaces))
-            return sub_interface_ip_list
-
-        interface_ip = self.sudo_command("ifconfig {} | grep inet".format(interface))
-        m = re.search("inet\s(\d+\.\d+\.\d+\.\d+)", interface_ip)
-        if m:
-            interface_ip = m.group(1)
-        else:
-            return sub_interface_ip_list
-        index = int(interface_ip[-1])
-        for i in range(1, num_sub_interfaces + 1):
-            sub_port = index + i
-            sub_interface_ip = interface_ip[:-1] + str(sub_port)
-            op = self.sudo_command("ifconfig {}:{} {} netmask {} up".format(interface, sub_port,
-                                                                            sub_interface_ip, netmask))
-            if op != '':
-                fun_test.test_assert(False, message="Sub interface creation failed with {}".format(op))
-            sub_interface_ip_list.append(sub_interface_ip)
-        return sub_interface_ip_list
-
-    def clear_sub_interfaces(self, interface="enp216s0"):
-        output = self.sudo_command("ifconfig | grep {}".format(interface))
-        output = output.split("\r\n")
-        for line in output:
-            m = re.search("{}:(\d+)".format(interface), line)
-            if m:
-                suffix = int(m.group(1))
-                op = self.sudo_command("ifconfig {}:{} down".format(interface, suffix))
-                if op != '':
-                    fun_test.log("Cleaning sub interface {}:{} failed".format(interface, suffix))
-                    return False
-        return True
-
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
         result = False
