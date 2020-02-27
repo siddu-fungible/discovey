@@ -50,7 +50,7 @@ class VolumeManagement(FunTestCase):
         self.topology = fun_test.shared_variables["topology"]
         fs_obj_list = []
         for dut_index in self.topology.get_available_duts().keys():
-            self.fs_obj = self.topology.get_dut_instance( index=dut_index )
+            self.fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(self.fs_obj)
 
         if ec_vol:
@@ -205,5 +205,5 @@ class ECVolMultipleAttach(VolumeManagement):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(RawVolMultipleAttach())
-    setup_bringup.add_test_case(ECVolMultipleAttach())
+    #setup_bringup.add_test_case(ECVolMultipleAttach())
     setup_bringup.run()

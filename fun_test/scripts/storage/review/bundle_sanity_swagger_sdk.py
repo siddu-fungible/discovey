@@ -37,6 +37,7 @@ class GenericStorageTest(FunTestCase):
     VOL_TYPE = VolumeTypes().LOCAL_THIN
     IO_DEPTH = 2
     CAPACITY = 1073741824
+    already_deployed = False
 
     def describe(self):
         self.set_test_details(id=self.test_case_id,
@@ -63,7 +64,7 @@ class GenericStorageTest(FunTestCase):
         elif self.VOL_TYPE == VolumeTypes().EC:
             self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
 
-        self.storage_controller_template.initialize(already_deployed=False)
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed)
 
         fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
@@ -204,6 +205,7 @@ class BltApiStorageTest(GenericStorageTest):
 class EcApiStorageTest(GenericStorageTest):
     VOL_TYPE = VolumeTypes().EC
     test_case_id = 3
+    already_deployed = True
 
     def describe(self):
         self.set_test_details(id=self.test_case_id,

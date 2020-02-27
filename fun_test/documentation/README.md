@@ -12,6 +12,7 @@ fun_test has the following layout
 ### Quick-start (without the web-server)
 ~~~~
 cd /project/users/QA/regression/Integration/fun_test
+mkdir -p web/static/logs
 export PYTHONPATH=`pwd`
 pip install -r requirements.txt --user
 python scripts/examples/sanity.py

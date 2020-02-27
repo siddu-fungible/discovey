@@ -893,11 +893,13 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
-            if self.fs.get_revision() in ["2"]:
-                ERROR_REGEXES.append('i2c write error.*')
-                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
-            for error_regex in ERROR_REGEXES:
-                regex += "{}|".format(error_regex)
+            if self.fs.bundle_compatible:
+                error_regexes = [r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
+                error_regexes.append('i2c write error.*')
+                error_regexes.append(r'smbus read cmd write failed(-6)! master:2')
+
+                for error_regex in error_regexes:
+                    regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
             with open(file_name, "r") as f:
                 content = f.read()
@@ -1034,12 +1036,14 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 if self.fs.bundle_image_parameters:
+                    """
                     try:
                         bmc.upload_bundle_f1_logs(prefix="pre-boot")
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     bmc.clear_bundle_f1_logs()
                     bmc.start_bundle_f1_logs()
+                    """
 
                 come = fs.get_come()
                 fs.get_bundle_version()
@@ -1965,9 +1969,10 @@ class ComE(Linux):
                                                              asset_id=asset_id,
                                                              artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                              artifact_sub_category=self.fs.ArtifactSubCategory.COME,
-                                                             is_large_file=True,
+                                                             is_large_file=False,
                                                              timeout=60)
-                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+                fun_test.log("HBM dump available at: {}".format(hbm_uploaded_path))
+                fun_test.report_message("HBM dump available at: {}".format(hbm_uploaded_path))
 
 
     def cleanup(self):
@@ -2963,6 +2968,13 @@ class Fs(object, ToDictMixin):
                             health_result = come.ensure_expected_containers_running(max_time=15)
                             if not health_result:
                                 fun_test.critical("Expected container not running")
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds,
+                                                                                                    with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     else:
@@ -2978,6 +2990,12 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds, with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     """
                 result = health_result, health_error_message
 

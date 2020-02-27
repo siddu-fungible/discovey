@@ -167,8 +167,7 @@ class StorageControllerOperationsTemplate:
                     dpu_id = node + "." + str(f1_index)
                     dpu_status = self.ensure_dpu_online(storage_controller=storage_controller,
                                                         dpu_id=dpu_id, raw_api_call=True)
-                    fun_test.add_checkpoint(expected=True, actual=dpu_status,
-                                            checkpoint="DPU {} is online".format(dpu_id))
+                    fun_test.test_assert_expected(expected=True, actual=dpu_status, message="DPU {} is online".format(dpu_id))
                     if dpu_status:
                         result += 1
 
@@ -523,7 +522,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         return result
 
     def nvme_connect_from_host(self, host_obj, subsys_nqn, host_nqn, dataplane_ip,
-                               transport_type='tcp', transport_port=4420, nvme_io_queues=None):
+                               transport_type='tcp', transport_port=4420, host_ip=None, nvme_io_queues=None):
         """
 
         :param host_obj: host handle from topology
@@ -543,7 +542,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         fun_test.test_assert(expression=host_linux_handle.ping(dst=dataplane_ip), message="Ping datapalne IP from Host")
         nvme_connect_command = host_linux_handle.nvme_connect(target_ip=dataplane_ip, nvme_subsystem=subsys_nqn,
                                                               port=transport_port, transport=transport_type,
-                                                              nvme_io_queues=nvme_io_queues, hostnqn=host_nqn)
+                                                              nvme_io_queues=nvme_io_queues, hostnqn=host_nqn,
+                                                              host_ip=host_ip)
         return nvme_connect_command
 
     def get_host_nvme_device(self, host_obj, subsys_nqn=None, nsid=None):

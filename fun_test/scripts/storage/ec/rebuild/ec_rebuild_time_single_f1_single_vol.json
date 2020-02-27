@@ -32,6 +32,7 @@
     "api_server_up_timeout": 300
   },
   "ECVolRebuildSingleDiskFailure": {
+    "test_rail_case_id": ["C16369"],
     "ec_info": {
       "volume_types": {
         "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
