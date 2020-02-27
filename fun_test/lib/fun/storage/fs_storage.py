@@ -25,6 +25,7 @@ class FsStorage:
             ssd_info_f1 = self.nvme_ssds(f1_index)
             ssd_present_count += len(ssd_info_f1)
         if ssd_present_count != num_ssds:
+            result = False
             error_message += "Expected ssds: {}, actual ssds: {}".format(num_ssds, ssd_present_count)
         if with_error_details:
             result = result, error_message
