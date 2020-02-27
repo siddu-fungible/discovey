@@ -1743,7 +1743,10 @@ class ComE(Linux):
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
         self.sudo_command("chmod 777 {}".format(target_file_name))
-        self.sudo_command("{} install".format(target_file_name), timeout=720)
+        command = "{} install".format(target_file_name)
+        if fun_test.fungible_controller_enabled:
+            command = "{} install-nosc".format(target_file_name)
+        self.sudo_command(command, timeout=720)
         exit_status = self.exit_status()
         if exit_status:
             self.fs.bundle_install_failure_reset_required = True
