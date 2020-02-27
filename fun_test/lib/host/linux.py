@@ -2902,7 +2902,7 @@ class Linux(object, ToDictMixin):
         return iostat_output
 
     def nvme_connect(self, target_ip, nvme_subsystem, port=1099, transport="tcp", nvme_io_queues=None, hostnqn=None,
-                     retries=2, timeout=61):
+                    host_ip=None, retries=2, timeout=61):
         result = False
         nvme_connect_cmd = "nvme connect -t {} -a {} -s {} -n {}".format(transport.lower(), target_ip, port,
                                                                          nvme_subsystem)
@@ -2910,6 +2910,8 @@ class Linux(object, ToDictMixin):
             nvme_connect_cmd += " -i {}".format(nvme_io_queues)
         if hostnqn:
             nvme_connect_cmd += " -q {}".format(hostnqn)
+        if host_ip:
+            nvme_connect_cmd += " -w {}".format(host_ip)
 
         for i in range(retries):
             try:
