@@ -994,6 +994,65 @@ class Linux(object, ToDictMixin):
                 result["size"] = int(m.group(1))
         return result
 
+    def create_sub_interfaces(self, num_sub_interfaces=None, interface="enp216s0", netmask='255.255.255.0'):
+        """
+        root@cab04-qa-05:~# ifconfig enp216s0 | grep inet
+        inet 15.1.45.2  netmask 255.255.255.0  broadcast 15.1.45.255
+        inet6 fe80::ba59:9fff:fe17:2f4c  prefixlen 64  scopeid 0x20<link>
+        root@cab04-qa-05:~#
+
+        :param num_sub_interfaces: Number of sub interfaces to be created with ip address to use in nvme connect
+               restricted to 127 now, change if needed more, later
+        :param interface: interface name; different for different hosts or VMs
+        :param netmask: Netmask is fixed for now, can be changed in future
+        :return: list of sub_interfaces created
+        """
+        sub_interface_ip_list = []
+        if num_sub_interfaces is None or num_sub_interfaces >= 128:
+            fun_test.test_assert(False, message="Cannot create {} subinterfaces".format(num_sub_interfaces))
+            return sub_interface_ip_list
+
+        interface_ip = self.sudo_command("ifconfig {} | grep inet".format(interface))
+        m = re.search("inet\s(\d+\.\d+\.\d+\.\d+)", interface_ip)
+        if m:
+            interface_ip = m.group(1)
+        else:
+            return sub_interface_ip_list
+        index = int(interface_ip[-1])
+        for i in range(1, num_sub_interfaces + 1):
+            sub_port = index + i
+            sub_interface_ip = interface_ip[:-1] + str(sub_port)
+            op = self.sudo_command(
+                "ifconfig {}:{} {} netmask {} up".format(interface, sub_port, sub_interface_ip, netmask))
+            if op != '':
+                fun_test.test_assert(False, message="Sub interface creation failed with {}".format(op))
+            sub_interface_ip_list.append(sub_interface_ip)
+        return sub_interface_ip_list
+
+    def clear_sub_interfaces(self, interface="enp216s0"):
+        """
+        root@cab04-qa-05:~# ifconfig | grep enp216s0
+        enp216s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        enp216s0:3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        enp216s0:4: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        enp216s0:5: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        root@cab04-qa-05:~#
+
+        :param interface: interface name on which sub interfaces needs to be cleared
+        :return: True or False, based on successful deletion of interfaces or not
+        """
+        output = self.sudo_command("ifconfig | grep {}".format(interface))
+        output = output.split("\r\n")
+        for line in output:
+            m = re.search("{}:(\d+)".format(interface), line)
+            if m:
+                suffix = int(m.group(1))
+                op = self.sudo_command("ifconfig {}:{} down".format(interface, suffix))
+                if op != '':
+                    fun_test.log("Cleaning sub interface {}:{} failed".format(interface, suffix))
+                    return False
+        return True
+
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
         result = False
