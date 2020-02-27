@@ -729,6 +729,8 @@ class ScaleMaxAttached(FunTestCase):
         fs_obj = self.fs_obj_list[0]
         attach_result_len = len(attach_result)
         host_obj = hosts[0]
+        fun_test.shared_variables["host_obj"] = host_obj
+        all_nvme_device_names = []
         print "len:", len, " all attached vols:", attach_result_len
         threads = list()
         for ctr in range(attach_result_len):
@@ -739,6 +741,7 @@ class ScaleMaxAttached(FunTestCase):
                                                                                          'data']['subsys_nqn'],
                                                                                      nsid=attach_result[ctr][
                                                                                          'data']['nsid'])
+            all_nvme_device_names.append(nvme_device_name)
             '''
             storage_traffic_obj = StorageTrafficTemplate(storage_operations_template=self.storage_controller_template)
             traffic_result = storage_traffic_obj.fio_basic(host_obj=host_obj.get_instance(), filename=nvme_device_name)
@@ -760,16 +763,30 @@ class ScaleMaxAttached(FunTestCase):
             fio_thread(host_obj=host_obj, nvme_device=nvme_device_name,
                        storage_controller_template=self.storage_controller_template)
             '''
-            for index, thread in enumerate(threads):
-                print "before joining thread"
-                thread.join()
-                print "thread done"
+
+        fun_test.shared_variables["all_nvme_device_names"] = all_nvme_device_names
+
+        for index, thread in enumerate(threads):
+            print "before joining thread"
+            thread.join()
+            print "thread done"
 
     def cleanup(self):
         created_vols = fun_test.shared_variables["created_vols"]
         created_ports = fun_test.shared_variables["created_ports"]
         fs_obj_list = fun_test.shared_variables["fs_obj_list"]
         fs_obj = self.fs_obj_list[0]
+        host_obj = fun_test.shared_variables["host_obj"]
+        all_nvme_device_names = fun_test.shared_variables["all_nvme_device_names"]
+        host_handle = host_obj.get_instance()
+
+        # disconnect first
+        for counter in range(len(all_nvme_device_names)):
+            device = all_nvme_device_names[counter]
+            host_handle.nvme_disconnect(device=device)
+            fun_test.add_checkpoint(checkpoint="Disconnect NVMe device: {} from host {}".
+                                    format(device, host_obj.name))
+        # detach and delete
         for counter in range(len(created_vols)):
             # Lets wait for some time before we detach
             fun_test.sleep("Lets wait for some time before we detach..", seconds=5)
@@ -781,6 +798,7 @@ class ScaleMaxAttached(FunTestCase):
             delete_vol_result = delete(fs_obj, vol_uuid)
             print "delete_vol_result:", delete_vol_result
             fun_test.test_assert(expression=delete_vol_result, message="Delete Volume Successful")
+
         self.storage_controller_template.cleanup(fun_test.is_current_test_case_failed())
 
 
