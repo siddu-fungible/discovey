@@ -20,7 +20,11 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
+        job_inputs = fun_test.get_job_inputs()
         already_deployed = False
+        if "already_deployed" in job_inputs:
+            already_deployed = job_inputs["already_deployed"]
+
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -51,14 +55,17 @@ class blt_data_integrity(FunTestCase):
 
     def setup(self,encrypt=False):
         self.testcase = self.__class__.__name__
+        job_inputs = fun_test.get_job_inputs()
+        capacity = int(16*1024*1024*1024)
+        # capacity = 1600143753216 - 3*4096
+        if "capacity" in job_inputs:
+            capacity = job_inputs["capacity"]
 
 
         self.topology = fun_test.shared_variables["topology"]
         self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
         self.name = 2
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = int(16*1024*1024*1024)
-        # capacity = 1600143753216 - 3*4096
 
 
         body_volume_intent_create = BodyVolumeIntentCreate(name="blt_vol"+str(self.name), vol_type=vol_type, capacity=capacity,
@@ -72,7 +79,7 @@ class blt_data_integrity(FunTestCase):
         # creates volume on all available FS's list
         self.vol_base_uuid_list = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=self.vol_base_uuid_list, message="Create BLT Volume Successful {}".format(self.vol_base_uuid_list))
+        fun_test.test_assert(expression=self.vol_base_uuid_list, message="Created BLT Volume {} with capacity {} Bytes".format(self.vol_base_uuid_list,capacity))
         self.hosts = self.topology.get_available_host_instances()
 
         for index, fs_obj in enumerate(self.fs_obj_list):
@@ -81,6 +88,16 @@ class blt_data_integrity(FunTestCase):
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+
+        # # Populating the NVMe devices available to the hosts
+
+        for host in self.hosts:
+            nvme_device_name = self.storage_controller_template._get_fungible_nvme_namespaces(
+                                        host_handle=host.get_instance())
+            fun_test.log("Available NVMe devices: {}".format(nvme_device_name))
+            fun_test.test_assert_expected(expected=1,
+                                          actual=len(nvme_device_name),
+                                          message="Expected NVMe devices are available")
 
     def run(self):
         modes = [("write", "read"), ("write", "randread"), ("randwrite", "read"), ("randwrite", "randread")]
@@ -99,11 +116,11 @@ class blt_data_integrity(FunTestCase):
                 for bsz in bsizes:
                     fio_write_cmd_args = {"ioengine": "libaio", "size": "100%", "rw": wmode, "direct": 1,
                                           "prio": 0, "iodepth": 64, "bs": bsz, "numjobs": 1, "do_verify": 0,
-                                          "verify": "md5", "cpus_allowed_policy": "split","timeout": 7200}
+                                          "verify": "md5", "cpus_allowed_policy": "split","timeout": 3600, "refill_buffers":"NO_VALUE"}
 
                     fio_read_cmd_args = {"ioengine": "libaio", "size": "100%", "rw": rmode, "direct": 1,
                                           "prio": 0, "iodepth": 64, "bs": bsz, "numjobs": 1, "do_verify": 1,
-                                          "verify": "md5", "cpus_allowed_policy": "split", "timeout": 7200}
+                                          "verify": "md5", "cpus_allowed_policy": "split", "timeout": 3600}
 
                     fio_output = host.get_instance().pcie_fio(filename=nvme_device_name[0],
                                                               cpus_allowed=host_numa_cpus,
