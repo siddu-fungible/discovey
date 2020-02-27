@@ -79,7 +79,7 @@ class blt_data_integrity(FunTestCase):
         # creates volume on all available FS's list
         self.vol_base_uuid_list = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                        body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=self.vol_base_uuid_list, message="Created BLT Volume {} with capacity {}".format(self.vol_base_uuid_list,capacity))
+        fun_test.test_assert(expression=self.vol_base_uuid_list, message="Created BLT Volume {} with capacity {} Bytes".format(self.vol_base_uuid_list,capacity))
         self.hosts = self.topology.get_available_host_instances()
 
         for index, fs_obj in enumerate(self.fs_obj_list):
@@ -90,17 +90,14 @@ class blt_data_integrity(FunTestCase):
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
         # # Populating the NVMe devices available to the hosts
-        #
-        # for host in self.hosts:
-        #     host.nvme_block_device_list = []
-        #     for namespace in self.blt_template.host_nvme_device[host]:
-        #         host.nvme_block_device_list.append("/dev/{}".format(namespace))
-        #     fun_test.log("Available NVMe devices: {}".format(host.nvme_block_device_list))
-        #     fun_test.test_assert_expected(expected=host.num_volumes,
-        #                                   actual=len(host.nvme_block_device_list),
-        #                                   message="Expected NVMe devices are available")
-        #     host.nvme_block_device_list.sort()
-        #     host.fio_filename = ":".join(host.nvme_block_device_list)
+
+        for host in self.hosts:
+            nvme_device_name = self.storage_controller_template._get_fungible_nvme_namespaces(
+                                        host_handle=host.get_instance())
+            fun_test.log("Available NVMe devices: {}".format(nvme_device_name))
+            fun_test.test_assert_expected(expected=1,
+                                          actual=len(nvme_device_name),
+                                          message="Expected NVMe devices are available")
 
     def run(self):
         modes = [("write", "read"), ("write", "randread"), ("randwrite", "read"), ("randwrite", "randread")]
