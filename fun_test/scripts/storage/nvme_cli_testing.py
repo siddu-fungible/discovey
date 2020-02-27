@@ -303,7 +303,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="Run all nvme Get Feature commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -403,7 +403,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
                     #Validate the get feature values
                     #TBD
 
-            fun_test.test_assert(expression=test_result, message="Identify test result")
+            fun_test.test_assert(expression=test_result, message="Get Feature test result")
 
             #traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
             #                                                                    filename="/dev/"+nvme_device_name)
@@ -419,7 +419,7 @@ class RunNvmeGetLogCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=3,
                               summary="Run all nvme Get Log commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -609,7 +609,7 @@ class RunNvmeGetPropertyCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=4,
                               summary="Run all nvme Get Property commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -713,7 +713,7 @@ class RunNvmeOtherCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=5,
                               summary="Run P2 NVME CLI commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -876,7 +876,7 @@ class RunNvmeIOCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary="Run NVME IO commands",
                               steps='''
                               1. Make sure API server is up and running
