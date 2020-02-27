@@ -1,4 +1,5 @@
 from lib.system.fun_test import *
+fun_test.enable_storage_api()
 from lib.system import utils
 from lib.fun.fs import Fs
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate

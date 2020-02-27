@@ -3528,10 +3528,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-    "mktg-server-14"
-    ]
+    }
   },
   "fs-117": {
     "workarounds": {
