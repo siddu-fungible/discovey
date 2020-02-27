@@ -1980,43 +1980,51 @@ class Linux(object, ToDictMixin):
                     elif stat in ("latency50", "latency90", "latency95", "latency99", "latency9950", "latency9999"):
                         for key in fio_result_dict["jobs"][0][operation].keys():
                             if key == "clat_ns":
-                                for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
-                                    if key.startswith("50.00"):
-                                        stat = "latency50"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("90.00"):
-                                        stat = "latency90"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("95.00"):
-                                        stat = "latency95"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.00"):
-                                        stat = "latency99"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.50"):
-                                        stat = "latency9950"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
-                                    if key.startswith("99.99"):
-                                        stat = "latency9999"
-                                        value = int(round(
-                                            fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
-                                        value /= 1000
-                                        fio_dict[operation][stat] = value
+                                if "percentile" in fio_result_dict["jobs"][0][operation]["clat_ns"]:
+                                    for key in fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"].keys():
+                                        if key.startswith("50.00"):
+                                            stat = "latency50"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["50.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("90.00"):
+                                            stat = "latency90"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["90.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("95.00"):
+                                            stat = "latency95"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["95.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.00"):
+                                            stat = "latency99"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.000000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.50"):
+                                            stat = "latency9950"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.500000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                        if key.startswith("99.99"):
+                                            stat = "latency9999"
+                                            value = int(round(
+                                                fio_result_dict["jobs"][0][operation]["clat_ns"]["percentile"]["99.990000"]))
+                                            value /= 1000
+                                            fio_dict[operation][stat] = value
+                                else:
+                                    fio_dict[operation]["latency50"] = 0
+                                    fio_dict[operation]["latency90"] = 0
+                                    fio_dict[operation]["latency95"] = 0
+                                    fio_dict[operation]["latency99"] = 0
+                                    fio_dict[operation]["latency9950"] = 0
+                                    fio_dict[operation]["latency9999"] = 0
             fun_test.debug(fio_dict)
         except Exception as ex:
             fun_test.critical(ex.message)
