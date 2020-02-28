@@ -109,7 +109,6 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
 
         fun_test.shared_variables["num_volumes"] = self.num_volumes
-        vol_type = VolumeTypes().EC
 
         self.available_hosts = self.topology.get_available_hosts()
         self.host_objs = self.available_hosts.values()
@@ -130,9 +129,10 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
             for i in range(self.num_volumes):
+                name = "EC_" + testcase + "_" + str(num + 1)
                 suffix = utils.generate_uuid(length=4)
-                body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i),
-                                                                   vol_type=vol_type,
+                body_volume_intent_create = BodyVolumeIntentCreate(name=name,
+                                                                   vol_type=self.ec_template.vol_type,
                                                                    capacity=self.ec_info["capacity"],
                                                                    compression_effort=self.ec_info["compression_effort"],
                                                                    allow_expansion=self.ec_info["allow_expansion"],
