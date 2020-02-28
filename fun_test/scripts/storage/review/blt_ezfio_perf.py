@@ -385,7 +385,6 @@ class SingleBltSingleHost(FunTestCase):
                                  output_dest=outputdir_name,
                                  dev_util=100, host_index=0, cpu_list=host_numa_cpus,
                                  timeout=ezfio_runtime)
-        fun_test.test_assert("COMPLETED!" in ezfio_output, message="Ezfio completed successful")
 
         # Stop mpstat logs
         stop_mpstat(host_handle=end_host_thread, stats_args=self.mpstat_args,
@@ -393,18 +392,6 @@ class SingleBltSingleHost(FunTestCase):
         # Stop funos stats
         stop_funos_stats(sc_dpcsh_obj=self.sc_dpcsh_obj, stats_obj=stats_obj,
                          stats_list=self.stats_collect_details)
-
-        # Copy ezfio output (.ods file)
-        ezfio_ods_file = "{}/*.ods".format(outputdir_name)
-        if ezfio_ods_file:
-            ezfio_artifact_final_report = fun_test.get_test_case_artifact_file_name(
-                post_fix_name="{}_ezfio_perf.ods".format(testcase))
-            fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
-                         source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
-                         source_file_path=ezfio_ods_file,
-                         target_file_path=ezfio_artifact_final_report)
-            fun_test.add_auxillary_file(description="Ezfio final test result: *.ods",
-                                        filename=ezfio_artifact_final_report)
 
         # Tar details* directory and copy it out
         ezfio_details_dir = end_host_thread.sudo_command(
@@ -425,12 +412,27 @@ class SingleBltSingleHost(FunTestCase):
 
         # Collect syslog from host
         syslog_artifact_file = fun_test.get_test_case_artifact_file_name(
-            post_fix_name="{}_syslog".format(testcase))
+            post_fix_name="{}_syslog.txt".format(testcase))
         fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
                      source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
                      source_file_path="/var/log/syslog",
                      target_file_path=syslog_artifact_file)
         fun_test.add_auxillary_file(description="Host syslog", filename=syslog_artifact_file)
+
+        # Check the output of ezfio.py script and collect .ods final report
+        fun_test.test_assert("COMPLETED!" in ezfio_output, message="Ezfio completed successful")
+
+        # Copy ezfio output (.ods file)
+        ezfio_ods_file = "{}/*.ods".format(outputdir_name)
+        if ezfio_ods_file:
+            ezfio_artifact_final_report = fun_test.get_test_case_artifact_file_name(
+                post_fix_name="{}_ezfio_perf.ods".format(testcase))
+            fun_test.scp(source_port=end_host_thread.ssh_port, source_username=end_host_thread.ssh_username,
+                         source_password=end_host_thread.ssh_password, source_ip=end_host_thread.host_ip,
+                         source_file_path=ezfio_ods_file,
+                         target_file_path=ezfio_artifact_final_report)
+            fun_test.add_auxillary_file(description="Ezfio final test result: *.ods",
+                                        filename=ezfio_artifact_final_report)
 
     def cleanup(self):
         pass
