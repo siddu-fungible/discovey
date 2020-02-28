@@ -728,10 +728,11 @@ class ECVolumeTestcase(FunTestCase):
                         bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
                         get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
                         status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
-                    if rebuild_completion_time > rebuild_start_time:
+                    if rebuild_completion_time["time"] > rebuild_start_time["time"]:
                         break
                     fun_test.sleep("waiting for rebuild to complete", self.status_interval)
                     fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
+                fun_test.simple_assert(not search_timer.is_expired(), "Rebuild operation is completed")
                 fun_test.log(
                     "Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
                 fun_test.test_assert(rebuild_completion_time["status"], "EC UUID: {} completed at: {}".format(

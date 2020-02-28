@@ -82,6 +82,23 @@ class GenericStorageTest(FunTestCase):
         fun_test.shared_variables["compression_effort_list"] = self.compression_effort_list
         fun_test.shared_variables["encrypt_list"] = self.encrypt_list
 
+    def verify_and_get_required_hosts_list(self, num_hosts):
+        available_hosts_list = []
+        try:
+            if self.testbed_type == "suite-based":
+                self.topology_helper = TopologyHelper()
+                available_hosts_list = OrderedDict(self.topology_helper.get_available_hosts())
+            else:
+                self.fs_hosts_map = utils.parse_file_to_json(SCRIPTS_DIR + "/storage/apple_rev2_fs_hosts_mapping.json")
+                available_hosts_list = self.fs_hosts_map[self.testbed_type]["host_info"]
+        except Exception as ex:
+            fun_test.critical(ex)
+        required_hosts_available = True if (len(available_hosts_list) >= num_hosts) else False
+        fun_test.log("Expected hosts: {}, Available hosts: {}".format(num_hosts, len(available_hosts_list)))
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
+        required_hosts_list = available_hosts_list[:num_hosts]
+        return required_hosts_list
+
     def create_volumes(self):
         total_capacity = 0
         remaining_capacity = 0
@@ -124,22 +141,22 @@ class GenericStorageTest(FunTestCase):
         fun_test.shared_variables["no_of_volumes"] = self.no_of_volumes
         fun_test.shared_variables["capacity"] = self.CAPACITY
         fun_test.shared_variables["vol_type"] = self.VOL_TYPE
+
+        if self.VOL_TYPE == VolumeTypes().LOCAL_THIN:
+            self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
+        elif self.VOL_TYPE == VolumeTypes().EC:
+            self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
+
+        self.storage_controller_template.initialize(already_deployed=self.already_deployed)
         for volume in range(self.no_of_volumes):
             name = "blt_vol_" + str(volume + 1)
             compression_effort = False
             encrypt = False
 
-            if self.VOL_TYPE == VolumeTypes().LOCAL_THIN:
-                self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-            elif self.VOL_TYPE == VolumeTypes().EC:
-                self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
-
             self.body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=self.VOL_TYPE,
                                                                     capacity=self.CAPACITY[volume],
                                                                     compression_effort=compression_effort,
                                                                     encrypt=encrypt, data_protection={})
-
-            self.storage_controller_template.initialize(already_deployed=self.already_deployed)
 
             vol_uuid = self.storage_controller_template.create_volume(fs_obj=self.fs_obj_list,
                                                                       body_volume_intent_create=self.body_volume_intent_create)
@@ -161,36 +178,10 @@ class GenericStorageTest(FunTestCase):
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def attach_volumes(self):
-        self.available_hosts = self.topology.get_available_hosts()
-        self.host_objs = self.available_hosts.values()
-
-        self.host_info = {}
-        # Populating the linux handles of the hosts
-        for host_name, host_obj in self.available_hosts.items():
-            self.host_info[host_name] = {}
-            self.host_info[host_name]["test_interface"] = host_obj.get_test_interface( index=0 )
-            self.host_info[host_name]["ip"] = host_obj.get_test_interface( index=0 ).ip.split( '/' )[0]
-            self.host_info[host_name]["handle"] = host_obj.get_instance()
-
-        # Extracting the host CPUs
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            if host_name.startswith( "cab0" ):
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu( "node[01]" )
-                    self.host_info[host_name]["host_numa_cpus"] = ",".join( host_numa_cpus_filter.values() )
-            else:
-                if self.override_numa_node["override"]:
-                    host_numa_cpus_filter = host_handle.lscpu( self.override_numa_node["override_node"] )
-                    self.host_info[host_name]["host_numa_cpus"] = host_numa_cpus_filter[
-                        self.override_numa_node["override_node"]]
-                else:
-                    self.host_info[host_name]["host_numa_cpus"] = fetch_numa_cpus( host_handle,
-                                                                                    self.ethernet_adapter )
-
-        hosts = self.topology.get_available_hosts()
+        hosts = self.topology.get_available_host_instances()
         for volume in range(self.no_of_volumes):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=self.fs_obj_list[0],
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0],
+                                                                               fs_obj=self.fs_obj_list[0],
                                                                                volume_uuid=self.vol_uuid_list[volume],
                                                                                validate_nvme_connect=True,
                                                                                raw_api_call=True)
@@ -198,7 +189,7 @@ class GenericStorageTest(FunTestCase):
             self.attach_result.append(attach_vol_result)
 
     def run_fio(self):
-        hosts = self.topology.get_available_hosts()
+        hosts = self.topology.get_available_host_instances()
         self.storage_traffic_template = StorageTrafficTemplate(
             storage_operations_template=self.storage_controller_template)
 
@@ -291,7 +282,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
     def cleanup(self):
         self.storage_controller_template.cleanup(test_result_failed=fun_test.is_current_test_case_failed())
         if not fun_test.is_current_test_case_failed():
-            hosts = self.topology.get_available_hosts()
+            hosts = self.topology.get_available_host_instances()
             for host_obj in hosts:
                 self.storage_controller_template.host_diagnostics(host_obj=host_obj.get_instance())
 

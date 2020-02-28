@@ -327,6 +327,7 @@ class FunTest:
         self.checkpoints = {}
         self.script_file_name = ""
         self.storage_api_enabled = False  # Just for backward-compatibility while we switchover to swagger
+        self.fungible_controller_enabled = False
 
     def is_current_test_case_failed(self):
         return self.current_test_case_exception
@@ -354,6 +355,9 @@ class FunTest:
         if not hasattr(self, "storage_api_log_handler"):
             self.storage_api_log_handler = ApiLogHandler()
         return self.storage_api_log_handler
+
+    def enable_fungible_controller(self):
+        self.fungible_controller_enabled = True
 
 
     def get_current_test_case_execution_id(self):

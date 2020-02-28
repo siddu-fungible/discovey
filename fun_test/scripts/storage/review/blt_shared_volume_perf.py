@@ -98,13 +98,15 @@ class SharedVolumePerfTest(FunTestCase):
     def describe(self):
 
         self.set_test_details(id=1,
-                              summary="Create Volume using API and run IO from host",
+                              summary="Sequential read performance for shared volume test with differnt "
+                                      "levels of io_depth",
                               steps='''
-                              1. Make sure API server is up and running
-                              2. Create a Volume using API Call
-                              3. Attach Volume to a remote host
-                              4. Run FIO from host 
-                              ''')
+                              1. Create 8 BLT volumes
+        2. For four hosts, create controller per host
+        3. Connect 8 volumes to all 4 hosts
+        4. Firstly,Run the FIO randwrite test(without verify),
+        5. Secondly, Run the FIO read test with different io_depths
+        ''')
 
     def setup(self):
 
@@ -138,6 +140,8 @@ class SharedVolumePerfTest(FunTestCase):
             self.capacity = job_inputs["capacity"]
         if "blt_count" in job_inputs:
             self.blt_count = job_inputs["blt_count"]
+        if "encrypt" in job_inputs:
+            self.encrypt = job_inputs["encrypt"]
         if "num_hosts" in job_inputs:
             self.num_hosts = job_inputs["num_hosts"]
         if "warmup_jobs" in job_inputs:
@@ -183,7 +187,7 @@ class SharedVolumePerfTest(FunTestCase):
             suffix = utils.generate_uuid(length=4)
             body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i), vol_type=vol_type,
                                                                capacity=self.capacity, compression_effort=False,
-                                                               encrypt=False, data_protection={})
+                                                               encrypt=self.encrypt, data_protection={})
             vol_uuid = self.blt_template.create_volume(self.fs_obj_list, body_volume_intent_create)
             fun_test.test_assert(expression=vol_uuid[0], message="Create Volume Successful")
             self.vol_uuid_list.append(vol_uuid[0])
@@ -275,7 +279,8 @@ class SharedVolumePerfTest(FunTestCase):
         fun_test.shared_variables["hosts"] = self.hosts
 
         # Warming up the volumes
-        self.fio_io_size = 100 / len(self.hosts)
+        self.fio_io_size = self.capacity / len(self.hosts)
+        fio_size_in_mb = self.fio_io_size / (1024 * 1024)
         # self.offsets = ["1%", "26%", "51%", "76%"]
         thread_id = {}
         end_host_thread = {}
@@ -298,7 +303,7 @@ class SharedVolumePerfTest(FunTestCase):
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                size = " --size={}%".format(self.fio_io_size)
+                size = " --size={}mb".format(fio_size_in_mb)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + offset + size + jobs
                 warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
@@ -309,7 +314,7 @@ class SharedVolumePerfTest(FunTestCase):
                                                                  host_index=index,
                                                                  filename="nofile",
                                                                  **warm_up_fio_cmd_args)
-                fio_offset += self.fio_io_size
+                fio_offset += fio_size_in_mb
                 fun_test.sleep("Fio threadzz", seconds=1)
 
         fun_test.sleep("Fio threads started", 10)
@@ -582,15 +587,18 @@ class ConfigPersistenceAfterReset(FunTestCase):
         self.sc_api = StorageControllerApi(api_server_ip=come.host_ip)
         # check the data integrity before reboot
         # self.offsets = ["1%", "26%", "51%", "76%"]
+        # Warming up the volumes
+        self.fio_io_size = self.capacity / len(self.hosts)
+        fio_size_in_mb = self.fio_io_size / (1024 * 1024)
+        # self.offsets = ["1%", "26%", "51%", "76%"]
         thread_id = {}
         end_host_thread = {}
         fio_output = {}
         fio_offset = 1
-        self.fio_io_size = 100
-
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
-            fun_test.log("Verifying data integrity before reboot")
+            host.instance.sudo_command("dmesg -C")  # cleaning the dmesg output of the previous runs
+            fun_test.log("Fio read with data integrity check before reboot")
             fio_output[index] = {}
             end_host_thread[index] = host.instance.clone()
             wait_time = len(self.hosts) - index
@@ -601,19 +609,19 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                # size = " --size={}%".format(self.fio_io_size)
-                warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                #offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
+                #size = " --size={}mb".format(fio_size_in_mb)
+                Read_fio_cmd_args["multiple_jobs"] = self.Read_fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + jobs
-                warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                Read_fio_cmd_args["timeout"] = self.Read_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser,
                                                                  arg1=end_host_thread[index],
                                                                  host_index=index,
                                                                  filename="nofile",
-                                                                 **warm_up_fio_cmd_args)
-                # fio_offset += self.fio_io_size
+                                                                 **Read_fio_cmd_args)
+                fio_offset += fio_size_in_mb
                 fun_test.sleep("Fio threadzz", seconds=1)
 
         fun_test.sleep("Fio threads started", 10)
@@ -624,17 +632,17 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 fun_test.log("FIO Command Output:")
                 fun_test.log(fun_test.shared_variables["fio"][i])
                 fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                     "FIO read test with IO depth 16 in host {}".format(host.name))
+                                     "FIO randwrite test with IO depth 16 in host {}".format(host.name))
                 fio_output[i] = fun_test.shared_variables["fio"][i]
         except Exception as ex:
             fun_test.critical(str(ex))
             fun_test.log("FIO Command Output from host {}:\n {}".format(host.name, fio_output[i]))
-            host.instance.sudo_command("dmesg") # print dmesg output of the host when fio fails
+            host.instance.sudo_command("dmesg")  # print dmesg output of the host when fio fails
 
         aggr_fio_output = {}
         for index, host in enumerate(self.hosts):
             fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                 "FIO test with IO depth 16 in host {}".format(host.name))
+                                 "FIO test with sequential read with data integrity check {}".format(host.name))
             for op, stats in fun_test.shared_variables["fio"][index].items():
                 if op not in aggr_fio_output:
                     aggr_fio_output[op] = {}
@@ -655,7 +663,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 if field == "runtime":
                     aggr_fio_output[op][field] = int(round(value / 1000) / len(self.hosts))
 
-        fun_test.log("Aggregated FIO Command Output after Computation :\n{}".format(aggr_fio_output))
+        fun_test.log("Aggregated FIO read Command Output after Computation :\n{}".format(aggr_fio_output))
 
 
 
@@ -734,16 +742,16 @@ class ConfigPersistenceAfterReset(FunTestCase):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
                 # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
                 # size = " --size={}%".format(self.fio_io_size)
-                warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                Read_fio_cmd_args["multiple_jobs"] = self.Read_fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + jobs
-                warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                Read_fio_cmd_args["timeout"] = self.Read_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
                                                                  func=fio_parser,
                                                                  arg1=end_host_thread[index],
                                                                  host_index=index,
                                                                  filename="nofile",
-                                                                 **warm_up_fio_cmd_args)
+                                                                 **Read_fio_cmd_args)
                 # fio_offset += self.fio_io_size
                 fun_test.sleep("Fio threadzz", seconds=1)
 
@@ -834,8 +842,32 @@ class ConfigPersistenceAfterReset(FunTestCase):
     """
 
 
+class SharedVolumeRandWritePerfTest(SharedVolumePerfTest):
+
+    def describe(self):
+        self.set_test_details(id=3,
+                              summary="Random write performance for shared volume test with different "
+                                      "levels of io_depth",
+                              steps='''
+        1. Create 8 BLT volumes
+        2. For four hosts, create controller per host
+        3. Connect 8 volumes to all 4 hosts
+        4. Firstly,Run the FIO randwrite test(without verify)
+        5. Secondly, Run the FIO read test with different io_depths
+        ''')
+
+    def setup(self):
+        super(SharedVolumeRandWritePerfTest, self).setup()
+
+    def run(self):
+        super(SharedVolumeRandWritePerfTest, self).run()
+
+    def cleanup(self):
+        super(SharedVolumeRandWritePerfTest, self).cleanup()
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(SharedVolumePerfTest())
+    setup_bringup.add_test_case(SharedVolumeRandWritePerfTest())
     setup_bringup.add_test_case(ConfigPersistenceAfterReset())
     setup_bringup.run()

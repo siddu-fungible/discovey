@@ -25,8 +25,7 @@ import logging
 
 # DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
-                 "bug_check on",
+ERROR_REGEXES = ["bug_check on",
                  "platform_halt: exit status 1",
                  "Assertion failed",
                  "Trap exception",
@@ -897,9 +896,10 @@ class Bmc(Linux):
                 error_regexes = [r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
                 error_regexes.append('i2c write error.*')
                 error_regexes.append(r'smbus read cmd write failed(-6)! master:2')
-
-                for error_regex in error_regexes:
-                    regex += "{}|".format(error_regex)
+            else:
+                error_regexes = ERROR_REGEXES
+            for error_regex in error_regexes:
+                regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
             with open(file_name, "r") as f:
                 content = f.read()
@@ -1459,7 +1459,12 @@ class ComE(Linux):
 
         result = True
         containers = self.docker(sudo=True)
-        for expected_container in self.EXPECTED_CONTAINERS:
+        expected_containers = []
+        if self.fs.bundle_compatible:
+            expected_containers.extend(["F1-0", "F1-1"])
+        if not fun_test.fungible_controller_enabled:
+            expected_containers.append("run_sc")
+        for expected_container in expected_containers:
             found = False
             if containers:
                 for container in containers:
@@ -1713,7 +1718,7 @@ class ComE(Linux):
     def _transform_build_number(self):
         pass
 
-    def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
+    def install_build_setup_script(self, build_number, release_train="1.0a_aa", max_installation_time=900):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1744,7 +1749,10 @@ class ComE(Linux):
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
         self.sudo_command("chmod 777 {}".format(target_file_name))
-        self.sudo_command("{} install".format(target_file_name), timeout=720)
+        command = "{} install".format(target_file_name)
+        if fun_test.fungible_controller_enabled:
+            command = "{} install-nosc".format(target_file_name)
+        self.sudo_command(command, timeout=max_installation_time)
         exit_status = self.exit_status()
         if exit_status:
             self.fs.bundle_install_failure_reset_required = True
