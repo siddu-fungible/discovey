@@ -57,7 +57,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
       "timeout": 600
     }
   },
@@ -81,7 +81,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   },
@@ -105,7 +105,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 600
     }
   },
@@ -129,7 +129,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   },
@@ -153,7 +153,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split  --norandommap --randrepeat=0 ",
       "timeout": 600
     }
   },
@@ -177,7 +177,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   },
@@ -201,7 +201,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 600
     }
   },
@@ -225,7 +225,7 @@
     },
     "ethernet_adapter": "Mellanox",
     "warm_up_fio_cmd_args": {
-      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
+      "multiple_jobs": "--rw=randwrite --bs=4k --numjobs=1 --iodepth=16 --direct=1 --do_verify=1 --verify=md5 --serialize_overlap=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 ",
       "timeout": 180
     }
   }
