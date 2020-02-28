@@ -5,6 +5,7 @@ from lib.fun.fs import Fs
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import EcVolumeOperationsTemplate
+from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from lib.host.linux import Linux
@@ -97,12 +98,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
-        if "capacity" in job_inputs:
-            self.capacity = job_inputs["capacity"]
         if "num_volumes" in job_inputs:
             self.num_volumes = job_inputs["num_volumes"]
-        if "num_hosts" in job_inputs:
-            self.num_host = job_inputs["num_hosts"]
         if "test_iteration_count" in job_inputs:
             self.test_iteration_count = job_inputs["test_iteration_count"]
 
@@ -124,6 +121,10 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             self.host_info[host_name]["test_interface"] = host_obj.get_test_interface(index=0)
             self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
             self.host_info[host_name]["handle"] = host_obj.get_instance()
+
+        fun_test.log("test info: capacity: {} ".format(self.ec_info["capacity"]))
+        fun_test.log("test info: num_volumes: {} ".format(self.num_volumes))
+        fun_test.log("test info: test_iteration_count: {} ".format(self.test_iteration_count))
 
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for count in range(self.test_iteration_count):
@@ -153,7 +154,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                                                                      nvme_io_queues=None,
                                                                      volume_is_shared=False)
 
-            # fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
             for host, data in attach_vol_result.items():
                 nvme_connect_result = self.ec_template.nvme_connect_from_host(host_obj=host,
