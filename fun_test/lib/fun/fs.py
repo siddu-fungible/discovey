@@ -1713,7 +1713,7 @@ class ComE(Linux):
     def _transform_build_number(self):
         pass
 
-    def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
+    def install_build_setup_script(self, build_number, release_train="1.0a_aa", max_installation_time=900):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1747,7 +1747,7 @@ class ComE(Linux):
         command = "{} install".format(target_file_name)
         if fun_test.fungible_controller_enabled:
             command = "{} install-nosc".format(target_file_name)
-        self.sudo_command(command, timeout=900)
+        self.sudo_command(command, timeout=max_installation_time)
         exit_status = self.exit_status()
         if exit_status:
             self.fs.bundle_install_failure_reset_required = True
