@@ -129,8 +129,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
             for i in range(self.num_volumes):
-                name = "EC_" + testcase + "_" + str(num + 1)
-                suffix = utils.generate_uuid(length=4)
+                name = "EC_" + testcase + "_" + str(i + 1)
                 body_volume_intent_create = BodyVolumeIntentCreate(name=name,
                                                                    vol_type=self.ec_template.vol_type,
                                                                    capacity=self.ec_info["capacity"],
