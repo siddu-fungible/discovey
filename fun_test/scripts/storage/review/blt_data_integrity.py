@@ -20,6 +20,8 @@ class BringupSetup(FunTestScript):
 
     def setup(self):
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         already_deployed = False
         format_drives = True
         if "already_deployed" in job_inputs:
