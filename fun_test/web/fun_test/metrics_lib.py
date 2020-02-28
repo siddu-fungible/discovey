@@ -355,15 +355,16 @@ class MetricLib():
         return self.create_chart(**kwargs)
 
     def add_child_to_metrics_json(self, parent_internal_chart_name, child_dict):
-        with open(METRICS_BASE_DATA_FILE, "r") as file:
-            metrics = json.load(file, object_pairs_hook=OrderedDict)
-            if len(metrics):
-                returned_dict = self.recurse_and_add_child(metrics_dict=metrics,
-                                                    internal_chart_name=parent_internal_chart_name,
-                                  child_dict=child_dict)
-                if returned_dict["added"]:
-                    with open(METRICS_BASE_DATA_FILE, "w") as out:
-                        json.dump(returned_dict["dict"], out, indent=2)
+        if is_development_mode():
+            with open(METRICS_BASE_DATA_FILE, "r") as file:
+                metrics = json.load(file, object_pairs_hook=OrderedDict)
+                if len(metrics):
+                    returned_dict = self.recurse_and_add_child(metrics_dict=metrics,
+                                                        internal_chart_name=parent_internal_chart_name,
+                                      child_dict=child_dict)
+                    if returned_dict["added"]:
+                        with open(METRICS_BASE_DATA_FILE, "w") as out:
+                            json.dump(returned_dict["dict"], out, indent=2)
 
     def recurse_and_add_child(self, metrics_dict, internal_chart_name, child_dict, return_dict={"added": False}):
         for metric in metrics_dict:
