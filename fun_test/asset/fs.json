@@ -1478,7 +1478,7 @@
     },
    "apc_info": {
       "username": "localadmin",
-      "outlet_number": 21,
+      "outlet_number": 22,
       "password": "Precious1*",
       "host_ip": "cab04-pdu1.fungible.local"
     }
@@ -1511,7 +1511,7 @@
     },
     "apc_info": {
       "username": "localadmin",
-      "outlet_number": 22,
+      "outlet_number": 21,
       "password": "Precious1*",
       "host_ip": "cab04-pdu1.fungible.local"
     }
