@@ -373,7 +373,7 @@ class MetricLib():
                         metric["children"].append(child_dict)
                         return_dict["added"] = True
                         return_dict["dict"] = metrics_dict
-                        return return_dict
+                        break
                     else:
                         return_dict = self.recurse_and_add_child(metrics_dict=metric["children"],
                                                                  internal_chart_name=internal_chart_name,
