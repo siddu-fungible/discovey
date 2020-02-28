@@ -29,12 +29,14 @@ from lib.utilities.send_mail import *
 from web.fun_test.web_interface import get_performance_url
 from django.utils import timezone
 import requests
+from fun_settings import WEB_ROOT_DIR
 
 app_config = apps.get_app_config(app_label=MAIN_WEB_APP)
 atomic_url = get_performance_url() + "/atomic"
 negative_threshold = -5
 positive_threshold = 5
 DEFAULT_BASE_URL = "http://integration.fungible.local"
+METRICS_BASE_DATA_FILE = WEB_ROOT_DIR + "/metrics.json"
 
 
 class MetricLib():
@@ -296,8 +298,9 @@ class MetricLib():
                             print chart.chart_name, jira_id
                             self.delete_jira_info(chart=chart, jira_id=jira_id)
 
-    def create_container(self, chart_name, internal_chart_name, owner_info, source, platform, base_line_date, \
-                         workspace_ids):
+    def create_container(self, chart_name, internal_chart_name, owner_info, platform,
+                         base_line_date,
+                         workspace_ids=[], source="Unknown"):
         data_sets = []
         one_data_set = {}
         one_data_set["name"] = "Scores"
@@ -325,9 +328,10 @@ class MetricLib():
         kwargs["workspace_ids"] = workspace_ids
         return self.create_chart(**kwargs)
 
-    def create_leaf(self, chart_name, internal_chart_name, data_sets, leaf, description, owner_info, source,
-                    positive, y1_axis_title, visualization_unit, metric_model_name, base_line_date,
-                    work_in_progress, children, jira_ids, platform, peer_ids, creator, workspace_ids):
+    def create_leaf(self, chart_name, internal_chart_name, data_sets, owner_info,
+                    positive, y1_axis_title, visualization_unit, metric_model_name, base_line_date, platform,
+                    leaf=True, description="TBD", source="Unknown", work_in_progress=False, children=[], jira_ids=[],
+                    peer_ids=[], creator=TEAM_REGRESSION_EMAIL, workspace_ids=[]):
         kwargs = {}
         kwargs["chart_name"] = chart_name
         kwargs["internal_chart_name"] = internal_chart_name
@@ -349,6 +353,35 @@ class MetricLib():
         kwargs["creator"] = creator
         kwargs["workspace_ids"] = workspace_ids
         return self.create_chart(**kwargs)
+
+    def add_child_to_metrics_json(self, parent_internal_chart_name, child_dict):
+        with open(METRICS_BASE_DATA_FILE, "r") as file:
+            metrics = json.load(file, object_pairs_hook=OrderedDict)
+            if len(metrics):
+                returned_dict = self.recurse_and_add_child(metrics_dict=metrics,
+                                                    internal_chart_name=parent_internal_chart_name,
+                                  child_dict=child_dict)
+                if returned_dict["added"]:
+                    with open(METRICS_BASE_DATA_FILE, "w") as out:
+                        json.dump(returned_dict["dict"], out, indent=2)
+
+    def recurse_and_add_child(self, metrics_dict, internal_chart_name, child_dict, return_dict={"added": False}):
+        for metric in metrics_dict:
+            if not return_dict["added"]:
+                if metric["metric_model_name"] == "MetricContainer" and "reference" not in metric:
+                    if internal_chart_name == metric["name"]:
+                        metric["children"].append(child_dict)
+                        return_dict["added"] = True
+                        return_dict["dict"] = metrics_dict
+                        return return_dict
+                    else:
+                        return_dict = self.recurse_and_add_child(metrics_dict=metric["children"],
+                                                                 internal_chart_name=internal_chart_name,
+                                                                 child_dict=child_dict, return_dict=return_dict)
+                        if return_dict["added"]:
+                            break
+        return return_dict
+
 
     def _get_new_dict(self, chart):
         dict = OrderedDict()
