@@ -1459,7 +1459,12 @@ class ComE(Linux):
 
         result = True
         containers = self.docker(sudo=True)
-        for expected_container in self.EXPECTED_CONTAINERS:
+        expected_containers = []
+        if self.fs.bundle_compatible:
+            expected_containers.extend(["F1-0", "F1-1"])
+        if not fun_test.fungible_controller_enabled:
+            expected_containers.append("run_sc")
+        for expected_container in expected_containers:
             found = False
             if containers:
                 for container in containers:
