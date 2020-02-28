@@ -778,6 +778,11 @@ class RecoveryWithFailures(FunTestCase):
         # Executing NVMe disconnect-all from all the hosts
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
+
+            # Check if host is still accessible and if not then restart them
+            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=240),
+                                 message="Ensure Host {} is reachable after reboot".format(host_name))
+
             nvme_disconnect_cmd = "nvme disconnect-all"
             nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
             nvme_disconnect_exit_status = host_handle.exit_status()
