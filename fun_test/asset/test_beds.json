@@ -322,10 +322,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-    "mktg-server-11"
-    ]
+    }
   },
   "fs-122": {
     "dut_info": {
@@ -519,10 +516,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-    "mktg-server-14"
-    ]
+    }
   },
   "fs-124": {
     "dut_info": {
@@ -3315,10 +3309,7 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info":[
-    "cab02-qa-10-vm03"
-  ]
+    }
   },
   "fs-104": {
     "dut_info": {
@@ -5198,9 +5189,6 @@
     },
     "workarounds": {
       "enable_funcp": true
-    },
-    "host_info": [
-      "cab04-qa-04"
-    ]
+    }
   }
 }
