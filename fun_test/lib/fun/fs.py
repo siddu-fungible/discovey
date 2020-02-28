@@ -1747,7 +1747,7 @@ class ComE(Linux):
         command = "{} install".format(target_file_name)
         if fun_test.fungible_controller_enabled:
             command = "{} install-nosc".format(target_file_name)
-        self.sudo_command(command, timeout=720)
+        self.sudo_command(command, timeout=900)
         exit_status = self.exit_status()
         if exit_status:
             self.fs.bundle_install_failure_reset_required = True
