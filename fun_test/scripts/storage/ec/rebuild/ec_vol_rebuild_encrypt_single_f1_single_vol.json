@@ -76,7 +76,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -133,7 +133,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -190,7 +190,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -247,7 +247,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": false,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -304,7 +304,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": false,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -361,7 +361,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": false,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,
@@ -418,7 +418,7 @@
     "fail_drive": true,
     "rebuild_on_spare_volume": true,
     "rebuild_rate": 80,
-    "rebuild_timeout": 3600,
+    "rebuild_timeout": 1800,
     // failure mode can take random or fixed as its value. If it is fixed, initialize failure_drive_index
     "failure_mode": "random",
     "failure_start_time_ratio": 0.05,

@@ -896,9 +896,10 @@ class Bmc(Linux):
                 error_regexes = [r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
                 error_regexes.append('i2c write error.*')
                 error_regexes.append(r'smbus read cmd write failed(-6)! master:2')
-
-                for error_regex in error_regexes:
-                    regex += "{}|".format(error_regex)
+            else:
+                error_regexes = ERROR_REGEXES
+            for error_regex in error_regexes:
+                regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
             with open(file_name, "r") as f:
                 content = f.read()
