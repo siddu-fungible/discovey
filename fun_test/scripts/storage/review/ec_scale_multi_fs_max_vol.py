@@ -5,6 +5,7 @@ from lib.fun.fs import Fs
 from swagger_client.models.body_volume_intent_create import BodyVolumeIntentCreate
 from lib.topology.topology_helper import TopologyHelper
 from lib.templates.storage.storage_operations_template import EcVolumeOperationsTemplate
+from swagger_client.models.volume_types import VolumeTypes
 from scripts.storage.storage_helper import *
 from scripts.networking.helper import *
 from lib.host.linux import Linux
@@ -16,6 +17,8 @@ Script for C18036: Multi DPU: Maximum number(n*128) of volumes supported(expecte
 
 
 class ECBlockScaleScript(FunTestScript):
+    topology = None
+    testbed_type = fun_test.get_job_environment_variable("test_bed_type")
 
     def describe(self):
         self.set_test_details(steps="""
@@ -24,131 +27,34 @@ class ECBlockScaleScript(FunTestScript):
         """)
 
     def setup(self):
-        # Parsing the global config and assign them as object members
-        config_file = fun_test.get_script_name_without_ext() + ".json"
-        fun_test.log("Config file being used: {}".format(config_file))
-        config_dict = utils.parse_file_to_json(config_file)
-
-        if "GlobalSetup" not in config_dict or not config_dict["GlobalSetup"]:
-            fun_test.critical("Global setup config is not available in the {} config file".format(config_file))
-            fun_test.log("Going to use the script level defaults")
-            self.bootargs = Fs.DEFAULT_BOOT_ARGS
-            self.disable_f1_index = None
-            self.f1_in_use = 0
-            self.syslog = "default"
-            self.command_timeout = 5
-            self.reboot_timeout = 600
-        else:
-            for k, v in config_dict["GlobalSetup"].items():
-                setattr(self, k, v)
-
-        fun_test.log("Global Config: {}".format(self.__dict__))
-
-        # Declaring default values if not defined in config files
-        if not hasattr(self, "dut_start_index"):
-            self.dut_start_index = 0
-        if not hasattr(self, "host_start_index"):
-            self.host_start_index = 0
-        if not hasattr(self, "update_workspace"):
-            self.update_workspace = False
-        if not hasattr(self, "update_deploy_script"):
-            self.update_deploy_script = False
-
-        # Using Parameters passed during execution, this will override global and config parameters
+        job_inputs = {}
         job_inputs = fun_test.get_job_inputs()
-        if not job_inputs:
-            job_inputs = {}
-        fun_test.log("Provided job inputs: {}".format(job_inputs))
-        if "dut_start_index" in job_inputs:
-            self.dut_start_index = job_inputs["dut_start_index"]
-        if "host_start_index" in job_inputs:
-            self.host_start_index = job_inputs["host_start_index"]
-        if "num_hosts" in job_inputs:
-            self.num_hosts = job_inputs["num_hosts"]
-        if "update_workspace" in job_inputs:
-            self.update_workspace = job_inputs["update_workspace"]
-        if "update_deploy_script" in job_inputs:
-            self.update_deploy_script = job_inputs["update_deploy_script"]
-        if "disable_wu_watchdog" in job_inputs:
-            self.disable_wu_watchdog = job_inputs["disable_wu_watchdog"]
-        else:
-            self.disable_wu_watchdog = False
-        if "f1_in_use" in job_inputs:
-            self.f1_in_use = job_inputs["f1_in_use"]
-        if "syslog" in job_inputs:
-            self.syslog = job_inputs["syslog"]
 
+        already_deployed = False
         if "already_deployed" in job_inputs:
-            self.already_deployed = job_inputs["already_deployed"]
-        else:
-            self.already_deployed = False
+            already_deployed = job_inputs["already_deployed"]
 
-        # Deploying of DUTs
-        self.num_duts = int(round(float(self.num_f1s) / self.num_f1_per_fs))
-        fun_test.log("Num DUTs for current test: {}".format(self.num_duts))
+        dpu_index = None if not "num_f1" in job_inputs else range(job_inputs["num_f1"])
 
-        # Pulling test bed specific configuration if script is not submitted with testbed-type suite-based
-        self.testbed_type = fun_test.get_job_environment_variable("test_bed_type")
-        self = single_fs_setup(self)
-
-        # Forming shared variables for defined parameters
-        fun_test.shared_variables["f1_in_use"] = self.f1_in_use
+        # TODO: Check workload=storage in deploy(), set dut params
+        topology_helper = TopologyHelper()
+        self.topology = topology_helper.deploy(already_deployed=already_deployed)
+        fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
-        fun_test.shared_variables["fs_obj"] = self.fs_objs
-        fun_test.shared_variables["come_obj"] = self.come_obj
-        fun_test.shared_variables["f1_obj"] = self.f1_objs
-        fun_test.shared_variables["sc_obj"] = self.sc_objs
-        fun_test.shared_variables["f1_ips"] = self.f1_ips
-        fun_test.shared_variables["host_handles"] = self.host_handles
-        fun_test.shared_variables["host_ips"] = self.host_ips
-        fun_test.shared_variables["numa_cpus"] = self.host_numa_cpus
-        fun_test.shared_variables["total_numa_cpus"] = self.total_numa_cpus
-        fun_test.shared_variables["num_f1s"] = self.num_f1s
-        fun_test.shared_variables["num_duts"] = self.num_duts
-        fun_test.shared_variables["syslog"] = self.syslog
-        fun_test.shared_variables["db_log_time"] = self.db_log_time
-        fun_test.shared_variables["host_info"] = self.host_info
 
-        self.ec_template = EcVolumeOperationsTemplate(topology=self.topology)
-        self.ec_template.initialize(dpu_indexes=[0], already_deployed=self.already_deployed)
-        fun_test.shared_variables["ec_template"] = self.ec_template
+        self.sc_template = EcVolumeOperationsTemplate(topology=self.topology)
+        self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
+        fun_test.shared_variables["ec_template"] = self.sc_template
+
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             self.fs_obj_list.append(fs_obj)
         fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
         
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            # Ensure all hosts are up after reboot
-            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=self.reboot_timeout),
-                                 message="Ensure Host {} is reachable after reboot".format(host_name))
-
-            # TODO: enable after mpstat check is added
-            """
-            # Check and install systat package
-            install_sysstat_pkg = host_handle.install_package(pkg="sysstat")
-            fun_test.test_assert(expression=install_sysstat_pkg, message="sysstat package available")
-            """
-            # Ensure required modules are loaded on host server, if not load it
-            for module in self.load_modules:
-                module_check = host_handle.lsmod(module)
-                if not module_check:
-                    host_handle.modprobe(module)
-                    module_check = host_handle.lsmod(module)
-                    fun_test.sleep("Loading {} module".format(module))
-                fun_test.simple_assert(module_check, "{} module is loaded".format(module))
-
-        # Ensuring connectivity from Host to F1's
-        for host_name in self.host_info:
-            host_handle = self.host_info[host_name]["handle"]
-            for index, ip in enumerate(self.f1_ips):
-                ping_status = host_handle.ping(dst=ip, max_percentage_loss=80)
-                fun_test.test_assert(ping_status, "Host {} is able to ping to {}'s bond interface IP {}".
-                                     format(host_name, self.funcp_spec[0]["container_names"][index], ip))
-
     def cleanup(self):
-        pass
+        self.sc_template.cleanup()
+        self.topology.cleanup()
 
 class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
@@ -192,12 +98,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             setattr(self, k, v)
 
         job_inputs = fun_test.get_job_inputs()
-        if "capacity" in job_inputs:
-            self.capacity = job_inputs["capacity"]
         if "num_volumes" in job_inputs:
             self.num_volumes = job_inputs["num_volumes"]
-        if "num_hosts" in job_inputs:
-            self.num_host = job_inputs["num_hosts"]
         if "test_iteration_count" in job_inputs:
             self.test_iteration_count = job_inputs["test_iteration_count"]
 
@@ -207,7 +109,6 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
 
         fun_test.shared_variables["num_volumes"] = self.num_volumes
-        vol_type = VolumeTypes().EC
 
         self.available_hosts = self.topology.get_available_hosts()
         self.host_objs = self.available_hosts.values()
@@ -220,13 +121,17 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
             self.host_info[host_name]["handle"] = host_obj.get_instance()
 
+        fun_test.log("test info: capacity: {} ".format(self.ec_info["capacity"]))
+        fun_test.log("test info: num_volumes: {} ".format(self.num_volumes))
+        fun_test.log("test info: test_iteration_count: {} ".format(self.test_iteration_count))
+
         # chars = string.ascii_uppercase + string.ascii_lowercase
         for count in range(self.test_iteration_count):
             self.vol_uuid_list = []
             for i in range(self.num_volumes):
-                suffix = utils.generate_uuid(length=4)
-                body_volume_intent_create = BodyVolumeIntentCreate(name=self.name + suffix + str(i),
-                                                                   vol_type=vol_type,
+                name = "EC_" + testcase + "_" + str(i + 1)
+                body_volume_intent_create = BodyVolumeIntentCreate(name=name,
+                                                                   vol_type=self.ec_template.vol_type,
                                                                    capacity=self.ec_info["capacity"],
                                                                    compression_effort=self.ec_info["compression_effort"],
                                                                    allow_expansion=self.ec_info["allow_expansion"],
@@ -248,7 +153,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                                                                      nvme_io_queues=None,
                                                                      volume_is_shared=False)
 
-            # fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
             for host, data in attach_vol_result.items():
                 nvme_connect_result = self.ec_template.nvme_connect_from_host(host_obj=host,
