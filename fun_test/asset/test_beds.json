@@ -4453,6 +4453,22 @@
       }
     }
   },
+  "fs-118": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-118"
+      }
+    }
+  },
+  "fs-162": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-162"
+      }
+    }
+  },
   "fs-139": {
     "dut_info": {
       "0": {
