@@ -167,6 +167,26 @@ class Bmc(Linux):
         return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
 
     @fun_test.safe
+    def upload_logs(self):
+        tgz_file_name = "/tmp/s_{}_logs.tgz".format(fun_test.get_suite_execution_id())
+        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY))
+
+        context_prefix = self._get_context_prefix(data="system_logs.tgz")
+        uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
+                                                 linux_obj=self,
+                                                 source_file_path=tgz_file_name,
+                                                 display_name="System logs",
+                                                 asset_type=self.fs.get_asset_type(),
+                                                 asset_id=self.fs.get_asset_name(),
+                                                 artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                 artifactF_sub_category=self.fs.ArtifactSubCategory.BMC,
+                                                 is_large_file=False,
+                                                 timeout=60)
+        fun_test.report_message("System logs available at {}".format(uploaded_path))
+        self.command("rm -f {}".format(tgz_file_name))
+
+
+    @fun_test.safe
     def ping(self,
              dst,
              count=5,
@@ -801,7 +821,7 @@ class Bmc(Linux):
             asset_id = self.fs.get_asset_name()
             self.fs.bmc_cleanup_attempted = True
 
-        fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
+        fun_test.sleep(message="Allowing time to generate full report", seconds=15, context=self.context)
         post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
@@ -879,6 +899,10 @@ class Bmc(Linux):
                                         artifact_category=self.fs.ArtifactCategory.BRING_UP,
                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
+        try:
+            self.upload_logs()
+        except Exception as ex:
+            fun_test.critical(str(ex))
         try:
             if not self.bundle_compatible:
                 self._reset_microcom()
@@ -3292,4 +3316,5 @@ if __name__ == "__main_22_":
 if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
-    bmc.reset_f1(f1_index=0)
+    bmc.upload_logs()
+    # bmc.reset_f1(f1_index=0)
