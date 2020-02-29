@@ -6,12 +6,16 @@ import json, commentjson
 import re
 
 class board_helper:
-    def __init__(self, target_machine):
-        self.target_machine = target_machine
-        test_board_asset = self.find_asset(target_machine)
-        if(test_board_asset["apc_info"] is None):
-            print("No apc_info for : " + str(target_machine))
-            return(None)
+    def __init__(self, target_machine): ## target_machine is either board name or the SPEC
+        if(isinstance( target_machine , basestring )):
+            self.target_machine = target_machine
+            test_board_asset = self.find_asset(target_machine)
+            if(test_board_asset["apc_info"] is None):
+                print("No apc_info for : " + str(target_machine))
+                return(None)
+        else :
+            self.target_machine = target_machine["name"]
+            test_board_asset = target_machine
         D = test_board_asset["apc_info"]
         self.H = D["host_ip"]
         self.N = D["outlet_number"];

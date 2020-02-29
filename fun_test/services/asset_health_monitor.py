@@ -125,15 +125,15 @@ class TestBedWorker(Thread):
                 instance = am.get_asset_instance(asset=asset_object)
                 self.service.service_assert(instance, "Unable to retrieve asset instance for {}: {}".format(asset_type,
                                                                                                             asset_name))
-                health_result, error_message = instance.health(only_reachability=only_reachability)
+                instance_health_result, instance_error_message = instance.health(only_reachability=only_reachability)
                 if asset_type in [AssetType.HOST, AssetType.PCIE_HOST, AssetType.PERFORMANCE_LISTENER_HOST]:
                     try:
                         instance.disconnect()
                     except:
                         pass
                 final_health_status = self.set_health_status(asset_object=asset_object,
-                                                             health_result=health_result,
-                                                             error_message=error_message)
+                                                             health_result=instance_health_result,
+                                                             error_message=instance_error_message)
                 if final_health_status == AssetHealthStates.DEGRADING:
                     at_least_one_degrading = True
                 if final_health_status == AssetHealthStates.UNHEALTHY:
@@ -141,11 +141,10 @@ class TestBedWorker(Thread):
                 if final_health_status == AssetHealthStates.DISABLED:
                     at_least_one_disabled = True
 
-                if not health_result:
+                if not instance_health_result and not issue_found:
                     issue_found = True
-                    error_message_for_test_bed = error_message
+                    error_message_for_test_bed = instance_error_message
 
-                    break
             if issue_found:
                 self.report_exception("Issue found: {}, {}".format(health_result, error_message))
                 break
