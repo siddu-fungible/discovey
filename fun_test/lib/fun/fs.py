@@ -179,7 +179,7 @@ class Bmc(Linux):
                                                  asset_type=self.fs.get_asset_type(),
                                                  asset_id=self.fs.get_asset_name(),
                                                  artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
-                                                 artifactF_sub_category=self.fs.ArtifactSubCategory.BMC,
+                                                 artifact_sub_category=self.fs.ArtifactSubCategory.BMC,
                                                  is_large_file=False,
                                                  timeout=60)
         fun_test.report_message("System logs available at {}".format(uploaded_path))
