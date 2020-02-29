@@ -1,6 +1,8 @@
-from lib.system.board_helper import board_helper
+from lib.utilities.board_helper import board_helper
 ## -----------------------------------------------------
-B = board_helper("fs-174")
+A = board_helper("fs-174") ## given board name or FS spec
+SPEC = A.find_asset("fs-174")
+B = board_helper(SPEC)
 B.bmc_test(0)
 # B.power_cycle() ## power cycle the power plug of the board
 B.power_cycle( 8 ) # unused port 8 of fs-174 (is off, used for testing)
