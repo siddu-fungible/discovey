@@ -996,11 +996,6 @@ class Linux(object, ToDictMixin):
 
     def create_subinterfaces(self, num_subinterfaces=None, interface="enp216s0", netmask='255.255.255.0'):
         """
-        root@cab04-qa-05:~# ifconfig enp216s0 | grep inet
-        inet 15.1.45.2  netmask 255.255.255.0  broadcast 15.1.45.255
-        inet6 fe80::ba59:9fff:fe17:2f4c  prefixlen 64  scopeid 0x20<link>
-        root@cab04-qa-05:~#
-
         :param num_subinterfaces: Number of sub interfaces to be created with ip address to use in nvme connect
                restricted to 127 now, change if needed more, later
         :param interface: interface name; different for different hosts or VMs
@@ -1038,7 +1033,7 @@ class Linux(object, ToDictMixin):
                 op = self.ifconfig(interface=subinterface, action="down")
                 if not op:
                     clear = False
-        return True
+        return clear
 
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
