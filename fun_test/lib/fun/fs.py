@@ -2988,6 +2988,11 @@ class Fs(object, ToDictMixin):
             bam_result = self.bam()
             if bam_result["status"]:
                 result = True
+            if result and check_expected_containers:
+                come = self.get_come()
+                result = come.ensure_expected_containers_running(max_time=15)
+                if not result:
+                    fun_test.critical("Expected container not running")
         else:
             try:
                 bmc = self.get_bmc()
