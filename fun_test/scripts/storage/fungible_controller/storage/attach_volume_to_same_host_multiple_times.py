@@ -23,7 +23,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -102,7 +102,9 @@ class VolumeManagement(FunTestCase):
             fun_test.test_assert(expression=vol_uuid_dict, message="Create volume{} with uuid {}"
                                  .format(x, vol_uuid_dict[0]))
 
-        self.hosts = self.topology.get_available_hosts()
+        self.hosts = self.topology.get_available_host_instances()
+        required_hosts_available = True if (self.hosts != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         for host_id in self.hosts:
             host_obj = self.hosts[host_id]
             for x in range(1, self.volume_count + 1, 1):
@@ -131,7 +133,9 @@ class VolumeManagement(FunTestCase):
                                                   actual=attach_vol_result[0]['error_message'], message="Volume is already attached" )
 
     def run(self):
-        hosts = self.topology.get_available_hosts()
+        hosts = self.topology.get_available_host_instances()
+        required_hosts_available = True if (hosts != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         if self.run_traffic:
             for host_id in hosts:
                 host_obj = hosts[host_id]

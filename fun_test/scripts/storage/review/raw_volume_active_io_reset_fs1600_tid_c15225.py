@@ -179,6 +179,8 @@ class GenericStorageTest(FunTestCase):
 
     def attach_volumes(self):
         hosts = self.topology.get_available_host_instances()
+        required_hosts_available = True if (hosts != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         for volume in range(self.no_of_volumes):
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0],
                                                                                fs_obj=self.fs_obj_list[0],
@@ -189,7 +191,10 @@ class GenericStorageTest(FunTestCase):
             self.attach_result.append(attach_vol_result)
 
     def run_fio(self):
-        hosts = self.topology.get_available_host_instances()
+        hosts=self.topology.get_available_host_instances()
+        required_hosts_available = True if (hosts != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
+
         self.storage_traffic_template = StorageTrafficTemplate(
             storage_operations_template=self.storage_controller_template)
 
@@ -283,6 +288,8 @@ class ConfigPersistenceAfterReset(FunTestCase):
         self.storage_controller_template.cleanup(test_result_failed=fun_test.is_current_test_case_failed())
         if not fun_test.is_current_test_case_failed():
             hosts = self.topology.get_available_host_instances()
+            required_hosts_available = True if (hosts != None) else False
+            fun_test.test_assert(required_hosts_available, "Required hosts available")
             for host_obj in hosts:
                 self.storage_controller_template.host_diagnostics(host_obj=host_obj.get_instance())
 
