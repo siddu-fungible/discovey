@@ -919,10 +919,12 @@ class FunTest:
 
     def get_logs_directory(self, is_large_file=False):
         result = self.logs_dir
+        '''
         if is_large_file and self.suite_execution_id:
             directory_path = "{}/s_{}".format(LARGE_FILE_STORE, self.suite_execution_id)
             os.system("mkdir -p {}".format(directory_path))
             result = directory_path
+        '''
         return result
 
     def disable_pause_on_failure(self):
