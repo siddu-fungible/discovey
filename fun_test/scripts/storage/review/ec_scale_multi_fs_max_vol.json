@@ -4,6 +4,7 @@
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
     "dut_start_index": 0,
     "host_start_index": 0,
+    "reboot_hosts" : true,
     "update_workspace": false,
     "update_deploy_script": false,
     "funcp_mode": ["ep", "storage"],
