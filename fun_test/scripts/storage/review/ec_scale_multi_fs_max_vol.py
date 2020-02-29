@@ -145,8 +145,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
             # index = 0
             # count = 0
-            hosts = self.topology.get_available_host_instances()
-            attach_vol_result = self.ec_template.attach_m_vol_n_host(host_obj_list=hosts, fs_obj=fs_obj,
+            attach_vol_result = self.ec_template.attach_m_vol_n_host(host_obj_list=self.host_objs, fs_obj=self.fs_obj_list,
                                                                      volume_uuid_list=self.vol_uuid_list,
                                                                      validate_nvme_connect=False,
                                                                      raw_api_call=True,
