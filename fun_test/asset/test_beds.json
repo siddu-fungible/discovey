@@ -4469,6 +4469,84 @@
       }
     }
   },
+  "fs-165": {
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-165",
+        "bond_interface_info": {
+          "0": {
+            "0": {
+              "ip": "192.165.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "192.0.0.0/8",
+                  "gateway": "192.165.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          },
+          "1": {
+            "0": {
+              "ip": "192.165.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "192.0.0.0/8",
+                  "gateway": "192.165.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET_BOND",
+              "fpg_slaves": [
+                0,
+                4
+              ]
+            }
+          }
+        },
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "qfx",
+                "port": "et-0/0/58"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfxx",
+                "port": "et-0/0/59"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "qfx",
+                "port": "et-0/0/34"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            },
+            "4": {
+              "switch_info": {
+                "name": "qfx",
+                "port": "et-0/0/35"
+              },
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      }
+    }
+  },
   "fs-139": {
     "dut_info": {
       "0": {
