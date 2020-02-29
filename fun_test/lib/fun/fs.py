@@ -169,7 +169,7 @@ class Bmc(Linux):
     @fun_test.safe
     def upload_logs(self):
         tgz_file_name = "/tmp/s_{}_logs.tgz".format(fun_test.get_suite_execution_id())
-        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY))
+        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY), timeout=120)
 
         context_prefix = self._get_context_prefix(data="system_logs.tgz")
         uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
@@ -183,7 +183,7 @@ class Bmc(Linux):
                                                  is_large_file=False,
                                                  timeout=60)
         fun_test.report_message("System logs available at {}".format(uploaded_path))
-        self.command("rm -f {}".format(tgz_file_name))
+        self.sudo_command("rm -f {}".format(tgz_file_name))
 
 
     @fun_test.safe
