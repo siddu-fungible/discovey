@@ -39,7 +39,7 @@
   },
   "CreateDeleteMaxVolume": {
     "num_f1": 1,
-    "blt_per_host": 10,
+    "blt_per_host": 1000,
     "num_hosts": 1,
     "capacity": 8589934592,
     "test_iteration_count": 10,
