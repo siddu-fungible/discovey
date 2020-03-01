@@ -217,6 +217,10 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                         size = " --size={}%".format(self.fio_io_size)
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                             fio_cpus_allowed_args + offset + size + jobs
+                    elif not self.shared_volume and self.detach_duringio:
+                        size = " --size=30%"
+                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                                                                fio_cpus_allowed_args + size + jobs
                     else:
                         size = " --size=10%"
                         warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
