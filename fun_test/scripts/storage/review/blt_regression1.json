@@ -1,0 +1,120 @@
+{
+  // patterns:
+  // "C": Create, Create ...(N volumes, no host needed)
+  // "CDl": Create, Delete, Create, Delete, Create, Delete (Same single volume, no host needed)
+  // "CCDlDl" : Create, Create, Delete, Delete (N volumes, no host needed)
+  // "CA" : Create, Attach, Create, Attach...(Different volumes, same host)
+  // "CAA" : Create, Attach, Attach, Attach.... (Same volume, > 1 hosts)
+  // "CCAA" : Create Create (n volumes)..Attach Attach (n hosts)
+  // "CADl": Create Attach Delete create attach delete (single volume, same host, -ve test, detach is needed!)
+  // "CADt" : Create, Attach, Detach, Create, Attach, Detach... (Different Volumes)
+  // "CAADtDt" : Create Attach Atach..Detach Detach.. (single volume, multiple hosts)
+  // "CCAADtDt" : Create Create ..atach Atach.. detach detach.. (n voluems, 1 host)
+  // "CADtADt" : Create, Attach, Detach, Attach, Detach... (Same volume): Done
+  // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...single volume 1 host
+
+  "c17808_1": {
+    "capacity": 4294967296, //4GB
+    "volume_count": 1,
+    "loop_count": 2,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CADtADt",
+    "tcid" : 1
+  },
+  "c17808_2": {
+    "capacity": 8589934592, //8GB
+    "volume_count": 1,
+    "loop_count": 3,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CADtADt",
+    "tcid" : 2
+  },
+   "CCDlDl1": {
+    "capacity": 17179869184, //16GB
+    "volume_count": 3,
+    "loop_count": 1024,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 3
+  },
+  "CADtDl1": {
+    "capacity": 34359738368, //32GB
+    "volume_count": 1024,
+    "loop_count": 2,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 4
+  },
+  "CADtDl2": {
+    "capacity": 68719476736, //64GB
+    "volume_count": 1024,
+    "loop_count": 6,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  },
+  "CreateDeleteNCreateAgain1": {
+    "capacity": 68719476736, //64GB
+    "volume_count": 1024,
+    "loop_count": 2,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  },
+  "C37533_1": {
+    "capacity": 17179869184, //16GB
+    "volume_count": 1,
+    "loop_count": 3,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  },
+  "C37533_2": {
+    "capacity": 17179869184, //16GB
+    "volume_count": 1,
+    "loop_count": 3,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "Y",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
+    "tcid" : 5
+  }
+}
