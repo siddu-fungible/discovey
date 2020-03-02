@@ -13,7 +13,7 @@
   // "CADtADt" : Create, Attach, Detach, Attach, Detach... (Same volume): Done
   // "CADtDl" : Create, Attach, Detach, Delete, Create, Attach, Detach, Delete...single volume 1 host
 
-  "c17808_1": {
+  "c17808": {
     "capacity": 4294967296, //4GB
     "volume_count": 1,
     "loop_count": 2,
@@ -26,36 +26,23 @@
     "pattern": "CADtADt",
     "tcid" : 1
   },
-  "c17808_2": {
+  "C36969": {
     "capacity": 8589934592, //8GB
     "volume_count": 1,
     "loop_count": 3,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
-    "encrypt": "Y",
+    "encrypt": "N",
     "already_deployed": true,
     "format_drive": true,
     "pattern": "CADtADt",
     "tcid" : 2
   },
-   "CCDlDl1": {
+   "C17854": {
     "capacity": 17179869184, //16GB
     "volume_count": 3,
     "loop_count": 1024,
-    "host_count": 1,
-    "fs_count" : 1,
-    "dpu_count" : 1,
-    "encrypt": "Y",
-    "already_deployed": true,
-    "format_drive": true,
-    "pattern": "CCDD",
-    "tcid" : 3
-  },
-  "CADtDl1": {
-    "capacity": 34359738368, //32GB
-    "volume_count": 1024,
-    "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
@@ -63,12 +50,12 @@
     "already_deployed": true,
     "format_drive": true,
     "pattern": "CCDD",
-    "tcid" : 4
+    "tcid" : 3
   },
-  "CADtDl2": {
-    "capacity": 68719476736, //64GB
+  "C36988": {
+    "capacity": 34359738368, //32GB
     "volume_count": 1024,
-    "loop_count": 6,
+    "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
@@ -76,16 +63,29 @@
     "already_deployed": true,
     "format_drive": true,
     "pattern": "CCDD",
+    "tcid" : 4
+  },
+  "C36894": {
+    "capacity": 68719476736, //64GB
+    "volume_count": 1024,
+    "loop_count": 6,
+    "host_count": 1,
+    "fs_count" : 1,
+    "dpu_count" : 1,
+    "encrypt": "N",
+    "already_deployed": true,
+    "format_drive": true,
+    "pattern": "CCDD",
     "tcid" : 5
   },
-  "CreateDeleteNCreateAgain1": {
+  "C36892": {
     "capacity": 68719476736, //64GB
     "volume_count": 1024,
     "loop_count": 2,
     "host_count": 1,
     "fs_count" : 1,
     "dpu_count" : 1,
-    "encrypt": "Y",
+    "encrypt": "N",
     "already_deployed": true,
     "format_drive": true,
     "pattern": "CCDD",
