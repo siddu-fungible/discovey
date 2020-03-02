@@ -1171,6 +1171,13 @@ class BootupWorker(Thread):
                     bmc.stop_bundle_f1_logs()
                     bmc._reset_microcom()
 
+                try:
+                    fun_test.log("Clearing old logs")
+                    if fs.bundle_compatible:
+                        bmc.clear_bundle_f1_logs()
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
                         continue
