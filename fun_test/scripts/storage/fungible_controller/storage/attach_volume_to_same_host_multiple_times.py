@@ -157,10 +157,14 @@ class VolumeManagement(FunTestCase):
             fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
             for volume in get_volume_result["data"]:
                 for port in get_volume_result["data"][volume]["ports"]:
+                    detach_volume = None
+                    detach_result = False
                     detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
-                    fun_test.test_assert(expression=detach_volume.status,
-                                         message="Detach Volume {} from host with remote IP {}".format(
-                                             volume, get_volume_result["data"][volume]['ports'][port]['remote_ip']))
+                    if detach_volume:
+                        detach_result = detach_volume.status
+                    fun_test.add_checkpoint(expected=True, actual=detach_result,
+                                            checkpoint="Detach Volume {} from host with host_nqn {}".format(volume,
+                                                    get_volume_result["data"][volume]['ports'][port]['host_nqn']))
                 delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
                 fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 

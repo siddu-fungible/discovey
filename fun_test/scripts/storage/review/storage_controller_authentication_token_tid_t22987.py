@@ -85,9 +85,9 @@ class CreateDeleteVolume(FunTestCase):
             else:
                 auth_status = False
         else:
-            if (str(response['message']) == "Username or password is incorrect"):
+            if (str(response['error_message']) == "Username or password is incorrect"):
                 auth_message = True
-            elif (str(response['error_message']) == "Token generated"):
+            elif (str(response['message']) == "Token generated"):
                 auth_message = False
             if (response['data'] == ""):
                 auth_token = True
