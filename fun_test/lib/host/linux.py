@@ -994,47 +994,6 @@ class Linux(object, ToDictMixin):
                 result["size"] = int(m.group(1))
         return result
 
-    def create_subinterfaces(self, num_subinterfaces=None, interface="enp216s0", netmask='255.255.255.0'):
-        """
-        :param num_subinterfaces: Number of sub interfaces to be created with ip address to use in nvme connect
-               restricted to 127 now, change if needed more, later
-        :param interface: interface name; different for different hosts or VMs
-        :param netmask: Netmask is fixed for now, can be changed in future
-        :return: list of subinterfaces created
-        """
-        subinterface_ip_list = []
-        interface_info = self.ifconfig(interface=interface)
-        interface_ip = interface_info[0]['ipv4']
-        index = int(interface_ip[-1])
-        for i in range(1, num_subinterfaces + 1):
-            sub_port = index + i
-            subinterface_ip = interface_ip[:-1] + str(sub_port)
-            cmd = "ifconfig {}:{} {} netmask {} up".format(interface, sub_port, subinterface_ip, netmask)
-
-            op = self.sudo_command(cmd)
-            if not op:
-                subinterface_ip_list.append(subinterface_ip)
-
-        return subinterface_ip_list
-
-    def clear_subinterfaces(self, interface="enp216s0"):
-        """
-        :param interface: interface name on which sub interfaces needs to be cleared
-        :return: True or False, based on successful deletion of interfaces or not
-        """
-
-        clear = True
-        data_interface = self.ifconfig(interface)
-        data_ip = data_interface[0]['ipv4']
-        interfaces = self.ifconfig()
-        for intr in interfaces:
-            if interface in intr["interface"] and intr['ipv4'] != data_ip:
-                subinterface = "{}:{}".format(intr['interface'], intr['ipv4'][-1])
-                op = self.ifconfig(interface=subinterface, action="down")
-                if not op:
-                    clear = False
-        return clear
-
     @fun_test.safe
     def enter_sudo(self, preserve_environment=None):
         result = False
@@ -3067,13 +3026,16 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ifconfig(self, interface="", action=None):
+    def ifconfig(self, interface="", ip="", netmask="255.255.255.0", action=None):
 
         result = []
         cmd = "ifconfig"
         if interface:
             cmd += " " + interface
             if action:
+                if ip:
+                    cmd += " " + ip
+                    cmd += " netmask " + netmask
                 cmd += " " + action
 
         ifconfig_output = self.sudo_command(cmd)
