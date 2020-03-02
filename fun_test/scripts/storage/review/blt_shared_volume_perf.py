@@ -280,12 +280,12 @@ class SharedVolumePerfTest(FunTestCase):
 
         # Warming up the volumes
         self.fio_io_size = self.capacity / len(self.hosts)
-        fio_size_in_mb = self.fio_io_size / (1024 * 1024)
+        fio_size_in_mb = size = self.fio_io_size / (1024 * 1024)
         # self.offsets = ["1%", "26%", "51%", "76%"]
         thread_id = {}
         end_host_thread = {}
         fio_output = {}
-        fio_offset = 1
+        fio_offset = 0
 
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
@@ -302,7 +302,7 @@ class SharedVolumePerfTest(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
+                offset = " --offset={}mb".format(fio_offset)
                 size = " --size={}mb".format(fio_size_in_mb)
                 warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + offset + size + jobs
@@ -418,7 +418,9 @@ class SharedVolumePerfTest(FunTestCase):
                 thread_id = {}
                 end_host_thread = {}
                 fio_output = {}
-                fio_offset = 1
+                fio_offset = 0
+                self.fio_io_size = self.capacity / len(self.hosts)
+                fio_size_in_mb = self.fio_io_size / (1024 * 1024)
                 for index, host in enumerate(self.hosts):
                     fun_test.log("After warmup,{} IO to volume, this might take long time depending on fio --size "
                                  "provided".format(mode))
@@ -445,13 +447,14 @@ class SharedVolumePerfTest(FunTestCase):
                         io_depth_string = " --iodepth={}".format(required_io_depth)
                         io_size = self.capacity / num_jobs
                         io_size_string = " --io_size={}".format(io_size)
-                        # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                        # size = " --size={}%".format(self.fio_io_size)
+                        offset = " --offset={}mb".format(fio_offset)
+                        size = " --size={}mb".format(fio_size_in_mb)
                         rw_string = " --rw={}".format(mode)
                         bs_string = " --bs={}".format(self.fio_bs)
                         fio_cmd_args["multiple_jobs"] = self.fio_cmd_args["multiple_jobs"] + \
                                                         fio_cpus_allowed_args + num_jobs_string + \
-                                                        io_depth_string + io_size_string + bs_string + rw_string + jobs
+                                                        io_depth_string + io_size_string + size + offset +\
+                                                        bs_string + rw_string + jobs
                         fio_cmd_args["timeout"] = self.fio_cmd_args["timeout"]
                         fun_test.log("Fio command used is ")
                         fun_test.log(fio_cmd_args["multiple_jobs"])
@@ -461,7 +464,7 @@ class SharedVolumePerfTest(FunTestCase):
                                                                          host_index=index,
                                                                          filename="nofile",
                                                                          **fio_cmd_args)
-                        fio_offset += self.fio_io_size
+                        fio_offset += fio_size_in_mb
                         fun_test.sleep("Fio threadzz", seconds=1)
 
                 fun_test.sleep("Fio threads started", 10)
@@ -592,7 +595,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
         thread_id = {}
         end_host_thread = {}
         fio_output = {}
-        fio_offset = 1
+        fio_offset = 0
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
             host.instance.sudo_command("dmesg -C")  # cleaning the dmesg output of the previous runs
@@ -607,10 +610,10 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                #offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                #size = " --size={}mb".format(fio_size_in_mb)
+                offset = " --offset={}mb".format(fio_offset)
+                size = " --size={}mb".format(fio_size_in_mb)
                 Read_fio_cmd_args["multiple_jobs"] = self.Read_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + jobs
+                                                        fio_cpus_allowed_args + offset + size + jobs
                 Read_fio_cmd_args["timeout"] = self.Read_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -722,8 +725,11 @@ class ConfigPersistenceAfterReset(FunTestCase):
         thread_id = {}
         end_host_thread = {}
         fio_output = {}
-        fio_offset = 1
+        fio_offset = 0
         self.fio_io_size = 100
+        self.fio_io_size = self.capacity / len(self.hosts)
+        fio_size_in_mb = self.fio_io_size / (1024 * 1024)
+
 
         fun_test.shared_variables["fio"] = {}
         for index, host in enumerate(self.hosts):
@@ -738,10 +744,10 @@ class ConfigPersistenceAfterReset(FunTestCase):
                 jobs = ""
                 for id, device in enumerate(host.nvme_block_device_list):
                     jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                # offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                # size = " --size={}%".format(self.fio_io_size)
+                offset = " --offset={}mb".format(fio_offset)
+                size = " --size={}mb".format(fio_size_in_mb)
                 Read_fio_cmd_args["multiple_jobs"] = self.Read_fio_cmd_args["multiple_jobs"] + \
-                                                        fio_cpus_allowed_args + jobs
+                                                        fio_cpus_allowed_args + offset + size + jobs
                 Read_fio_cmd_args["timeout"] = self.Read_fio_cmd_args["timeout"]
 
                 thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
@@ -750,7 +756,7 @@ class ConfigPersistenceAfterReset(FunTestCase):
                                                                  host_index=index,
                                                                  filename="nofile",
                                                                  **Read_fio_cmd_args)
-                # fio_offset += self.fio_io_size
+                fio_offset += fio_size_in_mb
                 fun_test.sleep("Fio threadzz", seconds=1)
 
         fun_test.sleep("Fio threads started", 10)
