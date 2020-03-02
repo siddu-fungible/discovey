@@ -1792,8 +1792,8 @@ class ComE(Linux):
 
         ### Workaround for bond
 
-        self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
-        self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
+        # self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
+        # self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         fun_test.set_version(version="{}/{}".format(release_train, build_number))
 
         return True
