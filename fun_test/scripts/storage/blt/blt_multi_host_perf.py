@@ -407,11 +407,10 @@ class MultiHostFioRandRead(FunTestCase):
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+                              "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999"]
         table_data_rows = []
 
         self.hosts = fun_test.shared_variables["hosts"]
@@ -594,7 +593,7 @@ class MultiHostFioRandRead(FunTestCase):
             row_data_list.append(len(self.hosts))
             if self.post_results:
                 fun_test.log("Posting results on dashboard")
-                post_results("Multi_host_TCP", test_method, *row_data_list)
+                post_raw_vol_perf_results(*row_data_list)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary,
