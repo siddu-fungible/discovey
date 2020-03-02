@@ -855,6 +855,30 @@ class PreCommitSanity(MultiHostFioRandRead):
         super(PreCommitSanity, self).cleanup()
 
 
+class MultiHostFioReadWrite7030(MultiHostFioRandRead):
+
+    def describe(self):
+        self.set_test_details(id=12,
+                              summary="Read Write 70:30 performance for multiple hosts on TCP "
+                                      "with different levels of numjobs & iodepth & block size 4K",
+                              steps='''
+        1. Create 12 BLT volumes on F1 attached
+        2. Create a storage controller for TCP and attach above volumes to this controller   
+        3. Connect to this volume from remote host
+        4. Run the FIO Random write test(without verify) for various block size and IO depth from the 
+        remote host and check the performance are inline with the expected threshold. 
+        ''')
+
+    def setup(self):
+        super(MultiHostFioReadWrite7030, self).setup()
+
+    def run(self):
+        super(MultiHostFioReadWrite7030, self).run()
+
+    def cleanup(self):
+        super(MultiHostFioReadWrite7030, self).cleanup()
+
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(MultiHostFioRandRead())
@@ -868,4 +892,5 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(MultiHostFioRandWrite64k())
     setup_bringup.add_test_case(MultiHostFioRandRead64k())
     setup_bringup.add_test_case(PreCommitSanity())
+    setup_bringup.add_test_case(MultiHostFioReadWrite7030())
     setup_bringup.run()
