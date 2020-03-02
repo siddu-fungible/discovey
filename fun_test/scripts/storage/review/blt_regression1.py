@@ -713,14 +713,14 @@ class C37533(FunTestCase):
         attach_vol_result = {}
         last_attach_result = {}
         print "loop_count:", self.loop_count
-        for counter in range(12):
+        for counter in range(128):
             vol_uuid = create_volume(fs_obj=fs_obj, body_volume_intent_create=body_volume_intent_create,
                                      name=self.name, sfx=str(counter))
 
             print "vol_uuid:", vol_uuid
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             created_vols.append(vol_uuid)
-            if (counter == 11):
+            if (counter == 127):
                 connect = True
             attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts[0], fs_obj=fs_obj,
                                                                                volume_uuid=vol_uuid,
@@ -941,7 +941,7 @@ class C36969(C17808):
         super(C36969, self).cleanup()
 
 
-class C37533_1(C37533):
+class C37533_1():
     def describe(self):
         self.set_test_details(id=8,
                               summary="C37533:attach >128 vols, detaching N existing volumes, attaching N more new",
@@ -979,6 +979,11 @@ class C37533_2(C37533):
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
+
+    # C37533:attach >128 enc vols, detaching N existing volumes, attaching N more new"
+    setup_bringup.add_test_case(C37533_1())
+    setup_bringup.add_test_case(C37533_2())
+
     # Detach/Attach in loop with host connected to NVMe sub system"
     setup_bringup.add_test_case(C17808())
     setup_bringup.add_test_case(C36969())
@@ -987,9 +992,7 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(C17854())
     setup_bringup.add_test_case(C36988())
 
-    # C37533:attach >128 enc vols, detaching N existing volumes, attaching N more new"
-    setup_bringup.add_test_case(C37533_1())
-    setup_bringup.add_test_case(C37533_2())
+
 
     # Create 1K vols/DPU and delete the same - (no attach required) in a loop"
     setup_bringup.add_test_case(C36894())
