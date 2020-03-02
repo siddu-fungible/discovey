@@ -941,7 +941,7 @@ class C36969(C17808):
         super(C36969, self).cleanup()
 
 
-class C37533_1():
+class C37533_1(C37533):
     def describe(self):
         self.set_test_details(id=8,
                               summary="C37533:attach >128 vols, detaching N existing volumes, attaching N more new",
