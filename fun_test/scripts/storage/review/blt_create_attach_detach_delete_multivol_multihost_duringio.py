@@ -675,6 +675,6 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt())
     setup_bringup.add_test_case(DetachUnmount())
-    setup_bringup.add_test_case(DetachAttachUnmount)
+    setup_bringup.add_test_case(DetachAttachUnmount())
     setup_bringup.add_test_case(ConnectFromRogueAndGenuineHost())
     setup_bringup.run()
