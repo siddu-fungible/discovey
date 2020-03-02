@@ -522,7 +522,7 @@ class C36892(FunTestCase):
 
     def describe(self):
         pass
-        self.set_test_details(id=3,
+        self.set_test_details(id=4,
                               summary="C36892:Create N more volumes after 1000, delete existing N volumes and create N",
                               steps='''
                               1. Make sure API server is up and running
@@ -637,7 +637,7 @@ class C37533(FunTestCase):
 
     def describe(self):
         pass
-        self.set_test_details(id=2,
+        self.set_test_details(id=5,
                               summary="c37533: attach >128 vols, detaching N existing volumes, attaching N more new",
                               steps='''
                               1. Make sure API server is up and running
@@ -904,7 +904,7 @@ class C37533(FunTestCase):
 
 class C36988(C17854):
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary=" Volume Create, Attach, Detach and Delete in a loop (Encrypted)",
                               steps='''
                               ''')
@@ -925,7 +925,7 @@ class C36988(C17854):
 
 class C36969(C17808):
     def describe(self):
-        self.set_test_details(id=2,
+        self.set_test_details(id=7,
                               summary="Detach/Attach in loop with host connected to NVMe sub system with Encryption",
                               steps='''
                               ''')
@@ -943,7 +943,7 @@ class C36969(C17808):
 
 class C37533_1(C37533):
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=8,
                               summary="C37533:attach >128 vols, detaching N existing volumes, attaching N more new",
                               steps='''
                               ''')
@@ -962,7 +962,7 @@ class C37533_1(C37533):
 
 class C37533_2(C37533):
     def describe(self):
-        self.set_test_details(id=7,
+        self.set_test_details(id=9,
                               summary="C37533:attach >128 enc vols, detaching N existing volumes, attaching N more new",
                               steps='''
                               ''')
@@ -979,7 +979,6 @@ class C37533_2(C37533):
 
 if __name__ == "__main__":
     setup_bringup = BootupSetup()
-    '''
     # Detach/Attach in loop with host connected to NVMe sub system"
     setup_bringup.add_test_case(C17808())
     setup_bringup.add_test_case(C36969())
@@ -987,15 +986,14 @@ if __name__ == "__main__":
     #  Volume Create, Attach, Detach and Delete in a loop
     setup_bringup.add_test_case(C17854())
     setup_bringup.add_test_case(C36988())
-    '''
+
     # C37533:attach >128 enc vols, detaching N existing volumes, attaching N more new"
     setup_bringup.add_test_case(C37533_1())
-    #setup_bringup.add_test_case(C37533_2())
-    '''
+    setup_bringup.add_test_case(C37533_2())
+
     # Create 1K vols/DPU and delete the same - (no attach required) in a loop"
     setup_bringup.add_test_case(C36894())
 
     # Create N more volumes after creating 1000 volumes, delete existing N volumes and create N
     setup_bringup.add_test_case(C36892())
-    '''
     setup_bringup.run()
