@@ -102,8 +102,8 @@ class VolumeManagement(FunTestCase):
             fun_test.test_assert(expression=vol_uuid_dict, message="Create volume{} with uuid {}"
                                  .format(x, vol_uuid_dict[0]))
 
-        self.hosts = self.topology.get_available_host_instances()
-        required_hosts_available = True if (self.hosts != None) else False
+        self.hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
         fun_test.test_assert(required_hosts_available, "Required hosts available")
         for host_id in self.hosts:
             host_obj = self.hosts[host_id]
@@ -133,8 +133,8 @@ class VolumeManagement(FunTestCase):
                                                   actual=attach_vol_result[0]['error_message'], message="Volume is already attached" )
 
     def run(self):
-        hosts = self.topology.get_available_host_instances()
-        required_hosts_available = True if (hosts != None) else False
+        hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
         fun_test.test_assert(required_hosts_available, "Required hosts available")
         if self.run_traffic:
             for host_id in hosts:
