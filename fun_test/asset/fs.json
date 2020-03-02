@@ -1646,7 +1646,8 @@
       "outlet_number": 11,
       "password": "Precious1*",
       "host_ip": "cab05-pdu1.fungible.local"
-    },
+    }
+  },
   {
     "bmc": {
       "mgmt_ssh_password": "superuser",
