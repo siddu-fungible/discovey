@@ -124,6 +124,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         fun_test.log("host_info: {} ".format(self.host_info))
         fun_test.log("test info: capacity: {} ".format(self.ec_info["capacity"]))
         fun_test.log("test info: num_volumes: {} ".format(self.num_volumes))
+        fun_test.log("test info: raw_api_call: {} ".format(self.raw_api_call))
         fun_test.log("test info: test_iteration_count: {} ".format(self.test_iteration_count))
 
         # chars = string.ascii_uppercase + string.ascii_lowercase
@@ -146,22 +147,21 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
             # index = 0
             # count = 0
-            attach_vol_result = self.ec_template.attach_m_vol_n_host(host_obj_list=self.host_objs, fs_obj=self.fs_obj_list,
+            attach_vol_result = self.ec_template.attach_m_vol_n_host(host_obj_list=self.host_objs,
+                                                                     fs_obj=self.fs_obj_list,
                                                                      volume_uuid_list=self.vol_uuid_list,
-                                                                     validate_nvme_connect=False,
-                                                                     raw_api_call=True,
-                                                                     nvme_io_queues=None,
+                                                                     validate_nvme_connect=True,
+                                                                     raw_api_call=self.raw_api_call,
+                                                                     nvme_io_queues=self.nvme_io_queues,
                                                                      volume_is_shared=False)
 
             fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
 
             for host, data in attach_vol_result.items():
-                nvme_connect_result = self.ec_template.nvme_connect_from_host(host_obj=host,
-                                                                              subsys_nqn=data[0]["data"]["subsys_nqn"],
-                                                                              host_nqn=data[0]["data"]["host_nqn"],
-                                                                              dataplane_ip=data[0]["data"]["ip"])
-                fun_test.test_assert_expected(expected=True, actual=nvme_connect_result,
-                                              message="nvme connect successful")
+
+                fun_test.log("host: {}".format(host))
+                fun_test.log("data: {}".format(data))
+
                 #fun_test.sleep(message="Wait for nvme devices to appear on host", seconds=30)
                 # Check number of volumes and devices found from hosts
                 #for host in hosts:
@@ -200,7 +200,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
             fun_test.log("Hosts info: {}".format(self.host_info))
 
-            '''self.fio_io_size = 100 / len(self.host_info)
+            self.fio_io_size = 100 / len(self.host_info)
             # self.offsets = ["1%", "26%", "51%", "76%"]
 
             thread_id = {}
@@ -277,7 +277,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
                     if field == "runtime":
                         aggr_fio_output[op][field] = int(round(value / 1000) / len(self.host_info))
 
-            fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))'''
+            fun_test.log("Aggregated FIO Command Output:\n{}".format(aggr_fio_output))
 
             self.ec_template.cleanup()
             fun_test.test_assert(expression=True, message="Iteration {} completed".format(count+1))
