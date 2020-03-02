@@ -121,6 +121,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
             self.host_info[host_name]["handle"] = host_obj.get_instance()
 
+        fun_test.log("fs_obj_list: {} ".format(self.fs_obj_list))
         fun_test.log("host_info: {} ".format(self.host_info))
         fun_test.log("test info: capacity: {} ".format(self.ec_info["capacity"]))
         fun_test.log("test info: num_volumes: {} ".format(self.num_volumes))
