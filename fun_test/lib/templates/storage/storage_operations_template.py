@@ -481,21 +481,21 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         try:
             temp_volume_uuid_list = []
             temp_host_obj_list = []
-            temp_volume_uuid_list.extend(x for x in volume_uuid_list)
+
             temp_host_obj_list.extend(x for x in host_obj_list)
             if volume_is_shared:
                 # when volumes are shared among hosts
                 temp_host_obj_list = temp_host_obj_list * len(temp_volume_uuid_list)
-                for i in range(1, len(host_obj_list)):
-                    temp_volume_uuid_list.extend(volume_uuid_list[i:] + volume_uuid_list[:i])
+                temp_volume_uuid_list = [vol_uuid * len(host_obj_list) for vol_uuid in volume_uuid_list]
             else:
+                temp_volume_uuid_list.extend(x for x in volume_uuid_list)
                 if len(temp_host_obj_list) < len(temp_volume_uuid_list):
                     # when volumes are attached in round robin fashion
                     fun_test.log("Num volumes to attach is {} and num hosts is {} and volume_is_shared is False. "
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(host_obj_list), len(volume_uuid_list)):
-                        temp_host_obj_list.append(temp_host_obj_list[i % len(host_obj_list)])
+                        temp_host_obj_list.append(host_obj_list[i % len(host_obj_list)])
 
                 elif len(temp_host_obj_list) > len(temp_volume_uuid_list):
                     # when volumes are attached in round robin fashion
@@ -503,7 +503,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                  "So attaching volumes in round robin fashion".format(len(temp_volume_uuid_list),
                                                                                       len(temp_host_obj_list)))
                     for i in range(len(volume_uuid_list), len(host_obj_list)):
-                        temp_volume_uuid_list.append(temp_volume_uuid_list[i % len(volume_uuid_list)])
+                        temp_volume_uuid_list.append(volume_uuid_list[i % len(volume_uuid_list)])
 
             for index in range(len(temp_host_obj_list)):
                 if not temp_host_obj_list[index] in result.keys():
