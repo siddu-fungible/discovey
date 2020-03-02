@@ -114,8 +114,8 @@ class CreateDeleteVolume(FunTestCase):
             self.vol_uuid_list.append(vol_uuid[0])
 
     def attach_volumes(self):
-        hosts = self.topology.get_available_host_instances()
-        required_hosts_available = True if (hosts != None) else False
+        hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
         fun_test.test_assert( required_hosts_available, "Required hosts available" )
 
         # for fs_obj in vol_uuid_dict:

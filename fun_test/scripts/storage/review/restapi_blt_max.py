@@ -84,8 +84,8 @@ class CreateMaxBLTVolumes(FunTestCase):
             fun_test.test_assert(expression=vol_uuid_dict, message="Create volume{} with uuid {}"
                                  .format(x, final_vol_uuid_dict[x]))
 
-        hosts = self.topology.get_available_host_instances()
-        required_hosts_available = True if (hosts != None) else False
+        hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
         fun_test.test_assert(required_hosts_available, "Required hosts available")
 
         # for fs_obj in vol_uuid_dict:
@@ -100,8 +100,8 @@ class CreateMaxBLTVolumes(FunTestCase):
                                      .format(final_vol_uuid_dict[x][0]))
 
     def run(self):
-        hosts = self.topology.get_available_host_instances()
-        required_hosts_available = True if (hosts != None) else False
+        hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
         fun_test.test_assert(required_hosts_available, "Required hosts available")
         if self.run_traffic:
             for host_id in hosts:
