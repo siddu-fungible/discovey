@@ -60,6 +60,8 @@ class BringupSetup(FunTestScript):
             self.fs_obj_list.append(fs_obj)
 
         fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+        self.sc_dpcsh_obj = self.fs_obj_list[0].get_storage_controller(f1_index=0)
+        fun_test.shared_variables["dpcsh_obj"] = self.sc_dpcsh_obj
 
     def cleanup(self):
         fun_test.log("Performing disconnect/detach/delete cleanup as part of script level cleanup")
@@ -143,6 +145,46 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                                                                            nvme_io_queues=None,
                                                                            volume_is_shared=self.shared_volume)
 
+            if self.detach_and_unmount:
+                self.cleanupio()
+                if self.attach_before_mount:
+                    self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
+                                                                                   fs_obj=self.fs_obj_list[0],
+                                                                                   volume_uuid_list=self.vol_uuid_list,
+                                                                                   validate_nvme_connect=False,
+                                                                                   raw_api_call=True,
+                                                                                   nvme_io_queues=None,
+                                                                                   volume_is_shared=False)
+
+                get_drive_id = get_drive_uuid_from_volume_uuid(self.sc_dpcsh_obj, self.vol_uuid_list)
+                fun_test.test_assert(expression=get_drive_id['status'], message="Retrieved drive details of volumes")
+
+                print(get_drive_id)
+                for label in get_drive_id['label']:
+                    unmount_result = self.sc_dpcsh_obj.unmount_drive(label=label)
+                    fun_test.test_assert(expression=unmount_result['status'], message="Unmount success for drive: {}"
+                                         .format(label))
+
+                index = 0
+                for drive_id in get_drive_id['drive_id']:
+                    rescan_result = self.sc_dpcsh_obj.rescan_drive(device_id=drive_id)
+                    fun_test.test_assert(expression=rescan_result['status'], message="Rescan success for drive {} with "
+                                         " drive_id: {}".format(get_drive_id['label'][index], drive_id))
+                    index += 1
+
+                if self.attach_after_mount:
+                    self.attach_vol_result = self.blt_template.attach_m_vol_n_host(host_obj_list=self.hosts,
+                                                                                   fs_obj=self.fs_obj_list[0],
+                                                                                   volume_uuid_list=self.vol_uuid_list,
+                                                                                   validate_nvme_connect=False,
+                                                                                   raw_api_call=True,
+                                                                                   nvme_io_queues=None,
+                                                                                   volume_is_shared=False)
+
+                self.skip_delete = True
+                self.cleanupio()
+
+
             for host in self.hosts:
                 host.nvme_connect_info = {}
                 for result in self.attach_vol_result[host]:
@@ -154,116 +196,160 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                         subsys_nqn = result.subsys_nqn
                         host_nqn = result.host_nqn
                         dataplane_ip = result.ip
-
                     if subsys_nqn not in host.nvme_connect_info:
                         host.nvme_connect_info[subsys_nqn] = []
                     host_nqn_ip = (host_nqn, dataplane_ip)
                     if host_nqn_ip not in host.nvme_connect_info[subsys_nqn]:
                         host.nvme_connect_info[subsys_nqn].append(host_nqn_ip)
 
-            for host in self.hosts:
-                for subsys_nqn in host.nvme_connect_info:
-                    for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
-                        host_nqn, dataplane_ip = host_nqn_ip
-                        fun_test.test_assert(
-                            expression=self.blt_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
-                                                                               host_nqn=host_nqn,
-                                                                               dataplane_ip=dataplane_ip),
-                            message="NVMe connect from host: {}".format(host.name))
-                        nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
-                        fun_test.test_assert(expression=nvme_filename,
-                                             message="Get NVMe drive from Host {} using lsblk".format(host.name))
+            if self.rogue_host:
+                # Connect and disconnect from Genuine host first
+                # Execute spurious connect 1024 times
+                # Connect and disconnect from Genuine host first
+                for host in self.hosts[0]:
+                    host_handle = host.instance
+                    for subsys_nqn in host.nvme_connect_info:
+                        for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                            host_nqn, dataplane_ip = host_nqn_ip
+                            fun_test.test_assert(
+                                expression=self.blt_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                                   host_nqn=host_nqn,
+                                                                                   dataplane_ip=dataplane_ip),
+                                message="NVMe connect from host: {}".format(host.name))
+                            nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                            fun_test.test_assert(expression=nvme_filename,
+                                                 message="Get NVMe drive from Host {} using lsblk".format(host.name))
+                        status = host_handle.nvme_disconnect(nvme_subsystem=subsys_nqn)
+                        fun_test.test_assert(expression=status,
+                                             message="nvme disconnect successful from host {}".format(host_handle))
 
-                        # Check number of volumes and devices found from hosts
-                        # for host in hosts:
-                        host.nvme_block_device_list = []
-                        nvme_devices = self.blt_template.get_host_nvme_device(host_obj=host)
-                        if nvme_devices:
-                            if isinstance(nvme_devices, list):
-                                host.nvme_block_device_list.extend(nvme_devices)
+                        for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                            host_nqn, dataplane_ip = host_nqn_ip
+                            for i in range(self.spurious_connection_count):
+                                spurious_cmd_result = self.blt_template.nvme_connect_from_host(host_obj=host,
+                                                                                               subsys_nqn=self.subsys_nqn,
+                                                                                               host_nqn=host_nqn,
+                                                                                               dataplane_ip=dataplane_ip)
+                                fun_test.test_assert(expression=not spurious_cmd_result, message="Spurious connection fail")
+
+                            fun_test.test_assert(
+                                expression=self.blt_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                                   host_nqn=host_nqn,
+                                                                                   dataplane_ip=dataplane_ip),
+                                message="NVMe connect from host: {}".format(host.name))
+                            nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                            fun_test.test_assert(expression=nvme_filename,
+                                                 message="Get NVMe drive from Host {} using lsblk".format(host.name))
+                        status = host_handle.nvme_disconnect(nvme_subsystem=subsys_nqn)
+                        fun_test.test_assert(expression=status,
+                                             message="nvme disconnect successful from host {}".format(host_handle))
+                self.cleanupio()
+
+            if self.run_io:
+                for host in self.hosts:
+                    for subsys_nqn in host.nvme_connect_info:
+                        for host_nqn_ip in host.nvme_connect_info[subsys_nqn]:
+                            host_nqn, dataplane_ip = host_nqn_ip
+                            fun_test.test_assert(
+                                expression=self.blt_template.nvme_connect_from_host(host_obj=host, subsys_nqn=subsys_nqn,
+                                                                                   host_nqn=host_nqn,
+                                                                                   dataplane_ip=dataplane_ip),
+                                message="NVMe connect from host: {}".format(host.name))
+                            nvme_filename = self.blt_template.get_host_nvme_device(host_obj=host, subsys_nqn=subsys_nqn)
+                            fun_test.test_assert(expression=nvme_filename,
+                                                 message="Get NVMe drive from Host {} using lsblk".format(host.name))
+
+                            # Check number of volumes and devices found from hosts
+                            # for host in hosts:
+                            host.nvme_block_device_list = []
+                            nvme_devices = self.blt_template.get_host_nvme_device(host_obj=host)
+                            if nvme_devices:
+                                if isinstance(nvme_devices, list):
+                                    host.nvme_block_device_list.extend(nvme_devices)
+                                else:
+                                    current_device = nvme_devices
+                                    host.nvme_block_device_list.append(current_device)
+                            if self.shared_volume:
+                                fun_test.test_assert_expected(expected=self.blt_count,
+                                                              actual=len(host.nvme_block_device_list),
+                                                              message="Check number of nvme block devices found "
+                                                              "on host {} matches with attached ".format(host.name))
                             else:
-                                current_device = nvme_devices
-                                host.nvme_block_device_list.append(current_device)
+                                fun_test.test_assert_expected(expected=len(self.attach_vol_result[host]),
+                                                              actual=len(host.nvme_block_device_list),
+                                                              message="Check number of nvme block devices found "
+                                                              "on host {} matches with attached ".format(host.name))
+
+                self.fio_io_size = 100 / len(self.hosts)
+                thread_id = {}
+                end_host_thread = {}
+                fio_output = {}
+                fio_offset = 1
+                fun_test.shared_variables["fio"] = {}
+                for index, host in enumerate(self.hosts):
+                    fio_output[index] = {}
+                    end_host_thread[index] = host.instance.clone()
+                    wait_time = len(self.hosts) - index
+                    if "multiple_jobs" in self.warm_up_fio_cmd_args:
+                        warm_up_fio_cmd_args = {}
+                        # Adding the allowed CPUs into the fio warmup command
+                        fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
+                        jobs = ""
+                        for id, device in enumerate(host.nvme_block_device_list):
+                            jobs += " --name=vol{} --filename={}".format(id + 1, device)
                         if self.shared_volume:
-                            fun_test.test_assert_expected(expected=self.blt_count,
-                                                          actual=len(host.nvme_block_device_list),
-                                                          message="Check number of nvme block devices found "
-                                                          "on host {} matches with attached ".format(host.name))
+                            offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
+                            size = " --size={}%".format(self.fio_io_size)
+                            warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                                                                fio_cpus_allowed_args + offset + size + jobs
                         else:
-                            fun_test.test_assert_expected(expected=len(self.attach_vol_result[host]),
-                                                          actual=len(host.nvme_block_device_list),
-                                                          message="Check number of nvme block devices found "
-                                                          "on host {} matches with attached ".format(host.name))
+                            size = " --size=10%"
+                            warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
+                                                                    fio_cpus_allowed_args + size + jobs
+                        warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
 
-            self.fio_io_size = 100 / len(self.hosts)
-            thread_id = {}
-            end_host_thread = {}
-            fio_output = {}
-            fio_offset = 1
-            fun_test.shared_variables["fio"] = {}
-            for index, host in enumerate(self.hosts):
-                fio_output[index] = {}
-                end_host_thread[index] = host.instance.clone()
-                wait_time = len(self.hosts) - index
-                if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                    warm_up_fio_cmd_args = {}
-                    # Adding the allowed CPUs into the fio warmup command
-                    fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
-                    jobs = ""
-                    for id, device in enumerate(host.nvme_block_device_list):
-                        jobs += " --name=vol{} --filename={}".format(id + 1, device)
-                    if self.shared_volume:
-                        offset = " --offset={}%".format(fio_offset - 1 if fio_offset - 1 else fio_offset)
-                        size = " --size={}%".format(self.fio_io_size)
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                            fio_cpus_allowed_args + offset + size + jobs
-                    else:
-                        size = " --size=10%"
-                        warm_up_fio_cmd_args["multiple_jobs"] = self.warm_up_fio_cmd_args["multiple_jobs"] + \
-                                                                fio_cpus_allowed_args + size + jobs
-                    warm_up_fio_cmd_args["timeout"] = self.warm_up_fio_cmd_args["timeout"]
+                        thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
+                                                                         func=fio_parser,
+                                                                         arg1=end_host_thread[index],
+                                                                         host_index=index,
+                                                                         filename="nofile",
+                                                                         **warm_up_fio_cmd_args)
+                        fio_offset += self.fio_io_size
+                        fun_test.sleep("Fio threadzz", seconds=1)
 
-                    thread_id[index] = fun_test.execute_thread_after(time_in_seconds=wait_time,
-                                                                     func=fio_parser,
-                                                                     arg1=end_host_thread[index],
-                                                                     host_index=index,
-                                                                     filename="nofile",
-                                                                     **warm_up_fio_cmd_args)
-                    fio_offset += self.fio_io_size
-                    fun_test.sleep("Fio threadzz", seconds=1)
+                if self.detach_duringio:
+                    fun_test.sleep("Wait before disconnect during IO", seconds=10)
+                    self.cleanupio()
+                fun_test.sleep("Fio threads started", 10)
+                try:
+                    for i, host_name in enumerate(self.hosts):
+                        fun_test.log("Joining fio thread {}".format(i))
+                        fun_test.join_thread(fun_test_thread_id=thread_id[i])
+                        fun_test.log("FIO Command Output:")
+                        fun_test.log(fun_test.shared_variables["fio"][i])
+                        if not fun_test.shared_variables["fio"][i] and self.detach_duringio:
+                            fun_test.test_assert(True, message="FIO interrupted due to disconnect")
+                        else:
+                            fun_test.test_assert(fun_test.shared_variables["fio"][i],
+                                                 "FIO randwrite test with verify in host {}".
+                                                 format(host_name.name))
+                        fio_output[i] = fun_test.shared_variables["fio"][i]
 
-            if self.detach_duringio:
-                fun_test.sleep("Wait before disconnect during IO", seconds=10)
-                self.cleanupio()
-            fun_test.sleep("Fio threads started", 10)
-            try:
-                for i, host_name in enumerate(self.hosts):
-                    fun_test.log("Joining fio thread {}".format(i))
-                    fun_test.join_thread(fun_test_thread_id=thread_id[i])
-                    fun_test.log("FIO Command Output:")
-                    fun_test.log(fun_test.shared_variables["fio"][i])
-                    if not fun_test.shared_variables["fio"][i] and self.detach_duringio:
-                        fun_test.test_assert(True, message="FIO interrupted due to disconnect")
-                    else:
-                        fun_test.test_assert(fun_test.shared_variables["fio"][i],
-                                             "FIO randwrite test with verify in host {}".
-                                             format(host_name.name))
-                    fio_output[i] = fun_test.shared_variables["fio"][i]
+                except Exception as ex:
+                    fun_test.critical(str(ex))
+                    fun_test.log("FIO Command Output from host {}:\n {}".format(host_name, fio_output[i]))
 
-            except Exception as ex:
-                fun_test.critical(str(ex))
-                fun_test.log("FIO Command Output from host {}:\n {}".format(host_name, fio_output[i]))
-
-            if not self.detach_duringio:
-                self.cleanupio()
-            fun_test.test_assert(expression=True, message="Test completed {} Iteration".format(count + 1))
+                if not self.detach_duringio:
+                    self.cleanupio()
+                fun_test.test_assert(expression=True, message="Test completed {} Iteration".format(count + 1))
 
     def cleanupio(self):
         for host_obj in self.hosts:
             host_handle = host_obj.instance
-            for subsys_nqn in host_obj.nvme_connect_info:
-                status = host_handle.nvme_disconnect(nvme_subsystem=subsys_nqn)
-                fun_test.test_assert(expression=status, message="nvme disconnect successful from host {}".format(host_handle))
+            if not self.detach_and_unmount:
+                for subsys_nqn in host_obj.nvme_connect_info:
+                    status = host_handle.nvme_disconnect(nvme_subsystem=subsys_nqn)
+                    fun_test.test_assert(expression=status, message="nvme disconnect successful from host {}".format(host_handle))
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
@@ -287,17 +373,18 @@ class GenericCreateAttachDetachDelete(FunTestCase):
                     fun_test.test_assert(expression=detach_volume.status,
                                          message="Detach Volume {} from host with host_nqn {}".format(
                                              volume, get_volume_result["data"][volume]['ports'][port]['host_nqn']))
-                delete_volume = None
-                try:
-                    delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
-                except ApiException as e:
-                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
-                except Exception as e:
-                    fun_test.critical("Exception while detaching volume: {}\n".format(e))
-                delete_volume_result = False
-                if delete_volume:
-                    delete_volume_result = delete_volume.status
-                fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
+                if self.skip_delete:
+                    delete_volume = None
+                    try:
+                        delete_volume = storage_controller.storage_api.delete_volume(volume_uuid=volume)
+                    except ApiException as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    except Exception as e:
+                        fun_test.critical("Exception while detaching volume: {}\n".format(e))
+                    delete_volume_result = False
+                    if delete_volume:
+                        delete_volume_result = delete_volume.status
+                    fun_test.test_assert(expression=delete_volume.status, message="Delete Volume {}".format(volume))
 
     def cleanup(self):
         fun_test.shared_variables["storage_controller_template"] = self.blt_template
@@ -502,6 +589,81 @@ class CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt(GenericCrea
         super(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt, self).cleanup()
 
 
+class DetachUnmount(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=9,
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
+                    "active IO during disconnect & detach",
+            steps='''
+                1. Create 8 volumes
+                2. Attach 8 volume to 6 hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
+                5. Detach and delete the volumes
+                6. Continue this in a loop for 24 times
+                ''')
+
+    def setup(self):
+        super(DetachUnmount, self).setup()
+
+    def run(self):
+        super(DetachUnmount, self).run()
+
+    def cleanup(self):
+        super(DetachUnmount, self).cleanup()
+
+
+class DetachAttachUnmount(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=10,
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
+                    "active IO during disconnect & detach",
+            steps='''
+                1. Create 8 volumes
+                2. Attach 8 volume to 6 hosts
+                3. Run fio ranwrite test with data integrity enabled, iodepth=16 and numjobs=1
+                4. Let IO run for 30sec, then perform nvme disconnect during I/O on all hosts
+                5. Detach and delete the volumes
+                6. Continue this in a loop for 24 times
+                ''')
+
+    def setup(self):
+        super(DetachAttachUnmount, self).setup()
+
+    def run(self):
+        super(DetachAttachUnmount, self).run()
+
+    def cleanup(self):
+        super(DetachAttachUnmount, self).cleanup()
+
+
+class ConnectFromRogueAndGenuineHost(GenericCreateAttachDetachDelete):
+    def describe(self):
+        self.set_test_details(
+            id=11,
+            summary="Create,attach,connect,disconnect,detach & delete same N volumes attached to M hosts along with "
+                    "active IO during disconnect & detach",
+            steps='''
+                1. Create 8 volumes
+                2. Attach 8 volume to single hosts
+                3. Connect from a rogue host, 1024 times
+                4. Connect from genuine host
+                5. Verify that host able to list volumes
+                ''')
+
+    def setup(self):
+        super(ConnectFromRogueAndGenuineHost, self).setup()
+
+    def run(self):
+        super(ConnectFromRogueAndGenuineHost, self).run()
+
+    def cleanup(self):
+        super(ConnectFromRogueAndGenuineHost, self).cleanup()
+
+
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihost())
@@ -512,4 +674,7 @@ if __name__ == "__main__":
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostDuringIOEncrypt())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedEncrypt())
     setup_bringup.add_test_case(CreateAttachDetachDeleteMultivolMultihostSharedDuringIOEncrypt())
+    setup_bringup.add_test_case(DetachUnmount())
+    setup_bringup.add_test_case(DetachAttachUnmount)
+    setup_bringup.add_test_case(ConnectFromRogueAndGenuineHost())
     setup_bringup.run()
