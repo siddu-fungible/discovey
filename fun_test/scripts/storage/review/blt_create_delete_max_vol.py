@@ -37,7 +37,7 @@ class BringupSetup(FunTestScript):
             self.already_deployed = job_inputs["already_deployed"]
         else:
             self.already_deployed = False
-        num_f1 = 1
+        num_f1 = 2
         dpu_indexes = [x for x in range(num_f1)]
 
         topology_helper = TopologyHelper()
