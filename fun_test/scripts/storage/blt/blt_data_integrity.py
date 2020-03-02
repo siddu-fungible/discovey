@@ -51,9 +51,12 @@ class BaseBltDataIntegrity(FunTestCase):
     def setup(self,):
 
         self.testcase = self.__class__.__name__
-        job_inputs = fun_test.get_job_inputs()
-        capacity = int(16*1024*1024*1024)
         # capacity = 1600143753216 - 3*4096
+        capacity = int(16*1024*1024*1024)
+
+        job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         if "capacity" in job_inputs:
             capacity = job_inputs["capacity"]
 
