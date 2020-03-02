@@ -181,7 +181,7 @@ class Bmc(Linux):
                                                  artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                  artifact_sub_category=self.fs.ArtifactSubCategory.BMC,
                                                  is_large_file=False,
-                                                 timeout=60)
+                                                 timeout=180)
         fun_test.report_message("System logs available at {}".format(uploaded_path))
         self.sudo_command("rm -f {}".format(tgz_file_name))
 
