@@ -3026,16 +3026,19 @@ class Linux(object, ToDictMixin):
         return result
 
     @fun_test.safe
-    def ifconfig(self, interface="", action=None):
+    def ifconfig(self, interface="", ip="", netmask="255.255.255.0", action=None):
 
         result = []
         cmd = "ifconfig"
         if interface:
             cmd += " " + interface
             if action:
+                if ip:
+                    cmd += " " + ip
+                    cmd += " netmask " + netmask
                 cmd += " " + action
 
-        ifconfig_output = self.command(cmd)
+        ifconfig_output = self.sudo_command(cmd)
         if ifconfig_output:
             interfaces = ifconfig_output.split("\n\r")
             for interface in interfaces:
