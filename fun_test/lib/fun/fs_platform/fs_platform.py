@@ -2,8 +2,8 @@ from lib.system.fun_test import fun_test
 
 
 class FsPlatform:
-    #images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag', 'emmc']
-    images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag']
+    #images_to_check = ['pufr', 'frmw', 'husc', 'husd', 'hbsb', 'husm', 'host', 'kbag']
+    images_to_check = ['pufr', 'frmw', 'hbsb', 'husc', 'host' ]
 
     def __init__(self, fs_obj):
         self.fs_obj = fs_obj

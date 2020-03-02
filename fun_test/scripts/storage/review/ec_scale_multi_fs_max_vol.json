@@ -4,11 +4,11 @@
       "app=mdt_test,load_mods cc_huid=2 workload=storage --serial --dpc-server --dpc-uart --all_100g"],
     "dut_start_index": 0,
     "host_start_index": 0,
+    "reboot_hosts" : true,
     "update_workspace": false,
     "update_deploy_script": false,
     "funcp_mode": ["ep", "storage"],
     "num_f1_per_fs": 2,
-    "num_f1s": 1,
     "num_hosts": 1,
     "fpg_int_prefix": "fpg",
     "disable_f1_index": 0,
@@ -35,28 +35,12 @@
   },
   "CreateAttachDetachDeleteMultivolMultihost": {
     "ec_info": {
-      "volume_types": {
-        "ndata": "VOL_TYPE_BLK_LOCAL_THIN",
-        "nparity": "VOL_TYPE_BLK_LOCAL_THIN",
-        "ec": "VOL_TYPE_BLK_EC",
-        "lsv": "VOL_TYPE_BLK_LSV",
-        "jvol": "VOL_TYPE_BLK_NV_MEMORY"
-      },
-      "volume_block": {
-        "ndata": 4096,
-        "nparity": 4096,
-        "ec": 4096,
-        "lsv": 4096,
-        "jvol": 512
-      },
-	"ndata": 4,
-	"nparity": 2,
       "capacity": 1073741824,
-      "use_lsv": 1,
-      "lsv_pct": 0.5,
-      "lsv_chunk_size": 128,
-      "jvol_size_multiplier": 4,
-      "num_volumes": 128
+      "data_protection": {"num_failed_disks": 2, "num_redundant_dpus": 0},
+      "encrypt": true,
+      "allow_expansion": false,
+      "stripe_count": 0,
+      "compression_effort": false
     },
     "test_rail_case_id": ["C18036"],
     "num_ssd": 12,

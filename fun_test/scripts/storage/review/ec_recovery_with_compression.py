@@ -14,6 +14,7 @@ from threading import Lock
 from lib.templates.storage.storage_controller_api import *
 import itertools
 import random
+from copy import deepcopy
 
 '''
 Script to track the Inspur Performance Cases of various read write combination of Erasure Coded volume using FIO
@@ -42,7 +43,7 @@ def check_dpcserver_running(come_obj):
             nvme_sock = '/dev/nvme0' if port == 42220 else '/dev/nvme1'
             outfile = '/tmp/f1_0_dpc_statistics.txt' if port == 42220 else '/tmp/f1_1_dpc_statistics.txt'
             dpcserver_cmd = 'sudo /opt/fungible/FunSDK/bin/Linux/dpcsh/dpcsh --pcie_nvme_sock={} ' \
-                            '--nvme_cmd_timeout=600000 --tcp_proxy={} &> {} &'.\
+                            '--nvme_cmd_timeout=600000 --tcp_proxy={} &> {} &'. \
                 format(nvme_sock, port, outfile)
             come_obj.command(dpcserver_cmd)
 
@@ -201,6 +202,8 @@ class RecoveryWithFailures(FunTestCase):
 
         fun_test.test_assert(benchmark_parsing, "Parsing Benchmark json file for this {} testcase".format(testcase))
 
+        if not hasattr(self, "num_ssd"):
+            self.num_ssd = 1
         fun_test.shared_variables["attach_transport"] = self.attach_transport
         fun_test.shared_variables["nvme_subsystem"] = self.nvme_subsystem
 
@@ -317,10 +320,14 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log(command_result)
                     fun_test.test_assert(command_result["status"], "Attaching {} EC/LS volume on DUT".format(num))
                     self.host_info[curr_host_name]["num_volumes"] += 1
-
+                if "device_id" in self.ec_info:
+                    del self.ec_info["device_id"]
+                if "drive_uuid" in self.ec_info:
+                    del self.ec_info["drive_uuid"]
                 # Get the device id for the plexes
                 self.ec_info = get_plex_device_id(self.ec_info, self.storage_controller)
                 # fun_test.shared_variables["ec_info"] = self.ec_info
+                fun_test.log("EC volume plexes are created in drives {}".format(self.ec_info["device_id"]))
 
                 # Do nvme connect, check if host is able to see the volume
                 for host_name in self.host_info:
@@ -373,6 +380,7 @@ class RecoveryWithFailures(FunTestCase):
                         command_duration=self.command_timeout)
 
                     # Perform write
+                    self.vol_stats = collections.OrderedDict()
                     self.fio_write_cmd_args["bs"] = str(self.ec_info["ndata"] * 4) + "k"
                     self.fio_read_cmd_args["bs"] = self.fio_write_cmd_args["bs"]
 
@@ -386,6 +394,10 @@ class RecoveryWithFailures(FunTestCase):
                                                       **self.fio_write_cmd_args)
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output, "Write completed on EC volume from host")
+                    self.vol_stats["vol_stats_before_initial_read"] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.simple_assert(self.vol_stats["vol_stats_before_initial_read"]["status"],
+                                           "Collected volume stats before initial READ")
 
                     # Get LSV stats after write and verify whether data was compressed
                     self.lsv_stats_after_write = self.storage_controller.peek(
@@ -394,10 +406,9 @@ class RecoveryWithFailures(FunTestCase):
                         command_duration=self.command_timeout)
 
                     # Calculate compression savings
-                    lsv_written_bytes = self.lsv_stats_after_write['data']['write_bytes'] - \
-                        self.lsv_stats_before_write['data']['write_bytes']
+                    lsv_written_bytes = self.lsv_stats_after_write['data']['write_bytes'] - self.lsv_stats_before_write['data']['write_bytes']
                     fio_written_bytes = fio_output["write"]["io_bytes"]
-                    compression_savings = (1 - (float(lsv_written_bytes)/fio_written_bytes)) * 100
+                    compression_savings = (1 - (float(lsv_written_bytes) / fio_written_bytes)) * 100
                     fun_test.log("Compression savings: {}".format(compression_savings))
 
                     # Compare with configured space savings
@@ -413,8 +424,8 @@ class RecoveryWithFailures(FunTestCase):
                         props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(
                             self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192,
                         command_duration=self.command_timeout)
-                    fun_test.log("EC Volume stats:\n{}".format(write_initial_vol_stats))
-                    fun_test.test_assert(write_initial_vol_stats, "EC Volume stats after WRITE")
+                    fun_test.log("EC Volume stats before initial READ:\n{}".format(write_initial_vol_stats))
+                    fun_test.test_assert(write_initial_vol_stats, "EC Volume stats before initial READ")
                     fun_test.log("EC volume recovery read count:\n{}".format(
                         write_initial_vol_stats["data"]["recovery_read_count"]))
 
@@ -425,14 +436,22 @@ class RecoveryWithFailures(FunTestCase):
                     fun_test.log("FIO Command Output:\n{}".format(fio_output))
                     fun_test.test_assert(fio_output,
                                          "READ with verify completed before failing any plex")
-                    read_initial_vol_stats = self.storage_controller.peek(
-                        props_tree="storage/volumes/VOL_TYPE_BLK_EC/{}/stats".format(
-                            self.ec_info["uuids"][num]["ec"][0]), legacy=False, chunk=8192,
-                        command_duration=self.command_timeout)
-                    fun_test.log("EC Volume stats:\n{}".format(read_initial_vol_stats))
-                    fun_test.test_assert(read_initial_vol_stats, "EC Volume stats after WRITE")
-                    fun_test.log("EC volume recovery read count:\n{}".
-                                 format(read_initial_vol_stats["data"]["recovery_read_count"]))
+                    self.vol_stats["vol_stats_initial_read"] = self.storage_controller.peek(
+                        props_tree="storage/volumes", legacy=False, chunk=8192, command_duration=self.command_timeout)
+                    fun_test.simple_assert(self.vol_stats["vol_stats_initial_read"]["status"],
+                                           "Collected volume stats after initial READ")
+                    ec_volume_stats = self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_EC"][
+                        self.ec_info["uuids"][num]["ec"][0]]
+                    fun_test.test_assert(ec_volume_stats, "EC Volume stats after initial READ")
+                    fun_test.log("EC Volume stats after initial READ:\n{}".format(ec_volume_stats))
+                    fun_test.log("EC volume recovery_read_count: {} and plex_read_fail_count: {}".format(
+                        ec_volume_stats["stats"]["recovery_read_count"],
+                        ec_volume_stats["stats"]["plex_read_fail_count"]))
+                    fun_test.test_assert_expected(expected=(0, 0),
+                                                  actual=(ec_volume_stats["stats"]["recovery_read_count"],
+                                                          ec_volume_stats["stats"]["plex_read_fail_count"]),
+                                                  message="Before plex failure, recovery_read_count and "
+                                                          "plex_read_fail_count of EC volume is 0")
 
                     # Power OFF device
                     self.device_id_failed = []
@@ -441,22 +460,21 @@ class RecoveryWithFailures(FunTestCase):
                             fun_test.log("Initiating drive failure for device id {} by powering off ssd".
                                          format(self.ec_info["device_id"][num][plex]))
                             device_fail_status = self.storage_controller.power_toggle_ssd("off",
-                                                                                          device_id=
-                                                                                          self.ec_info["device_id"][num][plex],
-                                                                                          command_duration=
-                                                                                          self.command_timeout)
+                                                                                          device_id=self.ec_info["device_id"][num][plex],
+                                                                                          command_duration=self.command_timeout)
                             fun_test.test_assert(device_fail_status["status"],
                                                  "Powering OFF Device ID {}".format(plex))
                             # Validate if Device is marked Failed
                             device_stats = self.storage_controller.get_ssd_power_status(
-                                plex, command_duration=self.command_timeout)
+                                self.ec_info["device_id"][num][plex], command_duration=self.command_timeout)
                             fun_test.simple_assert(device_stats["status"],
-                                                   "Device {} stats command".format(plex))
+                                                   "Device {} stats command".format(
+                                                       self.ec_info["device_id"][num][plex]))
                             fun_test.test_assert_expected(expected=1,
                                                           actual=device_stats["data"]["input"],
                                                           message="Device ID {} is powered OFF".format(
-                                                              plex))
-                            self.device_id_failed.append(plex)
+                                                              self.ec_info["device_id"][num][plex]))
+                            self.device_id_failed.append(self.ec_info["device_id"][num][plex])
                         elif self.plex_fail_method == "drive_pull":
                             fun_test.log("Initiating drive failure for device id {} by injecting fault".
                                          format(self.ec_info["device_id"][num][plex]))
@@ -475,7 +493,7 @@ class RecoveryWithFailures(FunTestCase):
                                                           actual=device_stats["data"]["device state"],
                                                           message="Device ID {} is marked as Failed".format(
                                                               self.ec_info["device_id"][num][plex]))
-                            self.device_id_failed.append(plex)
+                            self.device_id_failed.append(self.ec_info["device_id"][num][plex])
 
                         # Perform read if concurrent plex failure is not set
                         if not (hasattr(self, "m_concurrent_failure") or hasattr(self, "m_plus_concurrent_failure")):
@@ -484,7 +502,69 @@ class RecoveryWithFailures(FunTestCase):
                                                               **self.fio_read_cmd_args)
                             fun_test.log("FIO Command Output:\n{}".format(fio_output))
                             fun_test.test_assert(fio_output, "Reading from EC volume with {} plex({}) failed".
-                                                 format(index + 1, plex_fail_pattern[:index + 1]))
+                                                 format(index + 1, self.device_id_failed))
+                            # Volume stats validation after 1 plex failure
+                            if len(self.device_id_failed) == 1:
+                                self.vol_stats["vol_stats_after_1_plex_failure"] = self.storage_controller.peek(
+                                    props_tree="storage/volumes", legacy=False, chunk=8192,
+                                    command_duration=self.command_timeout)
+                                fun_test.simple_assert(self.vol_stats["vol_stats_after_1_plex_failure"]["status"],
+                                                       "Collected volume stats after 1 plex failure")
+                                ec_vol_stats_1_plex_failure = \
+                                    self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][self.ec_info["uuids"][num]["ec"][0]]
+                                ec_plex_read_fail_count_1_plex_failure, ec_recovery_read_count_1_plex_failure = \
+                                    ec_vol_stats_1_plex_failure["stats"]["plex_read_fail_count"], \
+                                    ec_vol_stats_1_plex_failure["stats"]["recovery_read_count"]
+                                num_reads_diff_1_plex_failure = \
+                                    self.vol_stats["vol_stats_after_1_plex_failure"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][
+                                        self.ec_info["uuids"][num]["blt"][plex]]["stats"]["num_reads"] - \
+                                    self.vol_stats["vol_stats_initial_read"]["data"]["VOL_TYPE_BLK_LOCAL_THIN"][
+                                        self.ec_info["uuids"][num]["blt"][plex]]["stats"]["num_reads"]
+                                fun_test.test_assert_expected(expected=(ec_plex_read_fail_count_1_plex_failure,
+                                                                        ec_recovery_read_count_1_plex_failure),
+                                                              actual=(num_reads_diff_1_plex_failure,
+                                                                      num_reads_diff_1_plex_failure),
+                                                              message="Expected number of plex_read_fails: "
+                                                                      "{} and recovery_read_count: {} are reported in the stats".format(
+                                                                  num_reads_diff_1_plex_failure,
+                                                                  ec_recovery_read_count_1_plex_failure))
+                            # Volume stats validation after 2 plex failure
+                            elif len(self.device_id_failed) == 2:
+                                self.vol_stats["vol_stats_after_2_plex_failure"] = self.storage_controller.peek(
+                                    props_tree="storage/volumes", legacy=False, chunk=8192,
+                                    command_duration=self.command_timeout)
+                                fun_test.simple_assert(self.vol_stats["vol_stats_after_2_plex_failure"]["status"],
+                                                       "Collected volume stats after 2 plex failure")
+                                ec_vol_stats_2_plex_failure = \
+                                    self.vol_stats["vol_stats_after_2_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
+                                        self.ec_info["uuids"][num]["ec"][0]]
+                                ec_plex_read_fail_count_2_plex_failure, ec_recovery_read_count_2_plex_failure = \
+                                    ec_vol_stats_2_plex_failure["stats"]["plex_read_fail_count"], \
+                                    ec_vol_stats_2_plex_failure["stats"]["recovery_read_count"]
+                                num_reads_diff_2_plex_failure = \
+                                    (self.vol_stats["vol_stats_after_2_plex_failure"]["data"][
+                                         "VOL_TYPE_BLK_LOCAL_THIN"][
+                                         self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"][
+                                         "num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"][
+                                         "VOL_TYPE_BLK_LOCAL_THIN"][
+                                         self.ec_info["uuids"][num]["blt"][plex_fail_pattern[1]]]["stats"][
+                                         "num_reads"]) + \
+                                    (self.vol_stats["vol_stats_after_2_plex_failure"]["data"][
+                                         "VOL_TYPE_BLK_LOCAL_THIN"][
+                                         self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]]["stats"][
+                                         "num_reads"] - self.vol_stats["vol_stats_after_1_plex_failure"]["data"][
+                                         "VOL_TYPE_BLK_LOCAL_THIN"][
+                                         self.ec_info["uuids"][num]["blt"][plex_fail_pattern[0]]]["stats"]["num_reads"])
+
+                                fun_test.test_assert_expected(
+                                    expected=(ec_plex_read_fail_count_2_plex_failure - ec_plex_read_fail_count_1_plex_failure,
+                                              ec_recovery_read_count_2_plex_failure - ec_recovery_read_count_1_plex_failure),
+                                    actual=(num_reads_diff_2_plex_failure, num_reads_diff_2_plex_failure / 2),
+                                    message="Expected number of plex_read_fails: {} and "
+                                            "recovery_read_count: {} are reported in the stats".format(
+                                        num_reads_diff_2_plex_failure,
+                                        ec_recovery_read_count_2_plex_failure -
+                                        ec_recovery_read_count_1_plex_failure))
 
                     # Perform read if concurrent plex failure is set
                     if hasattr(self, "m_concurrent_failure") and \
@@ -494,7 +574,51 @@ class RecoveryWithFailures(FunTestCase):
                                                           **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
                         fun_test.test_assert(fio_output, "Reading from EC volume with {} plex({}) failed".
-                                             format(index + 1, plex_fail_pattern[:index + 1]))
+                                             format(index + 1, self.device_id_failed))
+                        # Volume stats validation after concurrent plex failure
+                        self.vol_stats["vol_stats_concurrent_plex_failure"] = self.storage_controller.peek(
+                            props_tree="storage/volumes", legacy=False, chunk=8192,
+                            command_duration=self.command_timeout)
+                        fun_test.simple_assert(self.vol_stats["vol_stats_concurrent_plex_failure"]["status"],
+                                               "Collected volume stats after 2 concurrent plex failure")
+                        ec_vol_stats_concurrent_plex_failure = \
+                            self.vol_stats["vol_stats_concurrent_plex_failure"]["data"]["VOL_TYPE_BLK_EC"][
+                                self.ec_info["uuids"][num]["ec"][0]]
+                        ec_plex_read_fail_count_concurrent_plex_failure, ec_recovery_read_count_concurrent_plex_failure = \
+                            ec_vol_stats_concurrent_plex_failure["stats"]["plex_read_fail_count"], \
+                            ec_vol_stats_concurrent_plex_failure["stats"]["recovery_read_count"]
+                        device_failed_1, device_failed_0 = self.device_id_failed[1], self.device_id_failed[0]
+                        num_reads_diff_concurrent_plex_failure = (self.vol_stats["vol_stats_concurrent_plex_failure"][
+                                                                      "data"][
+                                                                      "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                                      self.ec_info["uuids"][num]["blt"][
+                                                                          plex_fail_pattern[1]]]["stats"][
+                                                                      "num_reads"] -
+                                                                  self.vol_stats["vol_stats_initial_read"]["data"][
+                                                                      "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                                      self.ec_info["uuids"][num]["blt"][
+                                                                          plex_fail_pattern[1]]]["stats"][
+                                                                      "num_reads"]) + \
+                                                                 (self.vol_stats["vol_stats_concurrent_plex_failure"][
+                                                                      "data"][
+                                                                      "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                                      self.ec_info["uuids"][num]["blt"][
+                                                                          plex_fail_pattern[0]]][
+                                                                      "stats"]["num_reads"] -
+                                                                  self.vol_stats["vol_stats_initial_read"]["data"][
+                                                                      "VOL_TYPE_BLK_LOCAL_THIN"][
+                                                                      self.ec_info["uuids"][num]["blt"][
+                                                                          plex_fail_pattern[0]]][
+                                                                      "stats"]["num_reads"])
+                        fun_test.test_assert_expected(expected=(
+                            ec_plex_read_fail_count_concurrent_plex_failure,
+                            ec_recovery_read_count_concurrent_plex_failure),
+                            actual=(num_reads_diff_concurrent_plex_failure,
+                                    num_reads_diff_concurrent_plex_failure / 2),
+                            message="Expected number of plex_read_fails: {} and recovery_read_count: "
+                                    "{} are reported in the stats".format(
+                                ec_plex_read_fail_count_concurrent_plex_failure,
+                                ec_recovery_read_count_concurrent_plex_failure))
 
                     if (hasattr(self, "mplusfailure") and self.mplusfailure) or \
                             (hasattr(self, "m_plus_concurrent_failure") and self.m_plus_concurrent_failure) or \
@@ -502,17 +626,12 @@ class RecoveryWithFailures(FunTestCase):
                         plex_to_be_failed = []
                         if not hasattr(self, "k_plus_m_concurrent_failure"):
                             # Fail one more plex other than the above ones
-                            while True:
-                                plex_to_be_failed.append(
-                                    random.choice(range(self.ec_info["ndata"] + self.ec_info["nparity"]))
-                                )
-                                if plex_to_be_failed[0] not in plex_fail_pattern:
-                                    break
+                            plex_to_be_failed.append(random.choice(
+                                list(set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))))
                         elif hasattr(self, "k_plus_m_concurrent_failure") and self.k_plus_m_concurrent_failure:
                             # Fail all the plexes, other than the ones failed already
                             plex_to_be_failed = list(
-                                set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed))
-                            )
+                                set(self.ec_info["device_id"][num]).difference(set(self.device_id_failed)))
                         for plex in plex_to_be_failed:
                             if self.plex_fail_method == "ssd_power_off":
                                 fun_test.log(
@@ -556,17 +675,19 @@ class RecoveryWithFailures(FunTestCase):
                             cpus_allowed=self.host_info[host_name]["host_numa_cpus"],
                             **self.fio_read_cmd_args)
                         fun_test.log("FIO Command Output:\n{}".format(fio_output))
-                        fun_test.test_assert(not(fio_output),
+                        fun_test.test_assert(not (fio_output),
                                              "After failing {} plexes with drive ids {} concurrently, \
                                              unable to read from EC volume as expected".
                                              format(len(self.device_id_failed), self.device_id_failed))
 
                     # Power ON the devices that were powered OFF
-                    for plex in self.device_id_failed:
+                    self.device_id_clean_up = deepcopy(self.device_id_failed)
+                    for plex in self.device_id_clean_up:
                         if self.plex_fail_method == "ssd_power_off":
                             fun_test.log("Initiating power ON for drive {}".format(plex))
                             device_bringup_status = self.storage_controller.power_toggle_ssd("on",
-                                device_id=plex, command_duration=self.command_timeout)
+                                                                                             device_id=plex,
+                                                                                             command_duration=self.command_timeout)
                             fun_test.simple_assert(device_bringup_status["status"],
                                                    "Powering ON Device ID {}".format(plex))
                             # Validate if Device is marked Failed
@@ -595,23 +716,30 @@ class RecoveryWithFailures(FunTestCase):
                                                           message="Cleared fault on Device ID {}".format(
                                                               plex))
                             self.device_id_failed.remove(plex)
+                    self.device_id_clean_up = self.device_id_failed
                     # Executing NVMe disconnect from all the hosts
+                    self.nvme_disconnect = False
                     nvme_disconnect_cmd = "nvme disconnect -n {}".format(self.nvme_subsystem)
                     nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
                     nvme_disconnect_exit_status = host_handle.exit_status()
                     fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                                   message="{} - NVME Disconnect Status".format(host_name))
+                    self.nvme_disconnect = True
 
                 # Detaching all the EC/LS volumes from the external server
+                self.volume_detach = False
                 command_result = self.storage_controller.detach_volume_from_controller(
                     ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
                 fun_test.log(command_result)
                 fun_test.test_assert(command_result["status"],
                                      "Detaching {} EC/LS volume from DUT".format(num))
+                self.volume_detach = True
 
                 # Unconfiguring all the LSV/EC and it's plex volumes
+                self.volume_delete = False
                 self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
                                                               command_timeout=self.command_timeout)
+                self.volume_delete = True
 
     def cleanup(self):
         # If the READ fails, Power ON the drives that were powered OFF
@@ -650,11 +778,29 @@ class RecoveryWithFailures(FunTestCase):
         # Executing NVMe disconnect-all from all the hosts
         for host_name in self.host_info:
             host_handle = self.host_info[host_name]["handle"]
+
+            # Check if host is still accessible and if not then restart them
+            fun_test.test_assert(host_handle.ensure_host_is_up(max_wait_time=240),
+                                 message="Ensure Host {} is reachable after reboot".format(host_name))
+
             nvme_disconnect_cmd = "nvme disconnect-all"
             nvme_disconnect_output = host_handle.sudo_command(command=nvme_disconnect_cmd, timeout=60)
             nvme_disconnect_exit_status = host_handle.exit_status()
             fun_test.test_assert_expected(expected=0, actual=nvme_disconnect_exit_status,
                                           message="{} - NVME Disconnect-all Status".format(host_name))
+
+        if not self.volume_detach:
+            for num in xrange(self.ec_info["num_volumes"]):
+                command_result = self.storage_controller.detach_volume_from_controller(
+                    ctrlr_uuid=self.ctrlr_uuid[num], ns_id=num + 1, command_duration=self.command_timeout)
+                fun_test.log(command_result)
+                fun_test.test_assert(command_result["status"],
+                                     "Detaching {} EC/LS volume from DUT".format(num))
+
+        if not self.volume_delete:
+            # Unconfiguring all the LSV/EC and it's plex volumes
+            self.storage_controller.unconfigure_ec_volume(ec_info=self.ec_info,
+                                                          command_timeout=self.command_timeout)
 
         # Deleting all the storage controller
         for index in xrange(len(self.host_info)):
@@ -663,7 +809,6 @@ class RecoveryWithFailures(FunTestCase):
             fun_test.test_assert(command_result["status"], "Deleting Storage Controller {}".
                                  format(self.ctrlr_uuid[index]))
         self.storage_controller.disconnect()
-        # self.stats_obj.stop(self.stats_collect_details)
         self.storage_controller.verbose = True
 
 

@@ -327,6 +327,7 @@ class FunTest:
         self.checkpoints = {}
         self.script_file_name = ""
         self.storage_api_enabled = False  # Just for backward-compatibility while we switchover to swagger
+        self.fungible_controller_enabled = False
 
     def is_current_test_case_failed(self):
         return self.current_test_case_exception
@@ -354,6 +355,9 @@ class FunTest:
         if not hasattr(self, "storage_api_log_handler"):
             self.storage_api_log_handler = ApiLogHandler()
         return self.storage_api_log_handler
+
+    def enable_fungible_controller(self):
+        self.fungible_controller_enabled = True
 
 
     def get_current_test_case_execution_id(self):
@@ -915,10 +919,12 @@ class FunTest:
 
     def get_logs_directory(self, is_large_file=False):
         result = self.logs_dir
+        '''
         if is_large_file and self.suite_execution_id:
             directory_path = "{}/s_{}".format(LARGE_FILE_STORE, self.suite_execution_id)
             os.system("mkdir -p {}".format(directory_path))
             result = directory_path
+        '''
         return result
 
     def disable_pause_on_failure(self):

@@ -9,7 +9,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -39,7 +39,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -69,7 +69,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -99,7 +99,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -129,7 +129,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -159,7 +159,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -189,7 +189,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -219,7 +219,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [16777216, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,
@@ -249,7 +249,7 @@
       "use_lsv": 1,
       "lsv_pct": 0.30,
       "lsv_chunk_size": 32,
-      "jvol_size_multiplier": 8
+      "jvol_size_multiplier": 4
     },
     "volume_capacity_list": [2097152, 4194304, 104857600, 1073741824, 2147483648, 4294967296],
     "min_ec_plex_blocks": 128,

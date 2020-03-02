@@ -3,6 +3,24 @@
     "bmc": {
       "mgmt_ssh_password": "superuser",
       "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "10.1.112.106"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "10.1.112.107"
+    },
+    "name": "fs-43",
+    "fpga": {
+      "mgmt_ssh_password": "root",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "10.1.112.108"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
       "mgmt_ip": "10.1.21.212"
     },
     "come": {
@@ -934,7 +952,8 @@
       "outlet_number": 1,
       "password": "Precious1*",
       "host_ip": "cab02-pdu1"
-    }
+    },
+    "num_ssds": 24
   },
   {
     "name": "fs-168",
@@ -1459,7 +1478,7 @@
     },
    "apc_info": {
       "username": "localadmin",
-      "outlet_number": 21,
+      "outlet_number": 22,
       "password": "Precious1*",
       "host_ip": "cab04-pdu1.fungible.local"
     }
@@ -1492,9 +1511,42 @@
     },
     "apc_info": {
       "username": "localadmin",
-      "outlet_number": 22,
+      "outlet_number": 21,
       "password": "Precious1*",
       "host_ip": "cab04-pdu1.fungible.local"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs165-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs165-come"
+    },
+    "name": "fs-165",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs165-fpga",
+      "telnet_ip": "cab17-termsrv",
+      "telnet_port": 2001,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 21,
+      "password": "Precious1*",
+      "host_ip": "cab17-pdu1"
     }
   }
 ]

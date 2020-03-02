@@ -941,10 +941,17 @@ class ECVolRebuildTestcase(FunTestCase):
                 fun_test.test_assert(rebuild_start_time["status"], "EC UUID: {} started at: {}".format(
                     ec_uuid, rebuild_start_time))
                 rebuild_time["start"][num][i] = rebuild_start_time
-                rebuild_completion_time = get_plex_operation_time(
-                    bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
-                    get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
-                    status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
+                search_timer = FunTimer(max_time=self.rebuild_timeout)
+                while not search_timer.is_expired():
+                    rebuild_completion_time = get_plex_operation_time(
+                        bmc_linux_handle=bmc_handle, log_file=uart_log_file, ec_uuid=ec_uuid,
+                        get_completion_time=True, plex_number=rebuild_start_time["plex_number"],
+                        status_interval=self.status_interval * 5, rebuild_wait_time=self.rebuild_timeout)
+                    if rebuild_completion_time["time"] > rebuild_start_time["time"]:
+                        break
+                    fun_test.sleep("waiting for rebuild to complete", self.status_interval)
+                    fun_test.log("Remaining Time: {}".format(search_timer.remaining_time()))
+                fun_test.simple_assert(not search_timer.is_expired(), "Rebuild operation is completed")
                 fun_test.log(
                     "Rebuild completion time for EC UUID: {} is: {}".format(ec_uuid, rebuild_completion_time))
                 fun_test.test_assert(rebuild_completion_time["status"], "EC UUID: {} completed at: {}".format(
@@ -1098,9 +1105,19 @@ class ECVolRebuildTestcase(FunTestCase):
 
 
 class ECVolRebuildSingleDiskFailure(ECVolRebuildTestcase):
+    def __init__(self):
+        super(ECVolRebuildSingleDiskFailure, self).__init__()
+        testcase = self.__class__.__name__
+        # Start of benchmarking json file parsing and initializing various variables to run this testcase
+        benchmark_file = fun_test.get_script_name_without_ext() + ".json"
+        benchmark_dict = utils.parse_file_to_json(benchmark_file)
+        for k, v in benchmark_dict[testcase].iteritems():
+            setattr(self, k, v)
+
     def describe(self):
         self.set_test_details(id=1,
                               summary="EC Volume Rebuild on single disk fail on EC volume",
+                              test_rail_case_ids=self.test_rail_case_id,
                               steps="""
         1. Bring up F1 in FS1600
         2. Reboot network connected host and ensure connectivity with F1

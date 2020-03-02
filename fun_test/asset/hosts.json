@@ -799,7 +799,7 @@
     "test_interface_info": {
       "0": {
         "name": "ens6",
-        "ip": "15.1.15.3/24",
+        "ip": "15.1.16.3/24",
         "switch_info": {
           "name": "qfx-1",
           "port": "et-0/0/57"
@@ -818,7 +818,7 @@
     "test_interface_info": {
       "0": {
         "name": "ens6",
-        "ip": "15.1.15.4/24",
+        "ip": "15.1.16.4/24",
         "switch_info": {
           "name": "qfx-1",
           "port": "et-0/0/57"
@@ -837,7 +837,7 @@
     "test_interface_info": {
       "0": {
         "name": "ens6",
-        "ip": "15.1.15.5/24",
+        "ip": "15.1.16.5/24",
         "switch_info": {
           "name": "qfx-1",
           "port": "et-0/0/57"
@@ -856,7 +856,7 @@
     "test_interface_info": {
       "0": {
         "name": "ens6",
-        "ip": "15.1.15.6/24",
+        "ip": "15.1.16.6/24",
         "switch_info": {
           "name": "qfx-1",
           "port": "et-0/0/57"
@@ -866,6 +866,11 @@
     "cpus": {
       "numa_node_ranges": ["0-3"]
     }
+  },
+   "cab02-qa-10-vm05": {
+    "host_ip": "cab02-qa-10-vm05",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*"
   },
   "cab02-qa-09": {
     "host_ip": "cab02-qa-09",

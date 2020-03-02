@@ -23,7 +23,7 @@ class BringupSetup(FunTestScript):
         """)
 
     def setup(self):
-        already_deployed = True
+        already_deployed = False
         topology_helper = TopologyHelper()
         self.topology = topology_helper.deploy(already_deployed=already_deployed)
         fun_test.test_assert(self.topology, "Topology deployed")
@@ -50,7 +50,7 @@ class VolumeManagement(FunTestCase):
         self.topology = fun_test.shared_variables["topology"]
         fs_obj_list = []
         for dut_index in self.topology.get_available_duts().keys():
-            self.fs_obj = self.topology.get_dut_instance( index=dut_index )
+            self.fs_obj = self.topology.get_dut_instance(index=dut_index)
             fs_obj_list.append(self.fs_obj)
 
         if ec_vol:
@@ -103,6 +103,8 @@ class VolumeManagement(FunTestCase):
                                  .format(x, vol_uuid_dict[0]))
 
         self.hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         for host_id in self.hosts:
             host_obj = self.hosts[host_id]
             for x in range(1, self.volume_count + 1, 1):
@@ -132,6 +134,8 @@ class VolumeManagement(FunTestCase):
 
     def run(self):
         hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         if self.run_traffic:
             for host_id in hosts:
                 host_obj = hosts[host_id]
@@ -205,5 +209,5 @@ class ECVolMultipleAttach(VolumeManagement):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(RawVolMultipleAttach())
-    setup_bringup.add_test_case(ECVolMultipleAttach())
+    #setup_bringup.add_test_case(ECVolMultipleAttach())
     setup_bringup.run()

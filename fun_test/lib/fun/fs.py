@@ -3,7 +3,7 @@ from lib.host.dpcsh_client import DpcshClient
 from lib.host.storage_controller import StorageController
 from lib.host.network_controller import NetworkController
 from lib.host.linux import Linux
-from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR
+from fun_settings import TFTP_SERVER_IP, INTEGRATION_DIR, DOCHUB_BASE_URL, DOCHUB_FUNGIBLE_LOCAL
 from lib.utilities.netcat import Netcat
 from lib.system.utils import ToDictMixin
 from lib.host.apc_pdu import ApcPdu
@@ -23,16 +23,15 @@ import os
 import socket
 import logging
 
-DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
+# DOCHUB_FUNGIBLE_LOCAL = "10.1.20.99"
 # ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT", "bug_check", "platform_halt: exit status 1"]
-ERROR_REGEXES = ["MUD_MCI_NON_FATAL_INTR_STAT",
-                 "bug_check on",
+ERROR_REGEXES = ["bug_check on",
                  "platform_halt: exit status 1",
                  "Assertion failed",
                  "Trap exception",
                  r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
 
-DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
+# DOCHUB_BASE_URL = "http://{}/doc/jenkins".format(DOCHUB_FUNGIBLE_LOCAL)
 
 """
 Possible workarounds:
@@ -166,6 +165,26 @@ class Bmc(Linux):
         this_ip = socket.gethostbyname(self.host_ip)  # so we can resolve full fqdn/ip-string in dot-decimal
         a, b, c, d = this_ip.split('.')
         return ':'.join(['02'] + ['1d', 'ad', "%02x" % int(c), "%02x" % int(d)] + ["%02x" % int(index)])
+
+    @fun_test.safe
+    def upload_logs(self):
+        tgz_file_name = "/tmp/s_{}_logs.tgz".format(fun_test.get_suite_execution_id())
+        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY), timeout=120)
+
+        context_prefix = self._get_context_prefix(data="system_logs.tgz")
+        uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
+                                                 linux_obj=self,
+                                                 source_file_path=tgz_file_name,
+                                                 display_name="System logs",
+                                                 asset_type=self.fs.get_asset_type(),
+                                                 asset_id=self.fs.get_asset_name(),
+                                                 artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
+                                                 artifact_sub_category=self.fs.ArtifactSubCategory.BMC,
+                                                 is_large_file=False,
+                                                 timeout=60)
+        fun_test.report_message("System logs available at {}".format(uploaded_path))
+        self.sudo_command("rm -f {}".format(tgz_file_name))
+
 
     @fun_test.safe
     def ping(self,
@@ -802,7 +821,7 @@ class Bmc(Linux):
             asset_id = self.fs.get_asset_name()
             self.fs.bmc_cleanup_attempted = True
 
-        fun_test.sleep(message="Allowing time to generate full report", seconds=30, context=self.context)
+        fun_test.sleep(message="Allowing time to generate full report", seconds=15, context=self.context)
         post_processing_error_found = False
         for f1_index in range(self.NUM_F1S):
             if self.disable_f1_index is not None and f1_index == self.disable_f1_index:
@@ -881,6 +900,10 @@ class Bmc(Linux):
                                         artifact_sub_category=self.fs.ArtifactSubCategory.BMC)
 
         try:
+            self.upload_logs()
+        except Exception as ex:
+            fun_test.critical(str(ex))
+        try:
             if not self.bundle_compatible:
                 self._reset_microcom()
             else:
@@ -893,10 +916,13 @@ class Bmc(Linux):
         try:
             fun_test.log("Post-processing UART log F1: {}".format(f1_index))
             regex = ""
-            if self.fs.get_revision() in ["2"]:
-                ERROR_REGEXES.append('i2c write error.*')
-                ERROR_REGEXES.append(r'smbus read cmd write failed(-6)! master:2')
-            for error_regex in ERROR_REGEXES:
+            if self.fs.bundle_compatible:
+                error_regexes = [r'CSR:FEP_.*(?<!NON)_FATAL_INTR']
+                error_regexes.append('i2c write error.*')
+                error_regexes.append(r'smbus read cmd write failed(-6)! master:2')
+            else:
+                error_regexes = ERROR_REGEXES
+            for error_regex in error_regexes:
                 regex += "{}|".format(error_regex)
             regex = regex.rstrip("|")
             with open(file_name, "r") as f:
@@ -1034,12 +1060,14 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 if self.fs.bundle_image_parameters:
+                    """
                     try:
                         bmc.upload_bundle_f1_logs(prefix="pre-boot")
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     bmc.clear_bundle_f1_logs()
                     bmc.start_bundle_f1_logs()
+                    """
 
                 come = fs.get_come()
                 fs.get_bundle_version()
@@ -1455,7 +1483,12 @@ class ComE(Linux):
 
         result = True
         containers = self.docker(sudo=True)
-        for expected_container in self.EXPECTED_CONTAINERS:
+        expected_containers = []
+        if self.fs.bundle_compatible:
+            expected_containers.extend(["F1-0", "F1-1"])
+        if not fun_test.fungible_controller_enabled:
+            expected_containers.append("run_sc")
+        for expected_container in expected_containers:
             found = False
             if containers:
                 for container in containers:
@@ -1709,7 +1742,7 @@ class ComE(Linux):
     def _transform_build_number(self):
         pass
 
-    def install_build_setup_script(self, build_number, release_train="1.0a_aa"):
+    def install_build_setup_script(self, build_number, release_train="1.0a_aa", max_installation_time=900):
         """
         install the build setup script downloaded from dochub
         :param build_number: build number
@@ -1740,7 +1773,10 @@ class ComE(Linux):
         self.curl(output_file=target_file_name, url=script_url, timeout=180)
         fun_test.simple_assert(self.list_files(target_file_name), "Install script downloaded")
         self.sudo_command("chmod 777 {}".format(target_file_name))
-        self.sudo_command("{} install".format(target_file_name), timeout=720)
+        command = "{} install".format(target_file_name)
+        if fun_test.fungible_controller_enabled:
+            command = "{} install-nosc".format(target_file_name)
+        self.sudo_command(command, timeout=max_installation_time)
         exit_status = self.exit_status()
         if exit_status:
             self.fs.bundle_install_failure_reset_required = True
@@ -1965,9 +2001,10 @@ class ComE(Linux):
                                                              asset_id=asset_id,
                                                              artifact_category=self.fs.ArtifactCategory.POST_BRING_UP,
                                                              artifact_sub_category=self.fs.ArtifactSubCategory.COME,
-                                                             is_large_file=True,
+                                                             is_large_file=False,
                                                              timeout=60)
-                fun_test.log("HBM dump uploaded to: {}".format(hbm_uploaded_path))
+                fun_test.log("HBM dump available at: {}".format(hbm_uploaded_path))
+                fun_test.report_message("HBM dump available at: {}".format(hbm_uploaded_path))
 
 
     def cleanup(self):
@@ -2141,6 +2178,8 @@ class ComE(Linux):
 
                 if hbm_dump_timer.is_expired():
                     fun_test.log("HBM dump timer expired. Giving up ...")
+                self.fs.reset_device_handles()
+                self.fs.renew_device_handles()
                 fun_test.test_assert(self.fs.ensure_is_up(validate_uptime=False), "FS must be up after HBM dump")
                 try:
                     self.upload_hbm_dump(asset_type=asset_type, asset_id=asset_id)
@@ -2949,6 +2988,11 @@ class Fs(object, ToDictMixin):
             bam_result = self.bam()
             if bam_result["status"]:
                 result = True
+            if result and check_expected_containers:
+                come = self.get_come()
+                result = come.ensure_expected_containers_running(max_time=15)
+                if not result:
+                    fun_test.critical("Expected container not running")
         else:
             try:
                 bmc = self.get_bmc()
@@ -2961,6 +3005,13 @@ class Fs(object, ToDictMixin):
                             health_result = come.ensure_expected_containers_running(max_time=15)
                             if not health_result:
                                 fun_test.critical("Expected container not running")
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds,
+                                                                                                    with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     except Exception as ex:
                         fun_test.critical(str(ex))
                     else:
@@ -2976,6 +3027,12 @@ class Fs(object, ToDictMixin):
                         else:
                             if fpga:
                                 fpga.disconnect()
+                        num_ssds = self.spec.get("num_ssds", None)
+                        if num_ssds:
+                            try:
+                                health_result, health_error_message = self.storage.check_ssd_status(num_ssds, with_error_details=True)
+                            except Exception as ex:
+                                fun_test.critical(str(ex))
                     """
                 result = health_result, health_error_message
 
@@ -3120,8 +3177,9 @@ class Fs(object, ToDictMixin):
 
     def ensure_is_up(self, validate_uptime=False):
         worst_case_uptime = 60 * 7
-        fpga = self.get_fpga()
+
         """
+        fpga = self.get_fpga()
         if fpga:
             fun_test.test_assert(expression=fpga.ensure_host_is_up(max_wait_time=120),
                                  context=self.context, message="FPGA reachable after reset")
@@ -3263,4 +3321,5 @@ if __name__ == "__main_22_":
 if __name__ == "__main__":
     fs = Fs.get(fun_test.get_asset_manager().get_fs_spec(name="fs-118"))
     bmc = fs.get_bmc()
-    bmc.reset_f1(f1_index=0)
+    bmc.upload_logs()
+    # bmc.reset_f1(f1_index=0)

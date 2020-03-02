@@ -37,28 +37,10 @@ class BringupSetup(FunTestScript):
         fun_test.test_assert(self.topology, "Topology deployed")
         fun_test.shared_variables["topology"] = self.topology
 
-    def cleanup(self):
-        self.topology.cleanup()
-        #pass
-
-
-class RunNvmeIdentifyCommands(FunTestCase):
-    topology = None
-    storage_controller_template = None
-
-    def describe(self):
-        self.set_test_details(id=1,
-                              summary="Run all nvme identify commands",
-                              steps='''
-                              1. Make sure API server is up and running
-                              2. Run all nvme identify commands
-                              ''')
-
-    def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol2"
-        already_deployed = True
+        name = "blt_vol6"
+        #already_deployed = True
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
         capacity = 160027797094
@@ -98,6 +80,34 @@ class RunNvmeIdentifyCommands(FunTestCase):
             print "Attach volume result is " + str(attach_vol_result)
 
         self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        fun_test.shared_variables["fs_obj"] = self.fs_obj
+        fun_test.shared_variables["f1_index"] = self.f1_index
+        fun_test.shared_variables["storage_controller_template"] = self.storage_controller_template
+
+
+    def cleanup(self):
+        self.topology.cleanup()
+        #pass
+
+
+class RunNvmeIdentifyCommands(FunTestCase):
+    topology = None
+    storage_controller_template = None
+
+    def describe(self):
+        self.set_test_details(id=1,
+                              summary="Run all nvme identify commands",
+                              steps='''
+                              1. Make sure API server is up and running
+                              2. Run all nvme identify commands
+                              ''')
+
+    def setup(self):
+        self.topology = fun_test.shared_variables["topology"]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+
 
     def getCtrlId(self,lnx,device):
         op = json.loads(lnx.sudo_command("nvme -id-ctrl {DEVICE} -o=json".format(DEVICE=device)))
@@ -133,8 +143,8 @@ class RunNvmeIdentifyCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device_ns = '/dev/' + nvme_device_name
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device_ns = nvme_device_name
+            nvme_device = nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
             identify_opcode = 06
@@ -293,7 +303,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=2,
                               summary="Run all nvme Get Feature commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -303,47 +313,9 @@ class RunNvmeGetFeatureCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol"
-        already_deployed = True
-        count = 0
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
-        compression_effort = False
-        encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=compression_effort,
-                                                           encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed)
-
-        fs_obj_list = []
-        self.bond_interface_dict = {}
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            dut = self.topology.get_dut(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
-                bond_interface_ip = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                dataplane_ip = str(bond_interface_ip.ip).split('/')[0]
-                self.bond_interface_dict[dataplane_ip] = f1_index
-            fs_obj_list.append(fs_obj)
-
-        print "Bond interface dict is " + str(self.bond_interface_dict)
-        self.fs_obj = fs_obj_list[0]
-
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
-        hosts = self.topology.get_available_host_instances()
-        for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[index],
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-            print "Attach volume result is " + str(attach_vol_result)
-
-        self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
 
     def run(self):
         hosts = self.topology.get_available_hosts()
@@ -368,7 +340,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device = nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
 
@@ -431,7 +403,7 @@ class RunNvmeGetFeatureCommands(FunTestCase):
                     #Validate the get feature values
                     #TBD
 
-            fun_test.test_assert(expression=test_result, message="Identify test result")
+            fun_test.test_assert(expression=test_result, message="Get Feature test result")
 
             #traffic_result = self.storage_controller_template.traffic_from_host(host_obj=host_obj,
             #                                                                    filename="/dev/"+nvme_device_name)
@@ -447,7 +419,7 @@ class RunNvmeGetLogCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=3,
                               summary="Run all nvme Get Log commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -457,47 +429,9 @@ class RunNvmeGetLogCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol2"
-        already_deployed = True
-        count = 0
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
-        compression_effort = False
-        encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=compression_effort,
-                                                           encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed)
-
-        fs_obj_list = []
-        self.bond_interface_dict = {}
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            dut = self.topology.get_dut(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
-                bond_interface_ip = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                dataplane_ip = str(bond_interface_ip.ip).split('/')[0]
-                self.bond_interface_dict[dataplane_ip] = f1_index
-            fs_obj_list.append(fs_obj)
-
-        print "Bond interface dict is " + str(self.bond_interface_dict)
-        self.fs_obj = fs_obj_list[0]
-
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
-        hosts = self.topology.get_available_host_instances()
-        for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[index],
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-            print "Attach volume result is " + str(attach_vol_result)
-
-        self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
 
 
     def run(self):
@@ -523,8 +457,8 @@ class RunNvmeGetLogCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device_ns = '/dev/' + nvme_device_name
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device_ns = nvme_device_name
+            nvme_device = nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
             known_issues = [0xC0]
 
@@ -675,7 +609,7 @@ class RunNvmeGetPropertyCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=4,
                               summary="Run all nvme Get Property commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -685,47 +619,9 @@ class RunNvmeGetPropertyCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol"
-        already_deployed = True
-        count = 0
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
-        compression_effort = False
-        encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=compression_effort,
-                                                           encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed)
-
-        fs_obj_list = []
-        self.bond_interface_dict = {}
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            dut = self.topology.get_dut(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
-                bond_interface_ip = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                dataplane_ip = str(bond_interface_ip.ip).split('/')[0]
-                self.bond_interface_dict[dataplane_ip] = f1_index
-            fs_obj_list.append(fs_obj)
-
-        print "Bond interface dict is " + str(self.bond_interface_dict)
-        self.fs_obj = fs_obj_list[0]
-
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
-        hosts = self.topology.get_available_host_instances()
-        for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[index],
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-            print "Attach volume result is " + str(attach_vol_result)
-
-        self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
 
     def run(self):
         hosts = self.topology.get_available_hosts()
@@ -750,7 +646,7 @@ class RunNvmeGetPropertyCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device = nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
             property_list = [0x0, 0x8, 0x14, 0x1c, 0x20, 0x30 ]
@@ -817,7 +713,7 @@ class RunNvmeOtherCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=5,
                               summary="Run P2 NVME CLI commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -827,47 +723,9 @@ class RunNvmeOtherCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol2"
-        already_deployed = True
-        count = 0
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
-        compression_effort = False
-        encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=compression_effort,
-                                                           encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed)
-
-        fs_obj_list = []
-        self.bond_interface_dict = {}
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            dut = self.topology.get_dut(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
-                bond_interface_ip = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                dataplane_ip = str(bond_interface_ip.ip).split('/')[0]
-                self.bond_interface_dict[dataplane_ip] = f1_index
-            fs_obj_list.append(fs_obj)
-
-        print "Bond interface dict is " + str(self.bond_interface_dict)
-        self.fs_obj = fs_obj_list[0]
-
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
-        hosts = self.topology.get_available_host_instances()
-        for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[index],
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-            print "Attach volume result is " + str(attach_vol_result)
-
-        self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
 
     def getCtrlId(self,lnx,device):
         op = json.loads(lnx.sudo_command("nvme -id-ctrl {DEVICE} -o=json".format(DEVICE=device)))
@@ -898,8 +756,8 @@ class RunNvmeOtherCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device_ns = '/dev/' + nvme_device_name
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device_ns = nvme_device_name
+            nvme_device = nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
             test_result = True
@@ -1018,7 +876,7 @@ class RunNvmeIOCommands(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        self.set_test_details(id=1,
+        self.set_test_details(id=6,
                               summary="Run NVME IO commands",
                               steps='''
                               1. Make sure API server is up and running
@@ -1028,47 +886,9 @@ class RunNvmeIOCommands(FunTestCase):
     def setup(self):
 
         self.topology = fun_test.shared_variables["topology"]
-        name = "blt_vol2"
-        already_deployed = True
-        count = 0
-        vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 160027797094
-        compression_effort = False
-        encrypt = False
-        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
-                                                           compression_effort=compression_effort,
-                                                           encrypt=encrypt, data_protection={})
-        self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
-        self.storage_controller_template.initialize(already_deployed=already_deployed)
-
-        fs_obj_list = []
-        self.bond_interface_dict = {}
-        for dut_index in self.topology.get_available_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            dut = self.topology.get_dut(index=dut_index)
-            for f1_index in range(fs_obj.NUM_F1S):
-                bond_interface_ip = dut.get_bond_interfaces(f1_index=f1_index)[0]
-                dataplane_ip = str(bond_interface_ip.ip).split('/')[0]
-                self.bond_interface_dict[dataplane_ip] = f1_index
-            fs_obj_list.append(fs_obj)
-
-        print "Bond interface dict is " + str(self.bond_interface_dict)
-        self.fs_obj = fs_obj_list[0]
-
-        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
-                                                                       body_volume_intent_create=body_volume_intent_create)
-        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
-        hosts = self.topology.get_available_host_instances()
-        for index, fs_obj in enumerate(fs_obj_list):
-            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
-                                                                               volume_uuid=vol_uuid_list[index],
-                                                                               validate_nvme_connect=True,
-                                                                               raw_api_call=True)
-            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
-
-            print "Attach volume result is " + str(attach_vol_result)
-
-        self.f1_index = self.bond_interface_dict[str(attach_vol_result[0]["data"]["ip"])]
+        self.fs_obj = fun_test.shared_variables["fs_obj"]
+        self.f1_index = fun_test.shared_variables["f1_index"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
 
     def getCtrlId(self,lnx,device):
         op = json.loads(lnx.sudo_command("nvme -id-ctrl {DEVICE} -o=json".format(DEVICE=device)))
@@ -1099,8 +919,8 @@ class RunNvmeIOCommands(FunTestCase):
             host_obj = hosts[host_id]
             host_handle = host_obj.get_instance()
             nvme_device_name = self.storage_controller_template.get_host_nvme_device(host_obj=host_obj)[0]
-            nvme_device_ns = '/dev/' + nvme_device_name
-            nvme_device = '/dev/' + nvme_device_name[0:-2]
+            nvme_device_ns = nvme_device_name
+            nvme_device =  nvme_device_name[0:-2]
             nsid = nvme_device_name[-1:]
 
             test_result = True

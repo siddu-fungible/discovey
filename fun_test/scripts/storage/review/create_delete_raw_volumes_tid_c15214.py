@@ -113,6 +113,38 @@ class CreateDeleteVolume(FunTestCase):
             fun_test.test_assert(expression=vol_uuid, message="Create Volume Successful")
             self.vol_uuid_list.append(vol_uuid[0])
 
+    def attach_volumes(self):
+        hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
+        fun_test.test_assert( required_hosts_available, "Required hosts available" )
+
+        # for fs_obj in vol_uuid_dict:
+        for host_id in hosts:
+            host_obj = hosts[host_id]
+            for volume in range(self.no_of_volumes):
+                self.attach_vol_result = self.storage_controller_template.attach_volume(host_obj=host_obj, fs_obj=self.fs_obj_list,
+                                                                                        volume_uuid=self.vol_uuid_list[volume][0],
+                                                                                        validate_nvme_connect=False,
+                                                                                        raw_api_call=True )
+                fun_test.test_assert(expression=self.attach_vol_result, message="Attach Volume with uuid {} Successful"
+                                     .format(self.vol_uuid_list[volume][0]))
+
+    def detach_volumes(self):
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            storage_controller = fs_obj.get_storage_controller()
+            # volumes = storage_controller.storage_api.get_volumes()
+            # WORKAROUND : get_volumes errors out.
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            get_volume_result = raw_sc_api.get_volumes()
+            fun_test.test_assert(message="Get Volume Details", expression=get_volume_result["status"])
+            for volume in get_volume_result["data"]:
+                for port in get_volume_result["data"][volume]["ports"]:
+                    detach_volume = storage_controller.storage_api.delete_port(port_uuid=port)
+                    fun_test.test_assert(expression=detach_volume.status,
+                                         message="Detach Volume {} from host with remote IP {}".format(
+                                             volume, get_volume_result["data"][volume]['ports'][port]['remote_ip']))
+
     def delete_volumes(self):
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
@@ -142,12 +174,14 @@ class CreateDeleteVolume(FunTestCase):
             raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
             for volume_uuid in self.vol_uuid_list:
                 vol_db_status = raw_sc_api.is_delete_in_db(come_handle=self.come_handle,vol_uuid=volume_uuid)
-                fun_test.test_assert( expression=vol_db_status["status"], message="Volume Deletion Check {}".format(vol_db_status))
+                fun_test.test_assert(expression=vol_db_status["status"], message="Volume Deletion Check {}".format(vol_db_status))
 
     def run(self):
         self.delete_volumes() #Delete Volumes from Previous run
         self.create_volumes()
         self.volumes_persistent_check()
+        self.attach_volumes()
+        self.detach_volumes()
         self.delete_volumes()
         self.volumes_deletion_check()
 

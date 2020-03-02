@@ -47,7 +47,7 @@ class CreateMaxBLTVolumes(FunTestCase):
         vol_name = "blt_vol"
         count = 0
         vol_type = VolumeTypes().LOCAL_THIN
-        capacity = 107374182400
+        capacity = 10737418240
         compression_effort = False
         if enable_encryption:
             encrypt = True
@@ -58,7 +58,7 @@ class CreateMaxBLTVolumes(FunTestCase):
             stripe_count = 12
         else:
             stripe_count = 0
-        volume_count = 10
+        volume_count = 1000
         self.run_traffic = False
         self.storage_controller_template = BltVolumeOperationsTemplate(topology=self.topology)
         if not skip_initialize:
@@ -85,6 +85,9 @@ class CreateMaxBLTVolumes(FunTestCase):
                                  .format(x, final_vol_uuid_dict[x]))
 
         hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
+
         # for fs_obj in vol_uuid_dict:
         for host_id in hosts:
             host_obj = hosts[host_id]
@@ -98,6 +101,8 @@ class CreateMaxBLTVolumes(FunTestCase):
 
     def run(self):
         hosts = self.topology.get_available_hosts()
+        required_hosts_available = True if (self.topology.get_available_host_instances() != None) else False
+        fun_test.test_assert(required_hosts_available, "Required hosts available")
         if self.run_traffic:
             for host_id in hosts:
                 host_obj = hosts[host_id]
@@ -188,7 +193,7 @@ class MaxStripeVolumeEncryption(CreateMaxBLTVolumes):
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(CreateMaxBLTVolumes())
-    setup_bringup.add_test_case(MaxBltEncryption())
-    setup_bringup.add_test_case(MaxStripeVolume())
-    setup_bringup.add_test_case(MaxStripeVolumeEncryption())
+    #setup_bringup.add_test_case(MaxBltEncryption())
+    #setup_bringup.add_test_case(MaxStripeVolume())
+    #setup_bringup.add_test_case(MaxStripeVolumeEncryption())
     setup_bringup.run()

@@ -3236,7 +3236,7 @@ if __name__ == "__main_8k_block_size_12_volumes__":
                                    workspace_ids=[])
             print "created latency charts for 12 volumes 8k block size"
 
-if __name__ == "__main__":
+if __name__ == "__main_data_plane_fix__":
     charts = MetricChart.objects.filter(metric_model_name="DataPlaneOperationsPerformance")
     for chart in charts:
         data_sets = chart.get_data_sets()
@@ -3250,4 +3250,104 @@ if __name__ == "__main__":
         chart.save()
     print "deleted the volume size and total volumes key from filter"
 
+if __name__ == "__main_internal_name_change__":
+    internal_chart_names = {"fungible_controller": "fs1600_controller",
+                            "fungible_controller_api": "fs1600_controller_storage",
+                            "fungible_controller_api_create": "fs1600_controller_storage_raw_create",
+                            "fungible_controller_api_create_avg_time_concurrent": "fs1600_controller_storage_raw_create_avg_time_concurrent",
+                            "fungible_controller_api_create_avg_time_serial": "fs1600_controller_storage_raw_create_avg_time_serial",
+                            "fungible_controller_api_attach": "fs1600_controller_storage_raw_attach",
+                            "fungible_controller_api_attach_avg_time_concurrent": "fs1600_controller_storage_raw_attach_avg_time_concurrent",
+                            "fungible_controller_api_attach_avg_time_serial": "fs1600_controller_storage_raw_attach_avg_time_serial",
+                            "fungible_controller_api_delete": "fs1600_controller_storage_raw_delete",
+                            "fungible_controller_api_delete_avg_time_concurrent": "fs1600_controller_storage_raw_delete_avg_time_concurrent",
+                            "fungible_controller_api_delete_avg_time_serial": "fs1600_controller_storage_raw_delete_avg_time_serial",
+                            "fungible_controller_api_detach": "fs1600_controller_storage_raw_detach",
+                            "fungible_controller_api_detach_avg_time_concurrent": "fs1600_controller_storage_raw_detach_avg_time_concurrent",
+                            "fungible_controller_api_detach_avg_time_serial": "fs1600_controller_storage_raw_detach_avg_time_serial"}
 
+    for internal_name in internal_chart_names:
+        chart = MetricChart.objects.get(internal_chart_name=internal_name)
+        chart.internal_chart_name = internal_chart_names[internal_name]
+        chart.save()
+    print "changed the internal chart names of all the fungible controller"
+
+if __name__ == "__main_real_f1_false__":
+    metric_model_name = "DataPlaneOperationsPerformance"
+    charts = MetricChart.objects.filter(metric_model_name=metric_model_name)
+    for chart in charts:
+        data_sets = chart.get_data_sets()
+        for data_set in data_sets:
+            data_set["inputs"]["input_real_f1"] = False
+        chart.data_sets = json.dumps(data_sets)
+        chart.save()
+    print "changed filter for old charts"
+
+if __name__ == "__main__":
+    owner_info = "Ashwin S (ashwin.s@fungible.com)"
+    ic = "fs1600_controller_realf1"
+    types = ["Storage"]
+    volumes = ["Raw volume"]
+    operations = ["Attach", "Create", "Delete", "Detach"]
+    leaves = ["avg_time_concurrent", "avg_time_serial"]
+    base_line_date = datetime(year=2020, month=2, day=26, minute=0, hour=0, second=0)
+    root_chart = ml.create_container(chart_name="Controller (using real F1)",
+                                     internal_chart_name="fs1600_controller_realf1",
+                                     platform=FunPlatform.F1,
+                                     owner_info=owner_info,
+                                     base_line_date=base_line_date)
+    for type in types:
+        type_ic = ic + "_" + type.lower()
+        type_chart = ml.create_container(chart_name=type, internal_chart_name=type_ic,
+                                         platform=FunPlatform.F1,
+                                         owner_info=owner_info,
+                                         base_line_date=base_line_date)
+        root_chart.add_child(child_id=type_chart.metric_id)
+        for volume in volumes:
+            vol_ic = type_ic + "_raw"
+            volume_chart = ml.create_container(chart_name=volume, internal_chart_name=vol_ic, platform=FunPlatform.F1,
+                                               owner_info=owner_info,
+                                               base_line_date=base_line_date)
+            type_chart.add_child(child_id=volume_chart.metric_id)
+            for operation in operations:
+                op_ic = vol_ic + "_" + operation.lower()
+                operation_chart = ml.create_container(chart_name=operation, internal_chart_name=op_ic,
+                                                      platform=FunPlatform.F1,
+                                                      owner_info=owner_info,
+                                                      base_line_date=base_line_date)
+                volume_chart.add_child(child_id=operation_chart.metric_id)
+                for leaf in leaves:
+                    leaf_ic = op_ic + "_" + leaf
+                    if "concurrent" in leaf:
+                        chart_name = "Average time per volume - concurrent"
+                        c = True
+                    else:
+                        chart_name = "Average time per volume - serial"
+                        c = False
+                    data_sets = []
+                    one_data_set = {}
+                    one_data_set["name"] = "avg_time"
+                    one_data_set["inputs"] = {"input_platform": FunPlatform.F1,
+                                              "input_action_type": operation.lower() + "_volume",
+                                              "input_volume_type": "raw", "input_concurrent": c,
+                                              "input_real_f1": True}
+                    one_data_set["output"] = {"name": "output_avg_time", "min": 0, "max": -1, "expected": -1,
+                                              "reference":
+                                                  -1, "best": -1, "unit": PerfUnit.UNIT_SECS}
+                    data_sets.append(one_data_set)
+                    leaf_chart = ml.create_leaf(chart_name=chart_name, internal_chart_name=leaf_ic, data_sets=data_sets,
+                                                owner_info=owner_info,
+                                                positive=False, y1_axis_title=PerfUnit.UNIT_SECS,
+                                                visualization_unit=PerfUnit.UNIT_SECS,
+                                                metric_model_name="DataPlaneOperationsPerformance",
+                                                base_line_date=base_line_date,
+                                                platform=FunPlatform.F1)
+                    leaf_chart.fix_children_weights()
+                    operation_chart.add_child(child_id=leaf_chart.metric_id)
+                operation_chart.fix_children_weights()
+            volume_chart.fix_children_weights()
+        type_chart.fix_children_weights()
+    root_chart.fix_children_weights()
+    final_dict = ml.get_dict(chart=root_chart)
+    print json.dumps(final_dict)
+    ml.add_child_to_metrics_json(parent_internal_chart_name="fs1600", child_dict=final_dict)

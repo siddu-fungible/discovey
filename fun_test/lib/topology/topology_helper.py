@@ -366,6 +366,7 @@ class TopologyHelper:
                 fun_test.simple_assert(host_spec, "Retrieve host-spec for {}".format(fungible_controller_name))
                 fungible_controller_obj = FungibleController(**host_spec)
                 fungible_controllers[fungible_controller_name].set_instance(fungible_controller_obj)
+                fun_test.enable_fungible_controller()
 
             duts = topology.duts
 

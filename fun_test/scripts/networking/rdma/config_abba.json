@@ -2,14 +2,15 @@
   "1_1": {
     "name": "1_1",
     "description": "RDMA Test between 1 Server and 1 Client",
-    "ib_device": "funrdma0",
+    "ib_deivce": "funrdma0",
+    "run_infinitely": 5,
     "is_parallel": true,
     "combined_log": 0,
     "clients": [
       {
         "client_id": "c1",
-        "host_ip": "mpoc-server40",
-        "hu_interface_ip": "20.2.2.3"
+        "host_ip": "mpoc-server44",
+        "hu_interface_ip": "20.2.1.2"
       }
     ],
     "servers": [
@@ -23,15 +24,15 @@
     "duration_in_secs": 30,
     "iterations": 100000,
     "inline_size": 64,
-    "qpairs": 6144
+    "qpairs": 800
   },
   "N_1": {
     "name": "N_1",
     "description": "RDMA test between N clients and 1 server",
     "ib_device": "funrdma0",
     "is_parallel": true,
+    "combined_log": 1,
     "run_infinitely": 5,
-    "combined_log": 0,
     "clients": [
       {
         "client_id": "c1",
@@ -55,26 +56,36 @@
       },
       {
         "client_id": "c5",
+        "host_ip": "mpoc-server42",
+        "hu_interface_ip": "20.2.17.2"
+      },
+      {
+        "client_id": "c6",
+        "host_ip": "mpoc-server48",
+        "hu_interface_ip": "20.2.18.2"
+      },
+      {
+        "client_id": "c7",
         "host_ip": "mpoc-server47",
         "hu_interface_ip": "20.2.3.3"
       },
       {
-        "client_id": "c6",
+        "client_id": "c8",
         "host_ip": "mpoc-server45",
         "hu_interface_ip": "20.2.4.3"
       },
       {
-        "client_id": "c7",
-        "host_ip": "mpoc-server32",
-        "hu_interface_ip": "20.2.7.2"
+        "client_id": "c9",
+        "host_ip": "mpoc-server34",
+        "hu_interface_ip": "20.2.21.2"
       },
       {
-        "client_id": "c8",
+        "client_id": "c10",
         "host_ip": "mpoc-server30",
         "hu_interface_ip": "20.2.22.3"
       },
       {
-        "client_id": "c9",
+        "client_id": "c11",
         "host_ip": "mpoc-server31",
         "hu_interface_ip": "20.2.22.2"
       }
@@ -82,15 +93,15 @@
     "servers": [
       {
         "server_id": "s1",
-        "host_ip": "mpoc-server34",
-        "hu_interface_ip": "20.2.21.2"
+        "host_ip": "mpoc-server32",
+        "hu_interface_ip": "20.2.7.2"
       }
     ],
-    "size_in_bytes": 8192,
-    "duration_in_secs": 120,
+    "size_in_bytes": 131072,
+    "duration_in_secs": 60,
     "iterations": 100000,
     "inline_size": 64,
-    "qpairs": 1
+    "qpairs": 500
   },
   "N_2": {
     "name": "N_2",
@@ -122,33 +133,53 @@
       },
       {
         "client_id": "c5",
+        "host_ip": "mpoc-server42",
+        "hu_interface_ip": "20.2.17.2"
+      },
+      {
+        "client_id": "c6",
+        "host_ip": "mpoc-server48",
+        "hu_interface_ip": "20.2.18.2"
+      },
+      {
+        "client_id": "c7",
         "host_ip": "mpoc-server47",
         "hu_interface_ip": "20.2.3.3"
       },
       {
-        "client_id": "c6",
+        "client_id": "c8",
+        "host_ip": "mpoc-server45",
+        "hu_interface_ip": "20.2.4.3"
+      },
+      {
+        "client_id": "c9",
         "host_ip": "mpoc-server32",
         "hu_interface_ip": "20.2.7.2"
+      },
+      {
+        "client_id": "c10",
+        "host_ip": "mpoc-server34",
+        "hu_interface_ip": "20.2.21.2"
       }
     ],
     "servers": [
       {
         "server_id": "s1",
-        "host_ip": "mpoc-server34",
-        "hu_interface_ip": "20.2.21.2"
+        "host_ip": "mpoc-server30",
+        "hu_interface_ip": "20.2.22.3"
       },
       {
         "server_id": "s2",
-        "host_ip": "mpoc-server30",
-        "hu_interface_ip": "20.2.22.3"
+        "host_ip": "mpoc-server31",
+        "hu_interface_ip": "20.2.22.2"
       }
     ],
-    "bw_test_size_in_bytes": 8192,
+    "bw_test_size_in_bytes": 65536,
     "lat_test_size_in_bytes": 1,
-    "duration_in_secs": 60,
+    "duration_in_secs": 120,
     "iterations": 100000,
     "inline_size": 64,
-    "qpairs": 4
+    "qpairs": 1
   },
   "N_N": {
     "name": "N_N",
@@ -156,6 +187,7 @@
     "ib_device": "funrdma0",
     "is_parallel": true,
     "run_infinitely": 5,
+    "combined_log": 1,
     "hosts": [
       {
         "host_ip": "mpoc-server44",
@@ -182,8 +214,8 @@
         "hu_interface_ip": "20.2.7.2"
       },
       {
-        "host_ip": "mpoc-server34",
-        "hu_interface_ip": "20.2.21.2"
+        "host_ip": "mpoc-server45",
+        "hu_interface_ip": "20.2.4.3"
       }
     ],
     "size_in_bytes": 8192,
@@ -196,6 +228,7 @@
     "description": "For Latency under BW test in N-->1 scenario and latency test 1-->1 scenario in parallel",
     "ib_device": "funrdma0",
     "run_infinitely": 5,
+    "combined_log": 1,
     "clients": [
       {
         "client_id": "c1",
@@ -219,54 +252,56 @@
       },
       {
         "client_id": "c5",
+        "host_ip": "mpoc-server42",
+        "hu_interface_ip": "20.2.17.2"
+      },
+      {
+        "client_id": "c6",
+        "host_ip": "mpoc-server48",
+        "hu_interface_ip": "20.2.18.2"
+      },
+      {
+        "client_id": "c7",
         "host_ip": "mpoc-server47",
         "hu_interface_ip": "20.2.3.3"
       },
       {
-        "client_id": "c6",
+        "client_id": "c8",
         "host_ip": "mpoc-server45",
         "hu_interface_ip": "20.2.4.3"
       },
       {
-        "client_id": "c7",
-        "host_ip": "mpoc-server32",
-        "hu_interface_ip": "20.2.7.2"
+        "client_id": "c9",
+        "host_ip": "mpoc-server34",
+        "hu_interface_ip": "20.2.21.2"
       },
       {
-        "client_id": "c8",
+        "client_id": "c10",
         "host_ip": "mpoc-server30",
         "hu_interface_ip": "20.2.22.3"
-      },
-      {
-        "client_id": "c9",
-        "host_ip": "mpoc-server31",
-        "hu_interface_ip": "20.2.22.2"
       }
     ],
     "servers": [
       {
         "server_id": "s1",
-        "host_ip": "mpoc-server34",
-        "hu_interface_ip": "20.2.21.2"
+        "host_ip": "mpoc-server32",
+        "hu_interface_ip": "20.2.7.2"
       }
     ],
-    "bw_test_size_in_bytes": 8192,
+    "bw_test_size_in_bytes": 65536,
     "lat_test_size_in_bytes": 1,
-    "duration_in_secs": 120,
+    "duration_in_secs": 30,
     "iterations": 100000,
     "inline_size": 64,
-    "qpairs": 642
+    "qpairs": 1
   },
   "abba_under_load": {
     "name": "abba_under_load",
     "description": "For Latency under BW test in N-->N scenario and latency test N-->N scenario in parallel",
     "ib_device": "funrdma0",
     "run_infinitely": 5,
+    "combined_log": 1,
     "hosts": [
-      {
-        "host_ip": "mpoc-server44",
-        "hu_interface_ip": "20.2.1.2"
-      },
       {
         "host_ip": "mpoc-server40",
         "hu_interface_ip": "20.2.2.3"
@@ -276,12 +311,28 @@
         "hu_interface_ip": "20.2.19.2"
       },
       {
+        "host_ip": "mpoc-server42",
+        "hu_interface_ip": "20.2.17.2"
+      },
+      {
         "host_ip": "mpoc-server43",
         "hu_interface_ip": "20.2.20.2"
       },
       {
+        "host_ip": "mpoc-server44",
+        "hu_interface_ip": "20.2.1.2"
+      },
+      {
+        "host_ip": "mpoc-server45",
+        "hu_interface_ip": "20.2.4.3"
+      },
+      {
         "host_ip": "mpoc-server47",
         "hu_interface_ip": "20.2.3.3"
+      },
+      {
+        "host_ip": "mpoc-server30",
+        "hu_interface_ip": "20.2.22.3"
       },
       {
         "host_ip": "mpoc-server32",
@@ -292,7 +343,7 @@
         "hu_interface_ip": "20.2.21.2"
       }
     ],
-    "bw_test_size_in_bytes": 8192,
+    "bw_test_size_in_bytes": 65536,
     "lat_test_size_in_bytes": 1,
     "duration_in_secs": 30,
     "iterations": 100000,

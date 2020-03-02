@@ -134,7 +134,10 @@ Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Starting PostgreSQL RDBMS...
 Feb 23 07:20:42 qa-ubuntu-01 systemd[1]: Started PostgreSQL RDBMS.
 ~~~~
 
-
+#### Set symbolic link to the log directory
+~~~~
+qa-admin@qa-ubuntu-01:/project/users/QA/regression/Integration/fun_test/web/static$ ln -s /project-fe/users/qa-admin/regression/static_logs/logs logs
+~~~~
 
 
 ### Re-starting the web-server

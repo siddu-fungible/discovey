@@ -47,6 +47,8 @@ class StorageControllerApi(object):
         response = self.execute_api("post", auth_url, data=data)
         print response
         print "Response Object \n{}".format(dir(response))
+        result = response.json()
+        return result
 
     def get_dpu_ids(self):
         result = []
@@ -255,7 +257,7 @@ class StorageControllerApi(object):
 
     def get_dpu_state(self, dpu_index):
         result = {"status": False, "data": {}}
-        url = "topology/dpus/FS1.{}/state".format(dpu_index)
+        url = "topologgity/dpus/FS1.{}/state".format(dpu_index)
         response = self.execute_api("GET", url)
         fun_test.log("GET {}".format(url))
         try:
