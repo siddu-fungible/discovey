@@ -130,6 +130,7 @@ class MultiHostFioRandRead(FunTestCase):
                      format(testcase, self.expected_fio_result))
         # End of benchmarking json file parsing
 
+        self.num_f1 = fun_test.shared_variables["num_f1"]
         job_inputs = fun_test.get_job_inputs()
         if not job_inputs:
             job_inputs = {}
@@ -218,8 +219,8 @@ class MultiHostFioRandRead(FunTestCase):
                 vol_uuid_list = self.sc_template.create_volume(fs_obj=fs_obj_list,
                                                                body_volume_intent_create=
                                                                body_volume_intent_create)
-                current_vol_uuid = vol_uuid_list[0]
-                fun_test.test_assert(expression=vol_uuid_list,
+                current_vol_uuid = vol_uuid_list[0] if vol_uuid_list else None
+                fun_test.test_assert(expression=current_vol_uuid,
                                      message="Created Volume {} Successfully".format(current_vol_uuid))
 
                 # Check if drive id is unique
@@ -228,11 +229,13 @@ class MultiHostFioRandRead(FunTestCase):
                 current_drive_list = f1_0_drive_id_list
                 props_tree = "{}/{}/{}".format("storage", "volumes", self.sc_template.vol_type)
                 dpu_op = self.sc_dpcsh_obj_f1_0.peek(props_tree=props_tree)
+                fun_test.simple_assert(dpu_op["status"],"Check volume {} in F1.0".format(current_vol_uuid))
                 if not current_vol_uuid in dpu_op["data"]:
                     current_dpu_index = 1
                     current_vol_list = f1_1_volume_list
                     current_drive_list = f1_1_drive_id_list
                     dpu_op = self.sc_dpcsh_obj_f1_1.peek(props_tree=props_tree)
+                    fun_test.simple_assert(dpu_op["status"], "Check volume {} in F1.1".format(current_vol_uuid))
                 drive_id = dpu_op["data"][current_vol_uuid]["stats"]["drive_uuid"]
                 if use_unique_drives:
                     fun_test.test_assert(drive_id not in current_drive_list,
@@ -411,11 +414,10 @@ class MultiHostFioRandRead(FunTestCase):
                               "Write Latency 99 Percentile in uSecs", "Write Latency 99.99 Percentile in uSecs",
                               "Read Latency in uSecs", "Read Latency 90 Percentile in uSecs",
                               "Read Latency 95 Percentile in uSecs", "Read Latency 99 Percentile in uSecs",
-                              "Read Latency 99.99 Percentile in uSecs", "fio_job_name"]
+                              "Read Latency 99.99 Percentile in uSecs"]
         table_data_cols = ["block_size", "iodepth", "size", "mode", "writeiops", "readiops", "writebw", "readbw",
                            "writeclatency", "writelatency90", "writelatency95", "writelatency99", "writelatency9999",
-                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999",
-                           "fio_job_name"]
+                           "readclatency", "readlatency90", "readlatency95", "readlatency99", "readlatency9999"]
         table_data_rows = []
 
         self.hosts = fun_test.shared_variables["hosts"]
@@ -600,12 +602,15 @@ class MultiHostFioRandRead(FunTestCase):
             table_data_list = copy.deepcopy(row_data_list)
             table_data_rows.append(table_data_list)
 
-            row_data_list.insert(0, self.blt_count)
-            row_data_list.insert(0, self.num_ssd)
+            dashboard_vols = self.blt_count/self.num_f1
+            row_data_list.insert(0, dashboard_vols)
+            row_data_list.insert(0, dashboard_vols)
             row_data_list.insert(0, get_data_collection_time())
+            row_data_list.append(self.num_f1)
+            row_data_list.append(len(self.hosts))
             if self.post_results:
                 fun_test.log("Posting results on dashboard")
-                post_results("Multi_host_TCP", test_method, *row_data_list)
+                post_raw_vol_perf_results(*row_data_list)
 
             table_data = {"headers": table_data_headers, "rows": table_data_rows}
             fun_test.add_table(panel_header="Multiple hosts over TCP Perf Table", table_name=self.summary,
