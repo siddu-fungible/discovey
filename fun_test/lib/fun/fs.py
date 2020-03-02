@@ -169,7 +169,7 @@ class Bmc(Linux):
     @fun_test.safe
     def upload_logs(self):
         tgz_file_name = "/tmp/s_{}_logs.tgz".format(fun_test.get_suite_execution_id())
-        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY), timeout=120)
+        self.command("tar -cvzf {} {}".format(tgz_file_name, self.LOG_DIRECTORY), timeout=180)
 
         context_prefix = self._get_context_prefix(data="system_logs.tgz")
         uploaded_path = fun_test.upload_artifact(local_file_name_post_fix=context_prefix,
@@ -989,6 +989,16 @@ class Bmc(Linux):
                                                          is_large_file=False,
                                                          timeout=60)
 
+    def clean_bundle_log_archives(self):
+        for f1_index in range(2):
+            try:
+                rotated_log_files = self.list_files(self.LOG_DIRECTORY + "/funos_f1_{}*gz".format(f1_index))
+                for rotated_index, rotated_log_file in enumerate(rotated_log_files):
+                    rotated_log_filename = rotated_log_file["filename"]
+                    self.command('rm {}'.format(rotated_log_filename))
+            except Exception as ex:
+                fun_test.critical(str(ex))
+
     def clear_bundle_f1_logs(self):
         for f1_index in range(2):
             if f1_index == self.disable_f1_index:
@@ -1060,14 +1070,7 @@ class BootupWorker(Thread):
 
             if self.fs.get_revision() in ["2"] and self.fs.bundle_compatible:
                 if self.fs.bundle_image_parameters:
-                    """
-                    try:
-                        bmc.upload_bundle_f1_logs(prefix="pre-boot")
-                    except Exception as ex:
-                        fun_test.critical(str(ex))
-                    bmc.clear_bundle_f1_logs()
-                    bmc.start_bundle_f1_logs()
-                    """
+                    bmc.clean_bundle_log_archives()
 
                 come = fs.get_come()
                 fs.get_bundle_version()
@@ -1792,8 +1795,8 @@ class ComE(Linux):
 
         ### Workaround for bond
 
-        self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
-        self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
+        # self.sudo_command("mkdir -p /opt/fungible/etc/funcontrolplane.d")
+        # self.sudo_command("touch /opt/fungible/etc/funcontrolplane.d/configure_bond")
         fun_test.set_version(version="{}/{}".format(release_train, build_number))
 
         return True
