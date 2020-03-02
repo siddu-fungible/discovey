@@ -58,6 +58,7 @@ class TestDataIntegrity(FunTestCase):
         capacity = 10*1024*1024*1024
         effort_levels = [1, 2]
         encrypt = True
+        already_deployed = False
 
         self.fs_obj_list = [self.topology.get_dut_instance(index=dut_index)
                        for dut_index in self.topology.get_available_duts().keys()]
@@ -72,13 +73,14 @@ class TestDataIntegrity(FunTestCase):
                                                                    data_protection={"num_redundant_dpus": 0,
                                                                                     "num_failed_disks": 2})
                 self.storage_controller_template = EcVolumeOperationsTemplate(topology=self.topology)
-                self.storage_controller_template.initialize(already_deployed=False)
+                self.storage_controller_template.initialize(already_deployed=already_deployed)
 
                 vol_uuid = self.storage_controller_template.\
                     create_volume(fs_obj=self.fs_obj_list, body_volume_intent_create=body_volume_intent_create)
                 fun_test.test_assert(vol_uuid,
                                      message="Create Volume {} Successful. zip level: {}".format(vol_uuid[0], effort))
                 self.vol_uuid_list.append(vol_uuid[0])
+                already_deployed = True
 
         self.attach_result = self.storage_controller_template.attach_m_vol_n_host(self.fs_obj_list[0],
                                                              self.vol_uuid_list, self.host_obj_list,
