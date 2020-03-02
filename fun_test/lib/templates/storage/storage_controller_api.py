@@ -257,7 +257,7 @@ class StorageControllerApi(object):
 
     def get_dpu_state(self, dpu_index):
         result = {"status": False, "data": {}}
-        url = "topologgity/dpus/FS1.{}/state".format(dpu_index)
+        url = "topology/dpus/FS1.{}/state".format(dpu_index)
         response = self.execute_api("GET", url)
         fun_test.log("GET {}".format(url))
         try:
