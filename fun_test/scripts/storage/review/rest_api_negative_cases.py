@@ -184,9 +184,148 @@ class EncryptParameter(BLTVolumes):
         super(EncryptParameter, self).cleanup()
 
 
+class MissingParameter(BLTVolumes):
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Create volume with missing API parameters",
+                              test_rail_case_ids=["C19182"],
+                              steps='''1. Make sure API server is up and running
+                              2. Create volumes using API Call which has missing  mandatory parameters
+                              3. Attach volumes to a remote host
+                              ''')
+
+    def setup(self):
+        min_capacity = fun_test.shared_variable["min_drive_capacity"]
+        drive_margin = fun_test.shared_variable["drive_margin"]
+        capacity_entry = min_capacity - drive_margin
+        missing_entries = ["name", "capacity", "vol_type", "data_protection", "all", "none"]
+
+        self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        vol_type = VolumeTypes().LOCAL_THIN
+        body_volume_intent_create = BodyVolumeIntentCreate(name=name, vol_type=vol_type, capacity=capacity,
+                                                           compression_effort=compression_effort,
+                                                           encrypt=encrypt, data_protection={})
+
+
+        fs_obj_list = []
+        for dut_index in self.topology.get_available_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            fs_obj_list.append(fs_obj)
+
+        vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
+                                                                       body_volume_intent_create=body_volume_intent_create)
+        fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
+        hosts = self.topology.get_available_host_instances()
+        for index, fs_obj in enumerate(fs_obj_list):
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+                                                                               volume_uuid=vol_uuid_list[index],
+                                                                               validate_nvme_connect=True,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+
+
+        for kk in range(len(missing_entries)):
+            fun_test.log("Trying to create Volume with missing parameter set to {}".format(missing_entries[kk]))
+            
+    def run(self):
+        super(EncryptParameter, self).run()
+
+    def cleanup(self):
+        super(EncryptParameter, self).cleanup()
+
+class MissingParameter(BLTVolumes):
+
+    def describe(self):
+        self.set_test_details(id=7,
+                              summary="Create volume with missing API parameters",
+                              test_rail_case_ids=["C19182"],
+                              steps='''1. Make sure API server is up and running
+                              2. Create volumes using API Call which has missing  mandatory parameters
+                              3. Attach volumes to a remote host
+                              ''')
+
+    def setup(self):
+        min_capacity = fun_test.shared_variable["min_drive_capacity"]
+        drive_margin = fun_test.shared_variable["drive_margin"]
+        capacity_entry = min_capacity - drive_margin
+        compression_effort = False
+        encrypt = False
+        missing_entries = ["name", "capacity", "vol_type", "data_protection", "all", "none"]
+
+        self.topology = fun_test.shared_variables["topology"]
+        self.storage_controller_template = fun_test.shared_variables["storage_controller_template"]
+        vol_type = VolumeTypes().LOCAL_THIN
+
+        for index, fs_obj in enumerate(fs_obj_list):
+            attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+                                                                               volume_uuid=vol_uuid_list[index],
+                                                                               validate_nvme_connect=True,
+                                                                               raw_api_call=True)
+            fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+
+
+        for kk in range(len(missing_entries)):
+            fun_test.log("Trying to create Volume with missing parameter set to {}".format(missing_entries[kk]))
+
+            if (missing_entries[kk]=="name"):
+                body_volume_intent_create = BodyVolumeIntentCreate(vol_type=vol_type, capacity=capacity,
+                                                               compression_effort=compression_effort,
+                                                               encrypt=encrypt, data_protection={})
+            if (missing_entries[kk]=="capacity"):
+                body_volume_intent_create = BodyVolumeIntentCreate(name="missing_capacity",vol_type=vol_type,
+                                                               compression_effort=compression_effort,
+                                                               encrypt=encrypt, data_protection={})
+
+            if (missing_entries[kk]=="vol_type"):
+                body_volume_intent_create = BodyVolumeIntentCreate(name="missing_capacity",capacity=capacity,
+                                                               compression_effort=compression_effort,
+                                                               encrypt=encrypt, data_protection={})
+            if (missing_entries[kk]=="data_protection"):
+                body_volume_intent_create = BodyVolumeIntentCreate(name="missiong_data_protection",vol_type=vol_type, capacity=capacity,
+                                                               compression_effort=compression_effort,
+                                                               encrypt=encrypt)
+            if (missing_entries[kk]=="all"):
+                body_volume_intent_create = BodyVolumeIntentCreate(compression_effort=compression_effort,
+                                                               encrypt=encrypt)
+
+            if (missing_entries[kk]=="none"):
+                body_volume_intent_create = BodyVolumeIntentCreate(name="all_good_params_blt", vol_type=vol_type, capacity=capacity,
+                                                               compression_effort=compression_effort,
+                                                               encrypt=encrypt, data_protection={})
+
+
+            fs_obj_list = []
+            for dut_index in self.topology.get_available_duts().keys():
+                fs_obj = self.topology.get_dut_instance(index=dut_index)
+                fs_obj_list.append(fs_obj)
+
+            vol_uuid_list = self.storage_controller_template.create_volume(fs_obj=fs_obj_list,
+                                                                           body_volume_intent_create=body_volume_intent_create)
+            fun_test.test_assert(expression=vol_uuid_list, message="Create Volume Successful")
+            hosts = self.topology.get_available_host_instances()
+
+            for index, fs_obj in enumerate(fs_obj_list):
+                attach_vol_result = self.storage_controller_template.attach_volume(host_obj=hosts, fs_obj=fs_obj,
+                                                                                   volume_uuid=vol_uuid_list[index],
+                                                                                   validate_nvme_connect=True,
+                                                                                   raw_api_call=True)
+                fun_test.test_assert(expression=attach_vol_result, message="Attach Volume Successful")
+
+    def run(self):
+        super(MissingParameter, self).run()
+
+    def cleanup(self):
+        super(MissingParameter, self).cleanup()
+
+
+
+
 if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(NameParameter())
     setup_bringup.add_test_case(CapacityParameter())
     setup_bringup.add_test_case(EncryptParameter())
+    setup_bringup.add_test_case(MissingParameter())
     setup_bringup.run()
