@@ -44,7 +44,7 @@
     },
     "test_rail_case_id": ["C18036"],
     "num_ssd": 12,
-    "raw_api_call": True,
+    "raw_api_call": true,
     "command_timeout": 30,
     "test_iteration_count": 1,
     "iter_interval": 10,
