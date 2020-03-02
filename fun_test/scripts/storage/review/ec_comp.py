@@ -64,9 +64,9 @@ class TestDataIntegrity(FunTestCase):
         self.host_obj_list = self.topology.get_available_host_instances()
         self.vol_uuid_list = []
 
-        for vol in num_vols:
+        for vol in range(num_vols):
             for effort in effort_levels:
-                body_volume_intent_create = BodyVolumeIntentCreate(name=vol_name + str(effort) + str(vol),
+                body_volume_intent_create = BodyVolumeIntentCreate(name=vol_name + str(effort) + str(vol+1),
                                                                    vol_type=vol_type, capacity=capacity,
                                                                    compression_effort=effort, encrypt=encrypt,
                                                                    data_protection={"num_redundant_dpus": 0,
