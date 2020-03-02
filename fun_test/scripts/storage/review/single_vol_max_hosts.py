@@ -147,7 +147,7 @@ class SingleVolumeMaxHosts(FunTestCase):
         if "num_hosts" in job_inputs:
             self.num_host = job_inputs["num_hosts"]
         if "num_vhosts" in job_inputs:
-            self.num_of_vhosts = job_inputs["num_vhosts"]
+            self.num_vhosts = job_inputs["num_vhosts"]
 
         """
         self.topology = fun_test.shared_variables["topology"]
