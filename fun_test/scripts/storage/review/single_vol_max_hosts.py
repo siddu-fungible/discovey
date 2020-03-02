@@ -146,8 +146,8 @@ class SingleVolumeMaxHosts(FunTestCase):
             self.capacity = job_inputs["capacity"]
         if "num_hosts" in job_inputs:
             self.num_host = job_inputs["num_hosts"]
-        if "num_of_vhosts" in job_inputs:
-            self.num_of_vhosts = job_inputs["num_of_vhosts"]
+        if "num_vhosts" in job_inputs:
+            self.num_of_vhosts = job_inputs["num_vhosts"]
 
         """
         self.topology = fun_test.shared_variables["topology"]
@@ -174,13 +174,13 @@ class SingleVolumeMaxHosts(FunTestCase):
                              message="Volume creation successful with uuid {}".format(self.vol_uuid[0]))
 
     def run(self):
-        self.vhosts_per_host = self.num_of_vhosts / self.num_host
+        self.vhosts_per_host = self.num_vhosts / self.num_host
         self.host_nvme_device_dict = {}
         for host_obj in self.hosts:
             self.host_nvme_device_dict[host_obj]=[]
             host_ip = host_obj.get_test_interface(index=0).ip.split('/')[0]
             for i in range(1, self.vhosts_per_host+1):
-                host_nqn = "nqn{}.2015-09.com.Fungible:{}".format(i, host_ip)
+                host_nqn = "nqn.2015-09.com.Fungible{}:{}".format(i, host_ip)
                 vol_uuid = self.vol_uuid[0]
 
                 attach_vol_result = self.attach_volume(self.fs_obj_list[0], vol_uuid, host_obj, host_nqn,
