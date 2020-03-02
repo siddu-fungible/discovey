@@ -76,7 +76,7 @@ class TestDataIntegrity(FunTestCase):
 
                 vol_uuid = self.storage_controller_template.\
                     create_volume(fs_obj=self.fs_obj_list, body_volume_intent_create=body_volume_intent_create)
-                fun_test.test_assert(expression=self.vol_uuid_list,
+                fun_test.test_assert(vol_uuid,
                                      message="Create Volume {} Successful. zip level: {}".format(vol_uuid[0], effort))
                 self.vol_uuid_list.append(vol_uuid[0])
 
