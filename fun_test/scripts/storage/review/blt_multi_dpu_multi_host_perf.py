@@ -193,6 +193,11 @@ class MultiHostFioRandRead(FunTestCase):
                 fun_test.critical("Original Volume size {} is overriden by the size {} given while running the "
                                   "script".format(self.blt_details["capacity"], job_inputs["capacity"]))
                 self.blt_details["capacity"] = job_inputs["capacity"]
+            fun_test.log("Using volume size {} to create volumes".format(self.blt_details["capacity"]))
+
+            props_tree = "{}/{}".format("storage", "devices")
+            for dpcsh_obj in self.sc_dpcsh_objs:
+                dpcsh_obj.peek(props_tree=props_tree)
 
             self.create_volume_list = []
             f1_0_volume_list = []
