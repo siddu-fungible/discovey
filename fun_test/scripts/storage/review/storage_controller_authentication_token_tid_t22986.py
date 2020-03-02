@@ -65,6 +65,30 @@ class CreateDeleteVolume(FunTestCase):
             self.fs_obj_list.append(fs_obj)
             self.come_handle = fs_obj.get_come()
 
+    def sc_auth_token_check(self, sc_api):
+        response = sc_api.get_auth_token()
+        if (str(response['message']) == "Token generated"):
+            auth_message = True
+        elif (str(response['error_message']) == "Username or password is incorrect"):
+            auth_message = False
+        if (response['data']['token'] == "ZXlKaGJHY2lPaUpJVXpVeE1pSXNJbVY0Y0NJNk1UVTRNekUzT0RJMU55d2lhV0YwSWpveE5UZ3pNRGt4T0RVM2ZRLmV5SjFjMlZ5WDJsa0lqb2laVFEzT0dZMVl6WXROV0psT1MweE1XVmhMVGhpTURndE1ESTBNbUZqTVRFd01EQTBJbjAuakVRVFZaMU1zTXM3cHJBZjNzZ3BlWVFmRXVpQW11ekROLTNjb2tzU0FIci1VWnRhaTJXQnJRVHVGMTBXSTN3amNtZE5XWTdocjkyTDhEM1lnbUxoOWc="):
+            auth_token = True
+        else:
+            auth_token = False
+        if (str(response['warning'] ) == ""):
+            auth_warning = True
+        else:
+            auth_warning = False
+
+        fun_test.test_assert(expression=response['status'],
+                             message="Token auth check {}".format(response))
+        fun_test.test_assert(expression=auth_message,
+                             message="auth token message check")
+        # fun_test.test_assert(expression=auth_token,
+        #                     message="auth token value check")
+        fun_test.test_assert(expression=auth_warning,
+                             message=" auth token warning check")
+
     def create_volumes(self):
         total_capacity = 0
         remaining_capacity = 0
@@ -74,12 +98,14 @@ class CreateDeleteVolume(FunTestCase):
         for dut_index in self.topology.get_available_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
             storage_controller = fs_obj.get_storage_controller()
-            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip)
+            raw_sc_api = StorageControllerApi(api_server_ip=storage_controller.target_ip,username="admin",password="password")
             response = raw_sc_api.get_pools()
             pool_uuid = str(response['data'].keys()[0])
             loc_capacity = str(response['data'][pool_uuid]['capacity'])
             total_capacity = total_capacity + int(loc_capacity)
             max_volume_capacity = find_min_drive_capacity(storage_controller,30) - (3*4096)
+
+        self.sc_auth_token_check(sc_api=raw_sc_api)
 
         max_no_of_volumes = total_capacity/min_volume_capacity
         if total_capacity-min_volume_capacity >= max_volume_capacity:
