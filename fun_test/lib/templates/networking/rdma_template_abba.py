@@ -8,6 +8,7 @@ import re
 
 IB_WRITE_BANDWIDTH_TEST = "ib_write_bw"
 IB_WRITE_LATENCY_TEST = "ib_write_lat"
+IB_SEND_LATENCY_TEST = "ib_send_lat"
 LD_LIBRARY_PATH = "/mnt/ws/fungible-rdma-core/build/lib"
 PATH = "/mnt/ws/fungible-rdma-core/build/bin:/mnt/ws/fungible-perftest:$PATH"
 
@@ -134,7 +135,7 @@ class RdmaTemplate(object):
                                                                                       self.connection_type,
                                                                                       self.qpairs, ibv_device,
                                                                                       port_num, self.size)
-                if self.qpairs > 256:
+                if self.qpairs > 256 or int(self.size) > 8192:
                     cmd += "--mr_per_qp "
 
                 if self.run_infinitely:
@@ -188,7 +189,7 @@ class RdmaTemplate(object):
                 # For latency test use self.iterations with run_infinitely. Coz when used with latency_under_load
                 # duration field is used as kill_timer and run_infinitely value is used as logging interval
                 if self.run_infinitely:
-                    cmd += "--run_infinitely -n %d " % self.iterations
+                    cmd += "--run_infinitely -D %d " % self.run_infinitely
                 else:
                     if '-n' not in cmd:
                         cmd += "-n %d " % self.iterations
@@ -204,7 +205,56 @@ class RdmaTemplate(object):
                     else:
                         if key not in cmd:
                             cmd += "%s %s " % (key, val)
+            elif self.test_type == IB_SEND_LATENCY_TEST:
+                # Remove tx_depth for latency test
+                if '-t' in kwargs:
+                    del kwargs['-t']
+
+                if '-c' in kwargs:
+                    self.connection_type = kwargs['-c']
+
+                if 'run_infinitely' in kwargs and client_cmd:
+                    self.run_infinitely = kwargs['--run_infinitely']
+
+                if '-s' in kwargs:
+                    self.size = kwargs['-s']
+
+                if '-I' in kwargs:
+                    self.inline_size = kwargs['-I']
+
+                if '-n' in kwargs:
+                    self.iterations = kwargs['-n']
+
+                if not self.connection_type:
+                    cmd = "%s -d %s -p %d -F -I %d -s %d " % (self.test_type, ibv_device,
+                                                              port_num, self.inline_size,
+                                                              self.size)
+                else:
+                    cmd = "%s -c %s -R -d %s -p %d -F -I %d -s %d " % (self.test_type, self.connection_type,
+                                                                       ibv_device, port_num,
+                                                                       self.inline_size, self.size)
+
+                # For latency test use self.iterations with run_infinitely. Coz when used with latency_under_load
+                # duration field is used as kill_timer and run_infinitely value is used as logging interval
+                if self.run_infinitely:
+                    cmd += "--run_infinitely -D %d " % self.run_infinitely
+                else:
+                    if '-n' not in cmd:
+                        cmd += "-n %d " % self.iterations
+
+                if client_cmd:
+                    cmd += "%s " % server_ip
+
+                for key, val in kwargs.items():
+                    if type(val) == list:
+                        for op in val:
+                            if op not in cmd:
+                                cmd += "%s" % op
+                    else:
+                        if key not in cmd:
+                            cmd += "%s %s " % (key, val)
             fun_test.log('Cmd Formed: %s' % cmd)
+
         except Exception as ex:
             fun_test.critical(str(ex))
         return cmd
@@ -271,6 +321,7 @@ class RdmaTemplate(object):
                 client_obj.kill_process(process_id=process_id, signal=9)
                 server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
                 output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
+                fun_test.sleep("Parsing output", 2)
                 result = self._parse_rdma_output(output=output)
             else:
                 output = client_obj.command(command=cmd, timeout=self.duration*2)
@@ -335,8 +386,12 @@ class RdmaTemplate(object):
                     lines = required_output.split("\n")
                     for line in lines:
                         match_nu = re.findall(r'[\d.]+', line)
-                        if match_nu:
-                            bw_avg = match_nu[3]
+                        if len(match_nu) == 5:
+                            try:
+                                bw_avg = match_nu[3]
+                            except:
+                                fun_test.log_section("Failed to get BW")
+                                fun_test.log("{}".format(match_nu))
                             one_data_set = {
                                 host_name: bw_avg
                             }
@@ -374,6 +429,53 @@ class RdmaTemplate(object):
             except Exception as ex:
                 fun_test.critical(str(ex))
             return result
+
+    def _parse_rdma_output_n2_bw(self, output):
+        result = []
+        m = re.search(r'(#bytes.*)', output, re.DOTALL)
+        if m:
+            required_output = m.group()
+            lines = required_output.split("\n")
+            for line in lines:
+                match_nu = re.findall(r'[\d.]+', line)
+                if match_nu:
+                    bw_avg = match_nu[3]
+                    one_data_set = {
+                        "throughput_Gbps": bw_avg
+                    }
+                    result.append(one_data_set)
+        return result
+
+    def _parse_rdma_output_n2_lat(self, output, server_name, client_name):
+        m = re.search(r'(#bytes.*)', output, re.DOTALL)
+        if m:
+            required_output = m.group()
+            res = []
+            lines = required_output.split("\n")
+            header_match = re.findall(r'\S+', lines[0])
+            print header_match
+            for line in lines:
+                data_match = re.findall(r'[\w.]+', line)
+                print data_match
+                if len(data_match) == len(header_match):
+                    one_data_set = OrderedDict()
+                    print data_match
+                    for index, k in enumerate(header_match):
+                        one_data_set[k] = data_match[index]
+                        one_data_set["server_name"] = server_name
+                        one_data_set["client_name"] = client_name
+                    res.append(one_data_set)
+            return res
+
+    def _parse_rdma_output_n2(self, output, server_name, client_name):
+        res = {"type": "", "data": "", "server": server_name, "client": client_name}
+        if "t_avg" in output:
+            res["type"] = "lat"
+            res["data"] = self._parse_rdma_output_n2_lat(output, server_name, client_name)
+        else:
+            res["type"] = "bw"
+            res["data"] = self._parse_rdma_output_n2_bw(output)
+        return res
 
     def create_table(self, records, scenario_type):
         try:
@@ -415,9 +517,13 @@ class RdmaTemplate(object):
 class RdmaLatencyUnderLoadTemplate(object):
 
     def __init__(self, lat_test_type, bw_test_type, lat_client_server_objs, bw_client_server_objs, bw_test_size,
-                 lat_test_size, inline_size, qpairs,
+                 lat_test_size, inline_size, qpairs, scenario_type,
                  duration, iterations, run_infinitely, hosts,
-                 connection_type=RdmaTemplate.CONNECTION_TYPE_RC, ib_device=None):
+                 connection_type=RdmaTemplate.CONNECTION_TYPE_RC, ib_device=None, combined_log=None):
+        self.bw_test_size = bw_test_size
+        self.lat_test_size = lat_test_size
+        self.scenario_type = scenario_type
+        self.combined_log = combined_log
         self.ibv_device = ib_device
         self.duration = duration
         self.lat_client_server_objs = lat_client_server_objs
@@ -445,6 +551,7 @@ class RdmaLatencyUnderLoadTemplate(object):
 
     def run(self, **kwargs):
         result = []
+        spl_dict = {}
         try:
             multi_task_obj = MultiProcessingTasks()
             process_count = 0
@@ -483,7 +590,34 @@ class RdmaLatencyUnderLoadTemplate(object):
             fun_test.simple_assert(run_started, "Ensure Clients initiated simultaneously")
             for index in range(process_count):
                 result_dict = multi_task_obj.get_result(task_key="process_%s" % index)
-                result.append(result_dict)
+                if self.combined_log:
+                    server = result_dict["server"]
+                    client = result_dict["client"]
+                    res_type = result_dict["type"]
+                    key_name = server + client
+                    spl_dict.setdefault(key_name, {})
+                    spl_dict[key_name][res_type] = result_dict["data"]
+                else:
+                    result.append(result_dict)
+            if self.combined_log:
+                for k, v in spl_dict.iteritems():
+                    bw = v["bw"]
+                    lat = v["lat"]
+                    bw_len = len(bw)
+                    lat_len = len(lat)
+                    if bw_len > lat_len:
+                        dif = bw_len - lat_len
+                        for i in range(dif):
+                            bw.pop()
+                    if lat_len > bw_len:
+                        dif = lat_len - bw_len
+                        for i in range(dif):
+                            lat.pop()
+
+                    for index, each_data in enumerate(lat):
+                        each_data.update(bw[index])
+                    RdmaTemplate("one", "BW Size {} :".format(self.bw_test_size), "three", "four").\
+                        create_table(lat, self.scenario_type)
         except Exception as ex:
             fun_test.critical(str(ex))
         return result
@@ -541,11 +675,16 @@ class RdmaLatencyUnderLoadTemplate(object):
             fun_test.sleep(message="Client cmd running infinitely", seconds=self.duration)
             client_obj.kill_process(process_id=process_id, signal=9)
             server_obj.kill_process(process_id=server_obj.rdma_process_id, signal=9)
+
             output = client_obj.read_file(file_name=tmp_output_file, include_last_line=True)
-            result_dict = self.lat_test_template._parse_rdma_output(output=output)
-            result_dict.update({'test_type': test_type})
-            result_dict.update({'client': str(client_obj)})
-            result_dict.update({'server': str(server_obj)})
+            if self.combined_log:
+                result_dict = self.lat_test_template._parse_rdma_output_n2(output=output, server_name=str(server_obj),
+                                                                           client_name=str(client_obj))
+            else:
+                result_dict = self.lat_test_template._parse_rdma_output(output=output)
+                result_dict.update({'test_type': test_type})
+                result_dict.update({'client': str(client_obj)})
+                result_dict.update({'server': str(server_obj)})
         except Exception as ex:
             fun_test.critical(str(ex))
         return result_dict

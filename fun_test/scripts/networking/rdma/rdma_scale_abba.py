@@ -110,6 +110,17 @@ class RdmaWriteBandwidthTest(FunTestCase):
         checkpoint = "Connect to each client and initiate RDMA traffic towards each server"
         output_record = self.rdma_template.run(**cmd_args)
         if (scenario_type == "N_1" and self.combined_log) and self.test_type == "ib_write_bw":
+            # Make sure the number of results are same
+            total_record_length = len(output_record)
+            record_length = []
+            for i in range(total_record_length):
+                record_length.append(len(output_record[i]))
+            min_record_length = min(record_length)
+            for i in range(total_record_length):
+                if len(output_record[i]) > min_record_length:
+                    count_diff = len(output_record[i]) - min_record_length
+                    for x in range(count_diff):
+                        output_record[i].pop()
             records = output_record[0]
             output_record.pop(0)
             for index, i in enumerate(records):
@@ -180,6 +191,12 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
         run_infinitely = self.rdma_helper.get_run_infinitely()
         qpairs = self.rdma_helper.get_qpairs()
         ib_device = self.rdma_helper.get_ibdev()
+        self.scenario_type = scenario_type
+
+        if fun_test.shared_variables["combined_log"]:
+            self.combined_log = fun_test.shared_variables["combined_log"]
+        else:
+            self.combined_log = self.rdma_helper.get_combined_log()
 
         self.rdma_template = RdmaLatencyUnderLoadTemplate(lat_test_type=self.lat_test_type,
                                                           bw_test_type=self.bw_test_type,
@@ -192,7 +209,9 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
                                                           qpairs=qpairs,
                                                           hosts=self.rdma_helper.host_objs,
                                                           connection_type=None,
-                                                          ib_device=ib_device)
+                                                          ib_device=ib_device,
+                                                          combined_log=self.combined_log,
+                                                          scenario_type=self.scenario_type)
 
         if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
@@ -209,10 +228,12 @@ class RdmaLatencyUnderLoadTest(FunTestCase):
                      "in parallel"
 
         records = self.rdma_template.run(**cmd_args)
-        fun_test.test_assert(records, checkpoint)
-
-        checkpoint = "Result table for %s scenario" % scenario_type
-        self.rdma_template.create_table(records=records)
+        if self.combined_log:
+            pass
+        else:
+            fun_test.test_assert(records, checkpoint)
+            checkpoint = "Result table for %s scenario" % scenario_type
+            self.rdma_template.create_table(records=records)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
@@ -254,6 +275,12 @@ class AbbaLatencyUnderLoadTest(FunTestCase):
         run_infinitely = self.rdma_helper.get_run_infinitely()
         qpairs = self.rdma_helper.get_qpairs()
         ib_device = self.rdma_helper.get_ibdev()
+        self.scenario_type = scenario_type
+
+        if fun_test.shared_variables["combined_log"]:
+            self.combined_log = fun_test.shared_variables["combined_log"]
+        else:
+            self.combined_log = self.rdma_helper.get_combined_log()
 
         self.rdma_template = RdmaLatencyUnderLoadTemplate(lat_test_type=self.lat_test_type,
                                                           bw_test_type=self.bw_test_type,
@@ -266,7 +293,9 @@ class AbbaLatencyUnderLoadTest(FunTestCase):
                                                           qpairs=qpairs,
                                                           hosts=self.rdma_helper.host_objs,
                                                           connection_type=None,
-                                                          ib_device=ib_device)
+                                                          ib_device=ib_device,
+                                                          combined_log=self.combined_log,
+                                                          scenario_type=self.scenario_type)
 
         if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
@@ -282,11 +311,13 @@ class AbbaLatencyUnderLoadTest(FunTestCase):
         checkpoint = "Connect to each client and initiate RDMA BW traffic towards each server and run latency test " \
                      "in parallel"
         records = self.rdma_template.run(**cmd_args)
-        fun_test.test_assert(records, checkpoint)
-
-        checkpoint = "Result table for %s scenario" % scenario_type
-        self.rdma_template.create_table(records=records)
-        fun_test.add_checkpoint(checkpoint)
+        if self.combined_log:
+            pass
+        else:
+            fun_test.test_assert(records, checkpoint)
+            checkpoint = "Result table for %s scenario" % scenario_type
+            self.rdma_template.create_table(records=records)
+            fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
         self.rdma_template.cleanup()
@@ -327,6 +358,12 @@ class RdmaLatencyUnderLoadN2(FunTestCase):
         run_infinitely = self.rdma_helper.get_run_infinitely()
         qpairs = self.rdma_helper.get_qpairs()
         ib_device = self.rdma_helper.get_ibdev()
+        self.scenario_type = scenario_type
+
+        if fun_test.shared_variables["combined_log"]:
+            self.combined_log = fun_test.shared_variables["combined_log"]
+        else:
+            self.combined_log = self.rdma_helper.get_combined_log()
 
         self.rdma_template = RdmaLatencyUnderLoadTemplate(lat_test_type=self.lat_test_type,
                                                           bw_test_type=self.bw_test_type,
@@ -339,7 +376,9 @@ class RdmaLatencyUnderLoadN2(FunTestCase):
                                                           qpairs=qpairs,
                                                           hosts=self.rdma_helper.host_objs,
                                                           connection_type=None,
-                                                          ib_device=ib_device)
+                                                          ib_device=ib_device,
+                                                          combined_log=self.combined_log,
+                                                          scenario_type=self.scenario_type)
 
         if not fun_test.shared_variables['already_deployed']:
             result = self.rdma_template.setup_test()
@@ -356,10 +395,13 @@ class RdmaLatencyUnderLoadN2(FunTestCase):
                      "in parallel"
 
         records = self.rdma_template.run(**cmd_args)
-        fun_test.test_assert(records, checkpoint)
 
-        checkpoint = "Result table for %s scenario" % scenario_type
-        self.rdma_template.create_table(records=records)
+        if self.combined_log:
+            pass
+        else:
+            fun_test.test_assert(records, checkpoint)
+            checkpoint = "Result table for %s scenario" % scenario_type
+            self.rdma_template.create_table(records=records)
         fun_test.add_checkpoint(checkpoint)
 
     def cleanup(self):
