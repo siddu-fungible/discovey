@@ -2933,6 +2933,35 @@ class Linux(object, ToDictMixin):
 
         return result
 
+    def nvme_connect_all(self, target_ip, port=8009, transport="tcp", hostnqn=None,
+                    retries=2, timeout=61):
+        result = False
+        nvme_connect_cmd = "nvme connect-all -t {} -a {} -s {} ".format(transport.lower(), target_ip, port)
+
+        if hostnqn:
+            nvme_connect_cmd += " -q {}".format(hostnqn)
+
+
+        for i in range(retries):
+            try:
+                nvme_connect_output = self.sudo_command(command=nvme_connect_cmd, timeout=timeout)
+                nvme_connect_exit_status = self.exit_status()
+                fun_test.log("NVMe connect output: {}".format(nvme_connect_output))
+                if not nvme_connect_exit_status:
+                    result = True
+                    break
+            except Exception as ex:
+                remaining = retries - i - 1
+                if remaining:
+                    fun_test.critical("NVMe connect all attempt failed...Going to retry {} more time(s)...\n".
+                                      format(remaining))
+                    fun_test.critical(str(ex))
+                    fun_test.sleep("before retrying")
+                else:
+                    fun_test.critical("Maximum number of retires({}) failed...So bailing out...".format(retries))
+
+        return result
+
     def nvme_disconnect(self, nvme_subsystem=None, device=None):
         result = False
         cmd = "nvme disconnect"
