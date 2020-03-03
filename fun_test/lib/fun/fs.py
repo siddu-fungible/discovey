@@ -134,7 +134,8 @@ class Bmc(Linux):
     SERIAL_SPEED_DEFAULT = 1000000
     U_BOOT_F1_PROMPT = "f1 #"
     NUM_F1S = 2
-    FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
+    # FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/funos_logs.sh"
+    FUNOS_LOGS_SCRIPT = "/mnt/sdmmc0p1/scripts/bmc_log_service.sh"
 
     def __init__(self, disable_f1_index=None,
                  disable_uart_logger=False,
@@ -907,7 +908,8 @@ class Bmc(Linux):
             if not self.bundle_compatible:
                 self._reset_microcom()
             else:
-                self.start_bundle_f1_logs()
+                if self.fs.tftp_image_path:
+                    self.start_bundle_f1_logs()
         except Exception as ex:
             fun_test.critical(str(ex))
 
@@ -1174,12 +1176,14 @@ class BootupWorker(Thread):
                     bmc.stop_bundle_f1_logs()
                     bmc._reset_microcom()
 
+                """
                 try:
                     fun_test.log("Clearing old logs")
                     if fs.bundle_compatible:
                         bmc.clear_bundle_f1_logs()
                 except Exception as ex:
                     fun_test.critical(str(ex))
+                """
 
                 for f1_index, f1 in fs.f1s.iteritems():
                     if f1_index == fs.disable_f1_index:
