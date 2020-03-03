@@ -308,7 +308,7 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         return result
 
     def attach_volume(self, fs_obj, volume_uuid, host_obj, validate_nvme_connect=True, raw_api_call=False,
-                      nvme_io_queues=None):
+                      nvme_io_queues=None, discover=False):
 
         """
         :param fs_obj: fs_object from topology
@@ -317,6 +317,8 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
         :param validate_nvme_connect: Use this flag to do NVMe connect from host along with attaching volume
         :param raw_api_call: Temporary workaround to use raw API call until swagger APi issues are resolved.
         :param nvme_io_queues: No of IO queues for NVMe connect command
+        :param discover: Use this flag to do discover and connect namespaces (NVMe connect-all)  instead of connecting to
+                 individual namespaces separately
         :return: Attach volume result in case of 1 host_obj
                  If multiple host_obj are provided, the result is a list of attach operation results,
                  in the same order of host_obj
@@ -369,7 +371,17 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                 if not self._check_host_target_existing_connection(fs_obj=fs_obj, volume_uuid=volume_uuid,
                                                                    subsys_nqn=subsys_nqn, host_nqn=host_nqn,
                                                                    host_obj=cur_host_obj):
-                    fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=cur_host_obj,
+                    if discover:
+                        discovery_controller_ip = fs_obj.get_storage_controller().target_ip
+                        fun_test.test_assert(expression=self.nvme_connect_all_from_host(host_obj=cur_host_obj,
+                                                                                    host_nqn=host_nqn,
+                                                                                    discovery_controller_ip=discovery_controller_ip,
+                                                                                    ),
+                                             message="NVMe connect from host: {}".format(cur_host_obj.name))
+
+                    else:
+
+                        fun_test.test_assert(expression=self.nvme_connect_from_host(host_obj=cur_host_obj,
                                                                                 subsys_nqn=subsys_nqn,
                                                                                 host_nqn=host_nqn,
                                                                                 dataplane_ip=dataplane_ip,
@@ -545,6 +557,31 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                                               nvme_io_queues=nvme_io_queues, hostnqn=host_nqn,
                                                               host_ip=host_ip)
         return nvme_connect_command
+
+    def nvme_connect_all_from_host(self, host_obj, host_nqn, discovery_controller_ip, transport_port=8009,
+                               transport_type='tcp'):
+        """
+
+        :param host_obj: host handle from topology
+        :param subsys_nqn: returned after volume attach
+        :param host_nqn: returned after volume attach
+        :param dataplane_ip: IP of FS1600 reachable from host returned after volume attach
+        :param nvme_io_queues: no of queues for nvme connect
+        :param transport_type: NVMe connect transport
+        :param transport_port: Port no to connect for NVMe TCP
+        :return: output of nvme connect command
+        """
+        host_linux_handle = host_obj.get_instance()
+        for driver in self.NVME_HOST_MODULES:
+            # if not host_linux_handle.lsmod(module=driver):
+            host_linux_handle.modprobe(driver)
+
+        fun_test.test_assert(expression=host_linux_handle.ping(dst=discovery_controller_ip), message="Ping discovery controller IP from Host")
+        nvme_connect_all_command = host_linux_handle.nvme_connect_all(target_ip=discovery_controller_ip,
+                                                              port=transport_port, transport=transport_type,
+                                                              hostnqn=host_nqn,
+                                                             )
+        return nvme_connect_all_command
 
     def get_host_nvme_device(self, host_obj, subsys_nqn=None, nsid=None):
         """
