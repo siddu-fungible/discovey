@@ -109,12 +109,12 @@
     "dpu_indices" : [0],
     "ethernet_adapter": "Mellanox",
     "override_numa_node": {"override": true, "override_node": 0},
-    "Read_fio_cmd_args": {
-      "multiple_jobs": "--rw=read --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=1 --verify=md5",
+    "warm_up_fio_cmd_args": {
+      "multiple_jobs": "--rw=write --bs=128k --numjobs=1 --iodepth=16 --direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=0 --verify=md5",
       "timeout": 2460
     },
     "fio_modes": ["randwrite"],
-    "fio_iodepth": [128],
+    "fio_iodepth": [128,256,512],
     "fio_bs": "4k",
     "fio_cmd_args": {
       "multiple_jobs": "--direct=1 --prio=0 --cpus_allowed_policy=split --norandommap --randrepeat=0 --do_verify=0 --verify=md5",
