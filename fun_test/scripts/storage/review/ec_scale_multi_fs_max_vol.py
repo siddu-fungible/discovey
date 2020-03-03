@@ -46,12 +46,6 @@ class ECBlockScaleScript(FunTestScript):
         self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
         fun_test.shared_variables["ec_template"] = self.sc_template
 
-        self.fs_obj_list = []
-        for dut_index in self.topology.get_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            self.fs_obj_list.append(fs_obj)
-        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
-        
     def cleanup(self):
         self.sc_template.cleanup()
         self.topology.cleanup()
@@ -78,8 +72,12 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         self.ec_template = fun_test.shared_variables["ec_template"]
-        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
-
+        self.fs_obj_list = []
+        for dut_index in self.topology.get_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            self.fs_obj_list.append(fs_obj)
+        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+        
         tc_config = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
         fun_test.log("Benchmark file being used: {}".format(benchmark_file))
