@@ -1701,39 +1701,6 @@
     "fpga": {
       "mgmt_ssh_password": "",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "fs152-fpga",
-      "telnet_ip": "cab01-terminal.fungible.local",
-      "telnet_port": 7008,
-      "telnet_username": "root",
-      "telnet_password": "fun123"
-    },
-    "apc_info": {
-      "username": "localadmin",
-      "outlet_number": 9,
-      "password": "Precious1*",
-      "host_ip": "cab05-pdu1.fungible.local"
-    }
-  },
-  {
-    "bmc": {
-      "mgmt_ssh_password": "superuser",
-      "mgmt_ssh_username": "sysadmin",
-      "mgmt_ip": "fs153-bmc"
-    },
-    "come": {
-      "mgmt_ssh_password": "123",
-      "mgmt_ssh_username": "fun",
-      "mgmt_ip": "fs153-come"
-    },
-    "name": "fs-153",
-    "workarounds": {
-      "skip_funeth_come_power_cycle": true
-    },
-    "revision": "2",
-    "bundle_compatible": true,
-    "fpga": {
-      "mgmt_ssh_password": "",
-      "mgmt_ssh_username": "root",
       "mgmt_ip": "fs153-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7007,
@@ -1767,7 +1734,7 @@
     "fpga": {
       "mgmt_ssh_password": "",
       "mgmt_ssh_username": "root",
-      "mgmt_ip": "fs152-fpga",
+      "mgmt_ip": "fs154-fpga",
       "telnet_ip": "cab01-terminal.fungible.local",
       "telnet_port": 7006,
       "telnet_username": "root",

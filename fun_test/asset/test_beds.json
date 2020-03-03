@@ -5284,5 +5284,341 @@
     "workarounds": {
       "enable_funcp": true
     }
+  },
+  "fs-feature-test-2": {
+    "switch_info": {
+      "cab05-100g-1": {
+        "interface_info": {
+          "et-0/0/31.0": {
+            "host_info": {
+              "name": "cab05-qa-01"
+            },
+            "ip": "15.5.1.1/24"
+          },
+          "et-0/0/30.0": {
+            "host_info": {
+              "name": "cab05-qa-02"
+            },
+            "ip": "15.5.2.1/24"
+          },
+          "et-0/0/29.0": {
+            "host_info": {
+              "name": "cab05-qa-03"
+            },
+            "ip": "15.5.3.1/24"
+          },
+          "et-0/0/28.0": {
+            "host_info": {
+              "name": "cab05-qa-04"
+            },
+            "ip": "15.5.4.1/24"
+          },
+          "et-0/0/27.0": {
+            "host_info": {
+              "name": "cab05-qa-05"
+            },
+            "ip": "15.5.5.1/24"
+          },
+          "et-0/0/26.0": {
+            "host_info": {
+              "name": "cab05-qa-06"
+            },
+            "ip": "15.5.6.1/24"
+          },
+          "et-0/0/25.0": {
+            "host_info": {
+              "name": "cab05-qa-07"
+            },
+            "ip": "15.5.7.1/24"
+          },
+          "et-0/0/24.0": {
+            "host_info": {
+              "name": "cab05-qa-08"
+            },
+            "ip": "15.5.8.1/24"
+          }
+        }
+      }
+    },
+    "host_info": [
+      "cab05-qa-01-vm01",
+      "cab05-qa-01-vm02",
+      "cab05-qa-01-vm03",
+      "cab05-qa-01-vm04",
+      "cab05-qa-02-vm01",
+      "cab05-qa-02-vm02",
+      "cab05-qa-02-vm03",
+      "cab05-qa-02-vm04",
+      "cab05-qa-03-vm01",
+      "cab05-qa-03-vm02",
+      "cab05-qa-03-vm03",
+      "cab05-qa-03-vm04",
+      "cab05-qa-04-vm01",
+      "cab05-qa-04-vm02",
+      "cab05-qa-04-vm03",
+      "cab05-qa-04-vm04",
+      "cab05-qa-05-vm01",
+      "cab05-qa-05-vm02",
+      "cab05-qa-05-vm03",
+      "cab05-qa-05-vm04",
+      "cab05-qa-06-vm01",
+      "cab05-qa-06-vm02",
+      "cab05-qa-06-vm03",
+      "cab05-qa-06-vm04",
+      "cab05-qa-07-vm01",
+      "cab05-qa-07-vm02",
+      "cab05-qa-07-vm03",
+      "cab05-qa-07-vm04",
+      "cab05-qa-08-vm01",
+      "cab05-qa-08-vm02",
+      "cab05-qa-08-vm03",
+      "cab05-qa-08-vm04"
+
+    ],
+    "dut_info": {
+      "0": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-145",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/18.0"
+              },
+              "ip": "15.145.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.145.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/1.0"
+              },
+              "ip": "15.145.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.145.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "1": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-146",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/19.0"
+              },
+              "ip": "15.146.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.146.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/2.0"
+              },
+              "ip": "15.146.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.146.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "2": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-149",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/20.0"
+              },
+              "ip": "15.149.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.149.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/3.0"
+              },
+              "ip": "15.149.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.149.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "3": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-152",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/21.0"
+              },
+              "ip": "15.152.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.152.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/4.0"
+              },
+              "ip": "15.152.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.152.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "4": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-153",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/22.0"
+              },
+              "ip": "15.153.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.153.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/5.0"
+              },
+              "ip": "15.153.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.153.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      },
+      "5": {
+        "type": "DUT_TYPE_FSU",
+        "dut": "fs-154",
+        "fpg_interface_info": {
+          "0": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/23.0"
+              },
+              "ip": "15.154.1.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.154.1.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          },
+          "1": {
+            "0": {
+              "switch_info": {
+                "name": "cab05-100g-1",
+                "port": "et-0/0/6.0"
+              },
+              "ip": "15.154.2.2/24",
+              "subnet_mask": "255.255.255.0",
+              "route": [
+                {
+                  "network": "15.0.0.0/8",
+                  "gateway": "15.154.2.1"
+                }
+              ],
+              "type": "INTERFACE_TYPE_ETHERNET"
+            }
+          }
+        }
+      }
+    },
+    "workarounds": {
+      "enable_funcp": true
+    }
   }
 }
