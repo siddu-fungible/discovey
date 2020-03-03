@@ -60,7 +60,7 @@ class BootupSetup(FunTestScript):
         if "already_deployed" in job_inputs:
             self.already_deployed = job_inputs["already_deployed"]
         else:
-            self.already_deployed = False
+            self.already_deployed = True
 
         if "format_drive" in job_inputs:
             self.format_drive = job_inputs["format_drive"]
@@ -110,7 +110,6 @@ class C17808(FunTestCase):
     attach_result = None
 
     def describe(self):
-        pass
         self.set_test_details(id=1,
                               summary="c17808: Detach/Attach in loop with the host connected to the NVMe sub system",
                               steps='''
@@ -276,7 +275,6 @@ class C17854(FunTestCase):
     attach_result = None
 
     def describe(self):
-        pass
         self.set_test_details(id=2,
                               summary="c17854:  Volume Create, Attach, Detach and Delete in a loop",
                               steps='''
@@ -406,7 +404,6 @@ class C36894(FunTestCase):
     attach_result = None
 
     def describe(self):
-        pass
         self.set_test_details(id=3,
                               summary="C36894: Create 1K vols/DPU and delete the same - (no attach required) in a loop",
                               steps='''
@@ -521,7 +518,6 @@ class C36892(FunTestCase):
     attach_result = None
 
     def describe(self):
-        pass
         self.set_test_details(id=4,
                               summary="C36892:Create N more volumes after 1000, delete existing N volumes and create N",
                               steps='''
@@ -636,7 +632,6 @@ class C37533(FunTestCase):
     storage_controller_template = None
 
     def describe(self):
-        pass
         self.set_test_details(id=5,
                               summary="c37533: attach >128 vols, detaching N existing volumes, attaching N more new",
                               steps='''
@@ -949,6 +944,7 @@ class C37533_1(C37533):
                               ''')
 
     def setup(self):
+        print "in C37533_1"
         super(C37533_1, self).setup()
 
     def run(self):
