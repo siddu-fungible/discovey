@@ -134,6 +134,8 @@ class SharedVolumePerfTest(FunTestCase):
 
         self.post_results = True
         job_inputs = fun_test.get_job_inputs()
+        if not job_inputs:
+            job_inputs = {}
         if "post_results" in job_inputs:
             self.post_results = job_inputs["post_results"]
         if "capacity" in job_inputs:
@@ -603,8 +605,8 @@ class ConfigPersistenceAfterReset(FunTestCase):
             fio_output[index] = {}
             end_host_thread[index] = host.instance.clone()
             wait_time = len(self.hosts) - index
-            if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                warm_up_fio_cmd_args = {}
+            if "multiple_jobs" in self.Read_fio_cmd_args:
+                Read_fio_cmd_args = {}
                 # Adding the allowed CPUs into the fio warmup command
                 fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                 jobs = ""
@@ -737,8 +739,8 @@ class ConfigPersistenceAfterReset(FunTestCase):
             fio_output[index] = {}
             end_host_thread[index] = host.instance.clone()
             wait_time = len(self.hosts) - index
-            if "multiple_jobs" in self.warm_up_fio_cmd_args:
-                warm_up_fio_cmd_args = {}
+            if "multiple_jobs" in self.Read_fio_cmd_args:
+                Read_fio_cmd_args = {}
                 # Adding the allowed CPUs into the fio warmup command
                 fio_cpus_allowed_args = " --cpus_allowed={}".format(host.host_numa_cpus)
                 jobs = ""
