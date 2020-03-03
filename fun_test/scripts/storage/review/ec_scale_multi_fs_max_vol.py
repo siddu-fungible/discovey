@@ -15,6 +15,11 @@ from lib.templates.storage.storage_controller_api import *
 Script for C18036: Multi DPU: Maximum number(n*128) of volumes supported(expected 32 * 128)
 '''
 
+def fio_parser(arg1, host_index, **kwargs):
+    fio_output = arg1.pcie_fio(**kwargs)
+    fun_test.shared_variables["fio"][host_index] = fio_output
+    fun_test.simple_assert(fio_output, "Fio test for thread {}".format(host_index))
+    arg1.disconnect()
 
 class ECBlockScaleScript(FunTestScript):
     topology = None
@@ -52,7 +57,6 @@ class ECBlockScaleScript(FunTestScript):
             fun_test.log("add fs_obj: {} ".format(fs_obj))
             self.fs_obj_list.append(fs_obj)
         fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
-        fun_test.log("fs_obj_list1: {} ".format(self.fs_obj_list))
 
     def cleanup(self):
         self.sc_template.cleanup()
@@ -80,13 +84,7 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
         self.topology = fun_test.shared_variables["topology"]
         self.ec_template = fun_test.shared_variables["ec_template"]
-        self.fs_obj_list = []
-        for dut_index in self.topology.get_duts().keys():
-            fs_obj = self.topology.get_dut_instance(index=dut_index)
-            fun_test.log("add fs_obj: {} ".format(fs_obj))
-            self.fs_obj_list.append(fs_obj)
-        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
-        fun_test.log("fs_obj_list2: {} ".format(self.fs_obj_list))
+        self.fs_obj_list = fun_test.shared_variables["fs_obj_list"]
         
         tc_config = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -104,8 +102,6 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
         for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
-
-        fun_test.log("fs_obj_list3: {} ".format(self.fs_obj_list))
 
         job_inputs = fun_test.get_job_inputs()
         if "num_volumes" in job_inputs:
@@ -131,7 +127,6 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
             self.host_info[host_name]["ip"] = host_obj.get_test_interface(index=0).ip.split('/')[0]
             self.host_info[host_name]["handle"] = host_obj.get_instance()
 
-        fun_test.log("fs_obj_list: {} ".format(self.fs_obj_list))
         fun_test.log("host_info: {} ".format(self.host_info))
         fun_test.log("test info: capacity: {} ".format(self.ec_info["capacity"]))
         fun_test.log("test info: num_volumes: {} ".format(self.num_volumes))
