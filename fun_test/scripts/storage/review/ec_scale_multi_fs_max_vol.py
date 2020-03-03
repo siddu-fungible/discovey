@@ -46,6 +46,14 @@ class ECBlockScaleScript(FunTestScript):
         self.sc_template.initialize(already_deployed=already_deployed, dpu_indexes=dpu_index)
         fun_test.shared_variables["ec_template"] = self.sc_template
 
+        self.fs_obj_list = []
+        for dut_index in self.topology.get_duts().keys():
+            fs_obj = self.topology.get_dut_instance(index=dut_index)
+            fun_test.log("add fs_obj: {} ".format(fs_obj))
+            self.fs_obj_list.append(fs_obj)
+        fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+        fun_test.log("fs_obj_list1: {} ".format(self.fs_obj_list))
+
     def cleanup(self):
         self.sc_template.cleanup()
         self.topology.cleanup()
@@ -75,8 +83,10 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
         self.fs_obj_list = []
         for dut_index in self.topology.get_duts().keys():
             fs_obj = self.topology.get_dut_instance(index=dut_index)
+            fun_test.log("add fs_obj: {} ".format(fs_obj))
             self.fs_obj_list.append(fs_obj)
         fun_test.shared_variables["fs_obj_list"] = self.fs_obj_list
+        fun_test.log("fs_obj_list2: {} ".format(self.fs_obj_list))
         
         tc_config = True
         benchmark_file = fun_test.get_script_name_without_ext() + ".json"
@@ -94,6 +104,8 @@ class CreateAttachDetachDeleteMultivolMultihost(FunTestCase):
 
         for k, v in tc_config[testcase].iteritems():
             setattr(self, k, v)
+
+        fun_test.log("fs_obj_list3: {} ".format(self.fs_obj_list))
 
         job_inputs = fun_test.get_job_inputs()
         if "num_volumes" in job_inputs:
