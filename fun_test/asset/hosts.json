@@ -1121,5 +1121,485 @@
       "username": "ADMIN",
       "password": "ADMIN"
     }
+  },
+  "cab05-qa-01-vm01": {
+    "host_ip": "cab05-qa-01-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.1.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-01-vm02": {
+    "host_ip": "cab05-qa-01-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.1.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-01-vm03": {
+    "host_ip": "cab05-qa-01-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.1.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-01-vm04": {
+    "host_ip": "cab05-qa-01-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.1.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-02-vm01": {
+    "host_ip": "cab05-qa-02-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.2.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-02-vm02": {
+    "host_ip": "cab05-qa-02-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.2.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-02-vm03": {
+    "host_ip": "cab05-qa-02-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.2.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-02-vm04": {
+    "host_ip": "cab05-qa-02-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.2.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-03-vm01": {
+    "host_ip": "cab05-qa-03-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.3.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-03-vm02": {
+    "host_ip": "cab05-qa-03-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.3.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-03-vm03": {
+    "host_ip": "cab05-qa-03-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.3.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-03-vm04": {
+    "host_ip": "cab05-qa-03-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.3.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-04-vm01": {
+    "host_ip": "cab05-qa-04-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.4.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-04-vm02": {
+    "host_ip": "cab05-qa-04-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.4.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-04-vm03": {
+    "host_ip": "cab05-qa-04-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.4.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-04-vm04": {
+    "host_ip": "cab05-qa-04-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.4.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-05-vm01": {
+    "host_ip": "cab05-qa-05-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.5.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-05-vm02": {
+    "host_ip": "cab05-qa-05-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.5.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-05-vm03": {
+    "host_ip": "cab05-qa-05-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.5.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-05-vm04": {
+    "host_ip": "cab05-qa-05-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.5.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-06-vm01": {
+    "host_ip": "cab05-qa-06-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.6.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-06-vm02": {
+    "host_ip": "cab05-qa-06-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.6.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-06-vm03": {
+    "host_ip": "cab05-qa-06-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.6.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-06-vm04": {
+    "host_ip": "cab05-qa-06-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.6.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-07-vm01": {
+    "host_ip": "cab05-qa-07-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.7.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-07-vm02": {
+    "host_ip": "cab05-qa-07-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.7.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-07-vm03": {
+    "host_ip": "cab05-qa-07-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.7.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-07-vm04": {
+    "host_ip": "cab05-qa-07-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.7.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-08-vm01": {
+    "host_ip": "cab05-qa-08-vm01",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.8.3/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-08-vm02": {
+    "host_ip": "cab05-qa-08-vm02",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.8.4/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-08-vm03": {
+    "host_ip": "cab05-qa-08-vm03",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.8.5/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
+  },
+  "cab05-qa-08-vm04": {
+    "host_ip": "cab05-qa-08-vm04",
+    "ssh_username": "localadmin",
+    "ssh_password": "Precious1*",
+    "ipmi_info": {},
+    "test_interface_info": {
+      "0": {
+        "name": "ens6",
+        "ip": "15.5.8.6/24"
+      }
+    },
+    "cpus": {
+      "numa_node_ranges": ["0-3"]
+    }
   }
 }

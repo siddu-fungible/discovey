@@ -1548,5 +1548,203 @@
       "password": "Precious1*",
       "host_ip": "cab17-pdu1"
     }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs145-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs145-come"
+    },
+    "name": "fs-145",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs145-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7019,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 19,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs146-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs146-come"
+    },
+    "name": "fs-146",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs146-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7018,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 17,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs149-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs149-come"
+    },
+    "name": "fs-149",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs149-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7017,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 11,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs152-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs152-come"
+    },
+    "name": "fs-152",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs152-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7008,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 9,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs153-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs153-come"
+    },
+    "name": "fs-153",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs153-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7007,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 3,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
+  },
+  {
+    "bmc": {
+      "mgmt_ssh_password": "superuser",
+      "mgmt_ssh_username": "sysadmin",
+      "mgmt_ip": "fs154-bmc"
+    },
+    "come": {
+      "mgmt_ssh_password": "123",
+      "mgmt_ssh_username": "fun",
+      "mgmt_ip": "fs154-come"
+    },
+    "name": "fs-154",
+    "workarounds": {
+      "skip_funeth_come_power_cycle": true
+    },
+    "revision": "2",
+    "bundle_compatible": true,
+    "fpga": {
+      "mgmt_ssh_password": "",
+      "mgmt_ssh_username": "root",
+      "mgmt_ip": "fs154-fpga",
+      "telnet_ip": "cab01-terminal",
+      "telnet_port": 7006,
+      "telnet_username": "root",
+      "telnet_password": "fun123"
+    },
+    "apc_info": {
+      "username": "localadmin",
+      "outlet_number": 1,
+      "password": "Precious1*",
+      "host_ip": "cab05-pdu1"
+    }
   }
 ]
