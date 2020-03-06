@@ -341,9 +341,9 @@ if __name__ == "__main__":
     setup_bringup = BringupSetup()
     setup_bringup.add_test_case(ConnectAllMaxVolumeFromOneHost())
     # TO be done
-    setup_bringup.add_test_case(ConnectAllMaxHosts())
-    setup_bringup.add_test_case(ConnectAllContinuous())
-    setup_bringup.add_test_case(ConnectAllContinuousMultiHost())
+    #setup_bringup.add_test_case(ConnectAllMaxHosts())
+    #setup_bringup.add_test_case(ConnectAllContinuous())
+    #setup_bringup.add_test_case(ConnectAllContinuousMultiHost())
 
 
     setup_bringup.run()

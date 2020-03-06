@@ -37,7 +37,7 @@
     "container_up_timeout": 120,
     "api_server_up_timeout": 300
   },
-  "ConnectAllMaxVolume": {
+  "ConnectAllMaxVolumeFromOneHost": {
     "num_f1": 1,
     "blt_per_host": 2,
     "num_hosts": 1,
