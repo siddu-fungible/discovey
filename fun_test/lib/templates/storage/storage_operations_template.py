@@ -11,6 +11,7 @@ from asset.asset_global import AssetType
 import ipaddress
 import re
 import copy
+import socket
 
 
 class DutsState:
@@ -373,6 +374,11 @@ class GenericVolumeOperationsTemplate(StorageControllerOperationsTemplate, objec
                                                                    host_obj=cur_host_obj):
                     if discover:
                         discovery_controller_ip = fs_obj.get_storage_controller().target_ip
+                        try:
+                            socket.inet_to_aton(discovery_controller_ip)
+                        except:
+                            discovery_controller_ip = socket.gethostbyname(discovery_controller_ip)
+
                         fun_test.test_assert(expression=self.nvme_connect_all_from_host(host_obj=cur_host_obj,
                                                                                     host_nqn=host_nqn,
                                                                                     discovery_controller_ip=discovery_controller_ip,
